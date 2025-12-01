@@ -47,6 +47,10 @@ export default function CreateEvent() {
     defaultValues: {
       requireApproval: false,
       capacity: '',
+      startDate: new Date(),
+      startTime: new Date().toTimeString().slice(0, 5),
+      endDate: new Date(),
+      endTime: new Date(new Date().getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5),
     },
   });
 
@@ -113,7 +117,7 @@ export default function CreateEvent() {
                 <div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2 bg-black/10 hover:bg-black/15 border-0">
+                      <Button variant="ghost" className="gap-2 bg-black/5 hover:bg-black/10 border-0">
                         {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                         {isPublic ? 'Public' : 'Privé'}
                         <ChevronDown className="h-4 w-4 ml-1" />
@@ -170,7 +174,7 @@ export default function CreateEvent() {
                 />
 
                 {/* Date & Time Block */}
-                <div className="bg-muted rounded-lg p-6 space-y-4">
+                <div className="bg-black/5 rounded-lg p-6 space-y-4">
                   {/* Start Date & Time */}
                   <div className="grid grid-cols-[80px_1fr_100px] gap-4 items-center">
                     <div className="flex items-center gap-2">
