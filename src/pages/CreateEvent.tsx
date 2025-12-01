@@ -181,7 +181,7 @@ export default function CreateEvent() {
                 />
 
                 {/* Date & Time Block */}
-                <div className="bg-black/[0.03] rounded-lg p-6 space-y-4">
+                <div className="bg-black/[0.03] rounded-lg px-6 py-4 space-y-4">
                   {/* Start Date & Time */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -236,9 +236,6 @@ export default function CreateEvent() {
                       />
                     </div>
                   </div>
-
-                  {/* Divider line */}
-                  <div className="border-l-2 border-dashed border-muted-foreground/30 h-4 ml-1" />
 
                   {/* End Date & Time */}
                   <div className="flex items-center justify-between">
