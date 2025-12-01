@@ -492,7 +492,7 @@ export default function CreateEvent() {
                         setSelectedCauseThemes([]);
                       }
                     }}
-                    className="w-full bg-black/[0.03] hover:bg-black/[0.05] border-0 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full bg-black/[0.03] hover:bg-black/[0.05] border-0 rounded-lg pl-4 pr-10 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Sélectionner une catégorie</option>
                     {causeThemes.map((theme) => (
