@@ -15,14 +15,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Index = () => {
-  const { user, profile, signOut, needsOnboarding, isLoading } = useAuth();
+  const { user, profile, signOut, needsOnboarding, isLoading, hasRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && user && needsOnboarding) {
-      navigate('/onboarding');
+    if (!isLoading && user) {
+      if (needsOnboarding) {
+        navigate('/onboarding');
+      } else if (hasRole('super_admin')) {
+        navigate('/admin');
+      } else if (hasRole('organization')) {
+        navigate('/organization/dashboard');
+      }
     }
-  }, [user, needsOnboarding, isLoading, navigate]);
+  }, [user, needsOnboarding, isLoading, hasRole, navigate]);
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
