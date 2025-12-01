@@ -1,4 +1,4 @@
-import { LogIn } from "lucide-react";
+import { LogIn, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,8 +46,9 @@ const Auth = () => {
             <span className="font-medium">
               {format(currentTime, 'HH:mm')} UTC+1
             </span>
-            <Link to="/" className="hover:text-foreground transition-colors">
+            <Link to="/" className="hover:text-foreground transition-colors flex items-center gap-1">
               Évènements
+              <ArrowUpRight className="w-4 h-4" />
             </Link>
             <Button variant="ghost" size="sm" className="text-foreground font-medium">
               Se connecter
