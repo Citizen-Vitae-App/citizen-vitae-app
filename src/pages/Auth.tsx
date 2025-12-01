@@ -106,7 +106,7 @@ const Auth = () => {
           {/* Google Button */}
           <Button 
             variant="outline" 
-            className="w-full hover:bg-[#F7F7F7]" 
+            className="w-full hover:bg-[#F9F9F9] hover:text-foreground" 
             size="lg"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
