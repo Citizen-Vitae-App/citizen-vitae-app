@@ -181,7 +181,7 @@ export default function CreateEvent() {
                 />
 
                 {/* Date & Time Block */}
-                <div className="bg-black/5 rounded-lg p-6 space-y-4">
+                <div className="bg-black/[0.03] rounded-lg p-6 space-y-4">
                   {/* Start Date & Time */}
                   <div className="grid grid-cols-[80px_200px_80px] gap-1 items-center">
                     <div className="flex items-center gap-2">
