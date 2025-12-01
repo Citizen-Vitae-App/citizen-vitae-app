@@ -12,13 +12,13 @@ const Auth = () => {
         className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background"
       >
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-60"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-50 blur-3xl"
           style={{
             background: `radial-gradient(circle, 
-              hsl(350, 100%, 90%) 0%,
-              hsl(30, 100%, 92%) 30%,
-              hsl(150, 60%, 92%) 50%,
-              transparent 70%
+              hsl(350, 100%, 88%) 0%,
+              hsl(25, 100%, 90%) 35%,
+              hsl(35, 80%, 92%) 60%,
+              transparent 80%
             )`
           }}
         />
