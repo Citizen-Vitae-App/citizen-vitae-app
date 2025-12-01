@@ -6,10 +6,10 @@ import { Label } from "@/components/ui/label";
 
 const Auth = () => {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Gradient Background */}
+    <div className="min-h-screen relative bg-background">
+      {/* Gradient Background - Top Only */}
       <div 
-        className="absolute inset-0 -z-10"
+        className="absolute top-0 left-0 right-0 h-[50vh] -z-10"
         style={{
           background: `linear-gradient(135deg, 
             hsl(350, 100%, 95%) 0%,
@@ -29,18 +29,18 @@ const Auth = () => {
       {/* Centered Card */}
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-background rounded-2xl shadow-lg p-8">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
+          {/* Icon - Left Aligned */}
+          <div className="mb-6">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
               <LogIn className="w-6 h-6 text-muted-foreground" />
             </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl font-bold text-center mb-2">
+          {/* Title - Left Aligned */}
+          <h1 className="text-2xl font-bold mb-2">
             Bienvenue sur CitizenVitae
           </h1>
-          <p className="text-center text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-8">
             Veuillez vous connecter ou vous inscrire ci-dessous.
           </p>
 
@@ -74,7 +74,11 @@ const Auth = () => {
           </div>
 
           {/* Google Button */}
-          <Button variant="outline" className="w-full" size="lg">
+          <Button 
+            variant="outline" 
+            className="w-full hover:bg-[#F7F7F7]" 
+            size="lg"
+          >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
