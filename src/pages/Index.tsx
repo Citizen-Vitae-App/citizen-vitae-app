@@ -169,7 +169,7 @@ const Index = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0">
-                      <div className="flex items-center gap-3 p-4 pb-3">
+                      <div className="flex items-center gap-3 p-4 pb-4">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground">
@@ -186,19 +186,20 @@ const Index = () => {
                         </div>
                       </div>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>View Profile</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Sign Out</span>
-                      </DropdownMenuItem>
+                      <div className="py-2">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Voir le profil</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Paramètres</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Se déconnecter</span>
+                        </DropdownMenuItem>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </>
