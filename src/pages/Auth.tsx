@@ -1,21 +1,50 @@
-import { LogIn, ArrowUpRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LogIn } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Auth = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    if (user) navigate('/');
+  }, [user, navigate]);
 
-    return () => clearInterval(timer);
-  }, []);
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const { error } = await signIn(email, password);
+    if (error) toast.error(error.message);
+    setIsLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const { error } = await signUp(email, password);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Vérifiez votre email pour confirmer votre inscription');
+    }
+    setIsLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) toast.error(error.message);
+    setIsLoading(false);
+  };
   return (
     <div className="min-h-screen relative">
       {/* Gradient Background - Circular Orb */}
@@ -35,27 +64,6 @@ const Auth = () => {
         />
       </div>
 
-      {/* Header with Logo and Navigation */}
-      <header className="absolute top-0 left-0 right-0 px-8 py-6">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-foreground hover:opacity-80 transition-opacity">
-            CitizenVitae
-          </Link>
-          
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <span className="font-medium">
-              {format(currentTime, 'HH:mm')} UTC+1
-            </span>
-            <Link to="/" className="hover:text-foreground transition-colors flex items-center gap-1">
-              Évènements
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-            <Button variant="ghost" size="sm" className="text-foreground font-medium">
-              Se connecter
-            </Button>
-          </div>
-        </div>
-      </header>
 
       {/* Centered Card */}
       <div className="min-h-screen flex items-center justify-center p-4">
