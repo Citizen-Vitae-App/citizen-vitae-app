@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, MapPin, Upload, Clock } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { 
+  DropdownMenu,
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -33,6 +39,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(true);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -60,7 +67,22 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative">
+      {/* Gradient Background - Same as Auth page */}
+      <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl"
+          style={{
+            background: `radial-gradient(circle, 
+              hsl(350, 100%, 88%) 0%,
+              hsl(25, 100%, 90%) 35%,
+              hsl(35, 80%, 92%) 60%,
+              transparent 80%
+            )`
+          }}
+        />
+      </div>
+
       <Navbar />
       
       <main className="container mx-auto px-4 pt-32 pb-12">
@@ -69,7 +91,6 @@ export default function CreateEvent() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-12">
               {/* Left side - Cover Image */}
               <div>
-                <label className="block text-sm font-medium mb-2">Image de couverture</label>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
                   {coverImage ? (
                     <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
@@ -92,6 +113,46 @@ export default function CreateEvent() {
 
               {/* Right side - Form */}
               <div className="space-y-6">
+                {/* Public/Private Dropdown */}
+                <div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                        {isPublic ? 'Public' : 'Privé'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-80">
+                      <DropdownMenuItem 
+                        onClick={() => setIsPublic(true)}
+                        className="flex items-start gap-3 p-4 cursor-pointer"
+                      >
+                        <Globe className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-semibold mb-1">Public</div>
+                          <div className="text-sm text-muted-foreground">
+                            Affiché sur votre calendrier et éligible pour être mis en avant
+                          </div>
+                        </div>
+                        {isPublic && <div className="text-primary">✓</div>}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setIsPublic(false)}
+                        className="flex items-start gap-3 p-4 cursor-pointer"
+                      >
+                        <Lock className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-semibold mb-1">Privé</div>
+                          <div className="text-sm text-muted-foreground">
+                            Non répertorié. Seules les personnes ayant le lien peuvent s'inscrire
+                          </div>
+                        </div>
+                        {!isPublic && <div className="text-primary">✓</div>}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
                 {/* Event Name */}
                 <FormField
                   control={form.control}
