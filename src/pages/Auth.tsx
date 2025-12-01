@@ -10,33 +10,33 @@ import { toast } from "sonner";
 
 const Auth = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signInWithOtp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user) navigate('/');
   }, [user, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    const { error } = await signIn(email, password);
-    if (error) toast.error(error.message);
-    setIsLoading(false);
-  };
+    
+    // Validation simple de l'email
+    if (!email || !email.includes('@')) {
+      toast.error('Veuillez entrer une adresse email valide');
+      return;
+    }
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
     setIsLoading(true);
-    const { error } = await signUp(email, password);
+    const { error } = await signInWithOtp(email);
+    
     if (error) {
       toast.error(error.message);
+      setIsLoading(false);
     } else {
-      toast.success('Vérifiez votre email pour confirmer votre inscription');
+      toast.success('Code de vérification envoyé par email');
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     }
-    setIsLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
@@ -84,7 +84,7 @@ const Auth = () => {
           </p>
 
           {/* Email Form */}
-          <div className="space-y-4 mb-6">
+          <form onSubmit={handleEmailSubmit} className="space-y-4 mb-6">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input 
@@ -92,13 +92,16 @@ const Auth = () => {
                 type="email" 
                 placeholder="vous@email.com"
                 className="w-full"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
-            <Button className="w-full" size="lg">
-              Continuer avec l'e-mail
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? 'Envoi en cours...' : 'Continuer avec l\'e-mail'}
             </Button>
-          </div>
+          </form>
 
           {/* Divider */}
           <div className="relative mb-6">
@@ -117,6 +120,8 @@ const Auth = () => {
             variant="outline" 
             className="w-full hover:bg-[#E5E5E5] hover:text-foreground" 
             size="lg"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path

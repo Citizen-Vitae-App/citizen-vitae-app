@@ -1,0 +1,172 @@
+import { KeyRound, ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+const VerifyOtp = () => {
+  const [otp, setOtp] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const { verifyOtp, signInWithOtp, user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get('email');
+
+  useEffect(() => {
+    if (!email) {
+      navigate('/auth');
+      return;
+    }
+  }, [email, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [countdown]);
+
+  const handleVerify = async () => {
+    if (otp.length !== 6) {
+      toast.error('Veuillez entrer le code à 6 chiffres');
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await verifyOtp(email!, otp);
+    
+    if (error) {
+      toast.error('Code invalide ou expiré');
+      setIsLoading(false);
+    } else {
+      toast.success('Connexion réussie');
+      // La redirection sera gérée par useAuth via onAuthStateChange
+    }
+  };
+
+  const handleResend = async () => {
+    if (!canResend) return;
+
+    setIsLoading(true);
+    const { error } = await signInWithOtp(email!);
+    
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Nouveau code envoyé');
+      setCountdown(60);
+      setCanResend(false);
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen relative">
+      {/* Gradient Background - Circular Orb */}
+      <div 
+        className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background"
+      >
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl"
+          style={{
+            background: `radial-gradient(circle, 
+              hsl(350, 100%, 88%) 0%,
+              hsl(25, 100%, 90%) 35%,
+              hsl(35, 80%, 92%) 60%,
+              transparent 80%
+            )`
+          }}
+        />
+      </div>
+
+      {/* Centered Card */}
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-background rounded-2xl shadow-lg p-8">
+          {/* Icon - Left Aligned */}
+          <div className="mb-6">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <KeyRound className="w-6 h-6 text-muted-foreground" />
+            </div>
+          </div>
+
+          {/* Title - Left Aligned */}
+          <h1 className="text-2xl font-bold mb-2">
+            Vérifiez votre email
+          </h1>
+          <p className="text-muted-foreground mb-8">
+            Nous avons envoyé un code de vérification à<br />
+            <span className="font-medium text-foreground">{email}</span>
+          </p>
+
+          {/* OTP Input */}
+          <div className="space-y-6 mb-6">
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={otp}
+                onChange={setOtp}
+                disabled={isLoading}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={handleVerify}
+              disabled={isLoading || otp.length !== 6}
+            >
+              {isLoading ? 'Vérification...' : 'Vérifier'}
+            </Button>
+          </div>
+
+          {/* Resend Code */}
+          <div className="text-center mb-4">
+            <Button
+              variant="ghost"
+              onClick={handleResend}
+              disabled={!canResend || isLoading}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {canResend ? 'Renvoyer le code' : `Renvoyer le code (${countdown}s)`}
+            </Button>
+          </div>
+
+          {/* Change Email */}
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/auth')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Utiliser un autre email
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VerifyOtp;
