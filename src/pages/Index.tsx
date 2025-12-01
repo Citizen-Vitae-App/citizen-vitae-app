@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
@@ -102,15 +102,28 @@ const Index = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="flex-1 max-w-4xl mx-8 flex items-center gap-4">
+              {/* Search Input */}
+              <div className="flex-1 bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow">
+                <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 <Input
                   type="search"
-                  placeholder="Rechercher un événement..."
-                  className="pl-10 bg-background border-border"
+                  placeholder="Autour de Paris"
+                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
+
+              {/* Date Selector */}
+              <button className="bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow whitespace-nowrap">
+                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <span className="text-foreground font-medium">Quand ?</span>
+              </button>
+
+              {/* Filters Button */}
+              <button className="bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow whitespace-nowrap">
+                <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+                <span className="text-foreground font-medium">Filtres</span>
+              </button>
             </div>
 
             {/* Login Button */}
