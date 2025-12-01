@@ -52,13 +52,16 @@ const VerifyOtp = () => {
     }
 
     setIsLoading(true);
+    console.log('Attempting to verify OTP for email:', email);
     const { error } = await verifyOtp(email!, otp);
     
     if (error) {
-      toast.error('Code invalide ou expiré');
+      console.error('OTP verification failed:', error);
+      toast.error(`Code invalide: ${error.message}`);
       setOtp(''); // Clear OTP on error
       setIsLoading(false);
     } else {
+      console.log('OTP verification succeeded');
       toast.success('Connexion réussie');
       // La redirection sera gérée par useAuth via onAuthStateChange
     }

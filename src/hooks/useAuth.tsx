@@ -75,21 +75,25 @@ export const useAuth = () => {
   };
 
   const signInWithOtp = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+    console.log('Requesting OTP for email:', email);
+    const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
       }
     });
+    console.log('OTP request response:', { data, error });
     return { error };
   };
 
   const verifyOtp = async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({
+    console.log('Verifying OTP:', { email, tokenLength: token.length });
+    const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'email'
     });
+    console.log('OTP verification response:', { data, error });
     return { error };
   };
 
