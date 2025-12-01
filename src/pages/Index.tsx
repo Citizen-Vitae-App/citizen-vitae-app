@@ -1,4 +1,5 @@
 import { Search, Calendar, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
@@ -132,9 +133,11 @@ const Index = () => {
 
             {/* Login Button */}
             <div className="flex-shrink-0">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Connexion
-              </Button>
+              <Link to="/auth">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Connexion
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
