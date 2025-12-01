@@ -168,7 +168,7 @@ const Index = () => {
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64 p-0">
+                    <DropdownMenuContent align="end" className="w-64 p-0 bg-background">
                       <div className="flex items-center gap-3 px-4 py-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
