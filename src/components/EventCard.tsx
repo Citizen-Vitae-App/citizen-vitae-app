@@ -15,7 +15,7 @@ const EventCard = ({ title, shortTitle, organization, date, location, image, isN
   
   return (
     <div className="group overflow-hidden cursor-pointer">
-      <div className="relative h-64 overflow-hidden rounded-2xl">
+      <div className="relative h-64 overflow-hidden rounded-lg">
         <img
           src={image}
           alt={title}
