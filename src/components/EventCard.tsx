@@ -12,7 +12,7 @@ interface EventCardProps {
 
 const EventCard = ({ title, organization, date, location, category, image, categoryColor }: EventCardProps) => {
   return (
-    <div className="group overflow-hidden cursor-pointer bg-card">
+    <div className="group overflow-hidden cursor-pointer">
       <div className="relative h-64 overflow-hidden rounded-2xl">
         <img
           src={image}
