@@ -42,15 +42,21 @@ export default function CreateEvent() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
 
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+  
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
+      name: '',
       requireApproval: false,
       capacity: '',
-      startDate: new Date(),
-      startTime: new Date().toTimeString().slice(0, 5),
-      endDate: new Date(),
-      endTime: new Date(new Date().getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5),
+      startDate: now,
+      startTime: now.toTimeString().slice(0, 5),
+      endDate: now,
+      endTime: oneHourLater.toTimeString().slice(0, 5),
+      location: '',
+      description: '',
     },
   });
 
