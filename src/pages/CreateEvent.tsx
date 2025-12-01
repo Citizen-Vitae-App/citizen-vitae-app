@@ -21,6 +21,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import defaultEventCover from '@/assets/default-event-cover.jpg';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -92,13 +93,11 @@ export default function CreateEvent() {
               {/* Left side - Cover Image */}
               <div>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
-                  {coverImage ? (
-                    <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <Upload className="h-16 w-16 text-muted-foreground/40" />
-                    </div>
-                  )}
+                  <img 
+                    src={coverImage || defaultEventCover} 
+                    alt="Cover" 
+                    className="w-full h-full object-cover" 
+                  />
                   <input
                     type="file"
                     accept="image/*"
