@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ChevronRight } from 'lucide-react';
@@ -79,9 +80,11 @@ export function EventsTab() {
       {/* Header avec titre et bouton */}
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">My Events</h2>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Créer
+        <Button asChild>
+          <Link to="/organization/create-event">
+            <Plus className="mr-2 h-4 w-4" />
+            Créer
+          </Link>
         </Button>
       </div>
 
