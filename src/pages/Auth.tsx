@@ -7,15 +7,16 @@ import { Label } from "@/components/ui/label";
 const Auth = () => {
   return (
     <div className="min-h-screen relative">
-      {/* Gradient Background - Top half fading to white */}
+      {/* Gradient Background - Centered */}
       <div 
         className="absolute top-0 left-0 right-0 bottom-0 -z-10"
         style={{
           background: `linear-gradient(to bottom, 
-            hsl(350, 100%, 95%) 0%,
-            hsl(30, 100%, 95%) 25%,
-            hsl(150, 50%, 95%) 35%,
-            hsl(0, 0%, 100%) 60%
+            hsl(0, 0%, 100%) 0%,
+            hsl(350, 100%, 95%) 20%,
+            hsl(30, 100%, 95%) 45%,
+            hsl(150, 50%, 95%) 55%,
+            hsl(0, 0%, 100%) 80%
           )`
         }}
       />
