@@ -45,22 +45,19 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
         
         {/* Tabs au centre pour les organisations */}
         {tabs && (
-          <div className="flex items-center gap-1 border-b border-border">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}
                 className={cn(
-                  "px-6 py-3 text-sm font-medium transition-colors relative",
+                  "px-8 py-2 text-sm font-medium transition-all rounded-full",
                   activeTab === tab.value
-                    ? "text-foreground"
+                    ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {tab.label}
-                {activeTab === tab.value && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-                )}
               </button>
             ))}
           </div>
