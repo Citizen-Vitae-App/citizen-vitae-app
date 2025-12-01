@@ -70,7 +70,7 @@ export default function CreateEvent() {
               {/* Left side - Cover Image */}
               <div>
                 <label className="block text-sm font-medium mb-2">Image de couverture</label>
-                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
                   {coverImage ? (
                     <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
                   ) : (
