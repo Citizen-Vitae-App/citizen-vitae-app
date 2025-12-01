@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 
 interface EventCardProps {
   title: string;
@@ -22,6 +22,11 @@ const EventCard = ({ title, shortTitle, organization, date, location, image, isN
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-white rounded-full p-2 shadow-lg">
+            <Heart className="w-5 h-5 text-foreground" />
+          </div>
+        </div>
         <div className="absolute bottom-6 left-6">
           <div className="text-white font-extrabold text-2xl uppercase leading-tight">
             {titleWords.map((word, index) => (
