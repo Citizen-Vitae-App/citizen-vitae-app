@@ -1,5 +1,6 @@
 import { Search, Calendar, SlidersHorizontal, Bell, User, Settings, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
@@ -14,7 +15,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Index = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, needsOnboarding, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && user && needsOnboarding) {
+      navigate('/onboarding');
+    }
+  }, [user, needsOnboarding, isLoading, navigate]);
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
