@@ -3,8 +3,19 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { useState, useEffect } from "react";
 
 const Auth = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
   return (
     <div className="min-h-screen relative">
       {/* Gradient Background - Circular Orb */}
@@ -12,7 +23,7 @@ const Auth = () => {
         className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background"
       >
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-50 blur-3xl"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl"
           style={{
             background: `radial-gradient(circle, 
               hsl(350, 100%, 88%) 0%,
@@ -24,11 +35,25 @@ const Auth = () => {
         />
       </div>
 
-      {/* Header with Logo */}
-      <header className="absolute top-0 left-0 p-8">
-        <Link to="/" className="text-2xl font-bold text-foreground hover:opacity-80 transition-opacity">
-          CitizenVitae
-        </Link>
+      {/* Header with Logo and Navigation */}
+      <header className="absolute top-0 left-0 right-0 px-8 py-6">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="text-2xl font-bold text-foreground hover:opacity-80 transition-opacity">
+            CitizenVitae
+          </Link>
+          
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span className="font-medium">
+              {format(currentTime, 'HH:mm')} UTC+1
+            </span>
+            <Link to="/" className="hover:text-foreground transition-colors">
+              Évènements
+            </Link>
+            <Button variant="ghost" size="sm" className="text-foreground font-medium">
+              Se connecter
+            </Button>
+          </div>
+        </div>
       </header>
 
       {/* Centered Card */}
