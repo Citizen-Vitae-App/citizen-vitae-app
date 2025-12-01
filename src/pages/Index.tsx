@@ -177,7 +177,7 @@ const Index = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-bold text-base">
+                          <span className="font-bold text-base text-foreground">
                             {profile?.first_name} {profile?.last_name?.toLowerCase()}
                           </span>
                           <span className="text-sm text-muted-foreground">
