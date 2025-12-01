@@ -486,7 +486,7 @@ export default function CreateEvent() {
                   <h3 className="text-sm font-medium">Catégorie</h3>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2 bg-black/5 hover:bg-black/10 border-0 w-full justify-start">
+                      <Button variant="ghost" className="gap-2 bg-black/[0.03] hover:bg-black/[0.05] border-0 w-full justify-start">
                         {selectedCauseThemes.length > 0 ? (
                           <>
                             {(() => {
