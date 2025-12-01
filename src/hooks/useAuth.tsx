@@ -74,23 +74,21 @@ export const useAuth = () => {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+  const signInWithOtp = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
+      options: {
+        shouldCreateUser: true,
+      }
     });
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+  const verifyOtp = async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({
       email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+      token,
+      type: 'email'
     });
     return { error };
   };
@@ -122,8 +120,8 @@ export const useAuth = () => {
     profile,
     roles,
     isLoading,
-    signIn,
-    signUp,
+    signInWithOtp,
+    verifyOtp,
     signInWithGoogle,
     signOut,
     hasRole,
