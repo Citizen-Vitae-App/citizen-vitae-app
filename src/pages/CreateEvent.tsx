@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon, Tag } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -483,24 +484,65 @@ export default function CreateEvent() {
                 {/* Cause Themes */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Catégorie</h3>
-                  <select
-                    value={selectedCauseThemes[0] || ''}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setSelectedCauseThemes([e.target.value]);
-                      } else {
-                        setSelectedCauseThemes([]);
-                      }
-                    }}
-                    className="w-full bg-black/[0.03] hover:bg-black/[0.05] border-0 rounded-lg pl-4 pr-10 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Sélectionner une catégorie</option>
-                    {causeThemes.map((theme) => (
-                      <option key={theme.id} value={theme.id}>
-                        {theme.name}
-                      </option>
-                    ))}
-                  </select>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="gap-2 bg-black/5 hover:bg-black/10 border-0 w-full justify-start">
+                        {selectedCauseThemes.length > 0 ? (
+                          <>
+                            {(() => {
+                              const selectedTheme = causeThemes.find(t => t.id === selectedCauseThemes[0]);
+                              if (selectedTheme) {
+                                const IconComponent = (Icons as any)[selectedTheme.icon] || Icons.Tag;
+                                return (
+                                  <>
+                                    <IconComponent className="h-4 w-4" />
+                                    {selectedTheme.name}
+                                  </>
+                                );
+                              }
+                              return (
+                                <>
+                                  <Tag className="h-4 w-4" />
+                                  Sélectionner une catégorie
+                                </>
+                              );
+                            })()}
+                          </>
+                        ) : (
+                          <>
+                            <Tag className="h-4 w-4" />
+                            Sélectionner une catégorie
+                          </>
+                        )}
+                        <ChevronDown className="h-4 w-4 ml-auto" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-80">
+                      {causeThemes.map((theme) => {
+                        const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
+                        const isSelected = selectedCauseThemes.includes(theme.id);
+                        return (
+                          <DropdownMenuItem
+                            key={theme.id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedCauseThemes([]);
+                              } else {
+                                setSelectedCauseThemes([theme.id]);
+                              }
+                            }}
+                            className="flex items-center gap-3 p-4 cursor-pointer"
+                          >
+                            <IconComponent className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
+                            <div className="flex-1">
+                              <div className="font-semibold">{theme.name}</div>
+                            </div>
+                            {isSelected && <div className="text-primary">✓</div>}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Event Options */}
