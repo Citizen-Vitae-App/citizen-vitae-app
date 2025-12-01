@@ -101,7 +101,7 @@ export default function CreateEvent() {
                       <FormControl>
                         <Input
                           placeholder="Event Name"
-                          className="text-5xl font-bold border-0 px-0 focus-visible:ring-0 placeholder:text-muted-foreground placeholder:opacity-40 h-auto py-2"
+                          className="text-6xl font-bold border-0 px-0 focus-visible:ring-0 placeholder:text-muted-foreground/30 h-auto py-4"
                           {...field}
                         />
                       </FormControl>
