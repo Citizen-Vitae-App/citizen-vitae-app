@@ -112,26 +112,25 @@ const VerifyOtp = () => {
 
           {/* OTP Input */}
           <div className="space-y-4 mb-6">
-            <div className="flex justify-center">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                disabled={isLoading}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator />
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
+            <InputOTP
+              maxLength={6}
+              value={otp}
+              onChange={setOtp}
+              disabled={isLoading}
+              containerClassName="w-full"
+            >
+              <InputOTPGroup className="flex-1 gap-2">
+                <InputOTPSlot index={0} className="flex-1 h-11" />
+                <InputOTPSlot index={1} className="flex-1 h-11" />
+                <InputOTPSlot index={2} className="flex-1 h-11" />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup className="flex-1 gap-2">
+                <InputOTPSlot index={3} className="flex-1 h-11" />
+                <InputOTPSlot index={4} className="flex-1 h-11" />
+                <InputOTPSlot index={5} className="flex-1 h-11" />
+              </InputOTPGroup>
+            </InputOTP>
 
             <Button 
               className="w-full" 
