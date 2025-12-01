@@ -104,7 +104,7 @@ const Index = () => {
             {/* Search Bar */}
             <div className="flex-1 max-w-xl mx-8 flex items-center gap-4">
               {/* Search + Date Combined */}
-              <div className="flex-1 border border-border rounded-2xl px-6 py-3 flex items-center gap-4 shadow-sm bg-background/50 backdrop-blur-sm">
+              <div className="flex-1 border border-border rounded-md px-6 py-3 flex items-center gap-4 shadow-sm bg-background/50 backdrop-blur-sm">
                 <div className="flex items-center gap-3 flex-1">
                   <Search className="w-5 h-5 text-foreground flex-shrink-0" />
                   <Input
@@ -124,7 +124,7 @@ const Index = () => {
               </div>
 
               {/* Filters Button */}
-              <button className="border border-border rounded-2xl px-6 py-3 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70">
+              <button className="border border-border rounded-md px-6 py-3 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70">
                 <SlidersHorizontal className="w-5 h-5 text-foreground" />
                 <span className="text-foreground font-medium">Filtres</span>
               </button>
