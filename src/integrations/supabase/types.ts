@@ -38,6 +38,65 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          capacity: number | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          end_date: string
+          has_waitlist: boolean | null
+          id: string
+          is_public: boolean | null
+          location: string
+          name: string
+          organization_id: string
+          require_approval: boolean | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          has_waitlist?: boolean | null
+          id?: string
+          is_public?: boolean | null
+          location: string
+          name: string
+          organization_id: string
+          require_approval?: boolean | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          has_waitlist?: boolean | null
+          id?: string
+          is_public?: boolean | null
+          location?: string
+          name?: string
+          organization_id?: string
+          require_approval?: boolean | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string | null
