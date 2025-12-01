@@ -102,7 +102,7 @@ export default function CreateEvent() {
                         <input
                           {...field}
                           placeholder="Event Name"
-                          className="w-full bg-transparent border-0 outline-none text-[64px] leading-none font-semibold placeholder:text-muted-foreground/25"
+                          className="w-full bg-transparent border-0 outline-none text-4xl leading-tight font-semibold placeholder:text-muted-foreground/25"
                           aria-label="Nom de l'événement"
                         />
                       </FormControl>
