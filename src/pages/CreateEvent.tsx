@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,7 +185,7 @@ export default function CreateEvent() {
                   {/* Start Date & Time */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <CalendarIconLucide className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-muted-foreground">Date de début</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ export default function CreateEvent() {
                   {/* End Date & Time */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                      <CalendarCheck className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium text-muted-foreground">Date de fin</span>
                     </div>
                     <div className="flex items-center gap-2">
