@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      event_cause_themes: {
+        Row: {
+          cause_theme_id: string
+          created_at: string | null
+          event_id: string
+          id: string
+        }
+        Insert: {
+          cause_theme_id: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+        }
+        Update: {
+          cause_theme_id?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_cause_themes_cause_theme_id_fkey"
+            columns: ["cause_theme_id"]
+            isOneToOne: false
+            referencedRelation: "cause_themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_cause_themes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           capacity: number | null
