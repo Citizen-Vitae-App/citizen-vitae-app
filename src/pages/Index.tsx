@@ -103,25 +103,29 @@ const Index = () => {
 
             {/* Search Bar */}
             <div className="flex-1 max-w-4xl mx-8 flex items-center gap-4">
-              {/* Search Input */}
-              <div className="flex-1 bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow">
-                <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <Input
-                  type="search"
-                  placeholder="Autour de Paris"
-                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
-                />
+              {/* Search + Date Combined */}
+              <div className="flex-1 border border-border rounded-2xl px-6 py-3 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow bg-background/50 backdrop-blur-sm">
+                <div className="flex items-center gap-3 flex-1">
+                  <Search className="w-5 h-5 text-foreground flex-shrink-0" />
+                  <Input
+                    type="search"
+                    placeholder="Autour de Paris"
+                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-foreground/60 font-medium"
+                  />
+                </div>
+                
+                {/* Vertical Separator */}
+                <div className="h-8 w-px bg-border"></div>
+                
+                <button className="flex items-center gap-3 whitespace-nowrap hover:opacity-70 transition-opacity">
+                  <Calendar className="w-5 h-5 text-foreground" />
+                  <span className="text-foreground font-medium">Quand ?</span>
+                </button>
               </div>
 
-              {/* Date Selector */}
-              <button className="bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow whitespace-nowrap">
-                <Calendar className="w-5 h-5 text-muted-foreground" />
-                <span className="text-foreground font-medium">Quand ?</span>
-              </button>
-
               {/* Filters Button */}
-              <button className="bg-card border border-border rounded-xl shadow-sm px-6 py-3 flex items-center gap-3 hover:shadow-md transition-shadow whitespace-nowrap">
-                <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+              <button className="border border-border rounded-2xl px-6 py-3 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70">
+                <SlidersHorizontal className="w-5 h-5 text-foreground" />
                 <span className="text-foreground font-medium">Filtres</span>
               </button>
             </div>
