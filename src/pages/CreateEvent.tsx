@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -182,11 +183,14 @@ export default function CreateEvent() {
                 {/* Date & Time Block */}
                 <div className="bg-black/5 rounded-lg p-6 space-y-4">
                   {/* Start Date & Time */}
-                  <div className="grid grid-cols-[80px_1fr_100px] gap-4 items-center">
+                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-primary" />
                       <span className="text-sm font-medium text-muted-foreground">Début</span>
                     </div>
+                    <div />
+                  </div>
+                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <FormField
                       control={form.control}
                       name="startDate"
@@ -198,11 +202,11 @@ export default function CreateEvent() {
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal bg-background",
+                                    "w-full justify-start text-left font-normal bg-white/10 border-0",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  {field.value ? format(field.value, "PPP") : "Date"}
+                                  {field.value ? format(field.value, "PPP", { locale: fr }) : "Date"}
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
@@ -226,7 +230,7 @@ export default function CreateEvent() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="time" className="bg-background" {...field} />
+                            <Input type="time" className="bg-white/10 border-0" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -238,11 +242,14 @@ export default function CreateEvent() {
                   <div className="border-l-2 border-dashed border-muted-foreground/30 h-4 ml-1" />
 
                   {/* End Date & Time */}
-                  <div className="grid grid-cols-[80px_1fr_100px] gap-4 items-center">
+                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
                       <span className="text-sm font-medium text-muted-foreground">Fin</span>
                     </div>
+                    <div />
+                  </div>
+                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <FormField
                       control={form.control}
                       name="endDate"
@@ -254,11 +261,11 @@ export default function CreateEvent() {
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal bg-background",
+                                    "w-full justify-start text-left font-normal bg-white/10 border-0",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  {field.value ? format(field.value, "PPP") : "Date"}
+                                  {field.value ? format(field.value, "PPP", { locale: fr }) : "Date"}
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
@@ -282,7 +289,7 @@ export default function CreateEvent() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="time" className="bg-background" {...field} />
+                            <Input type="time" className="bg-white/10 border-0" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
