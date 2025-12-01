@@ -341,7 +341,7 @@ export default function CreateEvent() {
                 {/* Event Options */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Options de l'événement</h3>
-                  <div className="bg-black/[0.03] rounded-lg px-6 py-4 space-y-4">
+                  <div className="bg-black/[0.03] rounded-lg px-4 py-4 space-y-2">
 
                   {/* Capacity */}
                   <FormField
