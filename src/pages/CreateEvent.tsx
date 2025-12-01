@@ -202,7 +202,7 @@ export default function CreateEvent() {
                   {/* Start Date & Time */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CalendarIconLucide className="h-4 w-4 text-foreground" />
+                      <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-normal text-foreground">Date de début</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -257,7 +257,7 @@ export default function CreateEvent() {
                   {/* End Date & Time */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CalendarCheck className="h-4 w-4 text-foreground" />
+                      <CalendarCheck className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-normal text-foreground">Date de fin</span>
                     </div>
                     <div className="flex items-center gap-2">
