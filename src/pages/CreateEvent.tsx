@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,18 +88,15 @@ export default function CreateEvent() {
       <main className="container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-12">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-8">
               {/* Left side - Cover Image */}
               <div>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
                   {coverImage ? (
                     <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Télécharger une image</p>
-                      </div>
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Upload className="h-16 w-16 text-muted-foreground/40" />
                     </div>
                   )}
                   <input
@@ -117,9 +114,10 @@ export default function CreateEvent() {
                 <div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
+                      <Button variant="ghost" className="gap-2 bg-black/10 hover:bg-black/15 border-0">
                         {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                         {isPublic ? 'Public' : 'Privé'}
+                        <ChevronDown className="h-4 w-4 ml-1" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-80">
