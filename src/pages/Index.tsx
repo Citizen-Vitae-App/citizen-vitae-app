@@ -110,7 +110,7 @@ const Index = () => {
                   <Input
                     type="search"
                     placeholder="Autour de Paris"
-                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-foreground/60 font-medium"
+                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-foreground font-medium"
                   />
                 </div>
                 
@@ -119,7 +119,7 @@ const Index = () => {
                 
                 <button className="flex items-center gap-3 whitespace-nowrap hover:opacity-70 transition-opacity">
                   <Calendar className="w-5 h-5 text-foreground" />
-                  <span className="text-foreground font-medium">Quand ?</span>
+                  <span className="text-foreground text-sm">Quand ?</span>
                 </button>
               </div>
 
