@@ -306,7 +306,7 @@ export default function CreateEvent() {
                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               placeholder="Rechercher une adresse ou un lieu"
-                              className="pl-10 py-3 bg-black/[0.03] hover:bg-black/10 border-0"
+                              className="pl-10 py-3 bg-black/[0.03] hover:bg-black/[0.05] border-0"
                               {...field}
                             />
                           </div>
@@ -328,7 +328,7 @@ export default function CreateEvent() {
                         <FormControl>
                           <Textarea
                             placeholder="Ajouter une description"
-                            className="min-h-[120px] bg-black/[0.03] hover:bg-black/10 border-0 px-4 pt-3"
+                            className="min-h-[120px] bg-black/[0.03] hover:bg-black/[0.05] border-0 px-4 pt-3"
                             {...field}
                           />
                         </FormControl>
