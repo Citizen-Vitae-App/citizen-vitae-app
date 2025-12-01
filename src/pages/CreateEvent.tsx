@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { CauseThemeTag } from '@/components/CauseThemeTag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,6 +49,8 @@ export default function CreateEvent() {
   const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
   const [tempCapacity, setTempCapacity] = useState('');
   const [hasWaitlist, setHasWaitlist] = useState(false);
+  const [causeThemes, setCauseThemes] = useState<Array<{ id: string; name: string; icon: string; color: string }>>([]);
+  const [selectedCauseThemes, setSelectedCauseThemes] = useState<string[]>([]);
 
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -78,6 +81,21 @@ export default function CreateEvent() {
       reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    const fetchCauseThemes = async () => {
+      const { data, error } = await supabase
+        .from('cause_themes')
+        .select('id, name, icon, color')
+        .order('name');
+
+      if (!error && data) {
+        setCauseThemes(data);
+      }
+    };
+
+    fetchCauseThemes();
+  }, []);
 
   const handleSetCapacity = () => {
     if (tempCapacity) {
@@ -150,7 +168,7 @@ export default function CreateEvent() {
       endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
 
       // Insert event
-      const { error: insertError } = await supabase
+      const { data: eventData, error: insertError } = await supabase
         .from('events')
         .insert({
           organization_id: memberData.organization_id,
@@ -164,12 +182,31 @@ export default function CreateEvent() {
           require_approval: data.requireApproval,
           is_public: isPublic,
           cover_image_url: uploadedImageUrl,
-        });
+        })
+        .select()
+        .single();
 
-      if (insertError) {
+      if (insertError || !eventData) {
         console.error('Error creating event:', insertError);
         toast.error('Erreur lors de la création de l\'événement');
         return;
+      }
+
+      // Insert event cause themes
+      if (selectedCauseThemes.length > 0) {
+        const causeThemeInserts = selectedCauseThemes.map(causeThemeId => ({
+          event_id: eventData.id,
+          cause_theme_id: causeThemeId,
+        }));
+
+        const { error: causeThemeError } = await supabase
+          .from('event_cause_themes')
+          .insert(causeThemeInserts);
+
+        if (causeThemeError) {
+          console.error('Error adding cause themes:', causeThemeError);
+          // Ne pas bloquer la création si les causes échouent
+        }
       }
 
       toast.success('Événement créé avec succès !');
@@ -442,6 +479,29 @@ export default function CreateEvent() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Cause Themes */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Catégorie</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {causeThemes.map((theme) => (
+                      <CauseThemeTag
+                        key={theme.id}
+                        name={theme.name}
+                        icon={theme.icon}
+                        color={theme.color}
+                        selected={selectedCauseThemes.includes(theme.id)}
+                        onClick={() => {
+                          setSelectedCauseThemes(prev => 
+                            prev.includes(theme.id)
+                              ? prev.filter(id => id !== theme.id)
+                              : [...prev, theme.id]
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 {/* Event Options */}
