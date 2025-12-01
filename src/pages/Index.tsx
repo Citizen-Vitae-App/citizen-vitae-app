@@ -169,7 +169,7 @@ const Index = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0">
-                      <div className="flex items-center gap-3 p-4 pb-4">
+                      <div className="flex items-center gap-3 px-4 py-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground">
@@ -187,15 +187,15 @@ const Index = () => {
                       </div>
                       <DropdownMenuSeparator />
                       <div className="py-2 px-2 space-y-1">
-                        <DropdownMenuItem className="cursor-pointer px-3 py-3">
+                        <DropdownMenuItem className="cursor-pointer px-3 py-3 text-base">
                           <User className="mr-3 h-4 w-4" />
                           <span>Voir le profil</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer px-3 py-3">
+                        <DropdownMenuItem className="cursor-pointer px-3 py-3 text-base">
                           <Settings className="mr-3 h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={signOut} className="cursor-pointer px-3 py-3">
+                        <DropdownMenuItem onClick={signOut} className="cursor-pointer px-3 py-3 text-base">
                           <LogOut className="mr-3 h-4 w-4" />
                           <span>Se déconnecter</span>
                         </DropdownMenuItem>
