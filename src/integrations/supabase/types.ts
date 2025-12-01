@@ -74,6 +74,54 @@ export type Database = {
           },
         ]
       }
+      event_registrations: {
+        Row: {
+          approved_at: string | null
+          attended_at: string | null
+          created_at: string
+          event_id: string
+          id: string
+          registered_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          attended_at?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          registered_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          attended_at?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          registered_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           capacity: number | null
@@ -212,6 +260,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           date_of_birth: string | null
+          email: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -221,6 +270,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -230,6 +280,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
