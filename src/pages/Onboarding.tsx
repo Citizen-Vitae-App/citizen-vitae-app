@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CauseThemeTag } from '@/components/CauseThemeTag';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 interface CauseTheme {
   id: string;
@@ -22,10 +20,30 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [birthDate, setBirthDate] = useState<Date>();
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
   const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+  const months = [
+    { value: '01', label: 'Janvier' },
+    { value: '02', label: 'Février' },
+    { value: '03', label: 'Mars' },
+    { value: '04', label: 'Avril' },
+    { value: '05', label: 'Mai' },
+    { value: '06', label: 'Juin' },
+    { value: '07', label: 'Juillet' },
+    { value: '08', label: 'Août' },
+    { value: '09', label: 'Septembre' },
+    { value: '10', label: 'Octobre' },
+    { value: '11', label: 'Novembre' },
+    { value: '12', label: 'Décembre' },
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
   
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -72,15 +90,16 @@ export default function Onboarding() {
   };
 
   const handleStep2 = async () => {
-    if (!birthDate) {
-      toast.error('Veuillez sélectionner votre date de naissance');
+    if (!day || !month || !year) {
+      toast.error('Veuillez sélectionner votre date de naissance complète');
       return;
     }
 
     setIsLoading(true);
+    const birthDate = `${year}-${month}-${day.padStart(2, '0')}`;
     const { error } = await supabase
       .from('profiles')
-      .update({ date_of_birth: format(birthDate, 'yyyy-MM-dd') })
+      .update({ date_of_birth: birthDate })
       .eq('id', user?.id);
 
     if (error) {
@@ -216,16 +235,54 @@ export default function Onboarding() {
               <p className="text-muted-foreground">Quand êtes-vous né(e) ?</p>
             </div>
 
-            <div className="flex justify-center">
-              <Calendar
-                mode="single"
-                selected={birthDate}
-                onSelect={setBirthDate}
-                locale={fr}
-                disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                initialFocus
-                className="rounded-md border"
-              />
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Jour</Label>
+                <Select value={day} onValueChange={setDay}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="JJ" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {days.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mois</Label>
+                <Select value={month} onValueChange={setMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Année</Label>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="AAAA" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((y) => (
+                      <SelectItem key={y} value={y}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex gap-4">
