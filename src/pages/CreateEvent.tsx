@@ -126,6 +126,7 @@ export default function CreateEvent() {
         .single();
 
       if (memberError || !memberData) {
+        console.error('Error fetching organization:', memberError);
         toast.error('Organisation non trouvée');
         return;
       }
