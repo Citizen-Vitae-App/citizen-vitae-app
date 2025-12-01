@@ -43,6 +43,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [isPublic, setIsPublic] = useState(true);
   const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
   const [tempCapacity, setTempCapacity] = useState('');
@@ -69,6 +70,7 @@ export default function CreateEvent() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setCoverImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setCoverImage(reader.result as string);
@@ -110,6 +112,34 @@ export default function CreateEvent() {
         return;
       }
 
+      let uploadedImageUrl = null;
+
+      // Upload cover image if provided
+      if (coverImageFile) {
+        const fileExt = coverImageFile.name.split('.').pop();
+        const fileName = `${memberData.organization_id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('event-covers')
+          .upload(fileName, coverImageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          toast.error("Erreur lors de l'upload de l'image");
+          console.error(uploadError);
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-covers')
+          .getPublicUrl(fileName);
+        
+        uploadedImageUrl = publicUrl;
+      }
+
       // Combine date and time
       const startDateTime = new Date(data.startDate);
       const [startHours, startMinutes] = data.startTime.split(':');
@@ -133,7 +163,7 @@ export default function CreateEvent() {
           has_waitlist: hasWaitlist,
           require_approval: data.requireApproval,
           is_public: isPublic,
-          cover_image_url: coverImage,
+          cover_image_url: uploadedImageUrl,
         });
 
       if (insertError) {
