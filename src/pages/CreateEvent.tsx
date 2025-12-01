@@ -318,22 +318,25 @@ export default function CreateEvent() {
                 </div>
 
                 {/* Description */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ajouter une description"
-                          className="min-h-[120px] bg-muted border-0"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Description</h3>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ajouter une description"
+                            className="min-h-[120px] bg-black/5 hover:bg-black/10 border-0"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Event Options */}
                 <div className="space-y-4 pt-4 border-t border-border">
