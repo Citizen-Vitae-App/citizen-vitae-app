@@ -27,6 +27,20 @@ export default function Onboarding() {
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Thèmes par défaut au cas où la base ne renvoie rien
+  const defaultThemes: CauseTheme[] = [
+    { name: 'Environnement', icon: 'Leaf', color: '#10b981', id: 'env' },
+    { name: 'Éducation', icon: 'GraduationCap', color: '#3b82f6', id: 'edu' },
+    { name: 'Solidarité', icon: 'Heart', color: '#ec4899', id: 'solid' },
+    { name: 'Santé', icon: 'HeartPulse', color: '#ef4444', id: 'health' },
+    { name: 'Culture', icon: 'Palette', color: '#8b5cf6', id: 'culture' },
+    { name: 'Sport', icon: 'Dumbbell', color: '#f59e0b', id: 'sport' },
+    { name: 'Animaux', icon: 'PawPrint', color: '#84cc16', id: 'animals' },
+    { name: 'Insertion professionnelle', icon: 'Briefcase', color: '#06b6d4', id: 'work' },
+    { name: 'Logement', icon: 'Home', color: '#f97316', id: 'housing' },
+    { name: 'Égalité & diversité', icon: 'Users', color: '#a855f7', id: 'equality' },
+  ];
+
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
     { value: '01', label: 'Janvier' },
@@ -59,12 +73,24 @@ export default function Onboarding() {
   }, []);
 
   const fetchCauseThemes = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('cause_themes')
       .select('*')
       .order('name');
     
-    if (data) setCauseThemes(data);
+    if (error) {
+      console.error('Erreur chargement thèmes', error);
+      toast.error("Impossible de charger les thèmes, affichage d'une liste par défaut");
+      setCauseThemes(defaultThemes);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setCauseThemes(defaultThemes);
+      return;
+    }
+
+    setCauseThemes(data as CauseTheme[]);
   };
 
   const handleStep1 = async () => {
