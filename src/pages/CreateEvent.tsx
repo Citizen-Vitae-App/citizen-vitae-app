@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DropdownMenu,
   DropdownMenuContent, 
@@ -89,10 +90,64 @@ export default function CreateEvent() {
     setIsCapacityDialogOpen(false);
   };
 
-  const onSubmit = (data: EventFormData) => {
-    console.log('Event data:', data);
-    toast.success('Événement créé avec succès !');
-    navigate('/organization/dashboard');
+  const onSubmit = async (data: EventFormData) => {
+    try {
+      // Get user's organization_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté');
+        return;
+      }
+
+      const { data: memberData, error: memberError } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberError || !memberData) {
+        toast.error('Organisation non trouvée');
+        return;
+      }
+
+      // Combine date and time
+      const startDateTime = new Date(data.startDate);
+      const [startHours, startMinutes] = data.startTime.split(':');
+      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+
+      const endDateTime = new Date(data.endDate);
+      const [endHours, endMinutes] = data.endTime.split(':');
+      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+
+      // Insert event
+      const { error: insertError } = await supabase
+        .from('events')
+        .insert({
+          organization_id: memberData.organization_id,
+          name: data.name,
+          start_date: startDateTime.toISOString(),
+          end_date: endDateTime.toISOString(),
+          location: data.location,
+          description: data.description || null,
+          capacity: data.capacity ? parseInt(data.capacity) : null,
+          has_waitlist: hasWaitlist,
+          require_approval: data.requireApproval,
+          is_public: isPublic,
+          cover_image_url: coverImage,
+        });
+
+      if (insertError) {
+        console.error('Error creating event:', insertError);
+        toast.error('Erreur lors de la création de l\'événement');
+        return;
+      }
+
+      toast.success('Événement créé avec succès !');
+      navigate('/organization/dashboard');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Une erreur est survenue');
+    }
   };
 
   return (
