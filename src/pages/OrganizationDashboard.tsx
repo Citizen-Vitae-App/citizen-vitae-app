@@ -11,7 +11,7 @@ export default function OrganizationDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
       
-      <main className="container mx-auto px-4 pt-24">
+      <main className="container mx-auto px-4 pt-32">
         <div className="max-w-5xl mx-auto">
           {activeTab === 'events' && <EventsTab />}
           {activeTab === 'people' && <PeopleTab />}
