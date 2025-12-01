@@ -23,7 +23,7 @@ const EventCard = ({ title, shortTitle, organization, date, location, image, isN
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Heart className="w-8 h-8 text-white fill-black/20 stroke-2" />
+          <Heart className="w-6 h-6 text-white fill-black/20 stroke-2" />
         </div>
         <div className="absolute bottom-6 left-6">
           <div className="text-white font-extrabold text-2xl uppercase leading-tight">
