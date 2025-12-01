@@ -170,17 +170,17 @@ const Index = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0">
                       <div className="flex items-center gap-3 p-4 pb-3">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-10 w-10">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground">
                             {getInitials()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm">
-                            {profile?.first_name} {profile?.last_name}
+                          <span className="font-bold text-base">
+                            {profile?.first_name} {profile?.last_name?.toLowerCase()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-sm text-muted-foreground">
                             {user.email}
                           </span>
                         </div>
