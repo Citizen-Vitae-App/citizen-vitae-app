@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   DropdownMenu,
   DropdownMenuContent, 
@@ -42,6 +43,9 @@ export default function CreateEvent() {
   const navigate = useNavigate();
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
+  const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
+  const [tempCapacity, setTempCapacity] = useState('');
+  const [hasWaitlist, setHasWaitlist] = useState(false);
 
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -70,6 +74,19 @@ export default function CreateEvent() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSetCapacity = () => {
+    if (tempCapacity) {
+      form.setValue('capacity', tempCapacity);
+    }
+    setIsCapacityDialogOpen(false);
+  };
+
+  const handleRemoveCapacity = () => {
+    form.setValue('capacity', '');
+    setTempCapacity('');
+    setIsCapacityDialogOpen(false);
   };
 
   const onSubmit = (data: EventFormData) => {
@@ -354,14 +371,19 @@ export default function CreateEvent() {
                             <Users className="h-4 w-4 text-muted-foreground" />
                             <FormLabel className="text-sm font-normal">Capacité</FormLabel>
                           </div>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Illimité"
-                              className="w-32 text-right bg-transparent border-0"
-                              {...field}
-                            />
-                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempCapacity(field.value || '');
+                              setIsCapacityDialogOpen(true);
+                            }}
+                            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <span className="text-sm">
+                              {field.value || 'Illimité'}
+                            </span>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -402,6 +424,62 @@ export default function CreateEvent() {
           </Form>
         </div>
       </main>
+
+      {/* Capacity Dialog */}
+      <Dialog open={isCapacityDialogOpen} onOpenChange={setIsCapacityDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Users className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+            <DialogTitle className="text-2xl">Capacité maximale</DialogTitle>
+            <p className="text-sm text-muted-foreground pt-2">
+              Fermeture automatique des inscriptions lorsque la capacité est atteinte. Seuls les invités approuvés comptent pour la limite.
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Capacité</label>
+              <Input
+                type="number"
+                value={tempCapacity}
+                onChange={(e) => setTempCapacity(e.target.value)}
+                placeholder="50"
+                className="text-lg"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Liste d'attente en cas de surcharge</label>
+              <Switch
+                checked={hasWaitlist}
+                onCheckedChange={setHasWaitlist}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSetCapacity}
+              className="flex-1"
+              size="lg"
+            >
+              Définir la limite
+            </Button>
+            <Button
+              onClick={handleRemoveCapacity}
+              variant="outline"
+              className="flex-1"
+              size="lg"
+            >
+              Retirer la limite
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
