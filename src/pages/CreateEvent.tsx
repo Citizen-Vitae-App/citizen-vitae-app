@@ -99,10 +99,11 @@ export default function CreateEvent() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
-                          placeholder="Event Name"
-                          className="text-[52px] leading-tight font-semibold border-0 px-0 focus-visible:ring-0 placeholder:text-muted-foreground/30 h-auto py-6"
+                        <input
                           {...field}
+                          placeholder="Event Name"
+                          className="w-full bg-transparent border-0 outline-none text-[64px] leading-none font-semibold placeholder:text-muted-foreground/25"
+                          aria-label="Nom de l'événement"
                         />
                       </FormControl>
                       <FormMessage />
