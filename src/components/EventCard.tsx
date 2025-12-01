@@ -45,7 +45,12 @@ const EventCard = ({ title, shortTitle, organization, date, location, image, isN
         </div>
         <h4 className="text-lg font-bold text-foreground">{title}</h4>
         <p className="text-sm text-muted-foreground">{date}</p>
-        <p className="text-sm text-muted-foreground">Organisé par {organization}</p>
+        <p className="text-sm text-muted-foreground">
+          Organisé par{" "}
+          <button className="text-foreground font-semibold underline hover:opacity-80 transition-opacity">
+            {organization}
+          </button>
+        </p>
       </div>
     </div>
   );
