@@ -66,7 +66,7 @@ export default function CreateEvent() {
       <main className="container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-12">
               {/* Left side - Cover Image */}
               <div>
                 <label className="block text-sm font-medium mb-2">Image de couverture</label>
@@ -100,8 +100,8 @@ export default function CreateEvent() {
                     <FormItem>
                       <FormControl>
                         <Input
-                          placeholder="Nom de l'événement"
-                          className="text-2xl font-semibold border-0 px-0 focus-visible:ring-0 placeholder:text-muted-foreground"
+                          placeholder="Event Name"
+                          className="text-5xl font-bold border-0 px-0 focus-visible:ring-0 placeholder:text-muted-foreground placeholder:opacity-40 h-auto py-2"
                           {...field}
                         />
                       </FormControl>
@@ -110,11 +110,14 @@ export default function CreateEvent() {
                   )}
                 />
 
-                {/* Start Date & Time */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-4">
-                    <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground w-16">Début</span>
+                {/* Date & Time Block */}
+                <div className="bg-muted rounded-lg p-6 space-y-4">
+                  {/* Start Date & Time */}
+                  <div className="grid grid-cols-[80px_1fr_100px] gap-4 items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">Début</span>
+                    </div>
                     <FormField
                       control={form.control}
                       name="startDate"
@@ -126,11 +129,10 @@ export default function CreateEvent() {
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal bg-background",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
                                   {field.value ? format(field.value, "PPP") : "Date"}
                                 </Button>
                               </FormControl>
@@ -153,22 +155,25 @@ export default function CreateEvent() {
                       control={form.control}
                       name="startTime"
                       render={({ field }) => (
-                        <FormItem className="w-24">
+                        <FormItem>
                           <FormControl>
-                            <Input type="time" {...field} />
+                            <Input type="time" className="bg-background" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                </div>
 
-                {/* End Date & Time */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-4">
-                    <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground w-16">Fin</span>
+                  {/* Divider line */}
+                  <div className="border-l-2 border-dashed border-muted-foreground/30 h-4 ml-1" />
+
+                  {/* End Date & Time */}
+                  <div className="grid grid-cols-[80px_1fr_100px] gap-4 items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                      <span className="text-sm font-medium text-muted-foreground">Fin</span>
+                    </div>
                     <FormField
                       control={form.control}
                       name="endDate"
@@ -180,11 +185,10 @@ export default function CreateEvent() {
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal bg-background",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
                                   {field.value ? format(field.value, "PPP") : "Date"}
                                 </Button>
                               </FormControl>
@@ -207,9 +211,9 @@ export default function CreateEvent() {
                       control={form.control}
                       name="endTime"
                       render={({ field }) => (
-                        <FormItem className="w-24">
+                        <FormItem>
                           <FormControl>
-                            <Input type="time" {...field} />
+                            <Input type="time" className="bg-background" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
