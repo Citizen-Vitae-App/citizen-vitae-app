@@ -177,7 +177,7 @@ const Index = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-bold text-base text-foreground">
+                          <span className="font-semibold text-base text-foreground">
                             {profile?.first_name} {profile?.last_name?.toLowerCase()}
                           </span>
                           <span className="text-sm text-muted-foreground">
@@ -186,17 +186,17 @@ const Index = () => {
                         </div>
                       </div>
                       <DropdownMenuSeparator />
-                      <div className="py-2">
-                        <DropdownMenuItem className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
+                      <div className="py-2 px-2 space-y-1">
+                        <DropdownMenuItem className="cursor-pointer px-3 py-3">
+                          <User className="mr-3 h-4 w-4" />
                           <span>Voir le profil</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Settings className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem className="cursor-pointer px-3 py-3">
+                          <Settings className="mr-3 h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                          <LogOut className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem onClick={signOut} className="cursor-pointer px-3 py-3">
+                          <LogOut className="mr-3 h-4 w-4" />
                           <span>Se déconnecter</span>
                         </DropdownMenuItem>
                       </div>
