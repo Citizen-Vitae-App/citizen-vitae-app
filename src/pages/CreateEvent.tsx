@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -205,7 +205,7 @@ export default function CreateEvent() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
               <div>
-                <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
+                <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm group">
                   <img 
                     src={coverImage || defaultEventCover} 
                     alt="Cover" 
@@ -217,6 +217,10 @@ export default function CreateEvent() {
                     onChange={handleImageUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
+                  {/* Upload badge indicator */}
+                  <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-primary border-2 border-white flex items-center justify-center transition-colors group-hover:bg-primary/80 pointer-events-none">
+                    <ImageIcon className="w-6 h-6 text-primary-foreground" />
+                  </div>
                 </div>
               </div>
 
