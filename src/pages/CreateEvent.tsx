@@ -183,19 +183,16 @@ export default function CreateEvent() {
                 {/* Date & Time Block */}
                 <div className="bg-black/5 rounded-lg p-6 space-y-4">
                   {/* Start Date & Time */}
-                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
+                  <div className="grid grid-cols-[80px_200px_80px] gap-1 items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-primary" />
                       <span className="text-sm font-medium text-muted-foreground">Début</span>
                     </div>
-                    <div />
-                  </div>
-                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <FormField
                       control={form.control}
                       name="startDate"
                       render={({ field }) => (
-                        <FormItem className="flex-1">
+                        <FormItem>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -242,19 +239,16 @@ export default function CreateEvent() {
                   <div className="border-l-2 border-dashed border-muted-foreground/30 h-4 ml-1" />
 
                   {/* End Date & Time */}
-                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
+                  <div className="grid grid-cols-[80px_200px_80px] gap-1 items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
                       <span className="text-sm font-medium text-muted-foreground">Fin</span>
                     </div>
-                    <div />
-                  </div>
-                  <div className="grid grid-cols-[200px_80px] gap-1 items-center">
                     <FormField
                       control={form.control}
                       name="endDate"
                       render={({ field }) => (
-                        <FormItem className="flex-1">
+                        <FormItem>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
