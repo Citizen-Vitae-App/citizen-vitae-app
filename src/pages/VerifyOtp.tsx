@@ -11,7 +11,7 @@ const VerifyOtp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { verifyOtp, signInWithOtp, getDefaultRoute } = useAuth();
+  const { verifyOtp, signInWithOtp, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
@@ -23,6 +23,11 @@ const VerifyOtp = () => {
     }
   }, [email, navigate]);
 
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -58,8 +63,7 @@ const VerifyOtp = () => {
     } else {
       console.log('OTP verification succeeded');
       toast.success('Connexion réussie');
-      const redirect = getDefaultRoute();
-      navigate(redirect, { replace: true });
+      // La redirection sera gérée par useAuth via onAuthStateChange
     }
   };
 
