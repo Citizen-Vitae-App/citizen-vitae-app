@@ -120,15 +120,15 @@ const VerifyOtp = () => {
               containerClassName="w-full"
             >
               <InputOTPGroup className="flex-1 gap-2">
-                <InputOTPSlot index={0} className="flex-1 h-11" />
-                <InputOTPSlot index={1} className="flex-1 h-11" />
-                <InputOTPSlot index={2} className="flex-1 h-11" />
+                <InputOTPSlot index={0} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={1} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={2} className="flex-1 h-14 text-lg" />
               </InputOTPGroup>
               <InputOTPSeparator />
               <InputOTPGroup className="flex-1 gap-2">
-                <InputOTPSlot index={3} className="flex-1 h-11" />
-                <InputOTPSlot index={4} className="flex-1 h-11" />
-                <InputOTPSlot index={5} className="flex-1 h-11" />
+                <InputOTPSlot index={3} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={4} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={5} className="flex-1 h-14 text-lg" />
               </InputOTPGroup>
             </InputOTP>
 
