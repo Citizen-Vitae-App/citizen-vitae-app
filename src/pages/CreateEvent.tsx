@@ -294,25 +294,28 @@ export default function CreateEvent() {
                 </div>
 
                 {/* Location */}
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-4">
-                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Adresse</h3>
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormControl>
-                          <Input
-                            placeholder="Ajouter un lieu ou un lien virtuel"
-                            className="border-0 bg-muted px-3 flex-1"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Rechercher une adresse ou un lieu"
+                              className="pl-10 bg-black/5 hover:bg-black/10 border-0"
+                              {...field}
+                            />
+                          </div>
                         </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Description */}
                 <FormField
