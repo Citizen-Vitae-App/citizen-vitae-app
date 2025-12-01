@@ -53,7 +53,7 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                 className={cn(
                   "px-8 py-2 text-sm font-medium transition-all rounded-full",
                   activeTab === tab.value
-                    ? "bg-foreground text-background"
+                    ? "bg-muted text-foreground border border-border"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
