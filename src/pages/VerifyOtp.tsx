@@ -11,7 +11,7 @@ const VerifyOtp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { verifyOtp, signInWithOtp, user } = useAuth();
+  const { verifyOtp, signInWithOtp, user, getDefaultRoute } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
@@ -25,9 +25,9 @@ const VerifyOtp = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate(getDefaultRoute());
     }
-  }, [user, navigate]);
+  }, [user, navigate, getDefaultRoute]);
 
   useEffect(() => {
     if (countdown > 0) {
