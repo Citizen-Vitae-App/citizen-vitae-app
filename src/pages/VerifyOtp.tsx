@@ -38,16 +38,16 @@ const VerifyOtp = () => {
     }
   }, [countdown]);
 
-  // Auto-submit when 4 digits are entered
+  // Auto-submit when 6 digits are entered
   useEffect(() => {
-    if (otp.length === 4 && !isLoading) {
+    if (otp.length === 6 && !isLoading) {
       handleVerify();
     }
   }, [otp]);
 
   const handleVerify = async () => {
-    if (otp.length !== 4) {
-      toast.error('Veuillez entrer le code à 4 chiffres');
+    if (otp.length !== 6) {
+      toast.error('Veuillez entrer le code à 6 chiffres');
       return;
     }
 
@@ -121,7 +121,7 @@ const VerifyOtp = () => {
           {/* OTP Input */}
           <div className="space-y-4 mb-6">
             <InputOTP
-              maxLength={4}
+              maxLength={6}
               value={otp}
               onChange={setOtp}
               disabled={isLoading}
@@ -130,11 +130,13 @@ const VerifyOtp = () => {
               <InputOTPGroup className="flex-1 gap-2">
                 <InputOTPSlot index={0} className="flex-1 h-14 text-lg" />
                 <InputOTPSlot index={1} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={2} className="flex-1 h-14 text-lg" />
               </InputOTPGroup>
               <InputOTPSeparator />
               <InputOTPGroup className="flex-1 gap-2">
-                <InputOTPSlot index={2} className="flex-1 h-14 text-lg" />
                 <InputOTPSlot index={3} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={4} className="flex-1 h-14 text-lg" />
+                <InputOTPSlot index={5} className="flex-1 h-14 text-lg" />
               </InputOTPGroup>
             </InputOTP>
 
@@ -142,7 +144,7 @@ const VerifyOtp = () => {
               className="w-full" 
               size="lg"
               onClick={handleVerify}
-              disabled={isLoading || otp.length !== 4}
+              disabled={isLoading || otp.length !== 6}
             >
               {isLoading ? 'Vérification...' : 'Vérifier'}
             </Button>
