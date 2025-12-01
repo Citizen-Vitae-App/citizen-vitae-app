@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { CauseThemeTag } from '@/components/CauseThemeTag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -484,24 +483,24 @@ export default function CreateEvent() {
                 {/* Cause Themes */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Catégorie</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <select
+                    value={selectedCauseThemes[0] || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setSelectedCauseThemes([e.target.value]);
+                      } else {
+                        setSelectedCauseThemes([]);
+                      }
+                    }}
+                    className="w-full bg-black/[0.03] hover:bg-black/[0.05] border-0 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Sélectionner une catégorie</option>
                     {causeThemes.map((theme) => (
-                      <CauseThemeTag
-                        key={theme.id}
-                        name={theme.name}
-                        icon={theme.icon}
-                        color={theme.color}
-                        selected={selectedCauseThemes.includes(theme.id)}
-                        onClick={() => {
-                          setSelectedCauseThemes(prev => 
-                            prev.includes(theme.id)
-                              ? prev.filter(id => id !== theme.id)
-                              : [...prev, theme.id]
-                          );
-                        }}
-                      />
+                      <option key={theme.id} value={theme.id}>
+                        {theme.name}
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
 
                 {/* Event Options */}
