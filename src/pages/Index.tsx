@@ -102,7 +102,7 @@ const Index = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="flex-1 max-w-4xl mx-8 flex items-center gap-4">
+            <div className="flex-1 max-w-2xl mx-8 flex items-center gap-4">
               {/* Search + Date Combined */}
               <div className="flex-1 border border-border rounded-2xl px-6 py-3 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow bg-background/50 backdrop-blur-sm">
                 <div className="flex items-center gap-3 flex-1">
