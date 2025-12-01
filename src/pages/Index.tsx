@@ -16,6 +16,9 @@ import {
 const Index = () => {
   const { user, profile, signOut } = useAuth();
 
+  console.log('Profile data:', profile);
+  console.log('User data:', user);
+
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
