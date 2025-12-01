@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck } from 'lucide-react';
+import { CalendarIcon, MapPin, Upload, Clock, Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -350,7 +350,10 @@ export default function CreateEvent() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-sm font-normal">Capacité</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <FormLabel className="text-sm font-normal">Capacité</FormLabel>
+                          </div>
                           <FormControl>
                             <Input
                               type="number"
@@ -372,7 +375,10 @@ export default function CreateEvent() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-sm font-normal">Approbation requise</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-muted-foreground" />
+                            <FormLabel className="text-sm font-normal">Approbation requise</FormLabel>
+                          </div>
                           <FormControl>
                             <Switch
                               checked={field.value}
