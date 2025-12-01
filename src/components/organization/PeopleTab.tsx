@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import emptyParticipantsImage from '@/assets/empty-participants.png';
 
 interface Participant {
   user_id: string;
@@ -122,12 +123,22 @@ export function PeopleTab() {
           ))}
         </div>
       ) : !filteredParticipants || filteredParticipants.length === 0 ? (
-        <div className="bg-muted rounded-lg p-12 text-center">
-          <p className="text-muted-foreground">
-            {searchQuery
-              ? 'Aucun participant trouvé'
-              : 'Aucun participant pour le moment'}
-          </p>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="max-w-md w-full">
+            <img 
+              src={emptyParticipantsImage} 
+              alt="Aucun participant" 
+              className="w-full h-auto rounded-lg mb-8"
+            />
+            <h3 className="text-xl font-semibold text-center mb-2">
+              {searchQuery ? 'Aucun résultat' : 'Votre audience vous attend'}
+            </h3>
+            <p className="text-muted-foreground text-center">
+              {searchQuery
+                ? 'Aucun participant ne correspond à votre recherche'
+                : 'Les participants à vos événements apparaîtront ici'}
+            </p>
+          </div>
         </div>
       ) : (
         <div className="border rounded-lg">
