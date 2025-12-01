@@ -10,9 +10,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { LogOut, User, Bell, Settings } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export const Navbar = () => {
+interface NavbarProps {
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   const { user, profile, signOut } = useAuth();
+  
+  const tabs = activeTab && onTabChange ? [
+    { value: 'events', label: 'Events' },
+    { value: 'people', label: 'People' },
+    { value: 'organization', label: 'Organization' }
+  ] : null;
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
@@ -30,6 +42,29 @@ export const Navbar = () => {
         >
           CitizenVitae
         </Link>
+        
+        {/* Tabs au centre pour les organisations */}
+        {tabs && (
+          <div className="flex items-center gap-1 border-b border-border">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => onTabChange(tab.value)}
+                className={cn(
+                  "px-6 py-3 text-sm font-medium transition-colors relative",
+                  activeTab === tab.value
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+                {activeTab === tab.value && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
         
         <div className="flex items-center gap-3">
           {user ? (
