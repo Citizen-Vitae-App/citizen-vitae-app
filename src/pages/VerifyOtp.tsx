@@ -2,7 +2,7 @@ import { KeyRound, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -112,22 +112,26 @@ const VerifyOtp = () => {
 
           {/* OTP Input */}
           <div className="space-y-4 mb-6">
-            <InputOTP
-              maxLength={6}
-              value={otp}
-              onChange={setOtp}
-              disabled={isLoading}
-              containerClassName="w-full"
-            >
-              <InputOTPGroup className="w-full gap-2">
-                <InputOTPSlot index={0} className="h-11 flex-1 text-lg" />
-                <InputOTPSlot index={1} className="h-11 flex-1 text-lg" />
-                <InputOTPSlot index={2} className="h-11 flex-1 text-lg" />
-                <InputOTPSlot index={3} className="h-11 flex-1 text-lg" />
-                <InputOTPSlot index={4} className="h-11 flex-1 text-lg" />
-                <InputOTPSlot index={5} className="h-11 flex-1 text-lg" />
-              </InputOTPGroup>
-            </InputOTP>
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={otp}
+                onChange={setOtp}
+                disabled={isLoading}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                </InputOTPGroup>
+                <InputOTPSeparator />
+                <InputOTPGroup>
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
 
             <Button 
               className="w-full" 
