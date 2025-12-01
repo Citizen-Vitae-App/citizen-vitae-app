@@ -100,7 +100,7 @@ export default function CreateEvent() {
       <main className="container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_600px] gap-8 justify-center">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
               <div>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm">
