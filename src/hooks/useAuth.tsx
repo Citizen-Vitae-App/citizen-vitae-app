@@ -114,6 +114,12 @@ export const useAuth = () => {
 
   const needsOnboarding = profile && !profile.onboarding_completed;
 
+  const getDefaultRoute = () => {
+    if (hasRole('super_admin')) return '/admin';
+    if (hasRole('organization')) return '/organization/dashboard';
+    return '/';
+  };
+
   return {
     user,
     session,
@@ -125,6 +131,7 @@ export const useAuth = () => {
     signInWithGoogle,
     signOut,
     hasRole,
-    needsOnboarding
+    needsOnboarding,
+    getDefaultRoute
   };
 };

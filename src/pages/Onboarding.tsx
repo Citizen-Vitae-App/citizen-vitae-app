@@ -172,8 +172,24 @@ export default function Onboarding() {
       return;
     }
 
+    // Récupérer les rôles de l'utilisateur pour la redirection
+    const { data: rolesData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user?.id);
+
+    const userRoles = rolesData?.map(r => r.role) || [];
+
     toast.success('Bienvenue sur CitizenVitae !');
-    navigate('/');
+    
+    // Redirection selon le rôle
+    if (userRoles.includes('super_admin')) {
+      navigate('/admin');
+    } else if (userRoles.includes('organization')) {
+      navigate('/organization/dashboard');
+    } else {
+      navigate('/');
+    }
   };
 
   const toggleTheme = (themeId: string) => {
