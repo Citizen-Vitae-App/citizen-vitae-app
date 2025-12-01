@@ -227,7 +227,7 @@ export default function CreateEvent() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="time" className="bg-white/10 border-0" {...field} />
+                            <Input type="time" className="bg-white/10 border-0 [&::-webkit-calendar-picker-indicator]:hidden" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -283,7 +283,7 @@ export default function CreateEvent() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="time" className="bg-white/10 border-0" {...field} />
+                            <Input type="time" className="bg-white/10 border-0 [&::-webkit-calendar-picker-indicator]:hidden" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
