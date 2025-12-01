@@ -92,7 +92,7 @@ export function EventsTab() {
           placeholder="Rechercher un événement..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 w-full"
+          className="pl-10 w-full bg-muted border-0"
         />
       </div>
 
