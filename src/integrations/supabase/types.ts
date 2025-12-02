@@ -132,7 +132,9 @@ export type Database = {
           has_waitlist: boolean | null
           id: string
           is_public: boolean | null
+          latitude: number | null
           location: string
+          longitude: number | null
           name: string
           organization_id: string
           require_approval: boolean | null
@@ -148,7 +150,9 @@ export type Database = {
           has_waitlist?: boolean | null
           id?: string
           is_public?: boolean | null
+          latitude?: number | null
           location: string
+          longitude?: number | null
           name: string
           organization_id: string
           require_approval?: boolean | null
@@ -164,7 +168,9 @@ export type Database = {
           has_waitlist?: boolean | null
           id?: string
           is_public?: boolean | null
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           name?: string
           organization_id?: string
           require_approval?: boolean | null
