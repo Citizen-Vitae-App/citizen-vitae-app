@@ -103,3 +103,53 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Google Places Autocomplete Styling */
+.pac-container {
+  background-color: hsl(0 0% 100%);
+  border: 1px solid hsl(30 15% 88%);
+  border-radius: 0.5rem;
+  box-shadow: none;
+  font-family: inherit;
+  margin-top: 4px;
+  z-index: 9999;
+}
+
+.pac-item {
+  padding: 10px 16px;
+  border-top: 1px solid hsl(30 15% 88%);
+  cursor: pointer;
+  font-size: 14px;
+  color: hsl(222.2 84% 4.9%);
+}
+
+.pac-item:first-child {
+  border-top: none;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background-color: hsl(30 15% 94%);
+}
+
+.pac-item-query {
+  font-size: 14px;
+  color: hsl(222.2 84% 4.9%);
+}
+
+.pac-matched {
+  font-weight: 600;
+}
+
+.pac-item-query + span {
+  color: hsl(215.4 16.3% 46.9%);
+  font-size: 13px;
+}
+
+.pac-icon {
+  display: none;
+}
+
+.pac-logo::after {
+  display: none;
+}
