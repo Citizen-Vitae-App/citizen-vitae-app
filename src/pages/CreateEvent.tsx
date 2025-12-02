@@ -26,6 +26,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
+import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -51,6 +52,7 @@ export default function CreateEvent() {
   const [hasWaitlist, setHasWaitlist] = useState(false);
   const [causeThemes, setCauseThemes] = useState<Array<{ id: string; name: string; icon: string; color: string }>>([]);
   const [selectedCauseThemes, setSelectedCauseThemes] = useState<string[]>([]);
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -183,6 +185,8 @@ export default function CreateEvent() {
           require_approval: data.requireApproval,
           is_public: isPublic,
           cover_image_url: uploadedImageUrl,
+          latitude: coordinates?.latitude || null,
+          longitude: coordinates?.longitude || null,
         })
         .select()
         .single();
@@ -446,12 +450,15 @@ export default function CreateEvent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
+                          <div className="bg-black/[0.03] hover:bg-black/[0.05] rounded-md">
+                            <GooglePlacesAutocomplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              onPlaceSelect={(place) => {
+                                field.onChange(place.address);
+                                setCoordinates({ latitude: place.latitude, longitude: place.longitude });
+                              }}
                               placeholder="Rechercher une adresse ou un lieu"
-                              className="pl-10 py-3 bg-black/[0.03] hover:bg-black/[0.05] focus:bg-black/[0.03] border-0"
-                              {...field}
                             />
                           </div>
                         </FormControl>
