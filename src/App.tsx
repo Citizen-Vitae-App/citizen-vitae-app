@@ -9,6 +9,7 @@ import VerifyOtp from "./pages/VerifyOtp";
 import Onboarding from "./pages/Onboarding";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
 import CreateEvent from "./pages/CreateEvent";
+import EditEvent from "./pages/EditEvent";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
           <Route path="/organization/dashboard" element={<ProtectedRoute requiredRole="organization"><OrganizationDashboard /></ProtectedRoute>} />
           <Route path="/organization/create-event" element={<ProtectedRoute requiredRole="organization"><CreateEvent /></ProtectedRoute>} />
+          <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="super_admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
