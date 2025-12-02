@@ -1,12 +1,15 @@
 import { Search, Calendar, SlidersHorizontal, Bell, User, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import logo from '@/assets/logo.png';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
 import { useAuth } from '@/hooks/useAuth';
+import { usePublicEvents } from '@/hooks/useEvents';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -16,11 +19,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Index = () => {
-  const { user, profile, signOut, needsOnboarding, isLoading, hasRole } = useAuth();
+  const { user, profile, signOut, needsOnboarding, isLoading: isAuthLoading, hasRole } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { events, isLoading: isEventsLoading } = usePublicEvents(searchQuery);
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isAuthLoading && user) {
       if (needsOnboarding) {
         navigate('/onboarding');
       } else if (hasRole('super_admin')) {
@@ -29,7 +34,7 @@ const Index = () => {
         navigate('/organization/dashboard');
       }
     }
-  }, [user, needsOnboarding, isLoading, hasRole, navigate]);
+  }, [user, needsOnboarding, isAuthLoading, hasRole, navigate]);
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
@@ -38,91 +43,14 @@ const Index = () => {
     return user?.email?.[0].toUpperCase() || 'U';
   };
 
-  const events = [
-    {
-      id: 1,
-      title: "Nettoyage de la plage des Dunes",
-      shortTitle: "Nettoyage Plage",
-      organization: "EcoAction France",
-      date: "15 janvier 2025, 9h00",
-      location: "Paris 3e",
-      image: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop",
-      isNew: true,
-    },
-    {
-      id: 2,
-      title: "Distribution alimentaire solidaire",
-      shortTitle: "Distribution Alimentaire",
-      organization: "Restos du Cœur",
-      date: "18 janvier 2025, 14h00",
-      location: "Lyon 3e",
-      image: "https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 3,
-      title: "Atelier permaculture urbaine",
-      shortTitle: "Atelier Permaculture",
-      organization: "Jardins Partagés",
-      date: "20 janvier 2025, 10h00",
-      location: "Bordeaux",
-      image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 4,
-      title: "Maraude solidaire nocturne",
-      shortTitle: "Maraude Solidaire",
-      organization: "Samu Social",
-      date: "22 janvier 2025, 20h00",
-      location: "Paris 10e",
-      image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&auto=format&fit=crop",
-      isNew: true,
-    },
-    {
-      id: 5,
-      title: "Plantation d'arbres en forêt",
-      shortTitle: "Plantation Arbres",
-      organization: "Reforestation Nationale",
-      date: "25 janvier 2025, 8h00",
-      location: "Fontainebleau",
-      image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 6,
-      title: "Collecte de sang - Don du cœur",
-      shortTitle: "Don Sang",
-      organization: "Croix-Rouge Française",
-      date: "28 janvier 2025, 9h00",
-      location: "Toulouse",
-      image: "https://images.unsplash.com/photo-1615461066159-fea0960485d5?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 7,
-      title: "Collecte de vêtements chauds",
-      shortTitle: "Collecte Vêtements",
-      organization: "Emmaüs Solidarité",
-      date: "1 février 2025, 10h00",
-      location: "Marseille",
-      image: "https://images.unsplash.com/photo-1445510861639-5651173bc5d5?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 8,
-      title: "Atelier cuisine pour seniors isolés",
-      shortTitle: "Atelier Cuisine",
-      organization: "Les Petits Frères des Pauvres",
-      date: "5 février 2025, 15h00",
-      location: "Lille",
-      image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&auto=format&fit=crop",
-    },
-    {
-      id: 9,
-      title: "Ramassage des déchets en forêt",
-      shortTitle: "Ramassage Déchets",
-      organization: "Green Team",
-      date: "8 février 2025, 9h30",
-      location: "Paris 12e",
-      image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&auto=format&fit=crop",
-    },
-  ];
+  const formatEventDate = (startDate: string) => {
+    return format(parseISO(startDate), "d MMMM yyyy 'à' HH'h'mm", { locale: fr });
+  };
+
+  const generateShortTitle = (name: string) => {
+    const words = name.split(' ').slice(0, 2);
+    return words.join(' ');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,8 +71,10 @@ const Index = () => {
                   <Search className="w-5 h-5 text-foreground flex-shrink-0" />
                   <Input
                     type="search"
-                    placeholder="Autour de Paris"
-                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-foreground font-medium"
+                    placeholder="Rechercher un événement..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground font-medium"
                   />
                 </div>
                 
@@ -232,11 +162,33 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-          {events.map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
-        </div>
+        {isEventsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center py-12">
+            <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement disponible</h3>
+            <p className="text-muted-foreground">
+              {searchQuery ? 'Aucun événement ne correspond à votre recherche' : 'Revenez bientôt pour découvrir de nouveaux événements'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+            {events.map((event) => (
+              <EventCard 
+                key={event.id}
+                title={event.name}
+                shortTitle={generateShortTitle(event.name)}
+                organization={event.organization_name || 'Organisation'}
+                date={formatEventDate(event.start_date)}
+                location={event.location}
+                image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
+              />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
