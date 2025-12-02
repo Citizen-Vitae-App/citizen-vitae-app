@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ChevronRight, Calendar } from 'lucide-react';
@@ -49,6 +49,7 @@ const getStatusBadge = (status: string) => {
 export function EventsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const { events, isLoading, error } = useOrganizationEvents(searchQuery);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -126,6 +127,7 @@ export function EventsTab() {
                   <TableRow 
                     key={event.id}
                     className="cursor-pointer hover:bg-muted/50 border-0"
+                    onClick={() => navigate(`/organization/events/${event.id}/edit`)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
