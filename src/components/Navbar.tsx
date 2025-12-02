@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import logo from '@/assets/logo.png';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -38,9 +39,9 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
       <div className="flex items-center justify-between">
         <Link 
           to="/" 
-          className="text-2xl font-bold text-foreground hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity"
         >
-          CitizenVitae
+          <img src={logo} alt="CitizenVitae" className="h-8" />
         </Link>
         
         {/* Tabs au centre pour les organisations */}
