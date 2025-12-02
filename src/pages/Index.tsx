@@ -1,6 +1,7 @@
 import { Search, Calendar, SlidersHorizontal, Bell, User, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import logo from '@/assets/logo.png';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
@@ -131,7 +132,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-foreground">CitizenVitae</h1>
+              <img src={logo} alt="CitizenVitae" className="h-8" />
             </div>
 
             {/* Search Bar */}
