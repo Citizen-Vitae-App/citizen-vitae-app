@@ -26,6 +26,7 @@ export default function Onboarding() {
   const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasGoogleData, setHasGoogleData] = useState(false);
 
   // Thèmes par défaut au cas où la base ne renvoie rien
   const defaultThemes: CauseTheme[] = [
@@ -65,6 +66,19 @@ export default function Onboarding() {
   useEffect(() => {
     if (profile?.onboarding_completed) {
       navigate('/');
+      return;
+    }
+    
+    // Pré-remplir les données si elles existent (Google OAuth)
+    if (profile) {
+      if (profile.first_name) setFirstName(profile.first_name);
+      if (profile.last_name) setLastName(profile.last_name);
+      
+      // Si prénom ET nom sont déjà remplis → sauter l'étape 1
+      if (profile.first_name && profile.last_name) {
+        setHasGoogleData(true);
+        setStep(2);
+      }
     }
   }, [profile, navigate]);
 
@@ -328,14 +342,16 @@ export default function Onboarding() {
             </div>
 
             <div className="flex gap-4">
-              <Button 
-                onClick={() => setStep(1)} 
-                variant="outline"
-                className="w-full" 
-                size="lg"
-              >
-                Retour
-              </Button>
+              {!hasGoogleData && (
+                <Button 
+                  onClick={() => setStep(1)} 
+                  variant="outline"
+                  className="w-full" 
+                  size="lg"
+                >
+                  Retour
+                </Button>
+              )}
               <Button 
                 onClick={handleStep2} 
                 className="w-full" 
