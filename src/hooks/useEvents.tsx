@@ -49,6 +49,8 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
         if (options.publicOnly) {
           query = query.eq('is_public', true);
+          // Filtrer uniquement les events "live" (non terminés)
+          query = query.gte('end_date', new Date().toISOString());
         }
 
         if (options.searchQuery && options.searchQuery.trim()) {
