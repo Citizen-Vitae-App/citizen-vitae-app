@@ -1,6 +1,8 @@
 import { Star, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface EventCardProps {
+  id?: string;
   title: string;
   shortTitle: string;
   organization: string;
@@ -10,11 +12,11 @@ interface EventCardProps {
   isNew?: boolean;
 }
 
-const EventCard = ({ title, shortTitle, organization, date, location, image, isNew = false }: EventCardProps) => {
+const EventCard = ({ id, title, shortTitle, organization, date, location, image, isNew = false }: EventCardProps) => {
   const titleWords = shortTitle.split(" ");
   
-  return (
-    <div className="group overflow-hidden cursor-pointer">
+  const CardContent = (
+    <>
       <div className="relative h-64 overflow-hidden rounded-lg">
         <img
           src={image}
@@ -47,11 +49,25 @@ const EventCard = ({ title, shortTitle, organization, date, location, image, isN
         <p className="text-sm text-muted-foreground">{date}</p>
         <p className="text-sm text-muted-foreground">
           Organisé par{" "}
-          <button className="text-foreground font-semibold underline hover:opacity-80 transition-opacity">
+          <span className="text-foreground font-semibold underline hover:opacity-80 transition-opacity">
             {organization}
-          </button>
+          </span>
         </p>
       </div>
+    </>
+  );
+
+  if (id) {
+    return (
+      <Link to={`/events/${id}`} className="group overflow-hidden cursor-pointer block">
+        {CardContent}
+      </Link>
+    );
+  }
+  
+  return (
+    <div className="group overflow-hidden cursor-pointer">
+      {CardContent}
     </div>
   );
 };
