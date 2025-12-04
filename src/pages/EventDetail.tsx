@@ -7,7 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import EventLocationMap from '@/components/EventLocationMap';
+import EventMap from '@/components/EventMap';
+import mapMarkerIcon from '@/assets/map-marker.svg';
 import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
 
@@ -208,10 +209,11 @@ const EventDetail = () => {
               <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
               <p className="text-muted-foreground mb-4">{event.location}</p>
               {event.latitude && event.longitude ? (
-                <EventLocationMap
-                  latitude={event.latitude}
-                  longitude={event.longitude}
-                  locationName={event.location}
+                <EventMap
+                  lat={event.latitude}
+                  lng={event.longitude}
+                  zoom={14}
+                  iconUrl={mapMarkerIcon}
                 />
               ) : (
                 <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
