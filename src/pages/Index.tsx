@@ -179,6 +179,7 @@ const Index = () => {
             {events.map((event) => (
               <EventCard 
                 key={event.id}
+                id={event.id}
                 title={event.name}
                 shortTitle={generateShortTitle(event.name)}
                 organization={event.organization_name || 'Organisation'}

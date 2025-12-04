@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
+import EventDetail from "./pages/EventDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -24,6 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/events/:eventId" element={<EventDetail />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
