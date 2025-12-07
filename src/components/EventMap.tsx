@@ -114,7 +114,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         this.div.style.cursor = 'pointer';
         this.div.style.width = '64px';
         this.div.style.height = '64px';
-        this.div.style.transform = 'translate(-50%, -100%)'; // Center horizontally, anchor at bottom
+        this.div.style.transform = 'translate(-50%, -50%)'; // Center both horizontally and vertically on the point
 
         const img = document.createElement('img');
         img.src = this.iconUrl;
@@ -159,7 +159,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
   if (error) {
     return (
-      <div className="h-[300px] w-full rounded-lg bg-muted flex items-center justify-center">
+      <div className="h-[450px] w-full rounded-lg bg-muted flex items-center justify-center">
         <p className="text-muted-foreground">Impossible de charger la carte</p>
       </div>
     );
@@ -167,13 +167,13 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
   if (!isLoaded) {
     return (
-      <div className="h-[300px] w-full rounded-lg bg-muted flex items-center justify-center">
+      <div className="h-[450px] w-full rounded-lg bg-muted flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  return <div ref={mapRef} className="h-[300px] w-full rounded-lg overflow-hidden" />;
+  return <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden" />;
 };
 
 export default EventMap;
