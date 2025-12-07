@@ -95,7 +95,7 @@ const EventDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <Skeleton className="w-full h-[400px] rounded-lg mb-8" />
+          <Skeleton className="w-full h-[400px] rounded-xl mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <Skeleton className="h-10 w-3/4" />
@@ -138,34 +138,36 @@ const EventDetail = () => {
         </div>
       </nav>
 
-      {/* Cover Image */}
-      <div className="relative w-full h-[400px] lg:h-[500px]">
-        <img
-          src={event.cover_image_url || defaultCover}
-          alt={event.name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
-        {/* Action buttons on cover */}
-        <div className="absolute bottom-6 right-6 flex items-center gap-3">
-          <button
-            onClick={() => setIsLiked(!isLiked)}
-            className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
-          >
-            <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
-          </button>
-          <button
-            onClick={handleShare}
-            className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
-          >
-            <Share2 className="h-5 w-5 text-foreground" />
-          </button>
+      {/* Cover Image - with container padding */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="relative w-full h-[400px] lg:h-[500px] rounded-xl overflow-hidden">
+          <img
+            src={event.cover_image_url || defaultCover}
+            alt={event.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          
+          {/* Action buttons on cover */}
+          <div className="absolute bottom-6 right-6 flex items-center gap-3">
+            <button
+              onClick={() => setIsLiked(!isLiked)}
+              className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
+            >
+              <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
+            >
+              <Share2 className="h-5 w-5 text-foreground" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      {/* Main Content - Title, Organizer, Description with Sidebar */}
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-8">
@@ -180,17 +182,17 @@ const EventDetail = () => {
               </div>
             </div>
 
-            {/* Organizer */}
-            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-              <Avatar className="h-14 w-14">
+            {/* Organizer - Simple aligned style */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12">
                 <AvatarImage src={event.organizations.logo_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Building2 className="h-6 w-6" />
+                  <Building2 className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm text-muted-foreground">Organisé par</p>
-                <p className="font-semibold text-foreground text-lg">{event.organizations.name}</p>
+                <p className="font-semibold text-foreground">{event.organizations.name}</p>
               </div>
             </div>
 
@@ -203,24 +205,6 @@ const EventDetail = () => {
                 </p>
               </div>
             )}
-
-            {/* Map */}
-            <div>
-              <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
-              <p className="text-muted-foreground mb-4">{event.location}</p>
-              {event.latitude && event.longitude ? (
-                <EventMap
-                  lat={event.latitude}
-                  lng={event.longitude}
-                  zoom={14}
-                  iconUrl={mapMarkerIcon}
-                />
-              ) : (
-                <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
-                  <p className="text-muted-foreground">Carte non disponible</p>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right Column - Sticky Booking Card */}
@@ -272,6 +256,24 @@ const EventDetail = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Map Section - Full Width */}
+      <div className="container mx-auto px-4 py-8">
+        <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
+        <p className="text-muted-foreground mb-4">{event.location}</p>
+        {event.latitude && event.longitude ? (
+          <EventMap
+            lat={event.latitude}
+            lng={event.longitude}
+            zoom={14}
+            iconUrl={mapMarkerIcon}
+          />
+        ) : (
+          <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
+            <p className="text-muted-foreground">Carte non disponible</p>
+          </div>
+        )}
       </div>
     </div>
   );
