@@ -124,8 +124,22 @@ const EventDetail = () => {
     );
   }
 
+  // Format date range for mobile (e.g., "9-11 dec.")
+  const formatMobileDateRange = () => {
+    const startDate = parseISO(event.start_date);
+    const endDate = parseISO(event.end_date);
+    const startDay = format(startDate, 'd', { locale: fr });
+    const endDay = format(endDate, 'd', { locale: fr });
+    const month = format(endDate, 'MMM', { locale: fr }).replace('.', '');
+    
+    if (startDay === endDay) {
+      return `${startDay} ${month}.`;
+    }
+    return `${startDay}-${endDay} ${month}.`;
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4">
@@ -207,8 +221,8 @@ const EventDetail = () => {
             )}
           </div>
 
-          {/* Right Column - Sticky Booking Card */}
-          <div className="lg:col-span-1">
+          {/* Right Column - Sticky Booking Card (hidden on mobile) */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24 bg-card border border-border rounded-lg p-6 space-y-6">
               {/* Date & Time */}
               <div className="space-y-4">
@@ -274,6 +288,28 @@ const EventDetail = () => {
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>
         )}
+      </div>
+
+      {/* Mobile Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 text-foreground">
+              <Calendar className="h-4 w-4" />
+              <span className="font-medium">{formatMobileDateRange()}</span>
+            </div>
+            <div className="flex items-center gap-2 text-foreground">
+              <Clock className="h-4 w-4" />
+              <span className="font-medium">{formatTime(event.start_date)}</span>
+            </div>
+          </div>
+          <Button
+            className="h-11 px-8 font-semibold"
+            style={{ backgroundColor: '#012573' }}
+          >
+            Je m'engage
+          </Button>
+        </div>
       </div>
     </div>
   );
