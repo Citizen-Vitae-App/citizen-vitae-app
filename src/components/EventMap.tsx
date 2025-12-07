@@ -88,7 +88,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: position,
         zoom: zoom,
-        gestureHandling: 'none',
+        gestureHandling: 'greedy',
         scrollwheel: false,
         disableDefaultUI: true,
         zoomControl: true,
