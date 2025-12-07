@@ -41,7 +41,7 @@ export const useEventRegistration = (eventId: string | undefined) => {
 
   // Register mutation
   const registerMutation = useMutation({
-    mutationFn: async ({ eventName, organizerId }: { eventName: string; organizerId: string }) => {
+    mutationFn: async ({ eventName, organizationId }: { eventName: string; organizationId: string }) => {
       if (!eventId || !user?.id) throw new Error('Missing event or user ID');
 
       // Insert registration
@@ -57,20 +57,33 @@ export const useEventRegistration = (eventId: string | undefined) => {
 
       if (regError) throw regError;
 
-      // Send notification to organizer via Edge Function
+      // Fetch organization admins to notify them
       try {
-        const { error: notifError } = await supabase.functions.invoke('send-notification', {
-          body: {
-            user_id: organizerId,
-            type: 'mission_signup',
-            event_id: eventId,
-            event_name: eventName,
-            action_url: `/organization/dashboard`,
-          },
-        });
+        const { data: admins, error: adminsError } = await supabase
+          .from('organization_members')
+          .select('user_id')
+          .eq('organization_id', organizationId)
+          .eq('role', 'admin');
 
-        if (notifError) {
-          console.error('Failed to send notification:', notifError);
+        if (adminsError) {
+          console.error('Failed to fetch admins:', adminsError);
+        } else if (admins && admins.length > 0) {
+          // Send notification to each admin
+          for (const admin of admins) {
+            try {
+              await supabase.functions.invoke('send-notification', {
+                body: {
+                  user_id: admin.user_id,
+                  type: 'mission_signup',
+                  event_id: eventId,
+                  event_name: eventName,
+                  action_url: `/organization/dashboard`,
+                },
+              });
+            } catch (err) {
+              console.error('Notification error for admin:', admin.user_id, err);
+            }
+          }
         }
       } catch (err) {
         console.error('Notification error:', err);
@@ -147,7 +160,7 @@ export const useEventRegistration = (eventId: string | undefined) => {
     return hoursUntilEnd >= 24;
   }, []);
 
-  const register = (eventName: string, organizerId: string) => {
+  const register = (eventName: string, organizationId: string) => {
     if (!user) {
       toast({
         title: 'Connexion requise',
@@ -156,10 +169,18 @@ export const useEventRegistration = (eventId: string | undefined) => {
       });
       return;
     }
-    registerMutation.mutate({ eventName, organizerId });
+    registerMutation.mutate({ eventName, organizationId });
   };
 
-  const unregister = () => {
+  const unregister = (endDate: string) => {
+    if (!canUnregister(endDate)) {
+      toast({
+        title: 'Désinscription impossible',
+        description: "L'événement a lieu dans moins de 24h.",
+        variant: 'destructive',
+      });
+      return;
+    }
     unregisterMutation.mutate();
   };
 

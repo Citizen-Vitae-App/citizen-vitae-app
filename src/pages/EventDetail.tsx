@@ -159,14 +159,11 @@ const EventDetail = () => {
       navigate('/auth');
       return;
     }
-    register(event.name, event.organizations.id);
+    register(event.name, event.organization_id);
   };
 
   const handleUnregister = () => {
-    if (!canUnregister(event.end_date)) {
-      return;
-    }
-    unregister();
+    unregister(event.end_date);
   };
 
   const canUserUnregister = canUnregister(event.end_date);
