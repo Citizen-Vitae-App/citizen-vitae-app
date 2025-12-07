@@ -88,7 +88,8 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: position,
         zoom: zoom,
-        gestureHandling: 'greedy',
+        gestureHandling: 'cooperative',
+        scrollwheel: false,
         disableDefaultUI: false,
         zoomControl: true,
         mapTypeControl: false,
@@ -102,31 +103,18 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
     const map = mapInstanceRef.current;
 
-    // Create ONE circle - starts invisible, appears at zoom 15+
+    // Create circle - always visible, scales naturally with zoom (500m real distance)
     const circle = new google.maps.Circle({
       map,
       center: position,
       radius: 500,
       fillColor: '#0552B5',
-      fillOpacity: 0,
+      fillOpacity: 0.15,
       strokeColor: '#0552B5',
-      strokeOpacity: 0,
+      strokeOpacity: 0.3,
       strokeWeight: 1,
     });
     circleRef.current = circle;
-
-    // Function to update circle visibility based on zoom
-    const updateCircleVisibility = () => {
-      const currentZoom = map.getZoom();
-      const showCircle = currentZoom !== undefined && currentZoom >= 15;
-      circle.setOptions({
-        fillOpacity: showCircle ? 0.15 : 0,
-        strokeOpacity: showCircle ? 0.3 : 0,
-      });
-    };
-
-    // Add zoom listener
-    listenerRef.current = map.addListener('zoom_changed', updateCircleVisibility);
 
     // Custom Marker using OverlayView for pixel-perfect positioning
     class CustomMarker extends google.maps.OverlayView {
