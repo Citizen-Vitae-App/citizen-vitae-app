@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 
 interface EventMapProps {
@@ -15,9 +15,26 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
   const markerRef = useRef<google.maps.OverlayView | null>(null);
+  const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const markerIcon = iconUrl || mapMarkerIcon;
+
+  // Cleanup function
+  const cleanupOverlays = useCallback(() => {
+    if (listenerRef.current) {
+      google.maps.event.removeListener(listenerRef.current);
+      listenerRef.current = null;
+    }
+    if (circleRef.current) {
+      circleRef.current.setMap(null);
+      circleRef.current = null;
+    }
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+      markerRef.current = null;
+    }
+  }, []);
 
   // Load Google Maps API
   useEffect(() => {
@@ -61,15 +78,8 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
   useEffect(() => {
     if (!isLoaded || !mapRef.current || !window.google?.maps) return;
 
-    // Clean up existing instances BEFORE creating new ones
-    if (circleRef.current) {
-      circleRef.current.setMap(null);
-      circleRef.current = null;
-    }
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-      markerRef.current = null;
-    }
+    // Clean up existing overlays FIRST
+    cleanupOverlays();
 
     const position = { lat, lng };
 
@@ -92,8 +102,8 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
     const map = mapInstanceRef.current;
 
-    // Create ONE circle (initially invisible)
-    circleRef.current = new google.maps.Circle({
+    // Create ONE circle - starts invisible, appears at zoom 15+
+    const circle = new google.maps.Circle({
       map,
       center: position,
       radius: 500,
@@ -103,18 +113,20 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
       strokeOpacity: 0,
       strokeWeight: 1,
     });
+    circleRef.current = circle;
 
-    // Show circle only when zooming in (zoom >= 15)
+    // Function to update circle visibility based on zoom
     const updateCircleVisibility = () => {
       const currentZoom = map.getZoom();
       const showCircle = currentZoom !== undefined && currentZoom >= 15;
-      circleRef.current?.setOptions({
+      circle.setOptions({
         fillOpacity: showCircle ? 0.15 : 0,
         strokeOpacity: showCircle ? 0.3 : 0,
       });
     };
 
-    map.addListener('zoom_changed', updateCircleVisibility);
+    // Add zoom listener
+    listenerRef.current = map.addListener('zoom_changed', updateCircleVisibility);
 
     // Custom Marker using OverlayView for pixel-perfect positioning
     class CustomMarker extends google.maps.OverlayView {
@@ -132,8 +144,8 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.div.style.cursor = 'pointer';
-        this.div.style.width = '80px';
-        this.div.style.height = '80px';
+        this.div.style.width = '100px';
+        this.div.style.height = '100px';
         this.div.style.transform = 'translate(-50%, -50%)';
 
         const img = document.createElement('img');
@@ -172,17 +184,17 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     marker.setMap(map);
     markerRef.current = marker;
 
+    // Return cleanup function
+    return cleanupOverlays;
+  }, [isLoaded, lat, lng, zoom, markerIcon, cleanupOverlays]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (circleRef.current) {
-        circleRef.current.setMap(null);
-        circleRef.current = null;
-      }
-      if (markerRef.current) {
-        markerRef.current.setMap(null);
-        markerRef.current = null;
-      }
+      cleanupOverlays();
+      mapInstanceRef.current = null;
     };
-  }, [isLoaded, lat, lng, zoom, markerIcon]);
+  }, [cleanupOverlays]);
 
   if (error) {
     return (
