@@ -35,7 +35,8 @@ const NOTIFICATION_MESSAGES: Record<string, { fr: string; en: string }> = {
 };
 
 interface NotificationRequest {
-  user_id: string;
+  user_id?: string;
+  organization_id?: string;
   type: string;
   event_id?: string;
   event_name?: string;
@@ -51,10 +52,6 @@ interface UserPreferences {
   phone_number: string | null;
 }
 
-interface Profile {
-  email: string | null;
-}
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -67,27 +64,45 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: NotificationRequest = await req.json();
-    const { user_id, type, event_id, event_name, action_url, custom_message_fr, custom_message_en } = body;
+    const { user_id, organization_id, type, event_id, event_name, action_url, custom_message_fr, custom_message_en } = body;
 
-    console.log(`[send-notification] Processing notification for user ${user_id}, type: ${type}`);
+    console.log(`[send-notification] Received request:`, JSON.stringify(body));
 
-    // Get user preferences
-    const { data: preferences, error: prefError } = await supabase
-      .from("user_preferences")
-      .select("language, email_opt_in, sms_opt_in, phone_number")
-      .eq("user_id", user_id)
-      .single();
+    // Determine target user(s)
+    let targetUserIds: string[] = [];
 
-    if (prefError) {
-      console.log(`[send-notification] No preferences found for user ${user_id}, using defaults`);
+    if (user_id) {
+      // Direct user notification
+      targetUserIds = [user_id];
+      console.log(`[send-notification] Direct notification to user: ${user_id}`);
+    } else if (organization_id) {
+      // Fetch organization admins (server-side, bypasses RLS)
+      console.log(`[send-notification] Fetching admins for organization: ${organization_id}`);
+      
+      const { data: admins, error: adminsError } = await supabase
+        .from("organization_members")
+        .select("user_id")
+        .eq("organization_id", organization_id)
+        .eq("role", "admin");
+
+      if (adminsError) {
+        console.error(`[send-notification] Error fetching admins:`, adminsError);
+        throw new Error(`Failed to fetch organization admins: ${adminsError.message}`);
+      }
+
+      if (!admins || admins.length === 0) {
+        console.log(`[send-notification] No admins found for organization ${organization_id}`);
+        return new Response(
+          JSON.stringify({ success: true, message: "No admins to notify", notifications_sent: 0 }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      targetUserIds = admins.map(a => a.user_id);
+      console.log(`[send-notification] Found ${targetUserIds.length} admins:`, targetUserIds);
+    } else {
+      throw new Error("Either user_id or organization_id must be provided");
     }
-
-    const userPrefs: UserPreferences = preferences || {
-      language: 'fr',
-      email_opt_in: true,
-      sms_opt_in: false,
-      phone_number: null,
-    };
 
     // Get message content
     let message_fr: string;
@@ -104,102 +119,82 @@ const handler = async (req: Request): Promise<Response> => {
       message_en = `New notification: ${type}`;
     }
 
-    // 1. ALWAYS create in-app notification
-    const { data: notification, error: notifError } = await supabase
-      .from("notifications")
-      .insert({
-        user_id,
-        type,
-        event_id: event_id || null,
-        message_fr,
-        message_en,
-        action_url: action_url || null,
-        is_read: false,
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+    // Send notification to each target user
+    const results: { user_id: string; success: boolean; notification_id?: string; error?: string }[] = [];
 
-    if (notifError) {
-      console.error(`[send-notification] Error creating notification:`, notifError);
-      throw notifError;
-    }
-
-    console.log(`[send-notification] In-app notification created: ${notification.id}`);
-
-    // 2. Send email if opted in (placeholder for future Resend integration)
-    if (userPrefs.email_opt_in) {
-      const resendApiKey = Deno.env.get("RESEND_API_KEY");
-      
-      if (resendApiKey) {
-        // Get user email
-        const { data: profile } = await supabase
+    for (const targetUserId of targetUserIds) {
+      try {
+        // Verify user exists in profiles
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("email")
-          .eq("id", user_id)
+          .select("id, email")
+          .eq("id", targetUserId)
           .single();
 
-        if (profile?.email) {
-          const message = userPrefs.language === 'fr' ? message_fr : message_en;
-          
-          try {
-            // TODO: Implement Resend email sending
-            console.log(`[send-notification] Would send email to ${profile.email}: ${message}`);
-            
-            // Placeholder for Resend integration:
-            // const resend = new Resend(resendApiKey);
-            // await resend.emails.send({
-            //   from: "CitizenVitae <notifications@citizenvitae.com>",
-            //   to: [profile.email],
-            //   subject: "Nouvelle notification CitizenVitae",
-            //   html: `<p>${message}</p>`,
-            // });
-          } catch (emailError) {
-            console.error(`[send-notification] Email sending failed:`, emailError);
-          }
+        if (profileError || !profile) {
+          console.log(`[send-notification] User ${targetUserId} not found in profiles, skipping`);
+          results.push({ user_id: targetUserId, success: false, error: "User not found" });
+          continue;
         }
-      } else {
-        console.log(`[send-notification] Email opted in but RESEND_API_KEY not configured`);
+
+        // Get user preferences
+        const { data: preferences } = await supabase
+          .from("user_preferences")
+          .select("language, email_opt_in, sms_opt_in, phone_number")
+          .eq("user_id", targetUserId)
+          .single();
+
+        const userPrefs: UserPreferences = preferences || {
+          language: 'fr',
+          email_opt_in: true,
+          sms_opt_in: false,
+          phone_number: null,
+        };
+
+        // Create in-app notification
+        const { data: notification, error: notifError } = await supabase
+          .from("notifications")
+          .insert({
+            user_id: targetUserId,
+            type,
+            event_id: event_id || null,
+            message_fr,
+            message_en,
+            action_url: action_url || null,
+            is_read: false,
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (notifError) {
+          console.error(`[send-notification] Error creating notification for ${targetUserId}:`, notifError);
+          results.push({ user_id: targetUserId, success: false, error: notifError.message });
+          continue;
+        }
+
+        console.log(`[send-notification] Notification created for ${targetUserId}: ${notification.id}`);
+        results.push({ user_id: targetUserId, success: true, notification_id: notification.id });
+
+        // Email placeholder (if opted in)
+        if (userPrefs.email_opt_in && profile.email) {
+          console.log(`[send-notification] Would send email to ${profile.email}`);
+        }
+      } catch (err: any) {
+        console.error(`[send-notification] Error for user ${targetUserId}:`, err);
+        results.push({ user_id: targetUserId, success: false, error: err.message });
       }
     }
 
-    // 3. Send SMS if opted in (placeholder for future Twilio integration)
-    if (userPrefs.sms_opt_in && userPrefs.phone_number) {
-      const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-      const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-      
-      if (twilioAccountSid && twilioAuthToken) {
-        const message = userPrefs.language === 'fr' ? message_fr : message_en;
-        
-        try {
-          // TODO: Implement Twilio SMS sending
-          console.log(`[send-notification] Would send SMS to ${userPrefs.phone_number}: ${message}`);
-          
-          // Placeholder for Twilio integration:
-          // const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
-          // await twilioClient.messages.create({
-          //   body: message,
-          //   from: Deno.env.get("TWILIO_PHONE_NUMBER"),
-          //   to: userPrefs.phone_number,
-          // });
-        } catch (smsError) {
-          console.error(`[send-notification] SMS sending failed:`, smsError);
-        }
-      } else {
-        console.log(`[send-notification] SMS opted in but Twilio not configured`);
-      }
-    }
+    const successCount = results.filter(r => r.success).length;
+    console.log(`[send-notification] Completed: ${successCount}/${targetUserIds.length} notifications sent`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        notification_id: notification.id,
-        channels: {
-          inapp: true,
-          email: userPrefs.email_opt_in,
-          sms: userPrefs.sms_opt_in && !!userPrefs.phone_number,
-        },
+        notifications_sent: successCount,
+        results,
       }),
       {
         status: 200,
