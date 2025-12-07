@@ -22,6 +22,8 @@ interface UseEventsOptions {
   organizationId?: string;
   publicOnly?: boolean;
   searchQuery?: string;
+  dateFilters?: Date[];
+  causeFilters?: string[];
 }
 
 export const useEvents = (options: UseEventsOptions = {}) => {
@@ -35,6 +37,27 @@ export const useEvents = (options: UseEventsOptions = {}) => {
       setError(null);
 
       try {
+        // If cause filters are applied, first get event IDs that match the causes
+        let eventIdsWithCauses: string[] | null = null;
+        
+        if (options.causeFilters && options.causeFilters.length > 0) {
+          const { data: causeMatches } = await supabase
+            .from('event_cause_themes')
+            .select('event_id')
+            .in('cause_theme_id', options.causeFilters);
+          
+          if (causeMatches) {
+            eventIdsWithCauses = [...new Set(causeMatches.map(m => m.event_id))];
+          }
+          
+          // If no events match the causes, return empty
+          if (!eventIdsWithCauses || eventIdsWithCauses.length === 0) {
+            setEvents([]);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         let query = supabase
           .from('events')
           .select(`
@@ -55,6 +78,23 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
         if (options.searchQuery && options.searchQuery.trim()) {
           query = query.or(`name.ilike.%${options.searchQuery}%,location.ilike.%${options.searchQuery}%`);
+        }
+
+        // Date filters - filter events that occur on any of the selected dates
+        if (options.dateFilters && options.dateFilters.length > 0) {
+          const dateConditions = options.dateFilters.map(date => {
+            const dayStart = new Date(date);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(date);
+            dayEnd.setHours(23, 59, 59, 999);
+            return `and(start_date.lte.${dayEnd.toISOString()},end_date.gte.${dayStart.toISOString()})`;
+          }).join(',');
+          query = query.or(dateConditions);
+        }
+
+        // Filter by cause-matched event IDs
+        if (eventIdsWithCauses) {
+          query = query.in('id', eventIdsWithCauses);
         }
 
         const { data, error: queryError } = await query;
@@ -78,7 +118,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     };
 
     fetchEvents();
-  }, [options.organizationId, options.publicOnly, options.searchQuery]);
+  }, [options.organizationId, options.publicOnly, options.searchQuery, options.dateFilters, options.causeFilters]);
 
   return { events, isLoading, error };
 };
@@ -123,6 +163,17 @@ export const useOrganizationEvents = (searchQuery?: string) => {
   };
 };
 
-export const usePublicEvents = (searchQuery?: string) => {
-  return useEvents({ publicOnly: true, searchQuery });
+interface PublicEventsOptions {
+  searchQuery?: string;
+  dateFilters?: Date[];
+  causeFilters?: string[];
+}
+
+export const usePublicEvents = (options: PublicEventsOptions = {}) => {
+  return useEvents({ 
+    publicOnly: true, 
+    searchQuery: options.searchQuery,
+    dateFilters: options.dateFilters,
+    causeFilters: options.causeFilters
+  });
 };

@@ -5,6 +5,7 @@ import logo from '@/assets/logo.png';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
+import EventFilters from "@/components/EventFilters";
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicEvents } from '@/hooks/useEvents';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,7 +23,17 @@ const Index = () => {
   const { user, profile, signOut, needsOnboarding, isLoading: isAuthLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const { events, isLoading: isEventsLoading } = usePublicEvents(searchQuery);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  
+  const { events, isLoading: isEventsLoading } = usePublicEvents({
+    searchQuery,
+    dateFilters: selectedDates,
+    causeFilters: selectedCauses
+  });
+
+  const activeFiltersCount = selectedDates.length + selectedCauses.length;
 
   useEffect(() => {
     if (!isAuthLoading && user) {
@@ -50,6 +61,12 @@ const Index = () => {
   const generateShortTitle = (name: string) => {
     const words = name.split(' ').slice(0, 2);
     return words.join(' ');
+  };
+
+  const getDateButtonLabel = () => {
+    if (selectedDates.length === 0) return 'Quand ?';
+    if (selectedDates.length === 1) return format(selectedDates[0], 'd MMM', { locale: fr });
+    return `${selectedDates.length} dates`;
   };
 
   return (
@@ -81,16 +98,27 @@ const Index = () => {
                 {/* Vertical Separator */}
                 <div className="h-8 w-px bg-border"></div>
                 
-                <button className="flex items-center gap-3 whitespace-nowrap hover:opacity-70 transition-opacity">
+                <button 
+                  onClick={() => setIsFiltersOpen(true)}
+                  className="flex items-center gap-3 whitespace-nowrap hover:opacity-70 transition-opacity"
+                >
                   <Calendar className="w-5 h-5 text-foreground" />
-                  <span className="text-foreground text-sm">Quand ?</span>
+                  <span className="text-foreground text-sm">{getDateButtonLabel()}</span>
                 </button>
               </div>
 
               {/* Filters Button */}
-              <button className="border border-border rounded-md px-6 py-3.5 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70">
+              <button 
+                onClick={() => setIsFiltersOpen(true)}
+                className="border border-border rounded-md px-6 py-3.5 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70 relative"
+              >
                 <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 <span className="text-foreground text-sm">Filtres</span>
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -160,6 +188,16 @@ const Index = () => {
         </div>
       </nav>
 
+      {/* Filters Modal */}
+      <EventFilters
+        isOpen={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        selectedDates={selectedDates}
+        onDatesChange={setSelectedDates}
+        selectedCauses={selectedCauses}
+        onCausesChange={setSelectedCauses}
+      />
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         {isEventsLoading ? (
@@ -171,8 +209,20 @@ const Index = () => {
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement disponible</h3>
             <p className="text-muted-foreground">
-              {searchQuery ? 'Aucun événement ne correspond à votre recherche' : 'Revenez bientôt pour découvrir de nouveaux événements'}
+              {searchQuery || activeFiltersCount > 0 ? 'Aucun événement ne correspond à vos critères' : 'Revenez bientôt pour découvrir de nouveaux événements'}
             </p>
+            {activeFiltersCount > 0 && (
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  setSelectedDates([]);
+                  setSelectedCauses([]);
+                }}
+              >
+                Effacer les filtres
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
