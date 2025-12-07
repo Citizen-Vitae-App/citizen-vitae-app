@@ -100,12 +100,26 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         },
       });
 
-      // Listen for fullscreen changes to enable/disable scroll
+      // Listen for fullscreen changes to enable/disable scroll and add margin
       document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement && mapInstanceRef.current) {
           mapInstanceRef.current.setOptions({ scrollwheel: true });
+          // Add margin effect in fullscreen
+          if (mapRef.current) {
+            mapRef.current.style.background = '#f5f5f5';
+            mapRef.current.style.padding = '16px';
+            mapRef.current.style.boxSizing = 'border-box';
+          }
+          google.maps.event.trigger(mapInstanceRef.current, 'resize');
         } else if (mapInstanceRef.current) {
           mapInstanceRef.current.setOptions({ scrollwheel: false });
+          // Remove margin effect
+          if (mapRef.current) {
+            mapRef.current.style.background = '';
+            mapRef.current.style.padding = '';
+            mapRef.current.style.boxSizing = '';
+          }
+          google.maps.event.trigger(mapInstanceRef.current, 'resize');
         }
       });
     } else {
