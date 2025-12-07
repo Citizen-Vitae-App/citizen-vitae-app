@@ -127,22 +127,31 @@ export const useEventRegistration = (eventId: string | undefined) => {
     mutationFn: async () => {
       if (!registration?.id) throw new Error('No registration found');
 
+      console.log('[useEventRegistration] Starting unregistration for registration:', registration.id);
+
       const { error } = await supabase
         .from('event_registrations')
         .delete()
         .eq('id', registration.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useEventRegistration] Delete error:', error);
+        throw error;
+      }
+
+      console.log('[useEventRegistration] Unregistration successful');
     },
     onSuccess: () => {
+      console.log('[useEventRegistration] Invalidating and refetching queries');
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
+      queryClient.refetchQueries({ queryKey: ['event-registration', eventId, user?.id] });
       toast({
         title: 'Désinscription confirmée',
         description: 'Vous n\'êtes plus inscrit à cet événement.',
       });
     },
-    onError: (error) => {
-      console.error('Unregistration error:', error);
+    onError: (error: any) => {
+      console.error('[useEventRegistration] Unregistration error:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de vous désinscrire. Veuillez réessayer.',
