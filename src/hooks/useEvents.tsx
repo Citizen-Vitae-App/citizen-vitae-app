@@ -18,11 +18,16 @@ interface Event {
   organization_name?: string;
 }
 
+export interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+
 interface UseEventsOptions {
   organizationId?: string;
   publicOnly?: boolean;
   searchQuery?: string;
-  dateFilters?: Date[];
+  dateRange?: DateRange;
   causeFilters?: string[];
 }
 
@@ -80,16 +85,17 @@ export const useEvents = (options: UseEventsOptions = {}) => {
           query = query.or(`name.ilike.%${options.searchQuery}%,location.ilike.%${options.searchQuery}%`);
         }
 
-        // Date filters - filter events that occur on any of the selected dates
-        if (options.dateFilters && options.dateFilters.length > 0) {
-          const dateConditions = options.dateFilters.map(date => {
-            const dayStart = new Date(date);
-            dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(date);
-            dayEnd.setHours(23, 59, 59, 999);
-            return `and(start_date.lte.${dayEnd.toISOString()},end_date.gte.${dayStart.toISOString()})`;
-          }).join(',');
-          query = query.or(dateConditions);
+        // Date range filter - filter events with start_date within the range
+        if (options.dateRange?.start) {
+          const rangeStart = new Date(options.dateRange.start);
+          rangeStart.setHours(0, 0, 0, 0);
+          query = query.gte('start_date', rangeStart.toISOString());
+          
+          if (options.dateRange.end) {
+            const rangeEnd = new Date(options.dateRange.end);
+            rangeEnd.setHours(23, 59, 59, 999);
+            query = query.lte('start_date', rangeEnd.toISOString());
+          }
         }
 
         // Filter by cause-matched event IDs
@@ -118,7 +124,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     };
 
     fetchEvents();
-  }, [options.organizationId, options.publicOnly, options.searchQuery, options.dateFilters, options.causeFilters]);
+  }, [options.organizationId, options.publicOnly, options.searchQuery, options.dateRange?.start, options.dateRange?.end, options.causeFilters]);
 
   return { events, isLoading, error };
 };
@@ -165,7 +171,7 @@ export const useOrganizationEvents = (searchQuery?: string) => {
 
 interface PublicEventsOptions {
   searchQuery?: string;
-  dateFilters?: Date[];
+  dateRange?: DateRange;
   causeFilters?: string[];
 }
 
@@ -173,7 +179,7 @@ export const usePublicEvents = (options: PublicEventsOptions = {}) => {
   return useEvents({ 
     publicOnly: true, 
     searchQuery: options.searchQuery,
-    dateFilters: options.dateFilters,
+    dateRange: options.dateRange,
     causeFilters: options.causeFilters
   });
 };

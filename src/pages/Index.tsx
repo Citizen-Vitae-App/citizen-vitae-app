@@ -5,7 +5,7 @@ import logo from '@/assets/logo.png';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
-import EventFilters from "@/components/EventFilters";
+import EventFilters, { DateRange } from "@/components/EventFilters";
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicEvents } from '@/hooks/useEvents';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,17 +23,17 @@ const Index = () => {
   const { user, profile, signOut, needsOnboarding, isLoading: isAuthLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   
   const { events, isLoading: isEventsLoading } = usePublicEvents({
     searchQuery,
-    dateFilters: selectedDates,
+    dateRange,
     causeFilters: selectedCauses
   });
 
-  const activeFiltersCount = selectedDates.length + selectedCauses.length;
+  const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
 
   useEffect(() => {
     if (!isAuthLoading && user) {
@@ -64,9 +64,9 @@ const Index = () => {
   };
 
   const getDateButtonLabel = () => {
-    if (selectedDates.length === 0) return 'Quand ?';
-    if (selectedDates.length === 1) return format(selectedDates[0], 'd MMM', { locale: fr });
-    return `${selectedDates.length} dates`;
+    if (!dateRange.start) return 'Quand ?';
+    if (!dateRange.end) return format(dateRange.start, 'd MMM', { locale: fr });
+    return `${format(dateRange.start, 'd MMM', { locale: fr })} - ${format(dateRange.end, 'd MMM', { locale: fr })}`;
   };
 
   return (
@@ -192,8 +192,8 @@ const Index = () => {
       <EventFilters
         isOpen={isFiltersOpen}
         onClose={() => setIsFiltersOpen(false)}
-        selectedDates={selectedDates}
-        onDatesChange={setSelectedDates}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
         selectedCauses={selectedCauses}
         onCausesChange={setSelectedCauses}
       />
@@ -216,7 +216,7 @@ const Index = () => {
                 variant="outline" 
                 className="mt-4"
                 onClick={() => {
-                  setSelectedDates([]);
+                  setDateRange({ start: null, end: null });
                   setSelectedCauses([]);
                 }}
               >

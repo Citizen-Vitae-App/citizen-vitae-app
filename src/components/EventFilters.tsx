@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, getDay, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { cn } from '@/lib/utils';
@@ -15,11 +15,16 @@ interface CauseTheme {
   color: string;
 }
 
+export interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+
 interface EventFiltersProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedDates: Date[];
-  onDatesChange: (dates: Date[]) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (range: DateRange) => void;
   selectedCauses: string[];
   onCausesChange: (causes: string[]) => void;
 }
@@ -32,11 +37,15 @@ const MONTHS_FR = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ];
 
+// Bleu principal
+const PRIMARY_BLUE = '#012573';
+const PRIMARY_BLUE_LIGHT = 'rgba(1, 37, 115, 0.15)';
+
 const EventFilters = ({
   isOpen,
   onClose,
-  selectedDates,
-  onDatesChange,
+  dateRange,
+  onDateRangeChange,
   selectedCauses,
   onCausesChange
 }: EventFiltersProps) => {
@@ -61,11 +70,16 @@ const EventFilters = ({
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   const handleDateClick = (date: Date) => {
-    const isSelected = selectedDates.some(d => isSameDay(d, date));
-    if (isSelected) {
-      onDatesChange(selectedDates.filter(d => !isSameDay(d, date)));
+    if (!dateRange.start || (dateRange.start && dateRange.end)) {
+      // First click or reset: set start date
+      onDateRangeChange({ start: date, end: null });
     } else {
-      onDatesChange([...selectedDates, date]);
+      // Second click: set end date
+      if (isBefore(date, dateRange.start)) {
+        onDateRangeChange({ start: date, end: dateRange.start });
+      } else {
+        onDateRangeChange({ start: dateRange.start, end: date });
+      }
     }
   };
 
@@ -73,21 +87,7 @@ const EventFilters = ({
     const year = currentMonth.getFullYear();
     const start = new Date(year, monthIndex, 1);
     const end = endOfMonth(start);
-    // Toggle: if already selected, remove all days of that month
-    const monthDays = eachDayOfInterval({ start, end });
-    const allSelected = monthDays.every(d => selectedDates.some(sd => isSameDay(sd, d)));
-    
-    if (allSelected) {
-      onDatesChange(selectedDates.filter(sd => !monthDays.some(md => isSameDay(md, sd))));
-    } else {
-      const newDates = [...selectedDates];
-      monthDays.forEach(d => {
-        if (!newDates.some(nd => isSameDay(nd, d))) {
-          newDates.push(d);
-        }
-      });
-      onDatesChange(newDates);
-    }
+    onDateRangeChange({ start, end });
   };
 
   const handleCauseToggle = (causeId: string) => {
@@ -99,48 +99,85 @@ const EventFilters = ({
   };
 
   const clearFilters = () => {
-    onDatesChange([]);
+    onDateRangeChange({ start: null, end: null });
     onCausesChange([]);
   };
+
+  const isInRange = (date: Date) => {
+    if (!dateRange.start) return false;
+    if (!dateRange.end) return isSameDay(date, dateRange.start);
+    return (isAfter(date, dateRange.start) || isSameDay(date, dateRange.start)) && 
+           (isBefore(date, dateRange.end) || isSameDay(date, dateRange.end));
+  };
+
+  const isRangeStart = (date: Date) => dateRange.start && isSameDay(date, dateRange.start);
+  const isRangeEnd = (date: Date) => dateRange.end && isSameDay(date, dateRange.end);
 
   const renderCalendarMonth = (monthDate: Date) => {
     const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
     const days = eachDayOfInterval({ start, end });
 
+    // Group days by week for row styling
+    const weeks: Date[][] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      weeks.push(days.slice(i, i + 7));
+    }
+
     return (
       <div className="flex-1">
-        <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+        <h3 className="text-lg font-semibold text-foreground mb-4 text-center capitalize">
           {format(monthDate, 'MMMM yyyy', { locale: fr })}
         </h3>
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-0 mb-2">
           {WEEKDAYS.map((day, i) => (
             <div key={i} className="text-center text-sm text-muted-foreground font-medium py-2">
               {day}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day, i) => {
-            const isCurrentMonth = isSameMonth(day, monthDate);
-            const isSelected = selectedDates.some(d => isSameDay(d, day));
-            const isTodayDate = isToday(day);
-
+        <div className="flex flex-col gap-1">
+          {weeks.map((week, weekIndex) => {
+            // Check if any day in this week is in range (for row background)
+            const hasRangeInWeek = week.some(d => isSameMonth(d, monthDate) && isInRange(d) && !isRangeStart(d) && !isRangeEnd(d));
+            
             return (
-              <button
-                key={i}
-                onClick={() => isCurrentMonth && handleDateClick(day)}
-                disabled={!isCurrentMonth}
+              <div 
+                key={weekIndex} 
                 className={cn(
-                  "h-10 w-10 mx-auto rounded-full text-sm transition-colors",
-                  !isCurrentMonth && "text-muted-foreground/30 cursor-default",
-                  isCurrentMonth && !isSelected && "hover:bg-muted text-foreground",
-                  isSelected && "bg-primary text-primary-foreground",
-                  isTodayDate && !isSelected && "ring-1 ring-primary"
+                  "grid grid-cols-7 gap-0 rounded-lg",
+                  hasRangeInWeek && "bg-[rgba(1,37,115,0.1)]"
                 )}
               >
-                {format(day, 'd')}
-              </button>
+                {week.map((day, dayIndex) => {
+                  const isCurrentMonth = isSameMonth(day, monthDate);
+                  const inRange = isInRange(day);
+                  const isStart = isRangeStart(day);
+                  const isEnd = isRangeEnd(day);
+                  const isTodayDate = isToday(day);
+
+                  return (
+                    <button
+                      key={dayIndex}
+                      onClick={() => isCurrentMonth && handleDateClick(day)}
+                      disabled={!isCurrentMonth}
+                      className={cn(
+                        "h-10 w-10 mx-auto text-sm transition-colors relative flex items-center justify-center",
+                        !isCurrentMonth && "text-muted-foreground/30 cursor-default",
+                        isCurrentMonth && !inRange && "hover:bg-[rgba(1,37,115,0.1)] text-foreground rounded-full",
+                        inRange && !isStart && !isEnd && "text-[#012573]",
+                        (isStart || isEnd) && "rounded-full text-white",
+                        isTodayDate && !inRange && "ring-1 ring-[#012573] rounded-full"
+                      )}
+                      style={{
+                        backgroundColor: (isStart || isEnd) ? PRIMARY_BLUE : undefined,
+                      }}
+                    >
+                      {format(day, 'd')}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
@@ -151,6 +188,12 @@ const EventFilters = ({
   const renderIcon = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName];
     return Icon ? <Icon className="h-4 w-4" /> : null;
+  };
+
+  const getDateSummary = () => {
+    if (!dateRange.start) return null;
+    if (!dateRange.end) return format(dateRange.start, 'd MMM yyyy', { locale: fr });
+    return `${format(dateRange.start, 'd MMM', { locale: fr })} - ${format(dateRange.end, 'd MMM yyyy', { locale: fr })}`;
   };
 
   return (
@@ -230,8 +273,8 @@ const EventFilters = ({
               {MONTHS_FR.map((month, index) => {
                 const monthStart = new Date(currentMonth.getFullYear(), index, 1);
                 const monthEnd = endOfMonth(monthStart);
-                const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-                const isSelected = monthDays.some(d => selectedDates.some(sd => isSameDay(sd, d)));
+                const isSelected = dateRange.start && dateRange.end && 
+                  isSameDay(dateRange.start, monthStart) && isSameDay(dateRange.end, monthEnd);
 
                 return (
                   <button
@@ -240,9 +283,12 @@ const EventFilters = ({
                     className={cn(
                       "py-4 px-3 rounded-xl text-sm font-medium transition-colors border",
                       isSelected 
-                        ? "bg-primary text-primary-foreground border-primary" 
-                        : "bg-background border-border hover:border-primary/50"
+                        ? "text-white border-[#012573]" 
+                        : "bg-background border-border hover:border-[#012573]/50"
                     )}
+                    style={{
+                      backgroundColor: isSelected ? PRIMARY_BLUE : undefined
+                    }}
                   >
                     {month}
                   </button>
@@ -263,7 +309,7 @@ const EventFilters = ({
                       "flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-medium transition-colors border",
                       isSelected 
                         ? "border-2" 
-                        : "bg-background border-border hover:border-primary/50"
+                        : "bg-background border-border hover:border-[#012573]/50"
                     )}
                     style={isSelected ? { 
                       borderColor: cause.color,
@@ -292,9 +338,9 @@ const EventFilters = ({
             Tout effacer
           </button>
           <div className="flex items-center gap-2">
-            {selectedDates.length > 0 && (
+            {getDateSummary() && (
               <span className="text-sm text-muted-foreground">
-                {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''}
+                {getDateSummary()}
               </span>
             )}
             {selectedCauses.length > 0 && (
@@ -304,7 +350,8 @@ const EventFilters = ({
             )}
             <button
               onClick={onClose}
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="px-6 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+              style={{ backgroundColor: PRIMARY_BLUE }}
             >
               Appliquer
             </button>
