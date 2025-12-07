@@ -44,6 +44,8 @@ export const useEventRegistration = (eventId: string | undefined) => {
     mutationFn: async ({ eventName, organizationId }: { eventName: string; organizationId: string }) => {
       if (!eventId || !user?.id) throw new Error('Missing event or user ID');
 
+      console.log('[useEventRegistration] Starting registration for event:', eventId, 'user:', user.id);
+
       // Insert registration
       const { data: regData, error: regError } = await supabase
         .from('event_registrations')
@@ -55,38 +57,34 @@ export const useEventRegistration = (eventId: string | undefined) => {
         .select()
         .single();
 
-      if (regError) throw regError;
+      if (regError) {
+        console.error('[useEventRegistration] Registration error:', regError);
+        throw regError;
+      }
 
-      // Fetch organization admins to notify them
+      console.log('[useEventRegistration] Registration successful:', regData.id);
+
+      // Send notification via Edge Function (it will fetch admins server-side)
       try {
-        const { data: admins, error: adminsError } = await supabase
-          .from('organization_members')
-          .select('user_id')
-          .eq('organization_id', organizationId)
-          .eq('role', 'admin');
+        console.log('[useEventRegistration] Calling send-notification for organization:', organizationId);
+        
+        const { data: notifData, error: notifError } = await supabase.functions.invoke('send-notification', {
+          body: {
+            organization_id: organizationId,
+            type: 'mission_signup',
+            event_id: eventId,
+            event_name: eventName,
+            action_url: `/organization/dashboard`,
+          },
+        });
 
-        if (adminsError) {
-          console.error('Failed to fetch admins:', adminsError);
-        } else if (admins && admins.length > 0) {
-          // Send notification to each admin
-          for (const admin of admins) {
-            try {
-              await supabase.functions.invoke('send-notification', {
-                body: {
-                  user_id: admin.user_id,
-                  type: 'mission_signup',
-                  event_id: eventId,
-                  event_name: eventName,
-                  action_url: `/organization/dashboard`,
-                },
-              });
-            } catch (err) {
-              console.error('Notification error for admin:', admin.user_id, err);
-            }
-          }
+        if (notifError) {
+          console.error('[useEventRegistration] Notification error:', notifError);
+        } else {
+          console.log('[useEventRegistration] Notification response:', notifData);
         }
       } catch (err) {
-        console.error('Notification error:', err);
+        console.error('[useEventRegistration] Notification error:', err);
       }
 
       return regData;
