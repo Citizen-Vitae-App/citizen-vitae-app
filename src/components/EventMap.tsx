@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import mapMarkerIcon from '@/assets/map-marker.png';
+import mapMarkerIcon from '@/assets/map-marker.svg';
 
 interface EventMapProps {
   lat: number;
