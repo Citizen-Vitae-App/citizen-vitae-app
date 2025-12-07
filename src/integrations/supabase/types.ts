@@ -187,6 +187,63 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          event_id: string | null
+          id: string
+          is_read: boolean
+          message_en: string
+          message_fr: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          is_read?: boolean
+          message_en: string
+          message_fr: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          is_read?: boolean
+          message_en?: string
+          message_fr?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string | null
@@ -323,6 +380,44 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          email_opt_in: boolean
+          language: string
+          phone_number: string | null
+          sms_opt_in: boolean
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_opt_in?: boolean
+          language?: string
+          phone_number?: string | null
+          sms_opt_in?: boolean
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_opt_in?: boolean
+          language?: string
+          phone_number?: string | null
+          sms_opt_in?: boolean
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -361,6 +456,7 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "organization" | "participant"
+      notification_status: "pending" | "sent" | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -489,6 +585,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "organization", "participant"],
+      notification_status: ["pending", "sent", "error"],
     },
   },
 } as const
