@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Expand } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 
 interface EventMapProps {
@@ -14,15 +12,12 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyDxIu4kXGdomUkhgAdalCzHB_b41IXzGkA';
 
 const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const fullscreenMapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const fullscreenMapInstanceRef = useRef<google.maps.Map | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
   const markerRef = useRef<google.maps.OverlayView | null>(null);
   const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const markerIcon = iconUrl || mapMarkerIcon;
 
   // Cleanup function
@@ -99,7 +94,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
-        fullscreenControl: false,
+        fullscreenControl: true,
       });
     } else {
       mapInstanceRef.current.setCenter(position);
@@ -181,98 +176,6 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     return cleanupOverlays;
   }, [isLoaded, lat, lng, zoom, markerIcon, cleanupOverlays]);
 
-  // Initialize fullscreen map when dialog opens
-  useEffect(() => {
-    if (!isFullscreen || !isLoaded || !fullscreenMapRef.current || !window.google?.maps) return;
-
-    const position = { lat, lng };
-
-    // Create fullscreen map instance
-    const fullscreenMap = new google.maps.Map(fullscreenMapRef.current, {
-      center: position,
-      zoom: zoom,
-      gestureHandling: 'greedy',
-      scrollwheel: true,
-      disableDefaultUI: false,
-      zoomControl: true,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    });
-    fullscreenMapInstanceRef.current = fullscreenMap;
-
-    // Create circle for fullscreen map
-    new google.maps.Circle({
-      map: fullscreenMap,
-      center: position,
-      radius: 500,
-      fillColor: '#0552B5',
-      fillOpacity: 0.15,
-      strokeColor: '#0552B5',
-      strokeOpacity: 0.3,
-      strokeWeight: 1,
-    });
-
-    // Custom Marker for fullscreen
-    class FullscreenMarker extends google.maps.OverlayView {
-      private position: google.maps.LatLng;
-      private div: HTMLDivElement | null = null;
-      private iconUrl: string;
-
-      constructor(position: google.maps.LatLngLiteral, iconUrl: string) {
-        super();
-        this.position = new google.maps.LatLng(position.lat, position.lng);
-        this.iconUrl = iconUrl;
-      }
-
-      onAdd() {
-        this.div = document.createElement('div');
-        this.div.style.position = 'absolute';
-        this.div.style.cursor = 'pointer';
-        this.div.style.width = '50px';
-        this.div.style.height = '50px';
-        this.div.style.transform = 'translate(-50%, -50%)';
-
-        const img = document.createElement('img');
-        img.src = this.iconUrl;
-        img.alt = 'Event location';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))';
-        this.div.appendChild(img);
-
-        const panes = this.getPanes();
-        panes?.overlayMouseTarget.appendChild(this.div);
-      }
-
-      draw() {
-        if (!this.div) return;
-        const projection = this.getProjection();
-        if (!projection) return;
-        
-        const pos = projection.fromLatLngToDivPixel(this.position);
-        if (pos) {
-          this.div.style.left = pos.x + 'px';
-          this.div.style.top = pos.y + 'px';
-        }
-      }
-
-      onRemove() {
-        if (this.div) {
-          this.div.parentNode?.removeChild(this.div);
-          this.div = null;
-        }
-      }
-    }
-
-    const marker = new FullscreenMarker(position, markerIcon);
-    marker.setMap(fullscreenMap);
-
-    return () => {
-      fullscreenMapInstanceRef.current = null;
-    };
-  }, [isFullscreen, isLoaded, lat, lng, zoom, markerIcon]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -297,32 +200,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     );
   }
 
-  return (
-    <>
-      <div className="relative">
-        <div 
-          ref={mapRef} 
-          className="h-[450px] w-full rounded-lg overflow-hidden cursor-pointer md:cursor-default"
-          onClick={() => setIsFullscreen(true)}
-        />
-        {/* Expand button - visible on mobile */}
-        <button
-          onClick={() => setIsFullscreen(true)}
-          className="absolute bottom-4 right-4 md:hidden bg-white rounded-lg p-2 shadow-md hover:bg-gray-50 transition-colors"
-          aria-label="Agrandir la carte"
-        >
-          <Expand className="h-5 w-5 text-gray-700" />
-        </button>
-      </div>
-
-      {/* Fullscreen map dialog */}
-      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 overflow-hidden">
-          <div ref={fullscreenMapRef} className="w-full h-full" />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+  return <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden" />;
 };
 
 export default EventMap;
