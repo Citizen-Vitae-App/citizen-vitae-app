@@ -1,8 +1,8 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2 } from 'lucide-react';
+import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,9 @@ import EventMap from '@/components/EventMap';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
+import { useEventRegistration } from '@/hooks/useEventRegistration';
+import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 
 interface EventWithOrganization {
   id: string;
@@ -23,6 +26,7 @@ interface EventWithOrganization {
   capacity: number | null;
   latitude: number | null;
   longitude: number | null;
+  organization_id: string;
   organizations: {
     id: string;
     name: string;
@@ -33,9 +37,21 @@ interface EventWithOrganization {
 
 const EventDetail = () => {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
+
+  const {
+    isRegistered,
+    isRegistering,
+    isUnregistering,
+    isAnimating,
+    register,
+    unregister,
+    canUnregister,
+  } = useEventRegistration(eventId);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -54,7 +70,7 @@ const EventDetail = () => {
         `)
         .eq('id', eventId)
         .eq('is_public', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching event:', error);
@@ -136,6 +152,77 @@ const EventDetail = () => {
       return `${startDay} ${month}.`;
     }
     return `${startDay}-${endDay} ${month}.`;
+  };
+
+  const handleRegister = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    register(event.name, event.organizations.id);
+  };
+
+  const handleUnregister = () => {
+    if (!canUnregister(event.end_date)) {
+      return;
+    }
+    unregister();
+  };
+
+  const canUserUnregister = canUnregister(event.end_date);
+
+  // Render CTA button based on registration state
+  const renderCTAButton = (isMobile: boolean = false) => {
+    const baseClasses = isMobile 
+      ? "h-11 px-8 font-semibold transition-all duration-300" 
+      : "w-full h-12 text-lg font-semibold transition-all duration-300";
+
+    if (isRegistered) {
+      return (
+        <Button
+          onClick={handleUnregister}
+          disabled={isUnregistering || !canUserUnregister}
+          variant="outline"
+          className={cn(
+            baseClasses,
+            "border-destructive text-destructive hover:bg-destructive/10",
+            !canUserUnregister && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          {isUnregistering ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <>
+              <X className="h-5 w-5 mr-2" />
+              Se désinscrire
+            </>
+          )}
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        onClick={handleRegister}
+        disabled={isRegistering}
+        className={cn(
+          baseClasses,
+          isAnimating && "bg-green-600 hover:bg-green-600"
+        )}
+        style={{ backgroundColor: isAnimating ? undefined : '#012573' }}
+      >
+        {isRegistering ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : isAnimating ? (
+          <>
+            <Check className="h-5 w-5 mr-2 animate-bounce" />
+            Inscrit !
+          </>
+        ) : (
+          "Je m'engage"
+        )}
+      </Button>
+    );
   };
 
   return (
@@ -250,12 +337,14 @@ const EventDetail = () => {
               </div>
 
               {/* CTA Button */}
-              <Button
-                className="w-full h-12 text-lg font-semibold"
-                style={{ backgroundColor: '#012573' }}
-              >
-                Je m'engage
-              </Button>
+              {renderCTAButton()}
+              
+              {/* Show message if can't unregister */}
+              {isRegistered && !canUserUnregister && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Désinscription impossible moins de 24h avant la fin de l'événement
+                </p>
+              )}
 
               {/* Conditions */}
               <div className="border-t border-border pt-4">
@@ -303,12 +392,7 @@ const EventDetail = () => {
               <span className="font-medium">{formatTime(event.start_date)}</span>
             </div>
           </div>
-          <Button
-            className="h-11 px-8 font-semibold"
-            style={{ backgroundColor: '#012573' }}
-          >
-            Je m'engage
-          </Button>
+          {renderCTAButton(true)}
         </div>
       </div>
     </div>
