@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import * as LucideIcons from 'lucide-react';
@@ -146,6 +144,11 @@ const EventFilters = ({
     // Don't clear hover immediately, only when leaving the calendar area
   };
 
+  // Check if we should show the range background connectors
+  const shouldShowRangeBackground = () => {
+    return getEffectiveEndDate() !== null;
+  };
+
   const renderCalendarMonth = (monthDate: Date) => {
     const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
@@ -156,6 +159,8 @@ const EventFilters = ({
     for (let i = 0; i < days.length; i += 7) {
       weeks.push(days.slice(i, i + 7));
     }
+
+    const showBackground = shouldShowRangeBackground();
 
     return (
       <div className="flex-1">
@@ -192,8 +197,8 @@ const EventFilters = ({
                     key={dayIndex}
                     className="relative h-10 flex items-center justify-center"
                   >
-                    {/* Background connector for range */}
-                    {isCurrentMonth && inRange && (
+                    {/* Background connector for range - only show if we have an effective end date */}
+                    {isCurrentMonth && inRange && showBackground && (
                       <>
                         {/* Left connector */}
                         {!isStart && (
@@ -260,13 +265,18 @@ const EventFilters = ({
     return `${format(dateRange.start, 'd MMM', { locale: fr })} - ${format(dateRange.end, 'd MMM yyyy', { locale: fr })}`;
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden">
-        <VisuallyHidden>
-          <DialogTitle>Filtres de recherche</DialogTitle>
-        </VisuallyHidden>
-        
+    <>
+      {/* Backdrop transparent pour fermer au clic */}
+      <div 
+        className="fixed inset-0 z-40"
+        onClick={onClose}
+      />
+      
+      {/* Panel intégré */}
+      <div className="fixed left-1/2 -translate-x-1/2 top-20 z-50 w-full max-w-4xl bg-background border border-border rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
         {/* Tabs */}
         <div className="flex justify-center pt-6 pb-4">
           <div className="inline-flex bg-muted rounded-full p-1">
@@ -421,8 +431,8 @@ const EventFilters = ({
             </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 };
 
