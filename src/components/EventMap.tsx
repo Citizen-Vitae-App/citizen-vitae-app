@@ -95,6 +95,18 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: true,
+        fullscreenControlOptions: {
+          position: google.maps.ControlPosition.TOP_RIGHT,
+        },
+      });
+
+      // Listen for fullscreen changes to enable/disable scroll
+      document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement && mapInstanceRef.current) {
+          mapInstanceRef.current.setOptions({ scrollwheel: true });
+        } else if (mapInstanceRef.current) {
+          mapInstanceRef.current.setOptions({ scrollwheel: false });
+        }
       });
     } else {
       mapInstanceRef.current.setCenter(position);
@@ -200,7 +212,11 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     );
   }
 
-  return <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden" />;
+  return (
+    <div className="p-2">
+      <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden" />
+    </div>
+  );
 };
 
 export default EventMap;
