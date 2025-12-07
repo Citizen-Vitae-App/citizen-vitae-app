@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logo from '@/assets/logo.png';
@@ -10,8 +10,9 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, Bell, Settings } from 'lucide-react';
+import { LogOut, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 interface NavbarProps {
   activeTab?: string;
@@ -20,6 +21,7 @@ interface NavbarProps {
 
 export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
   
   const tabs = activeTab && onTabChange ? [
     { value: 'events', label: 'Events' },
@@ -67,9 +69,7 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationDropdown />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -102,16 +102,16 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    <span>View Profile</span>
+                    <span>Voir le profil</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>Paramètres</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign Out</span>
+                    <span>Déconnexion</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
