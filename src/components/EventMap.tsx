@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import mapMarkerIcon from '@/assets/map-marker.svg';
+import mapMarkerIcon from '@/assets/map-marker.png';
 
 interface EventMapProps {
   lat: number;
@@ -88,13 +88,13 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: position,
         zoom: zoom,
-        gestureHandling: 'cooperative',
+        gestureHandling: 'none',
         scrollwheel: false,
-        disableDefaultUI: false,
+        disableDefaultUI: true,
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
-        fullscreenControl: true,
+        fullscreenControl: false,
       });
     } else {
       mapInstanceRef.current.setCenter(position);
