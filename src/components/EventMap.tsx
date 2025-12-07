@@ -12,6 +12,9 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyDxIu4kXGdomUkhgAdalCzHB_b41IXzGkA';
 
 const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const circleRef = useRef<google.maps.Circle | null>(null);
+  const markerRef = useRef<google.maps.OverlayView | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const markerIcon = iconUrl || mapMarkerIcon;
@@ -54,29 +57,46 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     document.head.appendChild(script);
   }, []);
 
-  // Initialize map
+  // Initialize map and overlays
   useEffect(() => {
     if (!isLoaded || !mapRef.current || !window.google?.maps) return;
 
+    // Clean up existing instances BEFORE creating new ones
+    if (circleRef.current) {
+      circleRef.current.setMap(null);
+      circleRef.current = null;
+    }
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+      markerRef.current = null;
+    }
+
     const position = { lat, lng };
 
-    const map = new google.maps.Map(mapRef.current, {
-      center: position,
-      zoom: zoom,
-      mapId: 'citizenvitae-map',
-      gestureHandling: 'greedy',
-      disableDefaultUI: false,
-      zoomControl: true,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-    });
+    // Create or reuse the map
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+        center: position,
+        zoom: zoom,
+        gestureHandling: 'greedy',
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+    } else {
+      mapInstanceRef.current.setCenter(position);
+      mapInstanceRef.current.setZoom(zoom);
+    }
 
-    // Create circle (initially invisible)
-    const circle = new google.maps.Circle({
+    const map = mapInstanceRef.current;
+
+    // Create ONE circle (initially invisible)
+    circleRef.current = new google.maps.Circle({
       map,
       center: position,
-      radius: 500, // 500 meters
+      radius: 500,
       fillColor: '#0552B5',
       fillOpacity: 0,
       strokeColor: '#0552B5',
@@ -88,7 +108,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     const updateCircleVisibility = () => {
       const currentZoom = map.getZoom();
       const showCircle = currentZoom !== undefined && currentZoom >= 15;
-      circle.setOptions({
+      circleRef.current?.setOptions({
         fillOpacity: showCircle ? 0.15 : 0,
         strokeOpacity: showCircle ? 0.3 : 0,
       });
@@ -112,9 +132,9 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.div.style.cursor = 'pointer';
-        this.div.style.width = '64px';
-        this.div.style.height = '64px';
-        this.div.style.transform = 'translate(-50%, -50%)'; // Center both horizontally and vertically on the point
+        this.div.style.width = '80px';
+        this.div.style.height = '80px';
+        this.div.style.transform = 'translate(-50%, -50%)';
 
         const img = document.createElement('img');
         img.src = this.iconUrl;
@@ -150,10 +170,17 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
     const marker = new CustomMarker(position, markerIcon);
     marker.setMap(map);
+    markerRef.current = marker;
 
     return () => {
-      marker.setMap(null);
-      circle.setMap(null);
+      if (circleRef.current) {
+        circleRef.current.setMap(null);
+        circleRef.current = null;
+      }
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
     };
   }, [isLoaded, lat, lng, zoom, markerIcon]);
 
