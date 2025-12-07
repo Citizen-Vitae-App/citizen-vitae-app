@@ -132,8 +132,8 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.div.style.cursor = 'pointer';
-        this.div.style.width = '100px';
-        this.div.style.height = '100px';
+        this.div.style.width = '50px';
+        this.div.style.height = '50px';
         this.div.style.transform = 'translate(-50%, -50%)';
 
         const img = document.createElement('img');
