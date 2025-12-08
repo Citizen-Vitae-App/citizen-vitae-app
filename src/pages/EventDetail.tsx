@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { ShareDialog } from '@/components/ShareDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,6 +44,7 @@ const EventDetail = () => {
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const {
     isRegistered,
@@ -92,20 +94,8 @@ const EventDetail = () => {
     return format(parseISO(dateString), "HH'h'mm", { locale: fr });
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: event?.name,
-          text: event?.description || '',
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Share cancelled');
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-    }
+  const handleShare = () => {
+    setIsShareOpen(true);
   };
 
   if (isLoading) {
@@ -394,6 +384,14 @@ const EventDetail = () => {
           {renderCTAButton(true)}
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={isShareOpen}
+        onOpenChange={setIsShareOpen}
+        url={window.location.href}
+        title={event.name}
+      />
     </div>
   );
 };
