@@ -61,11 +61,21 @@ const getInitials = (firstName: string | null, lastName: string | null) => {
 
 export function EventsTab() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { events, isLoading, error } = useOrganizationEvents(searchQuery);
+  const { events: allEvents, isLoading, error } = useOrganizationEvents();
   const navigate = useNavigate();
 
+  // Client-side filtering to avoid refetch on each keystroke
+  const events = useMemo(() => {
+    if (!searchQuery.trim()) return allEvents;
+    const query = searchQuery.toLowerCase();
+    return allEvents.filter(event => 
+      event.name.toLowerCase().includes(query) || 
+      event.location.toLowerCase().includes(query)
+    );
+  }, [allEvents, searchQuery]);
+
   // Get all event IDs for participant counts
-  const eventIds = useMemo(() => events.map(e => e.id), [events]);
+  const eventIds = useMemo(() => allEvents.map(e => e.id), [allEvents]);
   const { data: participantCounts } = useEventsParticipantCounts(eventIds);
 
   if (isLoading) {
