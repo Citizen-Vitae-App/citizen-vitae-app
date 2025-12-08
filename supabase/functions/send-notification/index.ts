@@ -25,12 +25,20 @@ const NOTIFICATION_MESSAGES: Record<string, { fr: string; en: string }> = {
     en: "The mission {event_name} has been canceled.",
   },
   mission_location_changed: {
-    fr: "Le lieu de la mission {event_name} a changé.",
-    en: "The location of mission {event_name} has changed.",
+    fr: "Le lieu de la mission {event_name} a été modifié. Vérifiez la nouvelle adresse.",
+    en: "The location of mission {event_name} has been changed. Check the new address.",
+  },
+  mission_start_date_changed: {
+    fr: "La date de début de la mission {event_name} a été modifiée.",
+    en: "The start date of mission {event_name} has been changed.",
+  },
+  mission_end_date_changed: {
+    fr: "La date de fin de la mission {event_name} a été modifiée.",
+    en: "The end date of mission {event_name} has been changed.",
   },
   mission_date_changed: {
-    fr: "La date de la mission {event_name} a été modifiée.",
-    en: "The date of mission {event_name} has been changed.",
+    fr: "Les dates de la mission {event_name} ont été modifiées.",
+    en: "The dates of mission {event_name} have been changed.",
   },
 };
 
