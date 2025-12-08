@@ -43,6 +43,7 @@ interface NotificationRequest {
   action_url?: string;
   custom_message_fr?: string;
   custom_message_en?: string;
+  notify_participants?: boolean;
 }
 
 interface UserPreferences {
@@ -64,14 +65,38 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: NotificationRequest = await req.json();
-    const { user_id, organization_id, type, event_id, event_name, action_url, custom_message_fr, custom_message_en } = body;
+    const { user_id, organization_id, type, event_id, event_name, action_url, custom_message_fr, custom_message_en, notify_participants } = body;
 
     console.log(`[send-notification] Received request:`, JSON.stringify(body));
 
     // Determine target user(s)
     let targetUserIds: string[] = [];
 
-    if (user_id) {
+    if (notify_participants && event_id) {
+      // Notify all participants registered to the event
+      console.log(`[send-notification] Fetching participants for event: ${event_id}`);
+      
+      const { data: registrations, error: regError } = await supabase
+        .from("event_registrations")
+        .select("user_id")
+        .eq("event_id", event_id);
+
+      if (regError) {
+        console.error(`[send-notification] Error fetching participants:`, regError);
+        throw new Error(`Failed to fetch event participants: ${regError.message}`);
+      }
+
+      if (!registrations || registrations.length === 0) {
+        console.log(`[send-notification] No participants found for event ${event_id}`);
+        return new Response(
+          JSON.stringify({ success: true, message: "No participants to notify", notifications_sent: 0 }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      targetUserIds = registrations.map(r => r.user_id);
+      console.log(`[send-notification] Found ${targetUserIds.length} participants:`, targetUserIds);
+    } else if (user_id) {
       // Direct user notification
       targetUserIds = [user_id];
       console.log(`[send-notification] Direct notification to user: ${user_id}`);
@@ -101,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
       targetUserIds = admins.map(a => a.user_id);
       console.log(`[send-notification] Found ${targetUserIds.length} admins:`, targetUserIds);
     } else {
-      throw new Error("Either user_id or organization_id must be provided");
+      throw new Error("Either user_id, organization_id, or notify_participants with event_id must be provided");
     }
 
     // Get message content
