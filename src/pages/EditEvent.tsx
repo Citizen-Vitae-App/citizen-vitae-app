@@ -43,6 +43,13 @@ const eventSchema = z.object({
 
 type EventFormData = z.infer<typeof eventSchema>;
 
+interface OriginalEventData {
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}
+
 export default function EditEvent() {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId: string }>();
@@ -58,6 +65,7 @@ export default function EditEvent() {
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [originalEvent, setOriginalEvent] = useState<OriginalEventData | null>(null);
   
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -94,6 +102,14 @@ export default function EditEvent() {
         }
 
         setOrganizationId(event.organization_id);
+
+        // Store original values for change detection
+        setOriginalEvent({
+          name: event.name,
+          location: event.location,
+          startDate: event.start_date,
+          endDate: event.end_date,
+        });
 
         // Set form values
         const startDate = new Date(event.start_date);
@@ -185,6 +201,18 @@ export default function EditEvent() {
     
     setIsDeleting(true);
     try {
+      // Notify participants about cancellation BEFORE deleting
+      const eventName = form.getValues('name');
+      console.log('[EditEvent] Sending cancellation notification to participants');
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'mission_canceled',
+          event_id: eventId,
+          event_name: eventName,
+          notify_participants: true,
+        },
+      });
+
       // Delete event cause themes first
       await supabase
         .from('event_cause_themes')
@@ -297,6 +325,30 @@ export default function EditEvent() {
         await supabase
           .from('event_cause_themes')
           .insert(causeThemeInserts);
+      }
+
+      // Detect changes and notify participants
+      if (originalEvent) {
+        const newStartDate = startDateTime.toISOString();
+        const newEndDate = endDateTime.toISOString();
+        
+        const locationChanged = data.location !== originalEvent.location;
+        const dateChanged = newStartDate !== originalEvent.startDate || newEndDate !== originalEvent.endDate;
+        
+        if (locationChanged || dateChanged) {
+          const notificationType = dateChanged ? 'mission_date_changed' : 'mission_location_changed';
+          
+          console.log(`[EditEvent] Sending ${notificationType} notification to participants`);
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              type: notificationType,
+              event_id: eventId,
+              event_name: data.name,
+              notify_participants: true,
+              action_url: `/events/${eventId}`,
+            },
+          });
+        }
       }
 
       toast.success('Événement mis à jour !');
