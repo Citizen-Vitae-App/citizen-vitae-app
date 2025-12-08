@@ -4,10 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users } from 'lucide-react';
+import { Users, Ticket } from 'lucide-react';
 
 interface Participant {
   user_id: string;
@@ -16,14 +17,31 @@ interface Participant {
   email: string | null;
   avatar_url: string | null;
   event_count: number;
+  tickets_scanned: number;
   last_participation: string;
+  last_status: string;
 }
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'registered':
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Inscrit</Badge>;
+    case 'approved':
+      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Approuvé</Badge>;
+    case 'attended':
+      return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">Présent</Badge>;
+    case 'waitlist':
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Liste d'attente</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
 
 export function PeopleTab() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: participants, isLoading } = useQuery({
-    queryKey: ['organization-participants'],
+    queryKey: ['organization-participants-detailed'],
     queryFn: async () => {
       // Get current user's organization
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,7 +60,9 @@ export function PeopleTab() {
         .from('event_registrations')
         .select(`
           user_id,
+          status,
           registered_at,
+          attended_at,
           profiles!inner(
             first_name,
             last_name,
@@ -64,13 +84,18 @@ export function PeopleTab() {
       data?.forEach((registration: any) => {
         const userId = registration.user_id;
         const profile = registration.profiles;
+        const hasAttended = registration.attended_at !== null;
 
         if (userMap.has(userId)) {
           const existing = userMap.get(userId)!;
           existing.event_count += 1;
+          if (hasAttended) {
+            existing.tickets_scanned += 1;
+          }
           // Update last participation if this one is more recent
           if (new Date(registration.registered_at) > new Date(existing.last_participation)) {
             existing.last_participation = registration.registered_at;
+            existing.last_status = registration.status;
           }
         } else {
           userMap.set(userId, {
@@ -80,7 +105,9 @@ export function PeopleTab() {
             email: profile.email,
             avatar_url: profile.avatar_url,
             event_count: 1,
+            tickets_scanned: hasAttended ? 1 : 0,
             last_participation: registration.registered_at,
+            last_status: registration.status,
           });
         }
       });
@@ -146,7 +173,14 @@ export function PeopleTab() {
                 <TableHead>Photo</TableHead>
                 <TableHead>Nom complet</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="text-right">Événements participés</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Missions</TableHead>
+                <TableHead className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Ticket className="h-4 w-4" />
+                    Scannés
+                  </div>
+                </TableHead>
                 <TableHead className="text-right">Dernière participation</TableHead>
               </TableRow>
             </TableHeader>
@@ -169,8 +203,14 @@ export function PeopleTab() {
                   <TableCell className="text-muted-foreground">
                     {participant.email || 'Email non renseigné'}
                   </TableCell>
+                  <TableCell>
+                    {getStatusBadge(participant.last_status)}
+                  </TableCell>
                   <TableCell className="text-right font-medium">
                     {participant.event_count}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {participant.tickets_scanned}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
                     {format(new Date(participant.last_participation), 'dd MMM yyyy', {

@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
+import { EventParticipantsSection } from '@/components/organization/EventParticipantsSection';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -405,7 +406,7 @@ export default function EditEvent() {
       <Navbar />
       
       <main className="container mx-auto px-4 pt-32 pb-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
@@ -809,6 +810,13 @@ export default function EditEvent() {
               </div>
             </form>
           </Form>
+
+          {/* Participants Section */}
+          {eventId && (
+            <div className="max-w-[916px] mx-auto">
+              <EventParticipantsSection eventId={eventId} />
+            </div>
+          )}
         </div>
       </main>
 
