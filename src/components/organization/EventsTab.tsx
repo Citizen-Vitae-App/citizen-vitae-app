@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ChevronRight, Calendar } from 'lucide-react';
+import { Plus, Search, ChevronRight, Calendar, Users } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
-import { format, isAfter, isBefore, isToday, parseISO } from 'date-fns';
+import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
+import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import {
@@ -16,6 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
@@ -46,10 +53,20 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const getInitials = (firstName: string | null, lastName: string | null) => {
+  const first = firstName?.[0] || '';
+  const last = lastName?.[0] || '';
+  return `${first}${last}`.toUpperCase() || '?';
+};
+
 export function EventsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const { events, isLoading, error } = useOrganizationEvents(searchQuery);
   const navigate = useNavigate();
+
+  // Get all event IDs for participant counts
+  const eventIds = useMemo(() => events.map(e => e.id), [events]);
+  const { data: participantCounts } = useEventsParticipantCounts(eventIds);
 
   if (isLoading) {
     return (
@@ -117,12 +134,17 @@ export function EventsTab() {
                 <TableHead className="font-semibold">Statut</TableHead>
                 <TableHead className="font-semibold">Lieu</TableHead>
                 <TableHead className="font-semibold">Capacité</TableHead>
+                <TableHead className="font-semibold">Participants</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {events.map((event) => {
                 const status = getEventStatus(event.start_date, event.end_date);
+                const eventParticipants = participantCounts?.get(event.id);
+                const participantCount = eventParticipants?.count || 0;
+                const participants = eventParticipants?.participants || [];
+
                 return (
                   <TableRow 
                     key={event.id}
@@ -147,6 +169,57 @@ export function EventsTab() {
                     <TableCell>{getStatusBadge(status)}</TableCell>
                     <TableCell>{event.location}</TableCell>
                     <TableCell>{event.capacity || 'Illimitée'}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <HoverCard openDelay={200}>
+                        <HoverCardTrigger asChild>
+                          <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                            <Users className="h-4 w-4" />
+                            <span className="font-medium">{participantCount}</span>
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent align="start" className="w-72 p-0">
+                          <div className="p-3 border-b border-border">
+                            <h4 className="font-semibold text-sm">Participants inscrits</h4>
+                          </div>
+                          {participants.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              Aucun participant inscrit
+                            </div>
+                          ) : (
+                            <div className="max-h-60 overflow-y-auto">
+                              {participants.slice(0, 5).map((participant) => (
+                                <div
+                                  key={participant.user_id}
+                                  className="flex items-center gap-3 p-3 border-b border-border last:border-0"
+                                >
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={participant.avatar_url || undefined} />
+                                    <AvatarFallback className="text-xs">
+                                      {getInitials(participant.first_name, participant.last_name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">
+                                      {participant.first_name && participant.last_name
+                                        ? `${participant.first_name} ${participant.last_name}`
+                                        : 'Nom non renseigné'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {participant.email}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                              {participants.length > 5 && (
+                                <div className="p-3 text-center text-sm text-muted-foreground bg-muted/50">
+                                  + {participants.length - 5} autres participants
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </HoverCardContent>
+                      </HoverCard>
+                    </TableCell>
                     <TableCell>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </TableCell>
