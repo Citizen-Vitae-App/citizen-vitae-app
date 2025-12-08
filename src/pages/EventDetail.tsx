@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -232,6 +233,7 @@ const EventDetail = () => {
               <ArrowLeft className="h-5 w-5 text-foreground" />
               <img src={logo} alt="CitizenVitae" className="h-8" />
             </Link>
+            {user && <NotificationDropdown />}
           </div>
         </div>
       </nav>
