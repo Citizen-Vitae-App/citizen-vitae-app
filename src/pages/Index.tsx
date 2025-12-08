@@ -1,4 +1,5 @@
-import { Search, Calendar, SlidersHorizontal, Bell, User, Settings, LogOut } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut } from "lucide-react";
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from '@/assets/logo.png';
@@ -126,9 +127,7 @@ const Index = () => {
             <div className="flex-shrink-0 flex items-center gap-3">
               {user ? (
                 <>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                  </Button>
+                  <NotificationDropdown />
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
