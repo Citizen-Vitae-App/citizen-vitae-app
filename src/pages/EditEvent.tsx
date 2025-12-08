@@ -334,11 +334,26 @@ export default function EditEvent() {
         const newEndDate = endDateTime.toISOString();
         
         const locationChanged = data.location !== originalEvent.location;
-        const dateChanged = newStartDate !== originalEvent.startDate || newEndDate !== originalEvent.endDate;
+        const startDateChanged = newStartDate !== originalEvent.startDate;
+        const endDateChanged = newEndDate !== originalEvent.endDate;
         
-        if (locationChanged || dateChanged) {
-          const notificationType = dateChanged ? 'mission_date_changed' : 'mission_location_changed';
-          
+        // Send separate notifications for each type of change
+        const notifications: string[] = [];
+        
+        if (locationChanged) {
+          notifications.push('mission_location_changed');
+        }
+        
+        if (startDateChanged && endDateChanged) {
+          notifications.push('mission_date_changed');
+        } else if (startDateChanged) {
+          notifications.push('mission_start_date_changed');
+        } else if (endDateChanged) {
+          notifications.push('mission_end_date_changed');
+        }
+        
+        // Send all relevant notifications
+        for (const notificationType of notifications) {
           console.log(`[EditEvent] Sending ${notificationType} notification to participants`);
           await supabase.functions.invoke('send-notification', {
             body: {
