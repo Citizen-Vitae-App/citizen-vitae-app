@@ -330,12 +330,15 @@ export default function EditEvent() {
 
       // Detect changes and notify participants
       if (originalEvent) {
-        const newStartDate = startDateTime.toISOString();
-        const newEndDate = endDateTime.toISOString();
+        // Compare timestamps to avoid ISO string format differences
+        const originalStartTime = new Date(originalEvent.startDate).getTime();
+        const originalEndTime = new Date(originalEvent.endDate).getTime();
+        const newStartTime = startDateTime.getTime();
+        const newEndTime = endDateTime.getTime();
         
         const locationChanged = data.location !== originalEvent.location;
-        const startDateChanged = newStartDate !== originalEvent.startDate;
-        const endDateChanged = newEndDate !== originalEvent.endDate;
+        const startDateChanged = newStartTime !== originalStartTime;
+        const endDateChanged = newEndTime !== originalEndTime;
         
         // Send separate notifications for each type of change
         const notifications: string[] = [];
