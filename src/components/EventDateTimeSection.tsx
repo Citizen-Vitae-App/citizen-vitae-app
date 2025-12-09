@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
 
@@ -43,6 +43,19 @@ const formatDuration = (minutes: number): string => {
   return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`;
 };
 
+// Validate time format HH:MM
+const isValidTimeFormat = (time: string): boolean => {
+  const regex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+  return regex.test(time);
+};
+
+// Normalize time to HH:MM format
+const normalizeTime = (time: string): string => {
+  if (!isValidTimeFormat(time)) return time;
+  const [hours, minutes] = time.split(':');
+  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+};
+
 export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
@@ -63,6 +76,7 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
   const duration = useMemo(() => {
     if (!startDate || !endDate || !startTime || !endTime) return null;
     if (!isSameDay(startDate, endDate)) return null;
+    if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) return null;
     
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
@@ -79,19 +93,6 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
     return formatDuration(diffMinutes);
   }, [startDate, endDate, startTime, endTime]);
 
-  // Filter end times to only show times after start time for single-day events
-  const availableEndTimes = useMemo(() => {
-    if (isMultiDay || !startDate || !endDate || !isSameDay(startDate, endDate)) {
-      return TIME_SLOTS;
-    }
-    
-    const startIndex = TIME_SLOTS.indexOf(startTime);
-    if (startIndex === -1) return TIME_SLOTS;
-    
-    // Return times after start time
-    return TIME_SLOTS.slice(startIndex + 1);
-  }, [isMultiDay, startDate, endDate, startTime]);
-
   // Handle multi-day toggle
   const handleMultiDayToggle = (checked: boolean) => {
     setIsMultiDay(checked);
@@ -99,10 +100,19 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
       // When switching to single day, set end date to start date
       form.setValue('endDate', startDate);
       // Ensure end time is after start time
-      const startIndex = TIME_SLOTS.indexOf(startTime);
-      const endIndex = TIME_SLOTS.indexOf(endTime);
-      if (endIndex <= startIndex && startIndex < TIME_SLOTS.length - 1) {
-        form.setValue('endTime', TIME_SLOTS[startIndex + 1]);
+      if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) {
+        const [startHours, startMinutes] = startTime.split(':').map(Number);
+        const [endHours, endMinutes] = endTime.split(':').map(Number);
+        const startTotal = startHours * 60 + startMinutes;
+        const endTotal = endHours * 60 + endMinutes;
+        
+        if (endTotal <= startTotal) {
+          // Set end time to start time + 1 hour
+          const newEndTotal = Math.min(startTotal + 60, 23 * 60 + 45);
+          const newEndHours = Math.floor(newEndTotal / 60);
+          const newEndMinutes = newEndTotal % 60;
+          form.setValue('endTime', `${newEndHours.toString().padStart(2, '0')}:${newEndMinutes.toString().padStart(2, '0')}`);
+        }
       }
     }
   };
@@ -127,17 +137,49 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
     }
   };
 
-  // Ensure end time is valid when start time changes
+  // Handle start time change with validation
   const handleStartTimeChange = (value: string) => {
     form.setValue('startTime', value);
     
-    if (!isMultiDay && startDate && endDate && isSameDay(startDate, endDate)) {
-      const startIndex = TIME_SLOTS.indexOf(value);
-      const endIndex = TIME_SLOTS.indexOf(endTime);
+    // Only validate if it's a valid time format and single-day event
+    if (!isMultiDay && startDate && endDate && isSameDay(startDate, endDate) && isValidTimeFormat(value) && isValidTimeFormat(endTime)) {
+      const [startHours, startMinutes] = value.split(':').map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+      const startTotal = startHours * 60 + startMinutes;
+      const endTotal = endHours * 60 + endMinutes;
       
-      if (endIndex <= startIndex && startIndex < TIME_SLOTS.length - 1) {
-        form.setValue('endTime', TIME_SLOTS[startIndex + 1]);
+      if (endTotal <= startTotal) {
+        // Set end time to start time + 1 hour
+        const newEndTotal = Math.min(startTotal + 60, 23 * 60 + 45);
+        const newEndHours = Math.floor(newEndTotal / 60);
+        const newEndMinutes = newEndTotal % 60;
+        form.setValue('endTime', `${newEndHours.toString().padStart(2, '0')}:${newEndMinutes.toString().padStart(2, '0')}`);
       }
+    }
+  };
+
+  // Handle end time change with validation
+  const handleEndTimeChange = (value: string) => {
+    // For single-day events, validate that end time is after start time
+    if (!isMultiDay && startDate && endDate && isSameDay(startDate, endDate) && isValidTimeFormat(value) && isValidTimeFormat(startTime)) {
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      const [endHours, endMinutes] = value.split(':').map(Number);
+      const startTotal = startHours * 60 + startMinutes;
+      const endTotal = endHours * 60 + endMinutes;
+      
+      if (endTotal <= startTotal) {
+        // Don't update if invalid
+        return;
+      }
+    }
+    form.setValue('endTime', value);
+  };
+
+  // Handle time input blur to normalize format
+  const handleTimeBlur = (fieldName: 'startTime' | 'endTime') => {
+    const value = form.getValues(fieldName);
+    if (isValidTimeFormat(value)) {
+      form.setValue(fieldName, normalizeTime(value));
     }
   };
 
@@ -264,23 +306,24 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
             name="startTime"
             render={({ field }) => (
               <FormItem>
-                <Select
-                  value={field.value}
-                  onValueChange={handleStartTimeChange}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-black/5 hover:bg-black/10 border-0 w-[90px]">
-                      <SelectValue placeholder="Début" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    {TIME_SLOTS.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="HH:MM"
+                      value={field.value}
+                      onChange={(e) => handleStartTimeChange(e.target.value)}
+                      onBlur={() => handleTimeBlur('startTime')}
+                      list="start-time-slots"
+                      className="bg-black/5 hover:bg-black/10 border-0 w-[90px] text-center tabular-nums"
+                    />
+                    <datalist id="start-time-slots">
+                      {TIME_SLOTS.map((time) => (
+                        <option key={time} value={time} />
+                      ))}
+                    </datalist>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -292,23 +335,24 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
             name="endTime"
             render={({ field }) => (
               <FormItem>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-black/5 hover:bg-black/10 border-0 w-[90px]">
-                      <SelectValue placeholder="Fin" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    {availableEndTimes.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="HH:MM"
+                      value={field.value}
+                      onChange={(e) => handleEndTimeChange(e.target.value)}
+                      onBlur={() => handleTimeBlur('endTime')}
+                      list="end-time-slots"
+                      className="bg-black/5 hover:bg-black/10 border-0 w-[90px] text-center tabular-nums"
+                    />
+                    <datalist id="end-time-slots">
+                      {TIME_SLOTS.map((time) => (
+                        <option key={time} value={time} />
+                      ))}
+                    </datalist>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
