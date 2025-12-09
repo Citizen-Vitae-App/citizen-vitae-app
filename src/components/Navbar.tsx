@@ -106,7 +106,7 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/favorites')}>
                     <Heart className="mr-2 h-4 w-4" />
-                    <span>Mes favoris</span>
+                    <span>Ma liste</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
