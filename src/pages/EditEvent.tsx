@@ -3,17 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Globe, Lock, ChevronDown, Calendar as CalendarIconLucide, CalendarCheck, Users, UserCheck, Pencil, ImageIcon, Tag, Trash2 } from 'lucide-react';
+import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Trash2, Pencil } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,11 +20,11 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventParticipantsSection } from '@/components/organization/EventParticipantsSection';
+import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -510,117 +506,7 @@ export default function EditEvent() {
                 />
 
                 {/* Date & Time Block */}
-                <div className="bg-black/[0.03] rounded-lg px-4 py-4 space-y-2">
-                  {/* Start Date & Time */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-normal text-foreground">Date de début</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FormField
-                        control={form.control}
-                        name="startDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? format(field.value, "PPP", { locale: fr }) : "Date"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  className="pointer-events-auto"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="startTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input type="time" className="bg-black/5 hover:bg-black/10 border-0 [&::-webkit-calendar-picker-indicator]:hidden" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* End Date & Time */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-normal text-foreground">Date de fin</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FormField
-                        control={form.control}
-                        name="endDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? format(field.value, "PPP", { locale: fr }) : "Date"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  className="pointer-events-auto"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="endTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input type="time" className="bg-black/5 hover:bg-black/10 border-0 [&::-webkit-calendar-picker-indicator]:hidden" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <EventDateTimeSection form={form} />
 
                 {/* Location */}
                 <div className="space-y-2">
