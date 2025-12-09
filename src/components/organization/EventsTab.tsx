@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ChevronRight, Calendar, Users } from 'lucide-react';
+import { Plus, Search, ChevronRight, Calendar, Users, Globe, Lock } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
 import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
@@ -51,6 +51,23 @@ const getStatusBadge = (status: string) => {
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
+};
+
+const getVisibilityBadge = (isPublic: boolean) => {
+  if (isPublic) {
+    return (
+      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+        <Globe className="h-3 w-3 mr-1" />
+        Public
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+      <Lock className="h-3 w-3 mr-1" />
+      Privé
+    </Badge>
+  );
 };
 
 const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -142,8 +159,8 @@ export function EventsTab() {
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="font-semibold">Nom</TableHead>
                 <TableHead className="font-semibold">Statut</TableHead>
+                <TableHead className="font-semibold">Visibilité</TableHead>
                 <TableHead className="font-semibold">Lieu</TableHead>
-                <TableHead className="font-semibold">Capacité</TableHead>
                 <TableHead className="font-semibold">Participants</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -177,8 +194,8 @@ export function EventsTab() {
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(status)}</TableCell>
+                    <TableCell>{getVisibilityBadge(event.is_public ?? true)}</TableCell>
                     <TableCell>{event.location}</TableCell>
-                    <TableCell>{event.capacity || 'Illimitée'}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <HoverCard openDelay={200}>
                         <HoverCardTrigger asChild>
