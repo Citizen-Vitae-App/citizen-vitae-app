@@ -77,7 +77,10 @@ export const useFavorites = () => {
     const existing = favorites.find(f => f.event_id === eventId);
 
     if (existing) {
-      // Remove from favorites
+      // Optimistic update - remove immediately from local state
+      setFavorites(prev => prev.filter(f => f.id !== existing.id));
+      
+      // Remove from database
       const { error } = await supabase
         .from('user_favorites')
         .delete()
@@ -85,6 +88,8 @@ export const useFavorites = () => {
 
       if (error) {
         console.error('Error removing favorite:', error);
+        // Rollback on error
+        setFavorites(prev => [...prev, existing]);
         toast({
           title: "Erreur",
           description: "Impossible de retirer des favoris",
@@ -99,16 +104,30 @@ export const useFavorites = () => {
       });
       return { success: true, added: false };
     } else {
-      // Add to favorites
-      const { error } = await supabase
+      // Create temporary favorite for optimistic update
+      const tempFavorite: Favorite = {
+        id: `temp-${Date.now()}`,
+        event_id: eventId,
+        created_at: new Date().toISOString()
+      };
+      
+      // Optimistic update - add immediately to local state
+      setFavorites(prev => [...prev, tempFavorite]);
+      
+      // Add to database
+      const { data, error } = await supabase
         .from('user_favorites')
         .insert({
           user_id: user.id,
           event_id: eventId
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error adding favorite:', error);
+        // Rollback on error
+        setFavorites(prev => prev.filter(f => f.id !== tempFavorite.id));
         toast({
           title: "Erreur",
           description: "Impossible d'ajouter aux favoris",
@@ -116,6 +135,9 @@ export const useFavorites = () => {
         });
         return { success: false };
       }
+
+      // Replace temp with real data
+      setFavorites(prev => prev.map(f => f.id === tempFavorite.id ? data : f));
 
       toast({
         title: "Ajouté aux favoris",
