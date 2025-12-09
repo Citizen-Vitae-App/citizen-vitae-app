@@ -15,6 +15,7 @@ import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
 import { useEventRegistration } from '@/hooks/useEventRegistration';
 import { useAuth } from '@/hooks/useAuth';
+import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 
 interface EventWithOrganization {
@@ -41,10 +42,23 @@ const EventDetail = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  
+  const isLiked = eventId ? isFavorite(eventId) : false;
+
+  const handleLikeClick = async () => {
+    if (!eventId) return;
+    
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    await toggleFavorite(eventId);
+  };
 
   const {
     isRegistered,
@@ -241,7 +255,7 @@ const EventDetail = () => {
           {/* Action buttons on cover */}
           <div className="absolute bottom-6 right-6 flex items-center gap-3">
             <button
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLikeClick}
               className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
             >
               <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
