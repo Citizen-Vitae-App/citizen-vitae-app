@@ -1,5 +1,8 @@
 import { Star, Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 
 interface EventCardProps {
   id?: string;
@@ -14,6 +17,25 @@ interface EventCardProps {
 
 const EventCard = ({ id, title, shortTitle, organization, date, location, image, isNew = false }: EventCardProps) => {
   const titleWords = shortTitle.split(" ");
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  
+  const isLiked = id ? isFavorite(id) : false;
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!id) return;
+    
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    await toggleFavorite(id);
+  };
   
   const CardContent = (
     <>
@@ -24,9 +46,18 @@ const EventCard = ({ id, title, shortTitle, organization, date, location, image,
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Heart className="w-6 h-6 text-white fill-black/20 stroke-2" />
-        </div>
+        <button
+          onClick={handleLikeClick}
+          className={cn(
+            "absolute top-4 right-4 transition-opacity duration-300 p-2 rounded-full bg-background/80 hover:bg-background",
+            isLiked ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
+        >
+          <Heart className={cn(
+            "w-5 h-5",
+            isLiked ? "fill-destructive text-destructive" : "text-foreground"
+          )} />
+        </button>
         <div className="absolute bottom-6 left-6">
           <div className="text-white font-extrabold text-2xl uppercase leading-tight">
             {titleWords.map((word, index) => (

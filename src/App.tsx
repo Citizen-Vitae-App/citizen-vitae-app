@@ -13,6 +13,7 @@ import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import Settings from "./pages/Settings";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="super_admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
