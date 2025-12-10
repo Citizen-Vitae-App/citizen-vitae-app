@@ -26,6 +26,16 @@ const generateTimeSlots = () => {
 
 const TIME_SLOTS = generateTimeSlots();
 
+// Validate time string format and values
+const isValidTime = (time: string): boolean => {
+  if (!time) return true; // Empty is considered valid (will use placeholder)
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return false;
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+};
+
 // Parse time string to minutes for scroll positioning
 const timeToMinutes = (time: string): number | null => {
   const match = time.match(/^(\d{1,2}):(\d{2})$/);
@@ -44,9 +54,19 @@ export function TimePickerInput({
   className 
 }: TimePickerInputProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
+  const [lastValidValue, setLastValidValue] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update last valid value when value changes externally and is valid
+  useEffect(() => {
+    if (isValidTime(value) && value) {
+      setLastValidValue(value);
+      setIsInvalid(false);
+    }
+  }, [value]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -77,12 +97,25 @@ export function TimePickerInput({
 
   const handleSelect = (time: string) => {
     onChange(time);
+    setLastValidValue(time);
+    setIsInvalid(false);
     setIsOpen(false);
     inputRef.current?.focus();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    onChange(newValue);
+    
+    // Check validity for visual feedback (but allow typing)
+    if (newValue && !isValidTime(newValue)) {
+      setIsInvalid(true);
+    } else {
+      setIsInvalid(false);
+      if (newValue && isValidTime(newValue)) {
+        setLastValidValue(newValue);
+      }
+    }
   };
 
   const handleInputFocus = () => {
@@ -92,12 +125,22 @@ export function TimePickerInput({
   const handleInputBlur = () => {
     // Delay to allow click on dropdown item
     setTimeout(() => {
+      // If current value is invalid, revert to last valid value
+      if (isInvalid || (value && !isValidTime(value))) {
+        onChange(lastValidValue);
+        setIsInvalid(false);
+      }
       if (onBlur) onBlur();
     }, 150);
   };
 
   return (
     <div ref={containerRef} className="relative">
+      {isInvalid && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap z-50">
+          Heure incorrecte
+        </div>
+      )}
       <Input
         ref={inputRef}
         type="text"
@@ -108,6 +151,7 @@ export function TimePickerInput({
         onBlur={handleInputBlur}
         className={cn(
           "bg-black/5 hover:bg-black/10 border-0 w-[90px] text-center tabular-nums",
+          isInvalid && "bg-destructive text-destructive-foreground hover:bg-destructive",
           className
         )}
       />
