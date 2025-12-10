@@ -7,28 +7,13 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { TimePickerInput } from '@/components/TimePickerInput';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
 
 interface EventDateTimeSectionProps {
   form: any;
 }
-
-// Generate time slots in 15-minute intervals
-const generateTimeSlots = () => {
-  const slots: string[] = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      const h = hour.toString().padStart(2, '0');
-      const m = minute.toString().padStart(2, '0');
-      slots.push(`${h}:${m}`);
-    }
-  }
-  return slots;
-};
-
-const TIME_SLOTS = generateTimeSlots();
 
 // Format duration in human-readable format
 const formatDuration = (minutes: number): string => {
@@ -307,22 +292,11 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="HH:MM"
-                      value={field.value}
-                      onChange={(e) => handleStartTimeChange(e.target.value)}
-                      onBlur={() => handleTimeBlur('startTime')}
-                      list="start-time-slots"
-                      className="bg-black/5 hover:bg-black/10 border-0 w-[90px] text-center tabular-nums"
-                    />
-                    <datalist id="start-time-slots">
-                      {TIME_SLOTS.map((time) => (
-                        <option key={time} value={time} />
-                      ))}
-                    </datalist>
-                  </div>
+                  <TimePickerInput
+                    value={field.value}
+                    onChange={handleStartTimeChange}
+                    onBlur={() => handleTimeBlur('startTime')}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -336,22 +310,12 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="HH:MM"
-                      value={field.value}
-                      onChange={(e) => handleEndTimeChange(e.target.value)}
-                      onBlur={() => handleTimeBlur('endTime')}
-                      list="end-time-slots"
-                      className="bg-black/5 hover:bg-black/10 border-0 w-[90px] text-center tabular-nums"
-                    />
-                    <datalist id="end-time-slots">
-                      {TIME_SLOTS.map((time) => (
-                        <option key={time} value={time} />
-                      ))}
-                    </datalist>
-                  </div>
+                  <TimePickerInput
+                    value={field.value}
+                    onChange={handleEndTimeChange}
+                    onBlur={() => handleTimeBlur('endTime')}
+                    startTime={startTime}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
