@@ -15,10 +15,10 @@ import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { useState } from 'react';
 
 interface NavbarProps {
@@ -87,14 +87,14 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
               
               {/* Menu burger mobile pour les tabs organisation */}
               {tabs && isMobile && (
-                <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-                  <DrawerTrigger asChild>
+                <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+                  <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-10 w-10">
                       <Menu className="h-5 w-5" />
                     </Button>
-                  </DrawerTrigger>
-                  <DrawerContent>
-                    <div className="p-4 pb-8 space-y-2">
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-64 p-0 pt-12">
+                    <div className="p-4 space-y-2">
                       {tabs.map((tab) => (
                         <button
                           key={tab.value}
@@ -110,8 +110,8 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                         </button>
                       ))}
                     </div>
-                  </DrawerContent>
-                </Drawer>
+                  </SheetContent>
+                </Sheet>
               )}
               
               <DropdownMenu>
