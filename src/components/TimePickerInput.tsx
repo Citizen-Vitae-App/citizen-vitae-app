@@ -36,7 +36,7 @@ const isValidTime = (time: string): boolean => {
   return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 };
 
-// Try to normalize partial time inputs (e.g., "8:3" -> "08:30", "14:5" -> "14:50")
+// Try to normalize partial time inputs (e.g., "8:3" -> "08:30", "14:5" -> "14:50", "8:" -> "08:00")
 const normalizeTime = (time: string): string | null => {
   if (!time) return null;
   
@@ -59,6 +59,16 @@ const normalizeTime = (time: string): string | null => {
     if (hours >= 0 && hours <= 23) {
       const normalizedHours = partialMatch[1].padStart(2, '0');
       return `${normalizedHours}:${minuteDigit}0`;
+    }
+  }
+  
+  // Try to fix inputs like "8:" or "14:" -> "08:00" or "14:00"
+  const hoursOnlyMatch = time.match(/^(\d{1,2}):?$/);
+  if (hoursOnlyMatch) {
+    const hours = parseInt(hoursOnlyMatch[1], 10);
+    if (hours >= 0 && hours <= 23) {
+      const normalizedHours = hoursOnlyMatch[1].padStart(2, '0');
+      return `${normalizedHours}:00`;
     }
   }
   
@@ -132,9 +142,9 @@ export function TimePickerInput({
     inputRef.current?.focus();
   };
 
-  // Check if input is a partial time entry in progress (e.g., "8:3" - single digit minute)
+  // Check if input is a partial time entry in progress (e.g., "8:3", "8:", "14")
   const isPartialTimeEntry = (time: string): boolean => {
-    return /^(\d{1,2}):(\d{1})$/.test(time);
+    return /^(\d{1,2}):?(\d{0,1})$/.test(time);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
