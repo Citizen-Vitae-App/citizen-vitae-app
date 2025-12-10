@@ -132,12 +132,18 @@ export function TimePickerInput({
     inputRef.current?.focus();
   };
 
+  // Check if input is a partial time entry in progress (e.g., "8:3" - single digit minute)
+  const isPartialTimeEntry = (time: string): boolean => {
+    return /^(\d{1,2}):(\d{1})$/.test(time);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
     
     // Check validity for visual feedback (but allow typing)
-    if (newValue && !isValidTime(newValue)) {
+    // Don't show error for partial entries like "8:3" - user is still typing
+    if (newValue && !isValidTime(newValue) && !isPartialTimeEntry(newValue)) {
       setIsInvalid(true);
     } else {
       setIsInvalid(false);
