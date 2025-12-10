@@ -314,7 +314,6 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
                     value={field.value}
                     onChange={handleEndTimeChange}
                     onBlur={() => handleTimeBlur('endTime')}
-                    startTime={startTime}
                   />
                 </FormControl>
                 <FormMessage />
