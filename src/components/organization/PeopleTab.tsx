@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Ticket } from 'lucide-react';
+import { Users, Ticket, Search } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Participant {
   user_id: string;
@@ -39,6 +40,7 @@ const getStatusBadge = (status: string) => {
 
 export function PeopleTab() {
   const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useIsMobile();
 
   const { data: participants, isLoading } = useQuery({
     queryKey: ['organization-participants-detailed'],
@@ -131,14 +133,16 @@ export function PeopleTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Audience</h2>
-        <div className="w-72">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 className="text-2xl md:text-3xl font-bold">Audience</h2>
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher par nom ou email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-muted border-0"
           />
         </div>
       </div>
@@ -165,7 +169,50 @@ export function PeopleTab() {
             </p>
           </div>
         </div>
+      ) : isMobile ? (
+        // Mobile: Card list view
+        <div className="space-y-3">
+          {filteredParticipants.map((participant) => (
+            <div key={participant.user_id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+              <Avatar className="h-12 w-12 flex-shrink-0">
+                <AvatarImage src={participant.avatar_url || undefined} />
+                <AvatarFallback>
+                  {getInitials(participant.first_name, participant.last_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-sm truncate">
+                      {participant.first_name && participant.last_name
+                        ? `${participant.first_name} ${participant.last_name}`
+                        : 'Nom non renseigné'}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {participant.email || 'Email non renseigné'}
+                    </p>
+                  </div>
+                  {getStatusBadge(participant.last_status)}
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {participant.event_count} mission{participant.event_count > 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Ticket className="h-3 w-3" />
+                    {participant.tickets_scanned} scanné{participant.tickets_scanned > 1 ? 's' : ''}
+                  </span>
+                  <span>
+                    {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
+        // Desktop: Table view
         <div className="border rounded-lg">
           <Table>
             <TableHeader>

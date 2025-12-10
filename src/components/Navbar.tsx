@@ -10,9 +10,16 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, Settings, Heart } from 'lucide-react';
+import { LogOut, User, Settings, Heart, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { useState } from 'react';
 
 interface NavbarProps {
   activeTab?: string;
@@ -22,6 +29,8 @@ interface NavbarProps {
 export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   const tabs = activeTab && onTabChange ? [
     { value: 'events', label: 'Events' },
@@ -36,18 +45,23 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
     return user?.email?.[0].toUpperCase() || 'U';
   };
 
+  const handleTabChange = (tab: string) => {
+    onTabChange?.(tab);
+    setDrawerOpen(false);
+  };
+
   return (
-    <header className="absolute top-0 left-0 right-0 px-8 py-6 z-10">
+    <header className="absolute top-0 left-0 right-0 px-4 md:px-8 py-4 md:py-6 z-10">
       <div className="flex items-center justify-between">
         <Link 
           to="/" 
           className="hover:opacity-80 transition-opacity"
         >
-          <img src={logo} alt="CitizenVitae" className="h-8" />
+          <img src={logo} alt="CitizenVitae" className="h-6 md:h-8" />
         </Link>
         
-        {/* Tabs au centre pour les organisations */}
-        {tabs && (
+        {/* Tabs au centre pour les organisations - Desktop only */}
+        {tabs && !isMobile && (
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
             {tabs.map((tab) => (
               <button
@@ -66,10 +80,39 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
           </div>
         )}
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {user ? (
             <>
               <NotificationDropdown />
+              
+              {/* Menu burger mobile pour les tabs organisation */}
+              {tabs && isMobile && (
+                <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+                  <DrawerTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                    <div className="p-4 pb-8 space-y-2">
+                      {tabs.map((tab) => (
+                        <button
+                          key={tab.value}
+                          onClick={() => handleTabChange(tab.value)}
+                          className={cn(
+                            "w-full px-4 py-3 text-left text-base font-medium transition-all rounded-lg",
+                            activeTab === tab.value
+                              ? "bg-muted text-foreground"
+                              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          )}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
