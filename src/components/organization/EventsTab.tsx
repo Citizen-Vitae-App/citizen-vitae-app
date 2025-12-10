@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ChevronRight, Calendar, Users, Globe, Lock } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
 import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
-import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import { format, isAfter, isBefore, parseISO, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,6 +59,21 @@ const getInitials = (firstName: string | null, lastName: string | null) => {
   const first = firstName?.[0] || '';
   const last = lastName?.[0] || '';
   return `${first}${last}`.toUpperCase() || '?';
+};
+
+const formatMobileEventDate = (startDate: string, endDate: string) => {
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+  
+  if (isSameDay(start, end)) {
+    // Single day: "10 déc. 2025 à 00:22"
+    return format(start, "d MMM yyyy 'à' HH:mm", { locale: fr });
+  }
+  
+  // Multi-day: "Du 10 déc. à 00:22 au 13 déc. 2025 à 01:42"
+  const startFormatted = format(start, "d MMM 'à' HH:mm", { locale: fr });
+  const endFormatted = format(end, "d MMM yyyy 'à' HH:mm", { locale: fr });
+  return `Du ${startFormatted} au ${endFormatted}`;
 };
 
 export function EventsTab() {
@@ -152,7 +167,7 @@ export function EventsTab() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{event.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {format(parseISO(event.start_date), "d MMM yyyy", { locale: fr })}
+                      {formatMobileEventDate(event.start_date, event.end_date)}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       {getStatusBadge(status)}
