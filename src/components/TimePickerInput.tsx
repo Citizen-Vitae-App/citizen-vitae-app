@@ -7,7 +7,6 @@ interface TimePickerInputProps {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
-  startTime?: string; // For end time picker, to calculate duration
   placeholder?: string;
   className?: string;
 }
@@ -27,7 +26,7 @@ const generateTimeSlots = () => {
 
 const TIME_SLOTS = generateTimeSlots();
 
-// Parse time string to minutes
+// Parse time string to minutes for scroll positioning
 const timeToMinutes = (time: string): number | null => {
   const match = time.match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return null;
@@ -37,25 +36,10 @@ const timeToMinutes = (time: string): number | null => {
   return hours * 60 + minutes;
 };
 
-// Format duration in human-readable format
-const formatDuration = (minutes: number): string => {
-  if (minutes <= 0) return '';
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h${remainingMinutes.toString().padStart(2, '0')}`;
-};
-
 export function TimePickerInput({ 
   value, 
   onChange, 
   onBlur, 
-  startTime,
   placeholder = "HH:MM",
   className 
 }: TimePickerInputProps) {
@@ -112,20 +96,6 @@ export function TimePickerInput({
     }, 150);
   };
 
-  // Calculate duration from startTime for each slot
-  const getDurationLabel = (slotTime: string): string => {
-    if (!startTime) return '';
-    const startMinutes = timeToMinutes(startTime);
-    const slotMinutes = timeToMinutes(slotTime);
-    if (startMinutes === null || slotMinutes === null) return '';
-    
-    const diff = slotMinutes - startMinutes;
-    if (diff <= 0) return '';
-    if (diff >= 24 * 60) return ''; // Don't show for 24h+
-    
-    return formatDuration(diff);
-  };
-
   return (
     <div ref={containerRef} className="relative">
       <Input
@@ -147,7 +117,6 @@ export function TimePickerInput({
           <ScrollArea className="h-[200px]" ref={scrollAreaRef}>
             <div className="py-1">
               {TIME_SLOTS.map((time, index) => {
-                const durationLabel = getDurationLabel(time);
                 const isSelected = value === time;
                 
                 return (
@@ -157,16 +126,11 @@ export function TimePickerInput({
                     type="button"
                     onClick={() => handleSelect(time)}
                     className={cn(
-                      "w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors flex items-center justify-between",
+                      "w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors",
                       isSelected && "bg-accent"
                     )}
                   >
                     <span className="tabular-nums">{time}</span>
-                    {durationLabel && (
-                      <span className="text-muted-foreground text-xs">
-                        ({durationLabel})
-                      </span>
-                    )}
                   </button>
                 );
               })}
