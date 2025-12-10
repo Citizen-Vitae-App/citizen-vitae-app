@@ -12,6 +12,8 @@ import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
   const start = parseISO(startDate);
@@ -24,6 +26,7 @@ const getEventStatus = (startDate: string, endDate: string) => {
   }
   return 'Live';
 };
+
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'Draft':
@@ -38,6 +41,7 @@ const getStatusBadge = (status: string) => {
       return <Badge variant="outline">{status}</Badge>;
   }
 };
+
 const getVisibilityBadge = (isPublic: boolean) => {
   if (isPublic) {
     return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
@@ -50,13 +54,16 @@ const getVisibilityBadge = (isPublic: boolean) => {
       Privé
     </Badge>;
 };
+
 const getInitials = (firstName: string | null, lastName: string | null) => {
   const first = firstName?.[0] || '';
   const last = lastName?.[0] || '';
   return `${first}${last}`.toUpperCase() || '?';
 };
+
 export function EventsTab() {
   const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useIsMobile();
   const {
     events: allEvents,
     isLoading,
@@ -76,24 +83,27 @@ export function EventsTab() {
   const {
     data: participantCounts
   } = useEventsParticipantCounts(eventIds);
+
   if (isLoading) {
     return <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
+
   if (error) {
     return <div className="text-center py-12 text-destructive">
         Erreur lors du chargement des événements
       </div>;
   }
-  return <div className="space-y-6">
+
+  return <div className="space-y-4 md:space-y-6">
       {/* Header avec titre et bouton */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">My Events</h2>
-        <Button asChild>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl md:text-3xl font-bold">My Events</h2>
+        <Button asChild size={isMobile ? "sm" : "default"}>
           <Link to="/organization/create-event">
-            <Plus className="mr-2 h-4 w-4" />
-            Créer
+            <Plus className="mr-1 md:mr-2 h-4 w-4" />
+            {isMobile ? "Créer" : "Créer"}
           </Link>
         </Button>
       </div>
@@ -104,9 +114,10 @@ export function EventsTab() {
         <Input placeholder="Rechercher un événement..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 w-full bg-muted border-0" />
       </div>
 
-      {/* Table des événements */}
+      {/* Liste des événements */}
       <div>
-        {events.length === 0 ? <div className="text-center py-12">
+        {events.length === 0 ? (
+          <div className="text-center py-12">
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement</h3>
             <p className="text-muted-foreground mb-4">
@@ -118,7 +129,48 @@ export function EventsTab() {
                   Créer un événement
                 </Link>
               </Button>}
-          </div> : <Table>
+          </div>
+        ) : isMobile ? (
+          // Mobile: Card list view
+          <div className="space-y-3">
+            {events.map(event => {
+              const status = getEventStatus(event.start_date, event.end_date);
+              const eventParticipants = participantCounts?.get(event.id);
+              const participantCount = eventParticipants?.count || 0;
+              
+              return (
+                <div 
+                  key={event.id} 
+                  className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/organization/events/${event.id}/edit`)}
+                >
+                  <img 
+                    src={event.cover_image_url || defaultEventCover} 
+                    alt={event.name} 
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0" 
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">{event.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {format(parseISO(event.start_date), "d MMM yyyy", { locale: fr })}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {getStatusBadge(status)}
+                      {getVisibilityBadge(event.is_public ?? true)}
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {participantCount}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          // Desktop: Table view
+          <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="font-semibold">Nom</TableHead>
@@ -131,11 +183,11 @@ export function EventsTab() {
             </TableHeader>
             <TableBody>
               {events.map(event => {
-            const status = getEventStatus(event.start_date, event.end_date);
-            const eventParticipants = participantCounts?.get(event.id);
-            const participantCount = eventParticipants?.count || 0;
-            const participants = eventParticipants?.participants || [];
-            return <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50 border-0" onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
+                const status = getEventStatus(event.start_date, event.end_date);
+                const eventParticipants = participantCounts?.get(event.id);
+                const participantCount = eventParticipants?.count || 0;
+                const participants = eventParticipants?.participants || [];
+                return <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50 border-0" onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <img src={event.cover_image_url || defaultEventCover} alt={event.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -143,8 +195,8 @@ export function EventsTab() {
                           <span className="font-medium">{event.name}</span>
                           <span className="text-sm text-muted-foreground">
                             {format(parseISO(event.start_date), "d MMMM yyyy 'à' HH'h'mm", {
-                        locale: fr
-                      })}
+                              locale: fr
+                            })}
                           </span>
                         </div>
                       </div>
@@ -194,9 +246,10 @@ export function EventsTab() {
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </TableCell>
                   </TableRow>;
-          })}
+              })}
             </TableBody>
-          </Table>}
+          </Table>
+        )}
       </div>
     </div>;
 }
