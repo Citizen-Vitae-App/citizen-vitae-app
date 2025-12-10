@@ -134,12 +134,12 @@ export function TimePickerInput({
     }
   }, [isOpen, value]);
 
-  const handleSelect = (time: string) => {
+  const handleSelect = (time: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent blur from firing first
     onChange(time);
     setLastValidValue(time);
     setIsInvalid(false);
     setIsOpen(false);
-    inputRef.current?.focus();
   };
 
   // Check if input is a partial time entry in progress (e.g., "8:3", "8:", "14")
@@ -219,7 +219,7 @@ export function TimePickerInput({
                     key={time}
                     data-index={index}
                     type="button"
-                    onClick={() => handleSelect(time)}
+                    onMouseDown={(e) => handleSelect(time, e)}
                     className={cn(
                       "w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors",
                       isSelected && "bg-accent"
