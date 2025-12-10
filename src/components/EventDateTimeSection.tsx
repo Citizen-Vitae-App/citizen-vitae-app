@@ -323,10 +323,12 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
         </div>
       </div>
 
-      {/* End Date display for multi-day (informative) */}
-      {isMultiDay && startDate && endDate && !isSameDay(startDate, endDate) && (
+      {/* Full date-time display for multi-day events */}
+      {isMultiDay && startDate && endDate && !isSameDay(startDate, endDate) && startTime && endTime && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-1 border-t border-black/5">
-          <span>Du {format(startDate, "d MMMM", { locale: fr })} au {format(endDate, "d MMMM yyyy", { locale: fr })}</span>
+          <span>
+            Du {format(startDate, "d MMMM", { locale: fr })} à {startTime} au {format(endDate, "d MMMM yyyy", { locale: fr })} à {endTime}
+          </span>
         </div>
       )}
     </div>
