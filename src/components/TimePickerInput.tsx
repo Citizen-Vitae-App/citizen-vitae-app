@@ -36,6 +36,35 @@ const isValidTime = (time: string): boolean => {
   return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 };
 
+// Try to normalize partial time inputs (e.g., "8:3" -> "08:30", "14:5" -> "14:50")
+const normalizeTime = (time: string): string | null => {
+  if (!time) return null;
+  
+  // Already valid format
+  if (isValidTime(time)) {
+    // Normalize to HH:MM format (add leading zero if needed)
+    const match = time.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      const hours = match[1].padStart(2, '0');
+      return `${hours}:${match[2]}`;
+    }
+    return time;
+  }
+  
+  // Try to fix partial inputs like "8:3" -> "08:30"
+  const partialMatch = time.match(/^(\d{1,2}):(\d{1})$/);
+  if (partialMatch) {
+    const hours = parseInt(partialMatch[1], 10);
+    const minuteDigit = partialMatch[2];
+    if (hours >= 0 && hours <= 23) {
+      const normalizedHours = partialMatch[1].padStart(2, '0');
+      return `${normalizedHours}:${minuteDigit}0`;
+    }
+  }
+  
+  return null; // Cannot normalize
+};
+
 // Parse time string to minutes for scroll positioning
 const timeToMinutes = (time: string): number | null => {
   const match = time.match(/^(\d{1,2}):(\d{2})$/);
@@ -125,8 +154,14 @@ export function TimePickerInput({
   const handleInputBlur = () => {
     // Delay to allow click on dropdown item
     setTimeout(() => {
-      // If current value is invalid, revert to last valid value
-      if (isInvalid || (value && !isValidTime(value))) {
+      // Try to normalize the input first (e.g., "8:3" -> "08:30")
+      const normalized = normalizeTime(value);
+      if (normalized && isValidTime(normalized)) {
+        onChange(normalized);
+        setLastValidValue(normalized);
+        setIsInvalid(false);
+      } else if (isInvalid || (value && !isValidTime(value))) {
+        // If current value is invalid and cannot be normalized, revert to last valid value
         onChange(lastValidValue);
         setIsInvalid(false);
       }
