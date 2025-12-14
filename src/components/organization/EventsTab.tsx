@@ -28,15 +28,15 @@ const getEventStatus = (startDate: string, endDate: string) => {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'Draft':
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Draft</Badge>;
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 whitespace-nowrap">Draft</Badge>;
     case 'À venir':
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">À venir</Badge>;
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 whitespace-nowrap">À venir</Badge>;
     case 'Live':
-      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">​En cours </Badge>;
+      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 whitespace-nowrap">En cours</Badge>;
     case 'Passé':
-      return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">Passé</Badge>;
+      return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 whitespace-nowrap">Passé</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline" className="whitespace-nowrap">{status}</Badge>;
   }
 };
 const getVisibilityBadge = (isPublic: boolean) => {
