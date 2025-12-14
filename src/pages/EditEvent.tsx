@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Trash2, Pencil } from 'lucide-react';
+import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Trash2, Pencil, Loader2, Check } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -51,8 +51,11 @@ export default function EditEvent() {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId: string }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [uploadedNewImageUrl, setUploadedNewImageUrl] = useState<string | null>(null);
+  const uploadPromiseRef = useRef<Promise<string | null> | null>(null);
   const [isPublic, setIsPublic] = useState(true);
   const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
   const [tempCapacity, setTempCapacity] = useState('');
@@ -126,7 +129,7 @@ export default function EditEvent() {
 
         setIsPublic(event.is_public ?? true);
         setHasWaitlist(event.has_waitlist ?? false);
-        setCoverImage(event.cover_image_url);
+        setExistingImageUrl(event.cover_image_url);
         if (event.latitude && event.longitude) {
           setCoordinates({ latitude: Number(event.latitude), longitude: Number(event.longitude) });
         }
@@ -168,16 +171,55 @@ export default function EditEvent() {
     fetchCauseThemes();
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setCoverImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file || !organizationId) return;
+
+    // Immediate preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Start background upload
+    setIsImageUploading(true);
+    setUploadedNewImageUrl(null);
+
+    const uploadPromise = (async () => {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${organizationId}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('event-covers')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast.error("Erreur lors de l'upload de l'image");
+          setIsImageUploading(false);
+          return null;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-covers')
+          .getPublicUrl(fileName);
+        
+        setUploadedNewImageUrl(publicUrl);
+        setIsImageUploading(false);
+        return publicUrl;
+      } catch (error) {
+        console.error('Upload failed:', error);
+        setIsImageUploading(false);
+        return null;
+      }
+    })();
+
+    uploadPromiseRef.current = uploadPromise;
   };
 
   const handleSetCapacity = () => {
@@ -244,31 +286,17 @@ export default function EditEvent() {
     if (!eventId || !organizationId) return;
 
     try {
-      let uploadedImageUrl = coverImage;
+      // Determine final image URL
+      let finalImageUrl = existingImageUrl;
 
-      // Upload new cover image if provided
-      if (coverImageFile) {
-        const fileExt = coverImageFile.name.split('.').pop();
-        const fileName = `${organizationId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-covers')
-          .upload(fileName, coverImageFile, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          toast.error("Erreur lors de l'upload de l'image");
-          console.error(uploadError);
-          return;
+      // If a new image was selected
+      if (newImagePreview) {
+        if (isImageUploading && uploadPromiseRef.current) {
+          toast.info('Finalisation de l\'upload de l\'image...');
+          finalImageUrl = await uploadPromiseRef.current;
+        } else if (uploadedNewImageUrl) {
+          finalImageUrl = uploadedNewImageUrl;
         }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-covers')
-          .getPublicUrl(fileName);
-        
-        uploadedImageUrl = publicUrl;
       }
 
       // Combine date and time
@@ -293,7 +321,7 @@ export default function EditEvent() {
           has_waitlist: hasWaitlist,
           require_approval: data.requireApproval,
           is_public: isPublic,
-          cover_image_url: uploadedImageUrl,
+          cover_image_url: finalImageUrl,
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
         })
@@ -427,7 +455,7 @@ export default function EditEvent() {
               <div>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm group">
                   <img 
-                    src={coverImage || defaultEventCover} 
+                    src={newImagePreview || existingImageUrl || defaultEventCover} 
                     alt="Cover" 
                     className="w-full h-full object-cover" 
                   />
@@ -437,8 +465,17 @@ export default function EditEvent() {
                     onChange={handleImageUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-primary border-2 border-white flex items-center justify-center transition-colors group-hover:bg-primary/80 pointer-events-none">
-                    <ImageIcon className="w-6 h-6 text-primary-foreground" />
+                  {/* Upload status indicator */}
+                  <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full border-2 border-white flex items-center justify-center transition-colors pointer-events-none"
+                    style={{ backgroundColor: isImageUploading ? 'hsl(var(--muted))' : uploadedNewImageUrl ? 'hsl(142, 76%, 36%)' : 'hsl(var(--primary))' }}
+                  >
+                    {isImageUploading ? (
+                      <Loader2 className="w-6 h-6 text-foreground animate-spin" />
+                    ) : uploadedNewImageUrl ? (
+                      <Check className="w-6 h-6 text-white" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-primary-foreground" />
+                    )}
                   </div>
                 </div>
               </div>

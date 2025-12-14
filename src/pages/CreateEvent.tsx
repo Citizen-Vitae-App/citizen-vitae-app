@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Pencil } from 'lucide-react';
+import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Pencil, Loader2, Check } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
+import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -40,8 +41,6 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 export default function CreateEvent() {
   const navigate = useNavigate();
-  const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [isPublic, setIsPublic] = useState(true);
   const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
   const [tempCapacity, setTempCapacity] = useState('');
@@ -49,6 +48,19 @@ export default function CreateEvent() {
   const [causeThemes, setCauseThemes] = useState<Array<{ id: string; name: string; icon: string; color: string }>>([]);
   const [selectedCauseThemes, setSelectedCauseThemes] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+
+  // Background image upload hook
+  const {
+    previewUrl: coverImage,
+    uploadedUrl,
+    isUploading: isImageUploading,
+    handleFileSelect,
+    waitForUpload,
+  } = useBackgroundImageUpload({
+    bucket: 'event-covers',
+    organizationId,
+  });
 
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -68,15 +80,28 @@ export default function CreateEvent() {
     },
   });
 
+  // Fetch organization ID on mount for early image upload
+  useEffect(() => {
+    const fetchOrgId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single();
+        if (data) {
+          setOrganizationId(data.organization_id);
+        }
+      }
+    };
+    fetchOrgId();
+  }, []);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      handleFileSelect(file);
     }
   };
 
@@ -110,51 +135,18 @@ export default function CreateEvent() {
 
   const onSubmit = async (data: EventFormData) => {
     try {
-      // Get user's organization_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Vous devez être connecté');
-        return;
-      }
-
-      const { data: memberData, error: memberError } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (memberError || !memberData) {
-        console.error('Error fetching organization:', memberError);
+      if (!organizationId) {
         toast.error('Organisation non trouvée');
         return;
       }
 
-      let uploadedImageUrl = null;
-
-      // Upload cover image if provided
-      if (coverImageFile) {
-        const fileExt = coverImageFile.name.split('.').pop();
-        const fileName = `${memberData.organization_id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-covers')
-          .upload(fileName, coverImageFile, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          toast.error("Erreur lors de l'upload de l'image");
-          console.error(uploadError);
-          return;
+      // Wait for background upload to complete if still in progress
+      let imageUrl: string | null = null;
+      if (coverImage) {
+        if (isImageUploading) {
+          toast.info('Finalisation de l\'upload de l\'image...');
         }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-covers')
-          .getPublicUrl(fileName);
-        
-        uploadedImageUrl = publicUrl;
+        imageUrl = await waitForUpload();
       }
 
       // Combine date and time
@@ -170,7 +162,7 @@ export default function CreateEvent() {
       const { data: eventData, error: insertError } = await supabase
         .from('events')
         .insert({
-          organization_id: memberData.organization_id,
+          organization_id: organizationId,
           name: data.name,
           start_date: startDateTime.toISOString(),
           end_date: endDateTime.toISOString(),
@@ -180,7 +172,7 @@ export default function CreateEvent() {
           has_waitlist: hasWaitlist,
           require_approval: data.requireApproval,
           is_public: isPublic,
-          cover_image_url: uploadedImageUrl,
+          cover_image_url: imageUrl,
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
         })
@@ -255,9 +247,17 @@ export default function CreateEvent() {
                     onChange={handleImageUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  {/* Upload badge indicator */}
-                  <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-primary border-2 border-white flex items-center justify-center transition-colors group-hover:bg-primary/80 pointer-events-none">
-                    <ImageIcon className="w-6 h-6 text-primary-foreground" />
+                  {/* Upload status indicator */}
+                  <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full border-2 border-white flex items-center justify-center transition-colors pointer-events-none"
+                    style={{ backgroundColor: isImageUploading ? 'hsl(var(--muted))' : uploadedUrl ? 'hsl(142, 76%, 36%)' : 'hsl(var(--primary))' }}
+                  >
+                    {isImageUploading ? (
+                      <Loader2 className="w-6 h-6 text-foreground animate-spin" />
+                    ) : uploadedUrl ? (
+                      <Check className="w-6 h-6 text-white" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-primary-foreground" />
+                    )}
                   </div>
                 </div>
               </div>
