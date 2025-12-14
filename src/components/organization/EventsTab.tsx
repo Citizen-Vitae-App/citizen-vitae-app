@@ -185,11 +185,11 @@ export function EventsTab() {
             const participantCount = eventParticipants?.count || 0;
             const participants = eventParticipants?.participants || [];
             return <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50 border-0" onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
-                    <TableCell>
+                    <TableCell className="max-w-[300px]">
                       <div className="flex items-center gap-3">
-                        <img src={event.cover_image_url || defaultEventCover} alt={event.name} className="w-12 h-12 rounded-lg object-cover" />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{event.name}</span>
+                        <img src={event.cover_image_url || defaultEventCover} alt={event.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium truncate" title={event.name}>{event.name}</span>
                           <span className="text-sm text-muted-foreground">
                             {format(parseISO(event.start_date), "d MMMM yyyy 'à' HH'h'mm", {
                         locale: fr
