@@ -8,7 +8,7 @@ import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -581,10 +581,10 @@ export default function EditEvent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Textarea
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
                             placeholder="Ajouter une description"
-                            className="min-h-[120px] bg-black/[0.03] hover:bg-black/[0.05] border-0 px-4 pt-3"
-                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
