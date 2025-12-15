@@ -1,5 +1,6 @@
 import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut } from "lucide-react";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from '@/assets/logo.png';
@@ -240,6 +241,12 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+      
+      {/* Bottom padding for mobile nav */}
+      <div className="h-16 md:hidden" />
     </div>
   );
 };

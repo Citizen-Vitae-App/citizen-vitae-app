@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { Switch } from '@/components/ui/switch';
@@ -229,6 +230,12 @@ export default function Settings() {
           </div>
         </section>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+      
+      {/* Bottom padding for mobile nav */}
+      <div className="h-16 md:hidden" />
     </div>
   );
 }
