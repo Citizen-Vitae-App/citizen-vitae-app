@@ -18,6 +18,90 @@ interface RichTextEditorProps {
   className?: string;
 }
 
+// Emoji data with searchable keywords
+const EMOJI_DATA: { emoji: string; keywords: string[] }[] = [
+  // Smileys
+  { emoji: '😀', keywords: ['sourire', 'smile', 'happy', 'heureux', 'joie'] },
+  { emoji: '😃', keywords: ['sourire', 'smile', 'happy', 'heureux', 'grand'] },
+  { emoji: '😄', keywords: ['sourire', 'smile', 'happy', 'content', 'rire'] },
+  { emoji: '😁', keywords: ['sourire', 'smile', 'grin', 'content'] },
+  { emoji: '😅', keywords: ['sourire', 'sueur', 'sweat', 'nerveux'] },
+  { emoji: '😂', keywords: ['rire', 'laugh', 'larmes', 'tears', 'mdr', 'lol'] },
+  { emoji: '🤣', keywords: ['rire', 'laugh', 'rofl', 'mdr', 'ptdr'] },
+  { emoji: '😊', keywords: ['sourire', 'smile', 'heureux', 'content', 'blush'] },
+  { emoji: '😇', keywords: ['ange', 'angel', 'innocent', 'halo'] },
+  { emoji: '🙂', keywords: ['sourire', 'smile', 'léger'] },
+  { emoji: '😉', keywords: ['clin', 'wink', 'complice'] },
+  { emoji: '😍', keywords: ['amour', 'love', 'coeur', 'heart', 'yeux'] },
+  { emoji: '🥰', keywords: ['amour', 'love', 'coeurs', 'hearts', 'affection'] },
+  { emoji: '😘', keywords: ['bisou', 'kiss', 'amour', 'love'] },
+  { emoji: '😋', keywords: ['miam', 'yummy', 'délicieux', 'langue'] },
+  { emoji: '😎', keywords: ['cool', 'lunettes', 'sunglasses', 'classe'] },
+  { emoji: '🤗', keywords: ['câlin', 'hug', 'accueil', 'bienvenue'] },
+  { emoji: '🤔', keywords: ['réfléchir', 'think', 'hmm', 'question'] },
+  { emoji: '😐', keywords: ['neutre', 'neutral', 'indifférent'] },
+  { emoji: '😑', keywords: ['ennui', 'bored', 'blasé'] },
+  { emoji: '🙄', keywords: ['yeux', 'eyes', 'roll', 'exaspéré'] },
+  { emoji: '😏', keywords: ['smirk', 'malicieux', 'narquois'] },
+  { emoji: '😴', keywords: ['dormir', 'sleep', 'fatigué', 'tired', 'zzz'] },
+  { emoji: '🙃', keywords: ['envers', 'upside', 'sarcastique'] },
+  // Gestures
+  { emoji: '👍', keywords: ['pouce', 'thumb', 'ok', 'bien', 'top', 'like', 'super'] },
+  { emoji: '👎', keywords: ['pouce', 'thumb', 'down', 'non', 'dislike', 'nul'] },
+  { emoji: '👏', keywords: ['applaudir', 'clap', 'bravo', 'félicitations'] },
+  { emoji: '🙌', keywords: ['mains', 'hands', 'célébrer', 'victoire', 'hourra'] },
+  { emoji: '🤝', keywords: ['poignée', 'handshake', 'accord', 'deal'] },
+  { emoji: '💪', keywords: ['muscle', 'fort', 'strong', 'force', 'biceps'] },
+  { emoji: '✌️', keywords: ['victoire', 'victory', 'paix', 'peace', 'deux'] },
+  { emoji: '🤞', keywords: ['croiser', 'cross', 'chance', 'luck', 'doigts'] },
+  { emoji: '👋', keywords: ['salut', 'wave', 'coucou', 'hello', 'bye'] },
+  { emoji: '🙏', keywords: ['prier', 'pray', 'merci', 'thanks', 'svp', 'please'] },
+  // Hearts
+  { emoji: '❤️', keywords: ['coeur', 'heart', 'amour', 'love', 'rouge', 'red'] },
+  { emoji: '🧡', keywords: ['coeur', 'heart', 'orange'] },
+  { emoji: '💛', keywords: ['coeur', 'heart', 'jaune', 'yellow'] },
+  { emoji: '💚', keywords: ['coeur', 'heart', 'vert', 'green'] },
+  { emoji: '💙', keywords: ['coeur', 'heart', 'bleu', 'blue'] },
+  { emoji: '💜', keywords: ['coeur', 'heart', 'violet', 'purple'] },
+  { emoji: '🖤', keywords: ['coeur', 'heart', 'noir', 'black'] },
+  { emoji: '🤍', keywords: ['coeur', 'heart', 'blanc', 'white'] },
+  { emoji: '💔', keywords: ['coeur', 'heart', 'brisé', 'broken', 'triste'] },
+  // Nature
+  { emoji: '🌸', keywords: ['fleur', 'flower', 'cerisier', 'cherry', 'rose', 'pink'] },
+  { emoji: '🌹', keywords: ['rose', 'fleur', 'flower', 'amour', 'love'] },
+  { emoji: '🌻', keywords: ['tournesol', 'sunflower', 'jaune', 'soleil'] },
+  { emoji: '☀️', keywords: ['soleil', 'sun', 'été', 'summer', 'chaud'] },
+  { emoji: '🌙', keywords: ['lune', 'moon', 'nuit', 'night'] },
+  { emoji: '⭐', keywords: ['étoile', 'star', 'favori', 'favorite'] },
+  { emoji: '✨', keywords: ['étincelles', 'sparkles', 'magie', 'magic', 'briller'] },
+  { emoji: '🔥', keywords: ['feu', 'fire', 'chaud', 'hot', 'tendance', 'lit'] },
+  { emoji: '🌈', keywords: ['arc-en-ciel', 'rainbow', 'couleurs', 'colors'] },
+  { emoji: '🌊', keywords: ['vague', 'wave', 'mer', 'sea', 'océan', 'ocean'] },
+  // Food
+  { emoji: '🍎', keywords: ['pomme', 'apple', 'rouge', 'fruit'] },
+  { emoji: '🍕', keywords: ['pizza', 'italien', 'italian', 'manger'] },
+  { emoji: '🍔', keywords: ['burger', 'hamburger', 'fast-food', 'manger'] },
+  { emoji: '☕', keywords: ['café', 'coffee', 'tasse', 'cup', 'matin'] },
+  { emoji: '🍺', keywords: ['bière', 'beer', 'alcool', 'bar'] },
+  { emoji: '🍷', keywords: ['vin', 'wine', 'rouge', 'alcool'] },
+  // Symbols
+  { emoji: '✅', keywords: ['check', 'ok', 'validé', 'done', 'fait', 'oui', 'yes'] },
+  { emoji: '❌', keywords: ['croix', 'cross', 'non', 'no', 'erreur', 'faux'] },
+  { emoji: '⚠️', keywords: ['attention', 'warning', 'danger', 'alerte'] },
+  { emoji: '📌', keywords: ['épingle', 'pin', 'punaise', 'marquer'] },
+  { emoji: '🔔', keywords: ['cloche', 'bell', 'notification', 'alerte'] },
+  { emoji: '💬', keywords: ['bulle', 'chat', 'message', 'parler', 'commentaire'] },
+  { emoji: '🎉', keywords: ['fête', 'party', 'célébration', 'confetti', 'bravo'] },
+  { emoji: '🎊', keywords: ['fête', 'party', 'célébration', 'confetti'] },
+  { emoji: '🎁', keywords: ['cadeau', 'gift', 'présent', 'anniversaire'] },
+  { emoji: '🏆', keywords: ['trophée', 'trophy', 'gagner', 'winner', 'champion'] },
+  { emoji: '💡', keywords: ['ampoule', 'idea', 'idée', 'lumière', 'light'] },
+  { emoji: '💰', keywords: ['argent', 'money', 'sac', 'riche', 'dollar'] },
+  { emoji: '💎', keywords: ['diamant', 'diamond', 'bijou', 'précieux'] },
+  { emoji: '⏰', keywords: ['réveil', 'alarm', 'heure', 'time', 'horloge'] },
+  { emoji: '📅', keywords: ['calendrier', 'calendar', 'date', 'rendez-vous'] },
+];
+
 const EMOJI_CATEGORIES = {
   smileys: {
     name: 'Smileys',
@@ -85,15 +169,14 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
     }
   }, []);
 
-  // Filter emojis based on search
-  const allEmojis = useMemo(() => {
-    return Object.values(EMOJI_CATEGORIES).flatMap(cat => cat.emojis);
-  }, []);
-
+  // Filter emojis based on search using keywords
   const filteredEmojis = useMemo(() => {
     if (!emojiSearch) return null;
-    return allEmojis.filter(emoji => emoji.includes(emojiSearch));
-  }, [emojiSearch, allEmojis]);
+    const searchLower = emojiSearch.toLowerCase();
+    return EMOJI_DATA
+      .filter(item => item.keywords.some(keyword => keyword.includes(searchLower)))
+      .map(item => item.emoji);
+  }, [emojiSearch]);
 
   const editor = useEditor({
     extensions: [
