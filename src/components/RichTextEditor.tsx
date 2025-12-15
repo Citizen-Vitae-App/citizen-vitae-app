@@ -3,7 +3,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { useState } from 'react';
-import { Bold, Italic, Underline as UnderlineIcon, Strikethrough, Link as LinkIcon, List, ListOrdered, Type } from 'lucide-react';
+import { Bold, Italic, Underline as UnderlineIcon, Strikethrough, Link as LinkIcon, List, ListOrdered, Type, Smile } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,22 @@ interface RichTextEditorProps {
   className?: string;
 }
 
+const EMOJI_LIST = [
+  '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+  '😉', '😍', '🥰', '😘', '😋', '😎', '🤗', '🤔', '😐', '😑',
+  '🙄', '😏', '😣', '😥', '😮', '🤐', '😯', '😪', '😫', '😴',
+  '😌', '😛', '😜', '😝', '🤤', '😒', '😓', '😔', '😕', '🙃',
+  '👍', '👎', '👏', '🙌', '🤝', '💪', '✌️', '🤞', '🤟', '🤘',
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️',
+  '✨', '🌟', '⭐', '🔥', '💥', '💫', '🎉', '🎊', '🎈', '🎁',
+  '✅', '❌', '⚠️', '📌', '📍', '🔔', '💬', '💭', '🗨️', '📢',
+];
+
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
   const [showToolbar, setShowToolbar] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  const [isEmojiPopoverOpen, setIsEmojiPopoverOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -68,6 +80,12 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
     if (editor) {
       editor.chain().focus().unsetLink().run();
       setIsLinkPopoverOpen(false);
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(emoji).run();
     }
   };
 
@@ -192,8 +210,8 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
         )}
       </div>
 
-      {/* Bottom bar with Aa button */}
-      <div className="flex items-center px-3 py-2 border-t border-border/30">
+      {/* Bottom bar with Aa button and Emoji button */}
+      <div className="flex items-center gap-1 px-3 py-2 border-t border-border/30">
         <button
           type="button"
           onClick={() => setShowToolbar(!showToolbar)}
@@ -205,6 +223,38 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
         >
           <Type className="h-4 w-4 text-muted-foreground" />
         </button>
+
+        <Popover open={isEmojiPopoverOpen} onOpenChange={setIsEmojiPopoverOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "flex items-center justify-center h-8 w-8 rounded hover:bg-black/10 transition-colors",
+                isEmojiPopoverOpen && "bg-black/10"
+              )}
+              title="Insérer un emoji"
+            >
+              <Smile className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-2" align="start">
+            <div className="grid grid-cols-10 gap-1">
+              {EMOJI_LIST.map((emoji, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    insertEmoji(emoji);
+                    setIsEmojiPopoverOpen(false);
+                  }}
+                  className="h-7 w-7 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-base"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
