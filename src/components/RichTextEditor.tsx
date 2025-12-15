@@ -2,13 +2,14 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
-import { useState } from 'react';
-import { Bold, Italic, Underline as UnderlineIcon, Strikethrough, Link as LinkIcon, List, ListOrdered, Type, Smile } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Bold, Italic, Underline as UnderlineIcon, Strikethrough, Link as LinkIcon, List, ListOrdered, Type, Smile, Search, Clock, SmilePlus, Heart, ThumbsUp, Leaf, Utensils, Plane, Activity, Hash } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RichTextEditorProps {
   value?: string;
@@ -17,22 +18,82 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-const EMOJI_LIST = [
-  '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
-  '😉', '😍', '🥰', '😘', '😋', '😎', '🤗', '🤔', '😐', '😑',
-  '🙄', '😏', '😣', '😥', '😮', '🤐', '😯', '😪', '😫', '😴',
-  '😌', '😛', '😜', '😝', '🤤', '😒', '😓', '😔', '😕', '🙃',
-  '👍', '👎', '👏', '🙌', '🤝', '💪', '✌️', '🤞', '🤟', '🤘',
-  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️',
-  '✨', '🌟', '⭐', '🔥', '💥', '💫', '🎉', '🎊', '🎈', '🎁',
-  '✅', '❌', '⚠️', '📌', '📍', '🔔', '💬', '💭', '🗨️', '📢',
-];
+const EMOJI_CATEGORIES = {
+  smileys: {
+    name: 'Smileys',
+    icon: SmilePlus,
+    emojis: ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😍', '🥰', '😘', '😋', '😎', '🤗', '🤔', '😐', '😑', '🙄', '😏', '😣', '😥', '😮', '🤐', '😯', '😪', '😫', '😴', '😌', '😛', '😜', '😝', '🤤', '😒', '😓', '😔', '😕', '🙃']
+  },
+  gestures: {
+    name: 'Gestes',
+    icon: ThumbsUp,
+    emojis: ['👍', '👎', '👏', '🙌', '🤝', '💪', '✌️', '🤞', '🤟', '🤘', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✊', '👊', '🤛', '🤜', '👆', '👇', '👈', '👉', '🙏']
+  },
+  hearts: {
+    name: 'Cœurs',
+    icon: Heart,
+    emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟']
+  },
+  nature: {
+    name: 'Nature',
+    icon: Leaf,
+    emojis: ['🌸', '💐', '🌷', '🌹', '🥀', '🌺', '🌻', '🌼', '🌿', '🍀', '🍁', '🍂', '🌲', '🌳', '🌴', '🌵', '🌾', '🌱', '☀️', '🌙', '⭐', '🌟', '✨', '⚡', '🔥', '🌈', '☁️', '❄️', '💧', '🌊']
+  },
+  food: {
+    name: 'Nourriture',
+    icon: Utensils,
+    emojis: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🌽', '🥕', '🧄', '🧅', '🥔', '🍞', '🥐', '🧀', '🍕', '🍔']
+  },
+  travel: {
+    name: 'Voyage',
+    icon: Plane,
+    emojis: ['🚗', '🚕', '🚌', '🚎', '🚐', '🚑', '🚒', '🚓', '✈️', '🚀', '🛸', '🚁', '⛵', '🚢', '🏠', '🏡', '🏢', '🏰', '🗼', '🗽', '🗿', '⛺', '🎡', '🎢', '🎠', '⛱️', '🏖️', '🏝️', '🏔️', '🌋']
+  },
+  activities: {
+    name: 'Activités',
+    icon: Activity,
+    emojis: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸', '🏒', '🎿', '⛷️', '🏂', '🎭', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎸', '🎺', '🎻', '🎲', '♟️', '🎯']
+  },
+  symbols: {
+    name: 'Symboles',
+    icon: Hash,
+    emojis: ['✅', '❌', '⚠️', '📌', '📍', '🔔', '💬', '💭', '🗨️', '📢', '💡', '💫', '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '🎖️', '🏅', '📊', '📈', '📉', '💰', '💎', '⏰', '📅', '✏️']
+  }
+};
+
+const FREQUENT_STORAGE_KEY = 'emoji-frequently-used';
+const MAX_FREQUENT = 16;
 
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
   const [showToolbar, setShowToolbar] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const [isEmojiPopoverOpen, setIsEmojiPopoverOpen] = useState(false);
+  const [emojiSearch, setEmojiSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [frequentEmojis, setFrequentEmojis] = useState<string[]>([]);
+
+  // Load frequent emojis from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(FREQUENT_STORAGE_KEY);
+    if (stored) {
+      try {
+        setFrequentEmojis(JSON.parse(stored));
+      } catch {
+        setFrequentEmojis([]);
+      }
+    }
+  }, []);
+
+  // Filter emojis based on search
+  const allEmojis = useMemo(() => {
+    return Object.values(EMOJI_CATEGORIES).flatMap(cat => cat.emojis);
+  }, []);
+
+  const filteredEmojis = useMemo(() => {
+    if (!emojiSearch) return null;
+    return allEmojis.filter(emoji => emoji.includes(emojiSearch));
+  }, [emojiSearch, allEmojis]);
 
   const editor = useEditor({
     extensions: [
@@ -86,8 +147,15 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
   const insertEmoji = (emoji: string) => {
     if (editor) {
       editor.chain().focus().insertContent(emoji).run();
+      
+      // Update frequent emojis
+      const newFrequent = [emoji, ...frequentEmojis.filter(e => e !== emoji)].slice(0, MAX_FREQUENT);
+      setFrequentEmojis(newFrequent);
+      localStorage.setItem(FREQUENT_STORAGE_KEY, JSON.stringify(newFrequent));
     }
   };
+
+  const categoryKeys = Object.keys(EMOJI_CATEGORIES) as (keyof typeof EMOJI_CATEGORIES)[];
 
   if (!editor) {
     return null;
@@ -224,7 +292,13 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
           <Type className="h-4 w-4 text-muted-foreground" />
         </button>
 
-        <Popover open={isEmojiPopoverOpen} onOpenChange={setIsEmojiPopoverOpen}>
+        <Popover open={isEmojiPopoverOpen} onOpenChange={(open) => {
+          setIsEmojiPopoverOpen(open);
+          if (!open) {
+            setEmojiSearch('');
+            setActiveCategory(null);
+          }
+        }}>
           <PopoverTrigger asChild>
             <button
               type="button"
@@ -237,22 +311,165 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
               <Smile className="h-4 w-4 text-muted-foreground" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-2" align="start">
-            <div className="grid grid-cols-10 gap-1">
-              {EMOJI_LIST.map((emoji, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    insertEmoji(emoji);
-                    setIsEmojiPopoverOpen(false);
-                  }}
-                  className="h-7 w-7 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-base"
-                >
-                  {emoji}
-                </button>
-              ))}
+          <PopoverContent className="w-80 p-0" align="start">
+            {/* Category tabs */}
+            <div className="flex items-center gap-0.5 p-2 border-b border-border/30 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveCategory(null);
+                  setEmojiSearch('');
+                }}
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded hover:bg-black/10 transition-colors flex-shrink-0",
+                  activeCategory === null && !emojiSearch && "bg-black/10"
+                )}
+                title="Rechercher"
+              >
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </button>
+              {categoryKeys.map((key) => {
+                const category = EMOJI_CATEGORIES[key];
+                const Icon = category.icon;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setActiveCategory(key);
+                      setEmojiSearch('');
+                    }}
+                    className={cn(
+                      "flex items-center justify-center h-8 w-8 rounded hover:bg-black/10 transition-colors flex-shrink-0",
+                      activeCategory === key && "bg-black/10"
+                    )}
+                    title={category.name}
+                  >
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Search input */}
+            {activeCategory === null && (
+              <div className="p-2 border-b border-border/30">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher parmi tous les émojis"
+                    value={emojiSearch}
+                    onChange={(e) => setEmojiSearch(e.target.value)}
+                    className="pl-8 h-9 text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            <ScrollArea className="h-52">
+              <div className="p-2">
+                {/* Search results */}
+                {emojiSearch && filteredEmojis && (
+                  <div className="grid grid-cols-8 gap-1">
+                    {filteredEmojis.map((emoji, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          insertEmoji(emoji);
+                          setIsEmojiPopoverOpen(false);
+                        }}
+                        className="h-8 w-8 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-lg"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Frequent emojis (only when no search and no category) */}
+                {!emojiSearch && !activeCategory && frequentEmojis.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Fréquemment utilisés</span>
+                    </div>
+                    <div className="grid grid-cols-8 gap-1">
+                      {frequentEmojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            insertEmoji(emoji);
+                            setIsEmojiPopoverOpen(false);
+                          }}
+                          className="h-8 w-8 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-lg"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Category content */}
+                {!emojiSearch && activeCategory && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      {(() => {
+                        const Icon = EMOJI_CATEGORIES[activeCategory].icon;
+                        return <Icon className="h-3.5 w-3.5 text-muted-foreground" />;
+                      })()}
+                      <span className="text-xs font-medium text-muted-foreground">{EMOJI_CATEGORIES[activeCategory].name}</span>
+                    </div>
+                    <div className="grid grid-cols-8 gap-1">
+                      {EMOJI_CATEGORIES[activeCategory].emojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            insertEmoji(emoji);
+                            setIsEmojiPopoverOpen(false);
+                          }}
+                          className="h-8 w-8 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-lg"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All categories (when no search, no active category, after frequent) */}
+                {!emojiSearch && !activeCategory && categoryKeys.map((key) => {
+                  const category = EMOJI_CATEGORIES[key];
+                  const Icon = category.icon;
+                  return (
+                    <div key={key} className="mb-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">{category.name}</span>
+                      </div>
+                      <div className="grid grid-cols-8 gap-1">
+                        {category.emojis.slice(0, 16).map((emoji, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              insertEmoji(emoji);
+                              setIsEmojiPopoverOpen(false);
+                            }}
+                            className="h-8 w-8 flex items-center justify-center hover:bg-black/10 rounded transition-colors text-lg"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </PopoverContent>
         </Popover>
       </div>
