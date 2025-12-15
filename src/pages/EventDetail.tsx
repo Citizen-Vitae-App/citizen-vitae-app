@@ -304,9 +304,10 @@ const EventDetail = () => {
             {event.description && (
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">À propos de l'événement</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {event.description}
-                </p>
+                <div 
+                  className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0"
+                  dangerouslySetInnerHTML={{ __html: event.description }}
+                />
               </div>
             )}
           </div>
