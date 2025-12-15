@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ArrowLeft } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import EventCard from '@/components/EventCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -135,6 +136,12 @@ const Favorites = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+      
+      {/* Bottom padding for mobile nav */}
+      <div className="h-16 md:hidden" />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, MapPin, QrCode } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO, isBefore } from 'date-fns';
@@ -256,6 +257,12 @@ const MyMissions = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+      
+      {/* Bottom padding for mobile nav */}
+      <div className="h-16 md:hidden" />
     </div>
   );
 };
