@@ -133,12 +133,13 @@ const Index = () => {
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-sm"
+                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-base"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
               
               {/* Filters Button - Mobile (icon only) */}
-              <button 
+              <button
                 onClick={() => setIsFiltersOpen(true)}
                 className="border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 hover:bg-background/70 relative flex-shrink-0"
               >
