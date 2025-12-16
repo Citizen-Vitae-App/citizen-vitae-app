@@ -76,14 +76,14 @@ const Index = () => {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 md:h-16 gap-3">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <img src={logo} alt="CitizenVitae" className="h-8" />
+              <img src={logo} alt="CitizenVitae" className="h-6 md:h-8" />
             </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-xl mx-8 flex items-center gap-4">
+            {/* Search Bar - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-xl mx-8 items-center gap-4">
               {/* Search + Date Combined */}
               <div className="flex-1 border border-border rounded-md px-6 py-2 flex items-center gap-4 shadow-sm bg-background/50 backdrop-blur-sm">
                 <div className="flex items-center gap-3 flex-1">
@@ -109,7 +109,7 @@ const Index = () => {
                 </button>
               </div>
 
-              {/* Filters Button */}
+              {/* Filters Button - Desktop */}
               <button 
                 onClick={() => setIsFiltersOpen(true)}
                 className="border border-border rounded-md px-6 py-3.5 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70 relative"
@@ -124,8 +124,35 @@ const Index = () => {
               </button>
             </div>
 
-            {/* User Actions */}
-            <div className="flex-shrink-0 flex items-center gap-3">
+            {/* Search Bar - Mobile */}
+            <div className="flex md:hidden flex-1 items-center gap-2">
+              <div className="flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50">
+                <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <Input
+                  type="search"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-sm"
+                />
+              </div>
+              
+              {/* Filters Button - Mobile (icon only) */}
+              <button 
+                onClick={() => setIsFiltersOpen(true)}
+                className="border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 hover:bg-background/70 relative flex-shrink-0"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-foreground" />
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* User Actions - Desktop only */}
+            <div className="hidden md:flex flex-shrink-0 items-center gap-3">
               {user ? (
                 <>
                   <NotificationDropdown />
