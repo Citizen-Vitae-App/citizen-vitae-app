@@ -149,7 +149,7 @@ const EventFilters = ({
     return getEffectiveEndDate() !== null;
   };
 
-  const renderCalendarMonth = (monthDate: Date) => {
+  const renderCalendarMonth = (monthDate: Date, showNavigation: boolean = false) => {
     const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
     const days = eachDayOfInterval({ start, end });
@@ -164,9 +164,27 @@ const EventFilters = ({
 
     return (
       <div className="flex-1">
-        <h3 className="text-lg font-semibold text-foreground mb-4 text-center capitalize">
-          {format(monthDate, 'MMMM yyyy', { locale: fr })}
-        </h3>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          {showNavigation && (
+            <button 
+              onClick={handlePrevMonth}
+              className="p-1.5 hover:bg-muted rounded-full transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
+          <h3 className="text-lg font-semibold text-foreground text-center capitalize">
+            {format(monthDate, 'MMMM yyyy', { locale: fr })}
+          </h3>
+          {showNavigation && (
+            <button 
+              onClick={handleNextMonth}
+              className="p-1.5 hover:bg-muted rounded-full transition-colors"
+            >
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-7 gap-0 mb-2">
           {WEEKDAYS.map((day, i) => (
             <div key={i} className="text-center text-sm text-muted-foreground font-medium py-2">
@@ -195,7 +213,7 @@ const EventFilters = ({
                 return (
                   <div
                     key={dayIndex}
-                    className="relative h-10 flex items-center justify-center"
+                    className="relative h-10 md:h-10 flex items-center justify-center"
                   >
                     {/* Background connector for range - only show if we have an effective end date */}
                     {isCurrentMonth && inRange && showBackground && (
@@ -203,7 +221,7 @@ const EventFilters = ({
                         {/* Left connector */}
                         {!isStart && (
                           <div 
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1/2 h-10"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1/2 h-10 md:h-10"
                             style={{ 
                               backgroundColor: isPreviewRange ? 'rgba(1, 37, 115, 0.08)' : 'rgba(1, 37, 115, 0.15)' 
                             }}
@@ -212,7 +230,7 @@ const EventFilters = ({
                         {/* Right connector */}
                         {!isEnd && (
                           <div 
-                            className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-10"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-10 md:h-10"
                             style={{ 
                               backgroundColor: isPreviewRange ? 'rgba(1, 37, 115, 0.08)' : 'rgba(1, 37, 115, 0.15)' 
                             }}
@@ -228,7 +246,7 @@ const EventFilters = ({
                       onMouseLeave={handleDayMouseLeave}
                       disabled={!isCurrentMonth}
                       className={cn(
-                        "relative z-10 h-10 w-10 text-sm transition-all flex items-center justify-center rounded-full",
+                        "relative z-10 h-10 w-10 md:h-10 md:w-10 text-sm transition-all flex items-center justify-center rounded-full",
                         !isCurrentMonth && "text-muted-foreground/30 cursor-default",
                         isCurrentMonth && !inRange && "hover:bg-[rgba(1,37,115,0.1)] text-foreground",
                         isMiddle && !isStart && !isEnd && "text-[#012573] font-medium",
@@ -276,7 +294,7 @@ const EventFilters = ({
       />
       
       {/* Panel intégré */}
-      <div className="fixed left-1/2 -translate-x-1/2 top-20 z-50 w-full max-w-4xl bg-background border border-border rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="fixed left-1/2 -translate-x-1/2 top-14 md:top-20 z-50 w-[calc(100%-1rem)] md:w-full max-w-4xl bg-background border border-border rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto">
         {/* Tabs */}
         <div className="flex justify-center pt-6 pb-4">
           <div className="inline-flex bg-muted rounded-full p-1">
@@ -316,30 +334,36 @@ const EventFilters = ({
           </div>
         </div>
 
-        <div className="px-8 pb-6">
+        <div className="px-4 md:px-8 pb-6">
           {activeTab === 'dates' && (
-            <div className="flex items-start gap-8">
-              <button 
-                onClick={handlePrevMonth}
-                className="mt-8 p-2 hover:bg-muted rounded-full transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5 text-muted-foreground" />
-              </button>
+            <>
+              {/* Mobile: single calendar with nav in header */}
+              <div className="md:hidden">
+                {renderCalendarMonth(currentMonth, true)}
+              </div>
               
-              <div className="flex-1 flex gap-8">
-                {renderCalendarMonth(currentMonth)}
-                <div className="hidden md:block">
+              {/* Desktop: dual calendar with nav on sides */}
+              <div className="hidden md:flex items-start gap-8">
+                <button 
+                  onClick={handlePrevMonth}
+                  className="mt-8 p-2 hover:bg-muted rounded-full transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                </button>
+                
+                <div className="flex-1 flex gap-8">
+                  {renderCalendarMonth(currentMonth)}
                   {renderCalendarMonth(nextMonth)}
                 </div>
-              </div>
 
-              <button 
-                onClick={handleNextMonth}
-                className="mt-8 p-2 hover:bg-muted rounded-full transition-colors"
-              >
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </div>
+                <button 
+                  onClick={handleNextMonth}
+                  className="mt-8 p-2 hover:bg-muted rounded-full transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+            </>
           )}
 
           {activeTab === 'mois' && (
