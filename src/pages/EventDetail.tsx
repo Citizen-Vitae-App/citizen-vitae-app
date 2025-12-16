@@ -17,6 +17,7 @@ import { useEventRegistration } from '@/hooks/useEventRegistration';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 interface EventWithOrganization {
   id: string;

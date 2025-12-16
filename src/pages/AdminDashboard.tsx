@@ -1,13 +1,14 @@
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Settings } from 'lucide-react';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 pt-24">
+      <main className="container mx-auto px-4 pt-24 pb-20 md:pb-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl font-bold mb-4">Dashboard Super Admin</h1>
           <p className="text-muted-foreground text-lg mb-8">
@@ -50,6 +51,8 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+      
+      <MobileBottomNav />
     </div>
   );
 }
