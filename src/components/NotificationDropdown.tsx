@@ -1,4 +1,4 @@
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { Bell, Check, CheckCheck, QrCode, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,9 +11,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO, isAfter, isBefore } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import defaultEventCover from '@/assets/default-event-cover.jpg';
+
+// Notification types that should show QR Code button
+const QR_CODE_TYPES = ['mission_reminder', 'mission_starting_soon', 'registration_confirmed'];
+// Notification types that should show Certificate button
+const CERTIFICATE_TYPES = ['mission_completed', 'certificate_available', 'attendance_confirmed'];
 
 const NotificationItem = ({
   notification,
@@ -37,6 +43,22 @@ const NotificationItem = ({
     }
   };
 
+  // Determine if notification should show QR code button
+  const shouldShowQRCode = () => {
+    if (!notification.event) return false;
+    const now = new Date();
+    const endDate = parseISO(notification.event.end_date);
+    return isAfter(endDate, now) && QR_CODE_TYPES.includes(notification.type);
+  };
+
+  // Determine if notification should show Certificate button
+  const shouldShowCertificate = () => {
+    if (!notification.event) return false;
+    const now = new Date();
+    const endDate = parseISO(notification.event.end_date);
+    return isBefore(endDate, now) && CERTIFICATE_TYPES.includes(notification.type);
+  };
+
   return (
     <DropdownMenuItem
       className={cn(
@@ -45,20 +67,68 @@ const NotificationItem = ({
       )}
       onClick={handleClick}
     >
-      <div className="flex items-start justify-between w-full gap-2">
-        <p className={cn('text-sm', !notification.is_read && 'font-medium')}>
-          {message}
-        </p>
-        {!notification.is_read && (
-          <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+      <div className="flex items-start gap-3 w-full">
+        {/* Event thumbnail */}
+        {notification.event && (
+          <img 
+            src={notification.event.cover_image_url || defaultEventCover}
+            alt=""
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          />
         )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between w-full gap-2">
+            <p className={cn('text-sm', !notification.is_read && 'font-medium')}>
+              {message}
+            </p>
+            {!notification.is_read && (
+              <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+            )}
+          </div>
+          
+          {/* Action buttons */}
+          {(shouldShowQRCode() || shouldShowCertificate()) && (
+            <div className="mt-2">
+              {shouldShowQRCode() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/mes-missions?tab=upcoming&event=${notification.event_id}`);
+                  }}
+                >
+                  <QrCode className="h-3 w-3 mr-1" />
+                  Code QR
+                </Button>
+              )}
+              {shouldShowCertificate() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/mes-missions?tab=certificates&event=${notification.event_id}`);
+                  }}
+                >
+                  <Award className="h-3 w-3 mr-1" />
+                  Certificat
+                </Button>
+              )}
+            </div>
+          )}
+          
+          <span className="text-xs text-muted-foreground mt-1 block">
+            {formatDistanceToNow(new Date(notification.created_at), {
+              addSuffix: true,
+              locale,
+            })}
+          </span>
+        </div>
       </div>
-      <span className="text-xs text-muted-foreground">
-        {formatDistanceToNow(new Date(notification.created_at), {
-          addSuffix: true,
-          locale,
-        })}
-      </span>
     </DropdownMenuItem>
   );
 };
@@ -80,7 +150,7 @@ export const NotificationDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 bg-background border border-border">
+      <DropdownMenuContent align="end" className="w-96 bg-background border border-border">
         <div className="flex items-center justify-between px-3 py-2">
           <h4 className="font-semibold text-sm">
             {language === 'fr' ? 'Notifications' : 'Notifications'}
@@ -110,7 +180,7 @@ export const NotificationDropdown = () => {
               : 'No notifications'}
           </div>
         ) : (
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-[350px]">
             {notifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
