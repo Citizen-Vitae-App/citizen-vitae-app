@@ -1,13 +1,19 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Check } from 'lucide-react';
+import { ArrowLeft, Bell, Check, QrCode, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/hooks/useAuth';
 import logo from '@/assets/logo.png';
-import { format, parseISO } from 'date-fns';
+import defaultEventCover from '@/assets/default-event-cover.jpg';
+import { format, parseISO, isAfter, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Notification types that should show QR Code button (upcoming events user is registered for)
+const QR_CODE_TYPES = ['mission_reminder', 'mission_starting_soon', 'registration_confirmed'];
+// Notification types that should show Certificate button (completed events)
+const CERTIFICATE_TYPES = ['mission_completed', 'certificate_available', 'attendance_confirmed'];
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -17,7 +23,7 @@ const Notifications = () => {
 
   const language = preferences?.language || 'fr';
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
@@ -28,6 +34,24 @@ const Notifications = () => {
 
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), "d MMM 'à' HH:mm", { locale: fr });
+  };
+
+  // Determine if notification should show QR code button
+  const shouldShowQRCode = (notification: Notification) => {
+    if (!notification.event) return false;
+    const now = new Date();
+    const endDate = parseISO(notification.event.end_date);
+    // Show QR code if event hasn't ended yet and notification type is relevant
+    return isAfter(endDate, now) && QR_CODE_TYPES.includes(notification.type);
+  };
+
+  // Determine if notification should show Certificate button
+  const shouldShowCertificate = (notification: Notification) => {
+    if (!notification.event) return false;
+    const now = new Date();
+    const endDate = parseISO(notification.event.end_date);
+    // Show certificate if event has ended and notification type is relevant
+    return isBefore(endDate, now) && CERTIFICATE_TYPES.includes(notification.type);
   };
 
   if (!user) {
@@ -91,13 +115,61 @@ const Notifications = () => {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {!notification.is_read && (
-                    <div className="w-2 h-2 rounded-full bg-destructive mt-2 flex-shrink-0" />
+                  {/* Event thumbnail */}
+                  {notification.event && (
+                    <img 
+                      src={notification.event.cover_image_url || defaultEventCover}
+                      alt=""
+                      className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                    />
                   )}
+                  
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${notification.is_read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
-                      {language === 'fr' ? notification.message_fr : notification.message_en}
-                    </p>
+                    <div className="flex items-start gap-2">
+                      <p className={`text-sm flex-1 ${notification.is_read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
+                        {language === 'fr' ? notification.message_fr : notification.message_en}
+                      </p>
+                      {!notification.is_read && (
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                      )}
+                    </div>
+                    
+                    {/* Action buttons */}
+                    {(shouldShowQRCode(notification) || shouldShowCertificate(notification)) && (
+                      <div className="mt-2">
+                        {shouldShowQRCode(notification) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Navigate to QR code page or show QR modal
+                              navigate(`/mes-missions?tab=upcoming&event=${notification.event_id}`);
+                            }}
+                          >
+                            <QrCode className="h-3.5 w-3.5 mr-1.5" />
+                            Code QR
+                          </Button>
+                        )}
+                        {shouldShowCertificate(notification) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Navigate to certificates page
+                              navigate(`/mes-missions?tab=certificates&event=${notification.event_id}`);
+                            }}
+                          >
+                            <Award className="h-3.5 w-3.5 mr-1.5" />
+                            Certificat
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDate(notification.created_at || '')}
                     </p>

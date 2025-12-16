@@ -3,6 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+export interface NotificationEvent {
+  id: string;
+  name: string;
+  cover_image_url: string | null;
+  start_date: string;
+  end_date: string;
+}
+
 export interface Notification {
   id: string;
   user_id: string;
@@ -15,6 +23,7 @@ export interface Notification {
   status: 'pending' | 'sent' | 'error';
   sent_at: string | null;
   created_at: string;
+  event?: NotificationEvent | null;
 }
 
 export const useNotifications = () => {
@@ -22,7 +31,7 @@ export const useNotifications = () => {
   const queryClient = useQueryClient();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Fetch notifications
+  // Fetch notifications with event data
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -30,7 +39,10 @@ export const useNotifications = () => {
       
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          *,
+          event:events(id, name, cover_image_url, start_date, end_date)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
