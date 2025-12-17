@@ -42,7 +42,7 @@ interface EventWithOrganization {
 const EventDetail = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -165,7 +165,7 @@ const EventDetail = () => {
       navigate('/auth');
       return;
     }
-    register(event.name, event.organization_id);
+    register(event.name, event.organization_id, profile?.id_verified);
   };
 
   const handleUnregister = () => {

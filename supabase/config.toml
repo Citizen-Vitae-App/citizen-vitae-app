@@ -2,3 +2,6 @@ project_id = "lqjnwjowbcptkucnpptb"
 
 [functions.send-notification]
 verify_jwt = false
+
+[functions.didit-verification]
+verify_jwt = false
