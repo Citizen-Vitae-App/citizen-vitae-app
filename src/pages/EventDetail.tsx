@@ -421,22 +421,69 @@ const EventDetail = () => {
         )}
       </div>
 
-      {/* Mobile Fixed Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2 text-foreground">
-              <Calendar className="h-4 w-4" />
-              <span className="font-medium">{formatMobileDateRange()}</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground">
-              <Clock className="h-4 w-4" />
-              <span className="font-medium">{formatTime(event.start_date)}</span>
-            </div>
+      {/* Mobile Content - Certification Card visible */}
+      <div className="lg:hidden container mx-auto px-4 pb-6">
+        {isRegistered && (
+          <div className="space-y-4">
+            <CertificationCard
+              eventStartDate={event.start_date}
+              eventEndDate={event.end_date}
+              eventLatitude={event.latitude}
+              eventLongitude={event.longitude}
+              eventName={event.name}
+              eventId={event.id}
+              userId={user?.id || ''}
+              registrationId={registration?.id || ''}
+              faceMatchPassed={registration?.face_match_passed}
+              qrToken={registration?.qr_token}
+              attendedAt={registration?.attended_at}
+            />
+            <Button
+              onClick={handleUnregister}
+              disabled={isUnregistering || !canUserUnregister}
+              variant="outline"
+              className={cn(
+                "w-full h-12 text-lg font-semibold transition-all duration-300",
+                "border-destructive text-destructive hover:bg-destructive/10",
+                !canUserUnregister && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {isUnregistering ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <X className="h-5 w-5 mr-2" />
+                  Se désinscrire
+                </>
+              )}
+            </Button>
+            {!canUserUnregister && (
+              <p className="text-xs text-muted-foreground text-center">
+                Désinscription impossible moins de 24h avant la fin de l'événement
+              </p>
+            )}
           </div>
-          {renderCTAButton(true)}
-        </div>
+        )}
       </div>
+
+      {/* Mobile Fixed Bottom Bar - only show registration CTA when not registered */}
+      {!isRegistered && (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2 text-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="font-medium">{formatMobileDateRange()}</span>
+              </div>
+              <div className="flex items-center gap-2 text-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="font-medium">{formatTime(event.start_date)}</span>
+              </div>
+            </div>
+            {renderCTAButton(true)}
+          </div>
+        </div>
+      )}
 
       {/* Share Dialog */}
       <ShareDialog

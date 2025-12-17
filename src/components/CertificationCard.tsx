@@ -165,7 +165,7 @@ export const CertificationCard = ({
               style={{ backgroundColor: '#012573' }}
             >
               <Shield className="h-4 w-4 mr-2" />
-              Démarrer la certification
+              Certifier ma présence
             </Button>
           </div>
         ) : (
