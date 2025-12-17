@@ -10,6 +10,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import EventMap from '@/components/EventMap';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 import logo from '@/assets/logo.png';
@@ -48,6 +58,7 @@ const EventDetail = () => {
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   
   const isLiked = eventId ? isFavorite(eventId) : false;
 
@@ -171,6 +182,11 @@ const EventDetail = () => {
   };
 
   const handleUnregister = () => {
+    setIsUnregisterDialogOpen(true);
+  };
+
+  const confirmUnregister = () => {
+    setIsUnregisterDialogOpen(false);
     unregister(event.end_date);
   };
 
@@ -492,6 +508,29 @@ const EventDetail = () => {
         url={window.location.href}
         title={event.name}
       />
+
+      {/* Unregister Confirmation Dialog */}
+      <AlertDialog open={isUnregisterDialogOpen} onOpenChange={setIsUnregisterDialogOpen}>
+        <AlertDialogContent className="max-w-sm rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">Confirmer la désinscription</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Si vous annulez, vous n'aurez plus accès aux mises à jour et aux activités de l'événement. Souhaitez-vous continuer ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:justify-center">
+            <AlertDialogCancel className="flex-1 m-0 text-primary hover:text-primary font-semibold">
+              Non
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmUnregister}
+              className="flex-1 m-0 bg-transparent text-destructive hover:bg-destructive/10 font-semibold"
+            >
+              Oui
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
