@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const DIDIT_API_KEY = Deno.env.get('DIDIT_API_KEY');
 const DIDIT_SECRET_KEY = Deno.env.get('DIDIT_SECRET_KEY');
+const DIDIT_WORKFLOW_ID = Deno.env.get('DIDIT_WORKFLOW_ID');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -417,7 +418,7 @@ serve(async (req) => {
           'x-api-key': DIDIT_API_KEY!,
         },
         body: JSON.stringify({
-          workflow_id: workflow_id || 'default', // Use workflow_id from request or default
+          workflow_id: workflow_id || DIDIT_WORKFLOW_ID, // Use workflow_id from request or env secret
           vendor_data: user_id, // Store user_id to identify user in webhook
           callback: callback_url || `${req.headers.get('origin')}/settings`,
         }),
