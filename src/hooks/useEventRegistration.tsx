@@ -11,6 +11,10 @@ interface Registration {
   event_id: string;
   status: string;
   registered_at: string;
+  face_match_passed?: boolean;
+  face_match_at?: string | null;
+  qr_token?: string | null;
+  attended_at?: string | null;
 }
 
 export const useEventRegistration = (eventId: string | undefined) => {
