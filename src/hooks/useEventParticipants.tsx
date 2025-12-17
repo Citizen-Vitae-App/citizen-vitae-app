@@ -10,6 +10,9 @@ export interface EventParticipant {
   status: string;
   registered_at: string;
   attended_at: string | null;
+  certification_start_at: string | null;
+  certification_end_at: string | null;
+  face_match_passed: boolean | null;
 }
 
 export interface EventParticipantCount {
@@ -31,6 +34,9 @@ export const useEventParticipants = (eventId: string | undefined) => {
           status,
           registered_at,
           attended_at,
+          certification_start_at,
+          certification_end_at,
+          face_match_passed,
           profiles!inner(
             first_name,
             last_name,
@@ -52,6 +58,9 @@ export const useEventParticipants = (eventId: string | undefined) => {
         status: reg.status,
         registered_at: reg.registered_at,
         attended_at: reg.attended_at,
+        certification_start_at: reg.certification_start_at,
+        certification_end_at: reg.certification_end_at,
+        face_match_passed: reg.face_match_passed,
       })) as EventParticipant[];
     },
     enabled: !!eventId,
@@ -72,6 +81,9 @@ export const useEventsParticipantCounts = (eventIds: string[]) => {
           status,
           registered_at,
           attended_at,
+          certification_start_at,
+          certification_end_at,
+          face_match_passed,
           profiles!inner(
             first_name,
             last_name,
@@ -105,6 +117,9 @@ export const useEventsParticipantCounts = (eventIds: string[]) => {
             status: reg.status,
             registered_at: reg.registered_at,
             attended_at: reg.attended_at,
+            certification_start_at: reg.certification_start_at,
+            certification_end_at: reg.certification_end_at,
+            face_match_passed: reg.face_match_passed,
           });
         }
       });

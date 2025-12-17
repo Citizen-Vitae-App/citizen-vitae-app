@@ -78,6 +78,8 @@ export type Database = {
         Row: {
           approved_at: string | null
           attended_at: string | null
+          certification_end_at: string | null
+          certification_start_at: string | null
           created_at: string
           event_id: string
           face_match_at: string | null
@@ -91,6 +93,8 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           attended_at?: string | null
+          certification_end_at?: string | null
+          certification_start_at?: string | null
           created_at?: string
           event_id: string
           face_match_at?: string | null
@@ -104,6 +108,8 @@ export type Database = {
         Update: {
           approved_at?: string | null
           attended_at?: string | null
+          certification_end_at?: string | null
+          certification_start_at?: string | null
           created_at?: string
           event_id?: string
           face_match_at?: string | null
