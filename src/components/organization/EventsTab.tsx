@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ChevronRight, Calendar, Users, Globe, Lock } from 'lucide-react';
+import { Plus, Search, ChevronRight, Calendar, Users, Globe, Lock, QrCode } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
 import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
 import { format, isAfter, isBefore, parseISO, isSameDay } from 'date-fns';
@@ -108,15 +108,23 @@ export function EventsTab() {
       </div>;
   }
   return <div className="space-y-4 md:space-y-6">
-      {/* Header avec titre et bouton */}
+      {/* Header avec titre et boutons */}
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-2xl md:text-3xl font-bold">My Events</h2>
-        <Button asChild size={isMobile ? "sm" : "default"}>
-          <Link to="/organization/create-event">
-            <Plus className="mr-1 md:mr-2 h-4 w-4" />
-            {isMobile ? "Créer" : "Créer"}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
+            <Link to="/organization/scan">
+              <QrCode className="mr-1 md:mr-2 h-4 w-4" />
+              {isMobile ? "Scan" : "Scanner"}
+            </Link>
+          </Button>
+          <Button asChild size={isMobile ? "sm" : "default"}>
+            <Link to="/organization/create-event">
+              <Plus className="mr-1 md:mr-2 h-4 w-4" />
+              {isMobile ? "Créer" : "Créer"}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Barre de recherche pleine largeur */}

@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Favorites from "./pages/Favorites";
 import MyMissions from "./pages/MyMissions";
 import Notifications from "./pages/Notifications";
+import ScanParticipant from "./pages/ScanParticipant";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -36,6 +37,8 @@ const App = () => (
           <Route path="/organization/dashboard" element={<ProtectedRoute requiredRole="organization"><OrganizationDashboard /></ProtectedRoute>} />
           <Route path="/organization/create-event" element={<ProtectedRoute requiredRole="organization"><CreateEvent /></ProtectedRoute>} />
           <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
+          <Route path="/organization/scan" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
+          <Route path="/organization/scan/:eventId" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="super_admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />

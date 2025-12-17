@@ -247,31 +247,34 @@ serve(async (req) => {
       }
     }
 
-    // Handle QR code verification (for admin scan - future)
+    // Handle QR code verification (for admin scan - two-scan system)
     if (body.action === 'verify-qr-code') {
-      const { registration_id, qr_token } = body;
+      const { qr_token } = body;
       
-      if (!registration_id || !qr_token) {
+      if (!qr_token) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Missing required parameters' }),
+          JSON.stringify({ success: false, error: 'Missing QR token' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      console.log('[didit-verification] Verifying QR code for registration:', registration_id);
+      console.log('[didit-verification] Verifying QR code:', qr_token.substring(0, 8) + '...');
       
-      // Fetch registration and verify token
+      // Fetch registration by QR token with user profile and event info
       const { data: registration, error: regError } = await supabase
         .from('event_registrations')
-        .select('*, events(*)')
-        .eq('id', registration_id)
+        .select(`
+          *,
+          events(id, name, start_date, end_date),
+          profiles:user_id(first_name, last_name, email, avatar_url)
+        `)
         .eq('qr_token', qr_token)
         .single();
       
       if (regError || !registration) {
         console.error('[didit-verification] Invalid QR code:', regError);
         return new Response(
-          JSON.stringify({ success: false, error: 'QR code invalide.' }),
+          JSON.stringify({ success: false, error: 'QR code invalide ou expiré.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -283,33 +286,114 @@ serve(async (req) => {
         );
       }
       
-      if (registration.attended_at) {
+      const profile = registration.profiles as any;
+      const event = registration.events as any;
+      const userName = profile?.first_name && profile?.last_name 
+        ? `${profile.first_name} ${profile.last_name}` 
+        : profile?.email || 'Participant';
+      
+      // Two-scan logic
+      if (!registration.certification_start_at) {
+        // FIRST SCAN - Arrival
+        const { error: updateError } = await supabase
+          .from('event_registrations')
+          .update({ 
+            certification_start_at: new Date().toISOString(),
+          })
+          .eq('id', registration.id);
+        
+        if (updateError) {
+          console.error('[didit-verification] Error recording arrival:', updateError);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Erreur lors de l\'enregistrement.' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        console.log('[didit-verification] Arrival recorded for:', userName);
+        
         return new Response(
-          JSON.stringify({ success: false, error: 'Présence déjà certifiée.' }),
+          JSON.stringify({ 
+            success: true, 
+            scan_type: 'arrival',
+            user_name: userName,
+            user_avatar: profile?.avatar_url,
+            event_name: event?.name,
+            arrival_time: new Date().toISOString(),
+            message: `Arrivée enregistrée pour ${userName}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } 
+      else if (!registration.certification_end_at) {
+        // SECOND SCAN - Departure
+        const departureTime = new Date();
+        const arrivalTime = new Date(registration.certification_start_at);
+        const durationMs = departureTime.getTime() - arrivalTime.getTime();
+        const durationMinutes = Math.round(durationMs / 60000);
+        const hours = Math.floor(durationMinutes / 60);
+        const minutes = durationMinutes % 60;
+        const durationFormatted = hours > 0 ? `${hours}h${minutes.toString().padStart(2, '0')}` : `${minutes}min`;
+        
+        const { error: updateError } = await supabase
+          .from('event_registrations')
+          .update({ 
+            certification_end_at: departureTime.toISOString(),
+            attended_at: departureTime.toISOString(), // Mark as officially attended
+          })
+          .eq('id', registration.id);
+        
+        if (updateError) {
+          console.error('[didit-verification] Error recording departure:', updateError);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Erreur lors de l\'enregistrement.' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        console.log('[didit-verification] Certification complete for:', userName, 'Duration:', durationFormatted);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            scan_type: 'departure',
+            certified: true,
+            user_name: userName,
+            user_avatar: profile?.avatar_url,
+            event_name: event?.name,
+            arrival_time: registration.certification_start_at,
+            departure_time: departureTime.toISOString(),
+            duration: durationFormatted,
+            message: `Certification complète pour ${userName}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      else {
+        // Already fully certified
+        const arrivalTime = new Date(registration.certification_start_at);
+        const departureTime = new Date(registration.certification_end_at);
+        const durationMs = departureTime.getTime() - arrivalTime.getTime();
+        const durationMinutes = Math.round(durationMs / 60000);
+        const hours = Math.floor(durationMinutes / 60);
+        const minutes = durationMinutes % 60;
+        const durationFormatted = hours > 0 ? `${hours}h${minutes.toString().padStart(2, '0')}` : `${minutes}min`;
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Participant déjà certifié.',
+            scan_type: 'already_certified',
+            user_name: userName,
+            user_avatar: profile?.avatar_url,
+            event_name: event?.name,
+            arrival_time: registration.certification_start_at,
+            departure_time: registration.certification_end_at,
+            duration: durationFormatted,
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      // Mark as attended
-      const { error: updateError } = await supabase
-        .from('event_registrations')
-        .update({ attended_at: new Date().toISOString() })
-        .eq('id', registration_id);
-      
-      if (updateError) {
-        console.error('[didit-verification] Error updating attendance:', updateError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Erreur lors de la mise à jour.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log('[didit-verification] Attendance verified successfully');
-      
-      return new Response(
-        JSON.stringify({ success: true, message: 'Présence certifiée avec succès.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
     }
 
     // Handle session creation request from frontend
