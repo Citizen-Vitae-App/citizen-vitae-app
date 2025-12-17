@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { Switch } from '@/components/ui/switch';
@@ -62,6 +63,14 @@ export default function Settings() {
       
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-2xl">
         <h1 className="text-2xl font-bold mb-8">Paramètres</h1>
+
+        {/* Identity Verification Section */}
+        <section className="mb-8">
+          <IdentityVerificationCard 
+            userId={user?.id || ''} 
+            isVerified={profile?.id_verified || false} 
+          />
+        </section>
 
         {/* Language Section */}
         <section className="mb-8">

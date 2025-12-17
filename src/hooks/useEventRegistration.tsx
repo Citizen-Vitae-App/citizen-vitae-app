@@ -167,7 +167,7 @@ export const useEventRegistration = (eventId: string | undefined) => {
     return hoursUntilEnd >= 24;
   }, []);
 
-  const register = (eventName: string, organizationId: string) => {
+  const register = (eventName: string, organizationId: string, isIdVerified?: boolean) => {
     if (!user) {
       toast({
         title: 'Connexion requise',
@@ -176,6 +176,17 @@ export const useEventRegistration = (eventId: string | undefined) => {
       });
       return;
     }
+    
+    // Check if user is verified
+    if (isIdVerified === false) {
+      toast({
+        title: 'Vérification requise',
+        description: 'Veuillez vérifier votre identité dans vos paramètres avant de vous inscrire.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     registerMutation.mutate({ eventName, organizationId });
   };
 

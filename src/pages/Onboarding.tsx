@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CauseThemeTag } from '@/components/CauseThemeTag';
+import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -74,7 +75,7 @@ export default function Onboarding() {
       if (profile.first_name) setFirstName(profile.first_name);
       if (profile.last_name) setLastName(profile.last_name);
       
-      // Si prénom ET nom sont déjà remplis → sauter l'étape 1
+      // Si prénom ET nom sont déjà remplis → sauter l'étape 1, aller à l'étape 2 (vérification ID)
       if (profile.first_name && profile.last_name) {
         setHasGoogleData(true);
         setStep(2);
@@ -126,10 +127,15 @@ export default function Onboarding() {
     }
 
     setIsLoading(false);
-    setStep(2);
+    setStep(2); // Step 2 is now identity verification
   };
 
-  const handleStep2 = async () => {
+  const handleStep2 = () => {
+    // Step 2: Identity verification - user can proceed, verification is optional during onboarding
+    setStep(3);
+  };
+
+  const handleStep3 = async () => {
     if (!day || !month || !year) {
       toast.error('Veuillez sélectionner votre date de naissance complète');
       return;
@@ -149,7 +155,7 @@ export default function Onboarding() {
     }
 
     setIsLoading(false);
-    setStep(3);
+    setStep(4);
   };
 
   const handleFinish = async () => {
@@ -232,18 +238,19 @@ export default function Onboarding() {
       </div>
 
       <div className="w-full max-w-2xl bg-background rounded-2xl shadow-lg p-8">
-        {/* Progress indicator */}
+        {/* Progress indicator - now 4 steps */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div 
               key={s}
-              className={`h-2 w-16 rounded-full transition-colors ${
+              className={`h-2 w-12 rounded-full transition-colors ${
                 s <= step ? 'bg-primary' : 'bg-muted'
               }`}
             />
           ))}
         </div>
 
+        {/* Step 1: Personal Info */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
@@ -284,7 +291,50 @@ export default function Onboarding() {
           </div>
         )}
 
+        {/* Step 2: Identity Verification */}
         {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Vérification d'identité</h1>
+              <p className="text-muted-foreground">
+                Vérifiez votre identité pour accéder à toutes les fonctionnalités
+              </p>
+            </div>
+
+            <IdentityVerificationCard 
+              userId={user?.id || ''} 
+              isVerified={profile?.id_verified || false}
+            />
+
+            <p className="text-sm text-muted-foreground text-center">
+              Vous pouvez aussi compléter cette étape plus tard dans vos paramètres
+            </p>
+
+            <div className="flex gap-4">
+              {!hasGoogleData && (
+                <Button 
+                  onClick={() => setStep(1)} 
+                  variant="outline"
+                  className="w-full" 
+                  size="lg"
+                >
+                  Retour
+                </Button>
+              )}
+              <Button 
+                onClick={handleStep2} 
+                className="w-full" 
+                size="lg"
+                variant={profile?.id_verified ? "default" : "outline"}
+              >
+                {profile?.id_verified ? 'Continuer' : 'Passer cette étape'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Date of Birth */}
+        {step === 3 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold mb-2">Date de naissance</h1>
@@ -342,18 +392,16 @@ export default function Onboarding() {
             </div>
 
             <div className="flex gap-4">
-              {!hasGoogleData && (
-                <Button 
-                  onClick={() => setStep(1)} 
-                  variant="outline"
-                  className="w-full" 
-                  size="lg"
-                >
-                  Retour
-                </Button>
-              )}
               <Button 
-                onClick={handleStep2} 
+                onClick={() => setStep(2)} 
+                variant="outline"
+                className="w-full" 
+                size="lg"
+              >
+                Retour
+              </Button>
+              <Button 
+                onClick={handleStep3} 
                 className="w-full" 
                 size="lg"
                 disabled={isLoading}
@@ -364,7 +412,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {step === 3 && (
+        {/* Step 4: Cause Themes */}
+        {step === 4 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold mb-2">Vos centres d'intérêt</h1>
@@ -391,7 +440,7 @@ export default function Onboarding() {
 
             <div className="flex gap-4">
               <Button 
-                onClick={() => setStep(2)} 
+                onClick={() => setStep(3)} 
                 variant="outline"
                 className="w-full" 
                 size="lg"

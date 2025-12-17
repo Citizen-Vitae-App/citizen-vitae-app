@@ -10,6 +10,7 @@ interface Profile {
   avatar_url: string | null;
   date_of_birth: string | null;
   onboarding_completed: boolean;
+  id_verified: boolean;
 }
 
 interface UserRole {
