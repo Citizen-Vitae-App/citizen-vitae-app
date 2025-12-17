@@ -5,6 +5,7 @@ import { fr } from 'date-fns/locale';
 import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
+import { CertificationCard } from '@/components/CertificationCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -341,14 +342,43 @@ const EventDetail = () => {
                 </div>
               </div>
 
-              {/* CTA Button */}
-              {renderCTAButton()}
-              
-              {/* Show message if can't unregister */}
-              {isRegistered && !canUserUnregister && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Désinscription impossible moins de 24h avant la fin de l'événement
-                </p>
+              {/* CTA Button or Certification Card */}
+              {isRegistered ? (
+                <>
+                  <CertificationCard
+                    eventStartDate={event.start_date}
+                    eventEndDate={event.end_date}
+                    eventLatitude={event.latitude}
+                    eventLongitude={event.longitude}
+                    eventName={event.name}
+                  />
+                  <Button
+                    onClick={handleUnregister}
+                    disabled={isUnregistering || !canUserUnregister}
+                    variant="outline"
+                    className={cn(
+                      "w-full h-12 text-lg font-semibold transition-all duration-300",
+                      "border-destructive text-destructive hover:bg-destructive/10",
+                      !canUserUnregister && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {isUnregistering ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <X className="h-5 w-5 mr-2" />
+                        Se désinscrire
+                      </>
+                    )}
+                  </Button>
+                  {!canUserUnregister && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Désinscription impossible moins de 24h avant la fin de l'événement
+                    </p>
+                  )}
+                </>
+              ) : (
+                renderCTAButton()
               )}
 
               {/* Conditions */}
