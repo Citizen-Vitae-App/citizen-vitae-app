@@ -326,6 +326,7 @@ export type Database = {
           email: string | null
           first_name: string | null
           id: string
+          id_verified: boolean
           last_name: string | null
           onboarding_completed: boolean | null
         }
@@ -336,6 +337,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           id: string
+          id_verified?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
         }
@@ -346,6 +348,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           id?: string
+          id_verified?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
         }
