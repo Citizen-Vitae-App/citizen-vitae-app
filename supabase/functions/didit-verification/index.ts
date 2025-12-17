@@ -448,7 +448,7 @@ serve(async (req) => {
 
     // Handle manual verification check
     if (body.action === 'check-status') {
-      const { session_id } = body;
+      const { session_id, user_id } = body;
       
       if (!session_id) {
         return new Response(
@@ -478,8 +478,75 @@ serve(async (req) => {
       const statusData = await statusResponse.json();
       console.log('[didit-verification] Session status:', statusData);
       
+      // If approved and user_id provided, update profile (fallback if webhook missed)
+      if (statusData.status === 'Approved' && user_id) {
+        console.log('[didit-verification] Status is Approved, updating profile for user:', user_id);
+        
+        // Check if already verified
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id_verified, reference_selfie_url')
+          .eq('id', user_id)
+          .single();
+        
+        if (!existingProfile?.id_verified) {
+          // Store the reference selfie if available
+          if (statusData.selfie?.url || statusData.source_image) {
+            const selfieUrl = statusData.selfie?.url || statusData.source_image;
+            
+            try {
+              const selfieResponse = await fetch(selfieUrl);
+              if (selfieResponse.ok) {
+                const selfieBlob = await selfieResponse.blob();
+                const selfieBuffer = await selfieBlob.arrayBuffer();
+                
+                const fileName = `${user_id}/reference.jpg`;
+                const { error: uploadError } = await supabase.storage
+                  .from('verification-selfies')
+                  .upload(fileName, selfieBuffer, {
+                    contentType: 'image/jpeg',
+                    upsert: true,
+                  });
+                
+                if (!uploadError) {
+                  const { data: signedUrlData } = await supabase.storage
+                    .from('verification-selfies')
+                    .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+                  
+                  await supabase
+                    .from('profiles')
+                    .update({ reference_selfie_url: signedUrlData?.signedUrl })
+                    .eq('id', user_id);
+                  
+                  console.log('[didit-verification] Reference selfie stored for user:', user_id);
+                }
+              }
+            } catch (selfieError) {
+              console.error('[didit-verification] Error storing selfie:', selfieError);
+            }
+          }
+          
+          // Update id_verified
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ id_verified: true })
+            .eq('id', user_id);
+          
+          if (updateError) {
+            console.error('[didit-verification] Error updating profile:', updateError);
+          } else {
+            console.log('[didit-verification] Profile updated via check-status for user:', user_id);
+          }
+        }
+      }
+      
       return new Response(
-        JSON.stringify({ success: true, status: statusData.status, data: statusData }),
+        JSON.stringify({ 
+          success: true, 
+          status: statusData.status, 
+          verified: statusData.status === 'Approved',
+          data: statusData 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
