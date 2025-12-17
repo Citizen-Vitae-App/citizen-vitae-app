@@ -64,6 +64,7 @@ const EventDetail = () => {
 
   const {
     isRegistered,
+    registration,
     isRegistering,
     isUnregistering,
     isAnimating,
@@ -351,6 +352,12 @@ const EventDetail = () => {
                     eventLatitude={event.latitude}
                     eventLongitude={event.longitude}
                     eventName={event.name}
+                    eventId={event.id}
+                    userId={user?.id || ''}
+                    registrationId={registration?.id || ''}
+                    faceMatchPassed={registration?.face_match_passed}
+                    qrToken={registration?.qr_token}
+                    attendedAt={registration?.attended_at}
                   />
                   <Button
                     onClick={handleUnregister}

@@ -80,7 +80,10 @@ export type Database = {
           attended_at: string | null
           created_at: string
           event_id: string
+          face_match_at: string | null
+          face_match_passed: boolean | null
           id: string
+          qr_token: string | null
           registered_at: string
           status: string
           user_id: string
@@ -90,7 +93,10 @@ export type Database = {
           attended_at?: string | null
           created_at?: string
           event_id: string
+          face_match_at?: string | null
+          face_match_passed?: boolean | null
           id?: string
+          qr_token?: string | null
           registered_at?: string
           status?: string
           user_id: string
@@ -100,7 +106,10 @@ export type Database = {
           attended_at?: string | null
           created_at?: string
           event_id?: string
+          face_match_at?: string | null
+          face_match_passed?: boolean | null
           id?: string
+          qr_token?: string | null
           registered_at?: string
           status?: string
           user_id?: string
@@ -329,6 +338,7 @@ export type Database = {
           id_verified: boolean
           last_name: string | null
           onboarding_completed: boolean | null
+          reference_selfie_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -340,6 +350,7 @@ export type Database = {
           id_verified?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
+          reference_selfie_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -351,6 +362,7 @@ export type Database = {
           id_verified?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
+          reference_selfie_url?: string | null
         }
         Relationships: []
       }

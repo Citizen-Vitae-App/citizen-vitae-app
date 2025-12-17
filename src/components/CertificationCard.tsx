@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Shield, MapPin, Clock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Shield, MapPin, Clock, Loader2, AlertCircle, CheckCircle2, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useCertificationEligibility } from '@/hooks/useCertificationEligibility';
-import { toast } from 'sonner';
+import { FaceMatchVerification } from './FaceMatchVerification';
+import { CertificationQRCode } from './CertificationQRCode';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface CertificationCardProps {
   eventStartDate: string;
@@ -11,6 +14,12 @@ interface CertificationCardProps {
   eventLatitude: number | null;
   eventLongitude: number | null;
   eventName: string;
+  eventId: string;
+  userId: string;
+  registrationId: string;
+  faceMatchPassed?: boolean;
+  qrToken?: string | null;
+  attendedAt?: string | null;
 }
 
 export const CertificationCard = ({
@@ -19,8 +28,18 @@ export const CertificationCard = ({
   eventLatitude,
   eventLongitude,
   eventName,
+  eventId,
+  userId,
+  registrationId,
+  faceMatchPassed = false,
+  qrToken = null,
+  attendedAt = null,
 }: CertificationCardProps) => {
   const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
+  const [showFaceMatch, setShowFaceMatch] = useState(false);
+  const [localFaceMatchPassed, setLocalFaceMatchPassed] = useState(faceMatchPassed);
+  const [localQrToken, setLocalQrToken] = useState(qrToken);
+  
   const {
     latitude: userLatitude,
     longitude: userLongitude,
@@ -34,7 +53,6 @@ export const CertificationCard = ({
     isEligible,
     isWithinTimeWindow,
     isWithinLocationRadius,
-    distanceFromEvent,
     timeMessage,
     locationMessage,
     isAfterEvent,
@@ -56,19 +74,33 @@ export const CertificationCard = ({
     }
   }, [hasRequestedLocation, requestLocation]);
 
+  // Update local state when props change
+  useEffect(() => {
+    setLocalFaceMatchPassed(faceMatchPassed);
+    setLocalQrToken(qrToken);
+  }, [faceMatchPassed, qrToken]);
+
   const handleStartCertification = () => {
-    // TODO: Integrate with Didit Face Match flow
-    toast.info('Face Match à venir', {
-      description: 'La certification par reconnaissance faciale sera bientôt disponible.',
-    });
+    setShowFaceMatch(true);
+  };
+
+  const handleFaceMatchSuccess = () => {
+    setLocalFaceMatchPassed(true);
   };
 
   const handleRetryLocation = () => {
     requestLocation();
   };
 
-  // Don't show if event is over
-  if (isAfterEvent) {
+  // Format event date for display
+  const formatEventDate = () => {
+    const start = new Date(eventStartDate);
+    const end = new Date(eventEndDate);
+    return `${format(start, "d MMMM yyyy 'à' HH:mm", { locale: fr })} - ${format(end, "HH:mm", { locale: fr })}`;
+  };
+
+  // If event is over and user didn't certify, show nothing
+  if (isAfterEvent && !attendedAt) {
     return null;
   }
 
@@ -77,78 +109,128 @@ export const CertificationCard = ({
     return null;
   }
 
+  // If already fully certified (attended)
+  if (attendedAt) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-green-600" />
+          <h3 className="font-semibold text-foreground">Présence certifiée</h3>
+        </div>
+        <div className="flex items-center gap-2 text-green-600">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm">
+            Certifié le {format(new Date(attendedAt), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // If Face Match passed but not yet scanned by admin - show QR code
+  if (localFaceMatchPassed && localQrToken) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <QrCode className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-foreground">QR Code de certification</h3>
+        </div>
+        <CertificationQRCode
+          qrToken={localQrToken}
+          registrationId={registrationId}
+          eventName={eventName}
+          eventDate={formatEventDate()}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold text-foreground">Certification de présence</h3>
+    <>
+      <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Certification de présence</h3>
+        </div>
+
+        {isEligible ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-sm">Vous êtes sur place</span>
+            </div>
+            <Button
+              onClick={handleStartCertification}
+              className="w-full"
+              style={{ backgroundColor: '#012573' }}
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Démarrer la certification
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">Certification non disponible</span>
+            </div>
+
+            {/* Time status */}
+            {!isWithinTimeWindow && timeMessage && (
+              <div className="flex items-start gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
+                <Clock className="h-4 w-4 mt-0.5 shrink-0" />
+                <span className="text-sm">{timeMessage}</span>
+              </div>
+            )}
+
+            {/* Location status */}
+            {isWithinTimeWindow && (
+              <>
+                {isLoadingLocation ? (
+                  <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Vérification de votre position...</span>
+                  </div>
+                ) : permissionDenied ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 text-destructive bg-destructive/10 rounded-md p-3">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span className="text-sm">Accès à la position refusé. Autorisez la géolocalisation dans les paramètres de votre navigateur.</span>
+                    </div>
+                  </div>
+                ) : locationError ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 text-destructive bg-destructive/10 rounded-md p-3">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span className="text-sm">{locationError}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleRetryLocation}>
+                      Réessayer
+                    </Button>
+                  </div>
+                ) : !isWithinLocationRadius && locationMessage && (
+                  <div className="flex items-start gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
+                    <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span className="text-sm">{locationMessage}</span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {isEligible ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-green-600">
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm">Vous êtes sur place</span>
-          </div>
-          <Button
-            onClick={handleStartCertification}
-            className="w-full"
-            style={{ backgroundColor: '#012573' }}
-          >
-            <Shield className="h-4 w-4 mr-2" />
-            Démarrer la certification
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-amber-600">
-            <AlertCircle className="h-4 w-4" />
-            <span className="text-sm font-medium">Certification non disponible</span>
-          </div>
-
-          {/* Time status */}
-          {!isWithinTimeWindow && timeMessage && (
-            <div className="flex items-start gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
-              <Clock className="h-4 w-4 mt-0.5 shrink-0" />
-              <span className="text-sm">{timeMessage}</span>
-            </div>
-          )}
-
-          {/* Location status */}
-          {isWithinTimeWindow && (
-            <>
-              {isLoadingLocation ? (
-                <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Vérification de votre position...</span>
-                </div>
-              ) : permissionDenied ? (
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2 text-destructive bg-destructive/10 rounded-md p-3">
-                    <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                    <span className="text-sm">Accès à la position refusé. Autorisez la géolocalisation dans les paramètres de votre navigateur.</span>
-                  </div>
-                </div>
-              ) : locationError ? (
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2 text-destructive bg-destructive/10 rounded-md p-3">
-                    <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                    <span className="text-sm">{locationError}</span>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleRetryLocation}>
-                    Réessayer
-                  </Button>
-                </div>
-              ) : !isWithinLocationRadius && locationMessage && (
-                <div className="flex items-start gap-2 text-muted-foreground bg-muted/30 rounded-md p-3">
-                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span className="text-sm">{locationMessage}</span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
+      {/* Face Match Dialog */}
+      <FaceMatchVerification
+        isOpen={showFaceMatch}
+        onClose={() => setShowFaceMatch(false)}
+        userId={userId}
+        eventId={eventId}
+        registrationId={registrationId}
+        eventName={eventName}
+        eventDate={formatEventDate()}
+        onSuccess={handleFaceMatchSuccess}
+      />
+    </>
   );
 };
