@@ -175,20 +175,12 @@ export const IdentityVerificationCard = ({
     );
   }
 
-  // Show verified state
+  // Show verified state - miniature version
   if (isVerified) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-        <div className="flex justify-center mb-3">
-          <div className="relative">
-            <IdCard className="h-12 w-12 text-green-600" />
-            <BadgeCheck className="h-5 w-5 text-green-600 absolute -bottom-1 -right-1 bg-green-50 rounded-full" />
-          </div>
-        </div>
-        <h3 className="text-lg font-semibold text-green-800 mb-1">Identité vérifiée</h3>
-        <p className="text-sm text-green-600">
-          Votre identité a été vérifiée avec succès
-        </p>
+      <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1.5">
+        <BadgeCheck className="h-4 w-4 text-green-600" />
+        <span className="text-sm font-medium text-green-700">Identité vérifiée</span>
       </div>
     );
   }
