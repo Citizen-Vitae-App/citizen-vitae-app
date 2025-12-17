@@ -75,6 +75,21 @@ export const useAuth = () => {
     }
   };
 
+  // Function to manually refresh profile data
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (data) setProfile(data);
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    }
+  };
+
   const signInWithOtp = async (email: string) => {
     console.log('Requesting OTP for email:', email);
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -137,6 +152,7 @@ export const useAuth = () => {
     signOut,
     hasRole,
     needsOnboarding,
-    getDefaultRoute
+    getDefaultRoute,
+    refreshProfile
   };
 };

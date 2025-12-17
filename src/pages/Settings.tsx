@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
@@ -31,7 +31,7 @@ const maskEmail = (email: string | null): string => {
 };
 
 export default function Settings() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useUserPreferences();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
@@ -40,6 +40,11 @@ export default function Settings() {
     updatePreferences({ phone_number: phoneNumber });
     setIsEditingPhone(false);
   };
+
+  // Callback when verification completes to refresh profile data
+  const handleVerificationComplete = useCallback(() => {
+    refreshProfile?.();
+  }, [refreshProfile]);
 
   if (isLoading) {
     return (
@@ -68,7 +73,8 @@ export default function Settings() {
         <section className="mb-8">
           <IdentityVerificationCard 
             userId={user?.id || ''} 
-            isVerified={profile?.id_verified || false} 
+            isVerified={profile?.id_verified || false}
+            onVerificationComplete={handleVerificationComplete}
           />
         </section>
 
