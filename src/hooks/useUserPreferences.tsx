@@ -9,6 +9,7 @@ export interface UserPreferences {
   email_opt_in: boolean;
   sms_opt_in: boolean;
   phone_number: string | null;
+  geolocation_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +19,7 @@ export interface UpdatePreferencesData {
   email_opt_in?: boolean;
   sms_opt_in?: boolean;
   phone_number?: string | null;
+  geolocation_enabled?: boolean;
 }
 
 export const useUserPreferences = () => {
@@ -46,6 +48,7 @@ export const useUserPreferences = () => {
               language: 'fr',
               email_opt_in: true,
               sms_opt_in: false,
+              geolocation_enabled: false,
             })
             .select()
             .single();
