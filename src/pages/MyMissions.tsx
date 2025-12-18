@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, QrCode } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,11 +10,14 @@ import { format, parseISO, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
+import { MissionCertificationButton } from '@/components/MissionCertificationButton';
+import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 
 interface RegistrationWithEvent {
   id: string;
   status: string;
   attended_at: string | null;
+  face_match_passed: boolean | null;
   event_id: string;
   events: {
     id: string;
@@ -24,6 +26,8 @@ interface RegistrationWithEvent {
     start_date: string;
     end_date: string;
     cover_image_url: string | null;
+    latitude: number | null;
+    longitude: number | null;
     organizations: {
       name: string;
     };
@@ -35,6 +39,8 @@ const MyMissions = () => {
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState<RegistrationWithEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showFaceMatch, setShowFaceMatch] = useState(false);
+  const [selectedEventForFaceMatch, setSelectedEventForFaceMatch] = useState<RegistrationWithEvent | null>(null);
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -46,6 +52,7 @@ const MyMissions = () => {
           id,
           status,
           attended_at,
+          face_match_passed,
           event_id,
           events!inner (
             id,
@@ -54,6 +61,8 @@ const MyMissions = () => {
             start_date,
             end_date,
             cover_image_url,
+            latitude,
+            longitude,
             organizations!inner (name)
           )
         `)
@@ -72,10 +81,10 @@ const MyMissions = () => {
 
   const now = new Date();
 
-  // À venir: events that haven't ended yet
-  const upcomingEvents = registrations.filter(
-    (r) => isBefore(now, parseISO(r.events.end_date))
-  );
+  // À venir: events that haven't ended yet, sorted by start_date ascending (closest first)
+  const upcomingEvents = registrations
+    .filter((r) => isBefore(now, parseISO(r.events.end_date)))
+    .sort((a, b) => parseISO(a.events.start_date).getTime() - parseISO(b.events.start_date).getTime());
 
   // Certificats: past events where user attended (scanned ticket)
   const completedEvents = registrations.filter(
@@ -86,6 +95,18 @@ const MyMissions = () => {
   const cancelledEvents = registrations.filter(
     (r) => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at === null
   );
+
+  const handleCertificationClick = (registration: RegistrationWithEvent) => {
+    setSelectedEventForFaceMatch(registration);
+    setShowFaceMatch(true);
+  };
+
+  const handleFaceMatchComplete = () => {
+    setShowFaceMatch(false);
+    setSelectedEventForFaceMatch(null);
+    // Refresh registrations to get updated data
+    window.location.reload();
+  };
 
   const formatEventDate = (dateString: string) => {
     const date = parseISO(dateString);
@@ -110,24 +131,18 @@ const MyMissions = () => {
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="p-4 space-y-4">
-          <div>
+        <div className="p-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div onClick={() => navigate(`/events/${event.id}`)} className="cursor-pointer">
             <h3 className="font-semibold text-lg text-foreground">{event.name}</h3>
             <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
           </div>
-          <Button 
-            className="w-full bg-[#012573] hover:bg-[#012573]/90 text-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/events/${event.id}`);
-            }}
-          >
-            <QrCode className="mr-2 h-4 w-4" />
-            Démarrer la mission
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Faîtes scanner votre QR Code pour démarrer
-          </p>
+          <MissionCertificationButton
+            eventStartDate={event.start_date}
+            eventEndDate={event.end_date}
+            eventLatitude={event.latitude}
+            eventLongitude={event.longitude}
+            onClick={() => handleCertificationClick(registration)}
+          />
         </div>
       </div>
     );
@@ -263,6 +278,23 @@ const MyMissions = () => {
       
       {/* Bottom padding for mobile nav */}
       <div className="h-16 md:hidden" />
+
+      {/* Face Match Verification Modal */}
+      {showFaceMatch && selectedEventForFaceMatch && user && (
+        <FaceMatchVerification
+          isOpen={showFaceMatch}
+          eventId={selectedEventForFaceMatch.event_id}
+          userId={user.id}
+          registrationId={selectedEventForFaceMatch.id}
+          eventName={selectedEventForFaceMatch.events.name}
+          eventDate={selectedEventForFaceMatch.events.start_date}
+          onSuccess={handleFaceMatchComplete}
+          onClose={() => {
+            setShowFaceMatch(false);
+            setSelectedEventForFaceMatch(null);
+          }}
+        />
+      )}
     </div>
   );
 };
