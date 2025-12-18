@@ -93,10 +93,26 @@ export const useEventRegistration = (eventId: string | undefined) => {
 
       return regData;
     },
-    onMutate: () => {
-      setIsAnimating(true);
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['event-registration', eventId, user?.id] });
+      
+      // Snapshot previous value
+      const previousRegistration = queryClient.getQueryData(['event-registration', eventId, user?.id]);
+      
+      // Optimistically update to new value (instant UI feedback)
+      queryClient.setQueryData(['event-registration', eventId, user?.id], {
+        id: 'temp-' + Date.now(),
+        user_id: user?.id,
+        event_id: eventId,
+        status: 'registered',
+        registered_at: new Date().toISOString(),
+      });
+      
+      return { previousRegistration };
     },
     onSuccess: () => {
+      setIsAnimating(true);
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
       toast({
         title: 'Inscription confirmée !',
@@ -105,8 +121,11 @@ export const useEventRegistration = (eventId: string | undefined) => {
       // Reset animation after a delay
       setTimeout(() => setIsAnimating(false), 1500);
     },
-    onError: (error: any) => {
-      setIsAnimating(false);
+    onError: (error: any, _variables, context) => {
+      // Rollback on error
+      if (context?.previousRegistration !== undefined) {
+        queryClient.setQueryData(['event-registration', eventId, user?.id], context.previousRegistration);
+      }
       console.error('Registration error:', error);
       
       // Check if it's a duplicate registration

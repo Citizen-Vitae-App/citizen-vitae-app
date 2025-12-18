@@ -228,9 +228,10 @@ const EventDetail = () => {
         disabled={isRegistering}
         className={cn(
           baseClasses,
+          isRegistering && "bg-muted text-muted-foreground cursor-wait",
           isAnimating && "bg-green-600 hover:bg-green-600"
         )}
-        style={{ backgroundColor: isAnimating ? undefined : '#012573' }}
+        style={{ backgroundColor: isRegistering ? undefined : (isAnimating ? undefined : '#012573') }}
       >
         {isRegistering ? (
           <Loader2 className="h-5 w-5 animate-spin" />

@@ -82,16 +82,20 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
     cleanupOverlays();
 
     const position = { lat, lng };
+    
+    // Detect mobile device
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
     // Create or reuse the map
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: position,
         zoom: zoom,
-        gestureHandling: 'greedy',
+        gestureHandling: isMobile ? 'none' : 'cooperative',
         scrollwheel: false,
+        draggable: !isMobile,
         disableDefaultUI: true,
-        zoomControl: true,
+        zoomControl: !isMobile,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: true,
@@ -103,7 +107,12 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
       // Listen for fullscreen changes to enable/disable scroll and add margin
       document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement && mapInstanceRef.current) {
-          mapInstanceRef.current.setOptions({ scrollwheel: true });
+          mapInstanceRef.current.setOptions({ 
+            scrollwheel: true, 
+            draggable: true, 
+            zoomControl: true,
+            gestureHandling: 'greedy' 
+          });
           // Add margin effect in fullscreen
           if (mapRef.current) {
             mapRef.current.style.background = '#f5f5f5';
@@ -112,7 +121,12 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
           }
           google.maps.event.trigger(mapInstanceRef.current, 'resize');
         } else if (mapInstanceRef.current) {
-          mapInstanceRef.current.setOptions({ scrollwheel: false });
+          mapInstanceRef.current.setOptions({ 
+            scrollwheel: false, 
+            draggable: !isMobile, 
+            zoomControl: !isMobile,
+            gestureHandling: isMobile ? 'none' : 'cooperative' 
+          });
           // Remove margin effect
           if (mapRef.current) {
             mapRef.current.style.background = '';
