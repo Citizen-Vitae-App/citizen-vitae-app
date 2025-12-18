@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Info, CheckCircle2, Loader2, Play } from 'lucide-react';
+import { Info, CheckCircle2, Loader2, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -37,6 +37,7 @@ export const MissionCertificationButton = ({
     timeMessage,
     locationMessage,
     isAfterEvent,
+    needsGeolocation,
   } = useCertificationEligibility({
     eventStartDate,
     eventEndDate,
@@ -60,7 +61,33 @@ export const MissionCertificationButton = ({
     return null;
   }
 
-  const infoMessage = !isWithinTimeWindow ? timeMessage : locationMessage;
+  const handleGeolocationClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    requestLocation();
+  };
+
+  // Render info message with clickable geolocation link
+  const renderInfoMessage = () => {
+    if (!isWithinTimeWindow) {
+      return <p className="text-muted-foreground">{timeMessage}</p>;
+    }
+    
+    if (needsGeolocation) {
+      return (
+        <p className="text-muted-foreground">
+          Position non disponible.{' '}
+          <button
+            onClick={handleGeolocationClick}
+            className="text-primary underline hover:text-primary/80 transition-colors"
+          >
+            Activez la géolocalisation
+          </button>
+        </p>
+      );
+    }
+    
+    return <p className="text-muted-foreground">{locationMessage}</p>;
+  };
 
   if (isLoadingLocation) {
     return (
@@ -82,7 +109,7 @@ export const MissionCertificationButton = ({
         className="w-full h-12 font-semibold"
         style={{ backgroundColor: '#012573' }}
       >
-        <Play className="h-5 w-5 mr-2" />
+        <QrCode className="h-5 w-5 mr-2" />
         Démarrer la mission
         <CheckCircle2 className="h-5 w-5 ml-2 text-green-400" />
       </Button>
@@ -95,7 +122,7 @@ export const MissionCertificationButton = ({
         disabled
         className="w-full h-12 font-semibold bg-muted text-muted-foreground pr-12"
       >
-        <Play className="h-5 w-5 mr-2" />
+        <QrCode className="h-5 w-5 mr-2" />
         Démarrer la mission
       </Button>
       <Popover>
@@ -108,7 +135,7 @@ export const MissionCertificationButton = ({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 text-sm" side="top">
-          <p className="text-muted-foreground">{infoMessage}</p>
+          {renderInfoMessage()}
         </PopoverContent>
       </Popover>
     </div>

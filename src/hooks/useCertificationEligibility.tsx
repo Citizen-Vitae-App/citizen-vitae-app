@@ -71,11 +71,13 @@ export const useCertificationEligibility = ({
     }
 
     let locationMessage = '';
+    let needsGeolocation = false;
+    
     if (!isLoadingLocation && distanceFromEvent !== null && !isWithinLocationRadius) {
       const distanceKm = (distanceFromEvent / 1000).toFixed(1);
       locationMessage = `Distance actuelle: ${distanceKm} km. Vous devez être à moins de 500m du lieu.`;
     } else if (!isLoadingLocation && distanceFromEvent === null && eventLatitude && eventLongitude) {
-      locationMessage = 'Position non disponible. Activez la géolocalisation.';
+      needsGeolocation = true;
     }
 
     const isEligible = isWithinTimeWindow && isWithinLocationRadius;
@@ -90,6 +92,7 @@ export const useCertificationEligibility = ({
       isBeforeWindow,
       isAfterEvent,
       windowStart,
+      needsGeolocation,
     };
   }, [
     eventStartDate,
