@@ -6,6 +6,7 @@ import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Lo
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
 import { CertificationCard } from '@/components/CertificationCard';
+import { CertificationButton } from '@/components/CertificationButton';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -28,7 +29,7 @@ import { useEventRegistration } from '@/hooks/useEventRegistration';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 
 interface EventWithOrganization {
   id: string;
@@ -59,6 +60,7 @@ const EventDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
+  const [showFaceMatch, setShowFaceMatch] = useState(false);
   
   const isLiked = eventId ? isFavorite(eventId) : false;
 
@@ -83,6 +85,11 @@ const EventDetail = () => {
     unregister,
     canUnregister,
   } = useEventRegistration(eventId);
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [eventId]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -215,7 +222,7 @@ const EventDetail = () => {
           ) : (
             <>
               <X className="h-5 w-5 mr-2" />
-              Se désinscrire
+              Me désinscrire
             </>
           )}
         </Button>
@@ -391,7 +398,7 @@ const EventDetail = () => {
                     ) : (
                       <>
                         <X className="h-5 w-5 mr-2" />
-                        Se désinscrire
+                        Me désinscrire
                       </>
                     )}
                   </Button>
@@ -438,29 +445,23 @@ const EventDetail = () => {
         )}
       </div>
 
-      {/* Mobile Content - Certification Card visible */}
-      <div className="lg:hidden container mx-auto px-4 pb-6">
-        {isRegistered && (
-          <div className="space-y-4">
-            <CertificationCard
+      {/* Mobile Fixed Bottom Bar */}
+      {isRegistered ? (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+          <div className="flex flex-col gap-3">
+            <CertificationButton
               eventStartDate={event.start_date}
               eventEndDate={event.end_date}
               eventLatitude={event.latitude}
               eventLongitude={event.longitude}
-              eventName={event.name}
-              eventId={event.id}
-              userId={user?.id || ''}
-              registrationId={registration?.id || ''}
-              faceMatchPassed={registration?.face_match_passed}
-              qrToken={registration?.qr_token}
-              attendedAt={registration?.attended_at}
+              onClick={() => setShowFaceMatch(true)}
             />
             <Button
               onClick={handleUnregister}
               disabled={isUnregistering || !canUserUnregister}
               variant="outline"
               className={cn(
-                "w-full h-12 text-lg font-semibold transition-all duration-300",
+                "w-full h-12 font-semibold",
                 "border-destructive text-destructive hover:bg-destructive/10",
                 !canUserUnregister && "opacity-50 cursor-not-allowed"
               )}
@@ -470,21 +471,13 @@ const EventDetail = () => {
               ) : (
                 <>
                   <X className="h-5 w-5 mr-2" />
-                  Se désinscrire
+                  Me désinscrire
                 </>
               )}
             </Button>
-            {!canUserUnregister && (
-              <p className="text-xs text-muted-foreground text-center">
-                Désinscription impossible moins de 24h avant la fin de l'événement
-              </p>
-            )}
           </div>
-        )}
-      </div>
-
-      {/* Mobile Fixed Bottom Bar - only show registration CTA when not registered */}
-      {!isRegistered && (
+        </div>
+      ) : (
         <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-0.5">
@@ -501,6 +494,18 @@ const EventDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Face Match Dialog for mobile */}
+      <FaceMatchVerification
+        isOpen={showFaceMatch}
+        onClose={() => setShowFaceMatch(false)}
+        userId={user?.id || ''}
+        eventId={event.id}
+        registrationId={registration?.id || ''}
+        eventName={event.name}
+        eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", { locale: fr })}`}
+        onSuccess={() => setShowFaceMatch(false)}
+      />
 
       {/* Share Dialog */}
       <ShareDialog
