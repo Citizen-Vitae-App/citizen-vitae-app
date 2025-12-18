@@ -489,8 +489,19 @@ serve(async (req) => {
           .eq('id', user_id)
           .single();
         
-        if (!existingProfile?.id_verified) {
-          // Store the reference selfie if available
+        console.log('[didit-verification] Existing profile state:', {
+          id_verified: existingProfile?.id_verified,
+          has_reference_selfie: !!existingProfile?.reference_selfie_url
+        });
+        
+        // Store selfie if missing (even if already verified)
+        if (!existingProfile?.reference_selfie_url) {
+          console.log('[didit-verification] No reference selfie found, attempting to store...');
+          console.log('[didit-verification] Decision data selfie info:', {
+            selfie_url: statusData.selfie?.url,
+            source_image: statusData.source_image
+          });
+          
           if (statusData.selfie?.url || statusData.source_image) {
             const selfieUrl = statusData.selfie?.url || statusData.source_image;
             
@@ -518,15 +529,23 @@ serve(async (req) => {
                     .update({ reference_selfie_url: signedUrlData?.signedUrl })
                     .eq('id', user_id);
                   
-                  console.log('[didit-verification] Reference selfie stored for user:', user_id);
+                  console.log('[didit-verification] Reference selfie stored successfully for user:', user_id);
+                } else {
+                  console.error('[didit-verification] Error uploading selfie:', uploadError);
                 }
+              } else {
+                console.error('[didit-verification] Failed to download selfie from Didit:', selfieResponse.status);
               }
             } catch (selfieError) {
               console.error('[didit-verification] Error storing selfie:', selfieError);
             }
+          } else {
+            console.log('[didit-verification] No selfie URL in Didit response');
           }
-          
-          // Update id_verified
+        }
+        
+        // Update id_verified if not already set
+        if (!existingProfile?.id_verified) {
           const { error: updateError } = await supabase
             .from('profiles')
             .update({ id_verified: true })
