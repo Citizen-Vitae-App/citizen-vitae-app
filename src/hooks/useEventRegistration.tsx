@@ -115,8 +115,7 @@ export const useEventRegistration = (eventId: string | undefined) => {
       setIsAnimating(true);
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
       toast({
-        title: 'Inscription confirmée !',
-        description: 'Vous êtes maintenant inscrit à cet événement.',
+        title: 'Inscription confirmée',
       });
       // Reset animation after a delay
       setTimeout(() => setIsAnimating(false), 1500);
@@ -170,7 +169,6 @@ export const useEventRegistration = (eventId: string | undefined) => {
       queryClient.refetchQueries({ queryKey: ['event-registration', eventId, user?.id] });
       toast({
         title: 'Désinscription confirmée',
-        description: 'Vous n\'êtes plus inscrit à cet événement.',
       });
     },
     onError: (error: any) => {
