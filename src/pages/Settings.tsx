@@ -4,11 +4,12 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare } from 'lucide-react';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 
 const maskPhoneNumber = (phone: string | null): string => {
   if (!phone || phone.length < 4) return phone || '';
@@ -33,12 +35,23 @@ const maskEmail = (email: string | null): string => {
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useUserPreferences();
+  const { latitude, longitude, error: geoError, isLoading: isGeoLoading, permissionDenied, requestLocation } = useGeolocation();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
 
   const handlePhoneSave = () => {
     updatePreferences({ phone_number: phoneNumber });
     setIsEditingPhone(false);
+  };
+
+  const handleRequestGeolocation = () => {
+    requestLocation();
+
+    // Provide immediate feedback that something is happening (especially on iOS)
+    toast.message('Demande de localisation…', {
+      description: 'Confirmez l\'autorisation dans votre navigateur si besoin.',
+      duration: 4000,
+    });
   };
 
   // Callback when verification completes to refresh profile data
@@ -76,6 +89,46 @@ export default function Settings() {
             isVerified={profile?.id_verified || false}
             onVerificationComplete={handleVerificationComplete}
           />
+        </section>
+
+        {/* Geolocation Section */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Localisation</h2>
+          </div>
+
+          <div className="bg-black/[0.03] rounded-lg p-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              La localisation est nécessaire pour démarrer une mission sur place.
+            </p>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleRequestGeolocation}
+                disabled={isGeoLoading}
+              >
+                {isGeoLoading ? 'Vérification…' : 'Autoriser la géolocalisation'}
+              </Button>
+
+              <div className="text-sm text-muted-foreground">
+                {latitude !== null && longitude !== null ? (
+                  <span>✅ Localisation activée</span>
+                ) : permissionDenied ? (
+                  <span>Accès refusé — réactivez-la dans les réglages du navigateur.</span>
+                ) : (
+                  <span>Non activée</span>
+                )}
+              </div>
+            </div>
+
+            {geoError && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                {geoError}
+              </p>
+            )}
+          </div>
         </section>
 
         {/* Language Section */}
