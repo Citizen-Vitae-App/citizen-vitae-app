@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock } from "lucide-react";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
@@ -71,6 +71,9 @@ const Index = () => {
     return `${format(dateRange.start, 'd MMM', { locale: fr })} - ${format(dateRange.end, 'd MMM', { locale: fr })}`;
   };
 
+  // Show login prompt for unauthenticated users on mobile
+  const showMobileLoginPrompt = !isAuthLoading && !user;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -124,24 +127,26 @@ const Index = () => {
               </button>
             </div>
 
-            {/* Search Bar - Mobile */}
+            {/* Search Bar - Mobile (disabled when not logged in) */}
             <div className="flex md:hidden flex-1 items-center gap-2">
-              <div className="flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50">
+              <div className={`flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}>
                 <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <Input
                   type="search"
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={showMobileLoginPrompt}
                   className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-base"
                   style={{ fontSize: '16px' }}
                 />
               </div>
               
-              {/* Filters Button - Mobile (icon only) */}
+              {/* Filters Button - Mobile (icon only, disabled when not logged in) */}
               <button
-                onClick={() => setIsFiltersOpen(true)}
-                className="border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 hover:bg-background/70 relative flex-shrink-0"
+                onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
+                disabled={showMobileLoginPrompt}
+                className={`border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 hover:bg-background/70 relative flex-shrink-0 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 {activeFiltersCount > 0 && (
@@ -226,6 +231,28 @@ const Index = () => {
         onCausesChange={setSelectedCauses}
       />
 
+      {/* Mobile Login Prompt - Centered overlay */}
+      {showMobileLoginPrompt && (
+        <div className="md:hidden fixed inset-0 top-14 z-40 flex items-center justify-center bg-background/95 backdrop-blur-sm px-6">
+          <div className="text-center max-w-sm">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              Accédez aux missions citoyennes
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Connectez-vous ou créez un compte pour découvrir et participer aux événements solidaires près de chez vous.
+            </p>
+            <Link to="/auth" className="block">
+              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                Se connecter / Créer un compte
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         {isEventsLoading ? (
@@ -270,11 +297,11 @@ const Index = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      {/* Mobile Bottom Navigation - Only show when logged in */}
+      {user && <MobileBottomNav />}
       
       {/* Bottom padding for mobile nav */}
-      <div className="h-16 md:hidden" />
+      {user && <div className="h-16 md:hidden" />}
     </div>
   );
 };
