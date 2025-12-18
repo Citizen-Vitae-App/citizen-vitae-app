@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { parseISO, subHours, format } from 'date-fns';
+import { parseISO, subHours, format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { calculateDistance } from '@/lib/utils';
 
@@ -58,7 +58,14 @@ export const useCertificationEligibility = ({
     // Generate messages
     let timeMessage = '';
     if (isBeforeWindow) {
-      timeMessage = `Disponible à partir de ${format(windowStart, "HH'h'mm", { locale: fr })}`;
+      const isTodayEvent = isSameDay(now, startDate);
+      if (isTodayEvent) {
+        // Same day: show time
+        timeMessage = `Disponible à partir de ${format(windowStart, "HH'h'mm", { locale: fr })}`;
+      } else {
+        // Different day: show date
+        timeMessage = `Disponible le ${format(startDate, "d MMMM", { locale: fr })}`;
+      }
     } else if (isAfterEvent) {
       timeMessage = 'L\'événement est terminé';
     }
