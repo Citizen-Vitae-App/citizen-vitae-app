@@ -116,6 +116,10 @@ export const IdentityVerificationCard = ({
   const handleStartVerification = async () => {
     setIsLoading(true);
     
+    // Open a blank window IMMEDIATELY on user click to avoid popup blockers
+    // The window must be opened synchronously during the click event
+    const verificationWindow = window.open('about:blank', '_blank');
+    
     try {
       console.log('[IdentityVerificationCard] Starting verification for user:', userId);
       
@@ -130,11 +134,15 @@ export const IdentityVerificationCard = ({
       if (error) {
         console.error('[IdentityVerificationCard] Error:', error);
         toast.error('Erreur lors du démarrage de la vérification');
+        verificationWindow?.close();
         return;
       }
 
+      console.log('[IdentityVerificationCard] Response data:', data);
+
       if (data?.verification_url && data?.session_id) {
         console.log('[IdentityVerificationCard] Session created:', data.session_id);
+        console.log('[IdentityVerificationCard] Verification URL:', data.verification_url);
         
         // Store session for later status check
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -145,14 +153,23 @@ export const IdentityVerificationCard = ({
         
         setVerificationStarted(true);
         
-        // Open Didit verification in new tab
-        window.open(data.verification_url, '_blank');
+        // Navigate the already-opened window to the verification URL
+        if (verificationWindow) {
+          verificationWindow.location.href = data.verification_url;
+        } else {
+          // Fallback: redirect current page if popup was blocked
+          console.log('[IdentityVerificationCard] Popup blocked, redirecting...');
+          window.location.href = data.verification_url;
+        }
       } else {
+        console.error('[IdentityVerificationCard] Missing verification_url or session_id in response:', data);
         toast.error('Impossible de démarrer la vérification');
+        verificationWindow?.close();
       }
     } catch (err) {
       console.error('[IdentityVerificationCard] Error:', err);
       toast.error('Erreur lors de la vérification');
+      verificationWindow?.close();
     } finally {
       setIsLoading(false);
     }
