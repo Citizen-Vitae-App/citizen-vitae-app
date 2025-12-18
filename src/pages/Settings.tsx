@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
@@ -39,19 +39,29 @@ export default function Settings() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
 
+  // Auto-request location if preference is enabled on mount
+  useEffect(() => {
+    if (preferences?.geolocation_enabled && latitude === null && !isGeoLoading) {
+      requestLocation();
+    }
+  }, [preferences?.geolocation_enabled, latitude, isGeoLoading, requestLocation]);
+
   const handlePhoneSave = () => {
     updatePreferences({ phone_number: phoneNumber });
     setIsEditingPhone(false);
   };
 
-  const handleRequestGeolocation = () => {
-    requestLocation();
-
-    // Provide immediate feedback that something is happening (especially on iOS)
-    toast.message('Demande de localisation…', {
-      description: 'Confirmez l\'autorisation dans votre navigateur si besoin.',
-      duration: 4000,
-    });
+  const handleGeolocationToggle = (checked: boolean) => {
+    if (checked) {
+      // Request browser permission first
+      requestLocation();
+      toast.message('Demande de localisation…', {
+        description: 'Confirmez l\'autorisation dans votre navigateur si besoin.',
+        duration: 4000,
+      });
+    }
+    // Save preference regardless (user can enable even if browser denied - they'll need to fix browser settings)
+    updatePreferences({ geolocation_enabled: checked });
   };
 
   // Callback when verification completes to refresh profile data
@@ -99,34 +109,43 @@ export default function Settings() {
           </div>
 
           <div className="bg-black/[0.03] rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-3">
-              La localisation est nécessaire pour démarrer une mission sur place.
-            </p>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <Button
-                type="button"
-                onClick={handleRequestGeolocation}
-                disabled={isGeoLoading}
-              >
-                {isGeoLoading ? 'Vérification…' : 'Autoriser la géolocalisation'}
-              </Button>
-
-              <div className="text-sm text-muted-foreground">
-                {latitude !== null && longitude !== null ? (
-                  <span>✅ Localisation activée</span>
-                ) : permissionDenied ? (
-                  <span>Accès refusé — réactivez-la dans les réglages du navigateur.</span>
-                ) : (
-                  <span>Non activée</span>
-                )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <Label htmlFor="geolocation-toggle" className="font-medium">
+                    Activer la géolocalisation
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Nécessaire pour démarrer une mission sur place
+                  </p>
+                </div>
               </div>
+              <Switch
+                id="geolocation-toggle"
+                checked={preferences?.geolocation_enabled ?? false}
+                onCheckedChange={handleGeolocationToggle}
+                disabled={isUpdating || isGeoLoading}
+              />
             </div>
 
-            {geoError && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                {geoError}
-              </p>
+            {/* Status message */}
+            {preferences?.geolocation_enabled && (
+              <div className="mt-3 pl-8 text-sm text-muted-foreground">
+                {isGeoLoading ? (
+                  <span>Vérification en cours…</span>
+                ) : latitude !== null && longitude !== null ? (
+                  <span className="text-green-600">✅ Localisation active</span>
+                ) : permissionDenied ? (
+                  <span className="text-amber-600">
+                    ⚠️ Accès refusé par le navigateur — réactivez-la dans les réglages.
+                  </span>
+                ) : geoError ? (
+                  <span className="text-amber-600">⚠️ {geoError}</span>
+                ) : (
+                  <span>En attente de la permission du navigateur…</span>
+                )}
+              </div>
             )}
           </div>
         </section>

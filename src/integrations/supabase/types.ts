@@ -434,6 +434,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email_opt_in: boolean
+          geolocation_enabled: boolean
           language: string
           phone_number: string | null
           sms_opt_in: boolean
@@ -443,6 +444,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email_opt_in?: boolean
+          geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
           sms_opt_in?: boolean
@@ -452,6 +454,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           email_opt_in?: boolean
+          geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
           sms_opt_in?: boolean
