@@ -27,7 +27,16 @@ export const useGeolocation = () => {
       return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setState(prev => ({ ...prev, isLoading: true, error: null, permissionDenied: false }));
+
+    // Detect iOS/Safari for adjusted timeout
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    const options: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: isIOS ? 15000 : 10000, // More time for iOS
+      maximumAge: 60000,
+    };
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -45,14 +54,19 @@ export const useGeolocation = () => {
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Vous avez refusé l\'accès à votre position';
             permissionDenied = true;
+            // Different message for iOS Safari (settings guidance)
+            if (isIOS) {
+              errorMessage = 'Accès refusé. Allez dans Réglages > Safari > Localisation pour réactiver.';
+            } else {
+              errorMessage = 'Accès refusé. Cliquez sur le cadenas dans la barre d\'adresse pour réactiver.';
+            }
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage = 'Position non disponible';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Délai d\'attente dépassé';
+            errorMessage = 'Délai d\'attente dépassé. Réessayez.';
             break;
         }
 
@@ -64,11 +78,7 @@ export const useGeolocation = () => {
           permissionDenied,
         });
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
+      options
     );
   }, []);
 

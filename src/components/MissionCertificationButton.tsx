@@ -62,7 +62,8 @@ export const MissionCertificationButton = ({
   }
 
   const handleGeolocationClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    // Only preventDefault, no stopPropagation - Safari needs direct user interaction
+    e.preventDefault();
     requestLocation();
   };
 
