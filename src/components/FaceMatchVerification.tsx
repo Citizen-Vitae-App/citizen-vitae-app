@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Shield, Loader2, XCircle, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CameraCapture } from './CameraCapture';
@@ -7,7 +7,7 @@ import { CertificationQRCode } from './CertificationQRCode';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type VerificationStage = 'instructions' | 'camera' | 'processing' | 'qr-code' | 'error';
+type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'error';
 
 interface FaceMatchVerificationProps {
   isOpen: boolean;
@@ -37,6 +37,16 @@ export const FaceMatchVerification = ({
   const [stage, setStage] = useState<VerificationStage>(initialStage);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [qrToken, setQrToken] = useState<string>(existingQrToken || '');
+
+  // Auto-transition from success to qr-code
+  useEffect(() => {
+    if (stage === 'success' && qrToken) {
+      const timer = setTimeout(() => {
+        setStage('qr-code');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [stage, qrToken]);
 
   const handleStartCapture = () => {
     setStage('camera');
@@ -83,9 +93,9 @@ export const FaceMatchVerification = ({
         return;
       }
 
-      // Face match passed - show QR code
+      // Face match passed
       const token = data.qr_token;
-      console.log('[FaceMatch] Success! qr_token received:', token);
+      console.log('[FaceMatch] Success! qr_token received:', token, 'cached:', data.cached);
 
       if (!token) {
         console.error('[FaceMatch] No QR token received from server');
@@ -94,11 +104,18 @@ export const FaceMatchVerification = ({
         return;
       }
 
-      // Update both states together - React 18 batches these automatically
       setQrToken(token);
-      setStage('qr-code');
       onSuccess();
-      toast.success('Face Match validé !');
+
+      // If cached result, skip animation and go directly to QR code
+      if (data.cached) {
+        setStage('qr-code');
+        toast.success('Face Match déjà validé !');
+      } else {
+        // Show success animation then transition to QR code
+        setStage('success');
+        toast.success('Face Match validé !');
+      }
     } catch (err) {
       console.error('Face match error:', err);
       setErrorMessage('Une erreur est survenue. Veuillez réessayer.');
@@ -162,6 +179,20 @@ export const FaceMatchVerification = ({
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground text-center">
               Vérification en cours...
+            </p>
+          </div>
+        )}
+
+        {stage === 'success' && (
+          <div className="flex flex-col items-center gap-4 py-8">
+            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center animate-scale-in">
+              <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+            </div>
+            <p className="text-lg font-semibold text-green-600 dark:text-green-400 text-center animate-fade-in">
+              Identité vérifiée !
+            </p>
+            <p className="text-sm text-muted-foreground text-center animate-fade-in">
+              Génération du QR code...
             </p>
           </div>
         )}

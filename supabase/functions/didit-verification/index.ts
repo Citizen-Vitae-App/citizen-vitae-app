@@ -226,6 +226,33 @@ serve(async (req) => {
       
       log('FACE-MATCH', `Starting face match for user: ${user_id}, event: ${event_id}`);
       
+      // Check if face match was already validated within the last 2 hours
+      const { data: existingReg } = await supabase
+        .from('event_registrations')
+        .select('face_match_passed, face_match_at, qr_token')
+        .eq('id', registration_id)
+        .eq('user_id', user_id)
+        .single();
+
+      if (existingReg?.face_match_passed && existingReg?.face_match_at && existingReg?.qr_token) {
+        const faceMatchTime = new Date(existingReg.face_match_at).getTime();
+        const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+        
+        if (faceMatchTime > twoHoursAgo) {
+          log('FACE-MATCH', `Reusing cached face match from ${existingReg.face_match_at}`);
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              passed: true, 
+              score: 100, 
+              qr_token: existingReg.qr_token,
+              cached: true 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+      
       // Fetch the reference selfie URL and session ID from profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -344,9 +371,9 @@ serve(async (req) => {
         || faceMatchResult.similarity 
         || 0;
       
-      // Le score Didit est déjà en pourcentage (0-100), seuil à 60%
+      // Le score Didit est déjà en pourcentage (0-100), seuil à 55%
       const score = rawScore;
-      const passed = score >= 60;
+      const passed = score >= 55;
       
       log('FACE-MATCH', `Raw score: ${rawScore}, Passed: ${passed}`);
       
