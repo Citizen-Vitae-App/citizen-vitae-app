@@ -90,17 +90,11 @@ export const FaceMatchVerification = ({
         return;
       }
 
-      // Set token first, then change stage with a small delay to ensure React processes the state update
+      // Update both states together - React 18 batches these automatically
       setQrToken(token);
-      console.log('[FaceMatch] qrToken state set, now changing stage to qr-code');
-      
-      // Use requestAnimationFrame to ensure DOM is ready before state change
-      requestAnimationFrame(() => {
-        setStage('qr-code');
-        console.log('[FaceMatch] Stage set to qr-code');
-        onSuccess();
-        toast.success('Face Match validé !');
-      });
+      setStage('qr-code');
+      onSuccess();
+      toast.success('Face Match validé !');
     } catch (err) {
       console.error('Face match error:', err);
       setErrorMessage('Une erreur est survenue. Veuillez réessayer.');
@@ -167,13 +161,22 @@ export const FaceMatchVerification = ({
           </div>
         )}
 
-        {stage === 'qr-code' && qrToken && (
-          <CertificationQRCode
-            qrToken={qrToken}
-            registrationId={registrationId}
-            eventName={eventName}
-            eventDate={eventDate}
-          />
+        {stage === 'qr-code' && (
+          qrToken ? (
+            <CertificationQRCode
+              qrToken={qrToken}
+              registrationId={registrationId}
+              eventName={eventName}
+              eventDate={eventDate}
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground text-center">
+                Génération du QR code...
+              </p>
+            </div>
+          )
         )}
 
         {stage === 'error' && (
