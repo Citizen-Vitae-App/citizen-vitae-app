@@ -19,7 +19,24 @@ function generateQrToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// Helper function to log with timestamps
+function log(prefix: string, message: string, data?: unknown) {
+  const timestamp = new Date().toISOString();
+  if (data !== undefined) {
+    console.log(`[${timestamp}] [${prefix}] ${message}`, JSON.stringify(data, null, 2));
+  } else {
+    console.log(`[${timestamp}] [${prefix}] ${message}`);
+  }
+}
+
+function logError(prefix: string, message: string, error?: unknown) {
+  const timestamp = new Date().toISOString();
+  console.error(`[${timestamp}] [${prefix}] ERROR: ${message}`, error);
+}
+
 serve(async (req) => {
+  const startTime = Date.now();
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -29,24 +46,31 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     const body = await req.json();
     
-    console.log('[didit-verification] Request received:', JSON.stringify({ ...body, live_selfie_base64: body.live_selfie_base64 ? '[BASE64_REDACTED]' : undefined }, null, 2));
+    log('REQUEST', 'Incoming request', { 
+      action: body.action,
+      webhook_type: body.webhook_type,
+      session_id: body.session_id,
+      user_id: body.user_id,
+      has_live_selfie: !!body.live_selfie_base64
+    });
 
     // Check if this is a webhook callback from Didit
     if (body.webhook_type === 'status.updated' || (body.session_id && !body.action)) {
-      console.log('[didit-verification] Processing webhook callback');
+      log('WEBHOOK', 'Processing webhook callback');
       
       const sessionId = body.session_id;
       const status = body.status || body.decision?.status;
       const vendorData = body.vendor_data; // This contains our user_id
       
-      console.log('[didit-verification] Session:', sessionId, 'Status:', status, 'User:', vendorData);
+      log('WEBHOOK', 'Webhook data', { sessionId, status, vendorData });
       
       // If verification is approved, update user profile and store reference selfie
       if (status === 'Approved' && vendorData) {
-        console.log('[didit-verification] Updating user id_verified to true for:', vendorData);
+        log('WEBHOOK', `Verification approved for user: ${vendorData}`);
         
         // Fetch the session decision to get the selfie image
         try {
+          log('SELFIE', 'Fetching decision data from Didit...');
           const decisionResponse = await fetch(`https://verification.didit.me/v2/session/${sessionId}/decision/`, {
             method: 'GET',
             headers: {
@@ -54,22 +78,35 @@ serve(async (req) => {
             },
           });
           
+          log('SELFIE', `Decision API response status: ${decisionResponse.status}`);
+          
           if (decisionResponse.ok) {
             const decisionData = await decisionResponse.json();
-            console.log('[didit-verification] Decision data received');
+            log('SELFIE', 'Decision data received', {
+              has_selfie_url: !!decisionData.selfie?.url,
+              has_source_image: !!decisionData.source_image,
+              selfie_url_preview: decisionData.selfie?.url?.substring(0, 50) + '...',
+              source_image_preview: decisionData.source_image?.substring(0, 50) + '...'
+            });
             
             // Store the reference selfie if available
             if (decisionData.selfie?.url || decisionData.source_image) {
               const selfieUrl = decisionData.selfie?.url || decisionData.source_image;
+              log('SELFIE', `Downloading selfie from: ${selfieUrl.substring(0, 50)}...`);
               
               // Download the selfie image
               const selfieResponse = await fetch(selfieUrl);
+              log('SELFIE', `Selfie download status: ${selfieResponse.status}`);
+              
               if (selfieResponse.ok) {
                 const selfieBlob = await selfieResponse.blob();
                 const selfieBuffer = await selfieBlob.arrayBuffer();
+                log('SELFIE', `Selfie downloaded, size: ${selfieBuffer.byteLength} bytes`);
                 
                 // Upload to Supabase Storage
                 const fileName = `${vendorData}/reference.jpg`;
+                log('SELFIE', `Uploading to storage: ${fileName}`);
+                
                 const { error: uploadError } = await supabase.storage
                   .from('verification-selfies')
                   .upload(fileName, selfieBuffer, {
@@ -78,47 +115,62 @@ serve(async (req) => {
                   });
                 
                 if (uploadError) {
-                  console.error('[didit-verification] Error uploading selfie:', uploadError);
+                  logError('SELFIE', 'Upload failed', uploadError);
                 } else {
-                  // Get the URL and update profile
-                  const { data: { publicUrl } } = supabase.storage
-                    .from('verification-selfies')
-                    .getPublicUrl(fileName);
+                  log('SELFIE', 'Upload successful');
                   
-                  // Store signed URL instead for private bucket
-                  const { data: signedUrlData } = await supabase.storage
+                  // Get signed URL for private bucket
+                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
                     .from('verification-selfies')
                     .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year
                   
-                  await supabase
-                    .from('profiles')
-                    .update({ reference_selfie_url: signedUrlData?.signedUrl || publicUrl })
-                    .eq('id', vendorData);
-                  
-                  console.log('[didit-verification] Reference selfie stored for user:', vendorData);
+                  if (signedUrlError) {
+                    logError('SELFIE', 'Failed to create signed URL', signedUrlError);
+                  } else {
+                    log('SELFIE', 'Signed URL created, updating profile...');
+                    
+                    const { error: updateSelfieError } = await supabase
+                      .from('profiles')
+                      .update({ reference_selfie_url: signedUrlData?.signedUrl })
+                      .eq('id', vendorData);
+                    
+                    if (updateSelfieError) {
+                      logError('SELFIE', 'Failed to update profile with selfie URL', updateSelfieError);
+                    } else {
+                      log('SELFIE', `Reference selfie stored successfully for user: ${vendorData}`);
+                    }
+                  }
                 }
+              } else {
+                logError('SELFIE', `Failed to download selfie, status: ${selfieResponse.status}`);
               }
+            } else {
+              log('SELFIE', 'No selfie URL in decision data');
             }
+          } else {
+            const errorText = await decisionResponse.text();
+            logError('SELFIE', `Decision API error: ${decisionResponse.status}`, errorText);
           }
         } catch (selfieError) {
-          console.error('[didit-verification] Error fetching/storing selfie:', selfieError);
+          logError('SELFIE', 'Exception during selfie processing', selfieError);
           // Continue even if selfie storage fails
         }
         
+        log('WEBHOOK', 'Updating id_verified to true...');
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ id_verified: true })
           .eq('id', vendorData);
         
         if (updateError) {
-          console.error('[didit-verification] Error updating profile:', updateError);
+          logError('WEBHOOK', 'Failed to update profile', updateError);
           return new Response(
             JSON.stringify({ success: false, error: updateError.message }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
-        console.log('[didit-verification] User verified successfully');
+        log('WEBHOOK', `User verified successfully in ${Date.now() - startTime}ms`);
         return new Response(
           JSON.stringify({ success: true, message: 'User verified successfully' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -126,6 +178,7 @@ serve(async (req) => {
       }
       
       // Handle other statuses
+      log('WEBHOOK', `Webhook processed with status: ${status}`);
       return new Response(
         JSON.stringify({ success: true, message: `Webhook processed, status: ${status}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -137,23 +190,29 @@ serve(async (req) => {
       const { user_id, event_id, registration_id, live_selfie_base64 } = body;
       
       if (!user_id || !event_id || !registration_id || !live_selfie_base64) {
+        logError('FACE-MATCH', 'Missing required parameters', { user_id: !!user_id, event_id: !!event_id, registration_id: !!registration_id, has_selfie: !!live_selfie_base64 });
         return new Response(
           JSON.stringify({ success: false, error: 'Missing required parameters' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      console.log('[didit-verification] Starting Face Match for user:', user_id);
+      log('FACE-MATCH', `Starting face match for user: ${user_id}, event: ${event_id}`);
       
       // Fetch the reference selfie URL from profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('reference_selfie_url')
+        .select('reference_selfie_url, id_verified')
         .eq('id', user_id)
         .single();
       
+      log('FACE-MATCH', 'Profile state', { 
+        id_verified: profile?.id_verified, 
+        has_reference_selfie: !!profile?.reference_selfie_url 
+      });
+      
       if (profileError || !profile?.reference_selfie_url) {
-        console.error('[didit-verification] No reference selfie found:', profileError);
+        logError('FACE-MATCH', 'No reference selfie found', profileError);
         return new Response(
           JSON.stringify({ success: false, error: 'Aucune photo de référence trouvée. Veuillez compléter la vérification d\'identité.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -161,15 +220,17 @@ serve(async (req) => {
       }
       
       // Download reference selfie from storage
+      log('FACE-MATCH', 'Downloading reference selfie...');
       const refSelfieResponse = await fetch(profile.reference_selfie_url);
       if (!refSelfieResponse.ok) {
-        console.error('[didit-verification] Failed to download reference selfie');
+        logError('FACE-MATCH', `Failed to download reference selfie, status: ${refSelfieResponse.status}`);
         return new Response(
           JSON.stringify({ success: false, error: 'Impossible de récupérer la photo de référence.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       const refSelfieBlob = await refSelfieResponse.blob();
+      log('FACE-MATCH', `Reference selfie downloaded, size: ${refSelfieBlob.size} bytes`);
       
       // Convert base64 live selfie to blob
       const base64Data = live_selfie_base64.replace(/^data:image\/\w+;base64,/, '');
@@ -179,13 +240,14 @@ serve(async (req) => {
         bytes[i] = binaryString.charCodeAt(i);
       }
       const liveSelfieBlob = new Blob([bytes], { type: 'image/jpeg' });
+      log('FACE-MATCH', `Live selfie prepared, size: ${liveSelfieBlob.size} bytes`);
       
       // Call Didit Face Match API
       const formData = new FormData();
       formData.append('user_image', liveSelfieBlob, 'live_selfie.jpg');
       formData.append('ref_image', refSelfieBlob, 'reference.jpg');
       
-      console.log('[didit-verification] Calling Didit Face Match API...');
+      log('FACE-MATCH', 'Calling Didit Face Match API...');
       
       const faceMatchResponse = await fetch('https://verification.didit.me/v2/face-match/', {
         method: 'POST',
@@ -195,9 +257,11 @@ serve(async (req) => {
         body: formData,
       });
       
+      log('FACE-MATCH', `API response status: ${faceMatchResponse.status}`);
+      
       if (!faceMatchResponse.ok) {
         const errorText = await faceMatchResponse.text();
-        console.error('[didit-verification] Face Match API error:', faceMatchResponse.status, errorText);
+        logError('FACE-MATCH', `API error: ${faceMatchResponse.status}`, errorText);
         return new Response(
           JSON.stringify({ success: false, error: 'Erreur lors de la vérification faciale.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -205,10 +269,12 @@ serve(async (req) => {
       }
       
       const faceMatchResult = await faceMatchResponse.json();
-      console.log('[didit-verification] Face Match result:', faceMatchResult);
+      log('FACE-MATCH', 'Face match result', faceMatchResult);
       
       const score = faceMatchResult.score || faceMatchResult.similarity || 0;
       const passed = score >= 0.75;
+      
+      log('FACE-MATCH', `Score: ${score}, Passed: ${passed}`);
       
       if (passed) {
         // Generate QR token
@@ -226,21 +292,21 @@ serve(async (req) => {
           .eq('user_id', user_id);
         
         if (updateError) {
-          console.error('[didit-verification] Error updating registration:', updateError);
+          logError('FACE-MATCH', 'Failed to update registration', updateError);
           return new Response(
             JSON.stringify({ success: false, error: 'Erreur lors de la mise à jour.' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
-        console.log('[didit-verification] Face Match passed, QR token generated');
+        log('FACE-MATCH', `Face match passed, QR token generated in ${Date.now() - startTime}ms`);
         
         return new Response(
           JSON.stringify({ success: true, passed: true, score, qr_token: qrToken }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } else {
-        console.log('[didit-verification] Face Match failed, score:', score);
+        log('FACE-MATCH', `Face match failed with score: ${score}`);
         return new Response(
           JSON.stringify({ success: true, passed: false, score }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -253,13 +319,14 @@ serve(async (req) => {
       const { qr_token } = body;
       
       if (!qr_token) {
+        logError('QR-VERIFY', 'Missing QR token');
         return new Response(
           JSON.stringify({ success: false, error: 'Missing QR token' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      console.log('[didit-verification] Verifying QR code:', qr_token.substring(0, 8) + '...');
+      log('QR-VERIFY', `Verifying QR code: ${qr_token.substring(0, 8)}...`);
       
       // Fetch registration by QR token with user profile and event info
       const { data: registration, error: regError } = await supabase
@@ -273,7 +340,7 @@ serve(async (req) => {
         .single();
       
       if (regError || !registration) {
-        console.error('[didit-verification] Invalid QR code:', regError);
+        logError('QR-VERIFY', 'Invalid QR code', regError);
         return new Response(
           JSON.stringify({ success: false, error: 'QR code invalide ou expiré.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -281,6 +348,7 @@ serve(async (req) => {
       }
       
       if (!registration.face_match_passed) {
+        logError('QR-VERIFY', 'Face match not validated for this registration');
         return new Response(
           JSON.stringify({ success: false, error: 'Face Match non validé.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -293,6 +361,11 @@ serve(async (req) => {
         ? `${profile.first_name} ${profile.last_name}` 
         : profile?.email || 'Participant';
       
+      log('QR-VERIFY', `Processing scan for: ${userName}`, {
+        has_arrival: !!registration.certification_start_at,
+        has_departure: !!registration.certification_end_at
+      });
+      
       // Two-scan logic
       if (!registration.certification_start_at) {
         // FIRST SCAN - Arrival
@@ -304,14 +377,14 @@ serve(async (req) => {
           .eq('id', registration.id);
         
         if (updateError) {
-          console.error('[didit-verification] Error recording arrival:', updateError);
+          logError('QR-VERIFY', 'Failed to record arrival', updateError);
           return new Response(
             JSON.stringify({ success: false, error: 'Erreur lors de l\'enregistrement.' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
-        console.log('[didit-verification] Arrival recorded for:', userName);
+        log('QR-VERIFY', `Arrival recorded for: ${userName} in ${Date.now() - startTime}ms`);
         
         return new Response(
           JSON.stringify({ 
@@ -345,14 +418,14 @@ serve(async (req) => {
           .eq('id', registration.id);
         
         if (updateError) {
-          console.error('[didit-verification] Error recording departure:', updateError);
+          logError('QR-VERIFY', 'Failed to record departure', updateError);
           return new Response(
             JSON.stringify({ success: false, error: 'Erreur lors de l\'enregistrement.' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
-        console.log('[didit-verification] Certification complete for:', userName, 'Duration:', durationFormatted);
+        log('QR-VERIFY', `Certification complete for: ${userName}, Duration: ${durationFormatted}, Time: ${Date.now() - startTime}ms`);
         
         return new Response(
           JSON.stringify({ 
@@ -380,6 +453,8 @@ serve(async (req) => {
         const minutes = durationMinutes % 60;
         const durationFormatted = hours > 0 ? `${hours}h${minutes.toString().padStart(2, '0')}` : `${minutes}min`;
         
+        log('QR-VERIFY', `User already certified: ${userName}`);
+        
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -402,13 +477,14 @@ serve(async (req) => {
       const { user_id, callback_url, workflow_id } = body;
       
       if (!user_id) {
+        logError('SESSION', 'Missing user_id');
         return new Response(
           JSON.stringify({ success: false, error: 'user_id is required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      console.log('[didit-verification] Creating Didit session for user:', user_id);
+      log('SESSION', `Creating Didit session for user: ${user_id}`);
       
       // Create a verification session with Didit
       const diditResponse = await fetch('https://verification.didit.me/v2/session/', {
@@ -424,9 +500,11 @@ serve(async (req) => {
         }),
       });
       
+      log('SESSION', `Didit API response status: ${diditResponse.status}`);
+      
       if (!diditResponse.ok) {
         const errorText = await diditResponse.text();
-        console.error('[didit-verification] Didit API error:', errorText);
+        logError('SESSION', 'Didit API error', errorText);
         return new Response(
           JSON.stringify({ success: false, error: 'Failed to create verification session', details: errorText }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -434,7 +512,10 @@ serve(async (req) => {
       }
       
       const sessionData = await diditResponse.json();
-      console.log('[didit-verification] Session created:', sessionData);
+      log('SESSION', `Session created successfully in ${Date.now() - startTime}ms`, { 
+        session_id: sessionData.session_id,
+        has_url: !!sessionData.url
+      });
       
       return new Response(
         JSON.stringify({ 
@@ -451,13 +532,14 @@ serve(async (req) => {
       const { session_id, user_id } = body;
       
       if (!session_id) {
+        logError('CHECK-STATUS', 'Missing session_id');
         return new Response(
           JSON.stringify({ success: false, error: 'session_id is required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      console.log('[didit-verification] Checking session status:', session_id);
+      log('CHECK-STATUS', `Checking session status: ${session_id}, user: ${user_id || 'not provided'}`);
       
       const statusResponse = await fetch(`https://verification.didit.me/v2/session/${session_id}/decision/`, {
         method: 'GET',
@@ -466,98 +548,163 @@ serve(async (req) => {
         },
       });
       
+      log('CHECK-STATUS', `Didit API response status: ${statusResponse.status}`);
+      
+      // Handle session not found (deleted from Didit)
       if (!statusResponse.ok) {
         const errorText = await statusResponse.text();
-        console.error('[didit-verification] Status check error:', errorText);
+        logError('CHECK-STATUS', `Status check failed: ${statusResponse.status}`, errorText);
+        
+        // If 404 = session deleted from Didit
+        if (statusResponse.status === 404 && user_id) {
+          log('CHECK-STATUS', 'Session not found in Didit (possibly deleted), checking profile state...');
+          
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id_verified, reference_selfie_url')
+            .eq('id', user_id)
+            .single();
+          
+          if (profileError) {
+            logError('CHECK-STATUS', 'Failed to fetch profile', profileError);
+          } else {
+            log('CHECK-STATUS', 'Profile state', {
+              id_verified: profile?.id_verified,
+              has_reference_selfie: !!profile?.reference_selfie_url
+            });
+            
+            // User is marked verified but has no selfie = needs to reverify
+            if (profile?.id_verified && !profile?.reference_selfie_url) {
+              log('CHECK-STATUS', 'User verified but missing selfie - needs reverification');
+              return new Response(
+                JSON.stringify({ 
+                  success: false, 
+                  status: 'session_expired',
+                  needs_reverification: true,
+                  message: 'Session expirée. Le selfie de référence est manquant, veuillez refaire la vérification.'
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+          }
+        }
+        
         return new Response(
-          JSON.stringify({ success: false, error: 'Failed to check session status' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: false, error: 'Failed to check session status', details: errorText }),
+          { status: statusResponse.status === 404 ? 404 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
       const statusData = await statusResponse.json();
-      console.log('[didit-verification] Session status:', statusData);
+      log('CHECK-STATUS', 'Session status received', {
+        status: statusData.status,
+        has_selfie_url: !!statusData.selfie?.url,
+        has_source_image: !!statusData.source_image
+      });
       
       // If approved and user_id provided, update profile (fallback if webhook missed)
       if (statusData.status === 'Approved' && user_id) {
-        console.log('[didit-verification] Status is Approved, updating profile for user:', user_id);
+        log('CHECK-STATUS', `Status is Approved, checking profile for user: ${user_id}`);
         
-        // Check if already verified
-        const { data: existingProfile } = await supabase
+        // Check current profile state
+        const { data: existingProfile, error: profileFetchError } = await supabase
           .from('profiles')
           .select('id_verified, reference_selfie_url')
           .eq('id', user_id)
           .single();
         
-        console.log('[didit-verification] Existing profile state:', {
-          id_verified: existingProfile?.id_verified,
-          has_reference_selfie: !!existingProfile?.reference_selfie_url
-        });
-        
-        // Store selfie if missing (even if already verified)
-        if (!existingProfile?.reference_selfie_url) {
-          console.log('[didit-verification] No reference selfie found, attempting to store...');
-          console.log('[didit-verification] Decision data selfie info:', {
-            selfie_url: statusData.selfie?.url,
-            source_image: statusData.source_image
+        if (profileFetchError) {
+          logError('CHECK-STATUS', 'Failed to fetch profile', profileFetchError);
+        } else {
+          log('CHECK-STATUS', 'Current profile state', {
+            id_verified: existingProfile?.id_verified,
+            has_reference_selfie: !!existingProfile?.reference_selfie_url
           });
           
-          if (statusData.selfie?.url || statusData.source_image) {
-            const selfieUrl = statusData.selfie?.url || statusData.source_image;
+          // Store selfie if missing (even if already verified)
+          if (!existingProfile?.reference_selfie_url) {
+            log('SELFIE', 'No reference selfie found, attempting to retrieve and store...');
+            log('SELFIE', 'Available in Didit response', {
+              selfie_url: statusData.selfie?.url?.substring(0, 50) + '...',
+              source_image: statusData.source_image?.substring(0, 50) + '...'
+            });
             
-            try {
-              const selfieResponse = await fetch(selfieUrl);
-              if (selfieResponse.ok) {
-                const selfieBlob = await selfieResponse.blob();
-                const selfieBuffer = await selfieBlob.arrayBuffer();
+            if (statusData.selfie?.url || statusData.source_image) {
+              const selfieUrl = statusData.selfie?.url || statusData.source_image;
+              
+              try {
+                log('SELFIE', `Downloading selfie from: ${selfieUrl.substring(0, 50)}...`);
+                const selfieResponse = await fetch(selfieUrl);
+                log('SELFIE', `Download response status: ${selfieResponse.status}`);
                 
-                const fileName = `${user_id}/reference.jpg`;
-                const { error: uploadError } = await supabase.storage
-                  .from('verification-selfies')
-                  .upload(fileName, selfieBuffer, {
-                    contentType: 'image/jpeg',
-                    upsert: true,
-                  });
-                
-                if (!uploadError) {
-                  const { data: signedUrlData } = await supabase.storage
+                if (selfieResponse.ok) {
+                  const selfieBlob = await selfieResponse.blob();
+                  const selfieBuffer = await selfieBlob.arrayBuffer();
+                  log('SELFIE', `Selfie downloaded, size: ${selfieBuffer.byteLength} bytes`);
+                  
+                  const fileName = `${user_id}/reference.jpg`;
+                  log('SELFIE', `Uploading to storage: ${fileName}`);
+                  
+                  const { error: uploadError } = await supabase.storage
                     .from('verification-selfies')
-                    .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+                    .upload(fileName, selfieBuffer, {
+                      contentType: 'image/jpeg',
+                      upsert: true,
+                    });
                   
-                  await supabase
-                    .from('profiles')
-                    .update({ reference_selfie_url: signedUrlData?.signedUrl })
-                    .eq('id', user_id);
-                  
-                  console.log('[didit-verification] Reference selfie stored successfully for user:', user_id);
+                  if (!uploadError) {
+                    log('SELFIE', 'Upload successful, creating signed URL...');
+                    
+                    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                      .from('verification-selfies')
+                      .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+                    
+                    if (signedUrlError) {
+                      logError('SELFIE', 'Failed to create signed URL', signedUrlError);
+                    } else {
+                      const { error: updateSelfieError } = await supabase
+                        .from('profiles')
+                        .update({ reference_selfie_url: signedUrlData?.signedUrl })
+                        .eq('id', user_id);
+                      
+                      if (updateSelfieError) {
+                        logError('SELFIE', 'Failed to update profile', updateSelfieError);
+                      } else {
+                        log('SELFIE', `Reference selfie stored successfully for user: ${user_id}`);
+                      }
+                    }
+                  } else {
+                    logError('SELFIE', 'Upload failed', uploadError);
+                  }
                 } else {
-                  console.error('[didit-verification] Error uploading selfie:', uploadError);
+                  logError('SELFIE', `Failed to download selfie from Didit: ${selfieResponse.status}`);
                 }
-              } else {
-                console.error('[didit-verification] Failed to download selfie from Didit:', selfieResponse.status);
+              } catch (selfieError) {
+                logError('SELFIE', 'Exception during selfie processing', selfieError);
               }
-            } catch (selfieError) {
-              console.error('[didit-verification] Error storing selfie:', selfieError);
+            } else {
+              log('SELFIE', 'No selfie URL available in Didit response');
             }
-          } else {
-            console.log('[didit-verification] No selfie URL in Didit response');
           }
-        }
-        
-        // Update id_verified if not already set
-        if (!existingProfile?.id_verified) {
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ id_verified: true })
-            .eq('id', user_id);
           
-          if (updateError) {
-            console.error('[didit-verification] Error updating profile:', updateError);
-          } else {
-            console.log('[didit-verification] Profile updated via check-status for user:', user_id);
+          // Update id_verified if not already set
+          if (!existingProfile?.id_verified) {
+            log('CHECK-STATUS', 'Updating id_verified to true...');
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ id_verified: true })
+              .eq('id', user_id);
+            
+            if (updateError) {
+              logError('CHECK-STATUS', 'Failed to update id_verified', updateError);
+            } else {
+              log('CHECK-STATUS', `Profile updated via check-status for user: ${user_id}`);
+            }
           }
         }
       }
+      
+      log('CHECK-STATUS', `Completed in ${Date.now() - startTime}ms`);
       
       return new Response(
         JSON.stringify({ 
@@ -570,13 +717,14 @@ serve(async (req) => {
       );
     }
 
+    logError('REQUEST', 'Invalid action received', body.action);
     return new Response(
       JSON.stringify({ success: false, error: 'Invalid action' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error: unknown) {
-    console.error('[didit-verification] Error:', error);
+    logError('REQUEST', 'Unhandled exception', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
