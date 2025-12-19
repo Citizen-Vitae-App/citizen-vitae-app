@@ -74,13 +74,23 @@ export const FaceMatchVerification = ({
       }
 
       if (!data.passed) {
-        setErrorMessage(`Le score de correspondance est insuffisant (${Math.round(data.score * 100)}%). Veuillez réessayer.`);
+        setErrorMessage(`Le score de correspondance est insuffisant (${Math.round(data.score)}%). Veuillez réessayer.`);
         setStage('error');
         return;
       }
 
       // Face match passed - show QR code
-      setQrToken(data.qr_token);
+      const token = data.qr_token;
+      console.log('Face match success, qr_token:', token);
+
+      if (!token) {
+        console.error('No QR token received from server');
+        setErrorMessage('Erreur: aucun QR code généré. Veuillez réessayer.');
+        setStage('error');
+        return;
+      }
+
+      setQrToken(token);
       setStage('qr-code');
       onSuccess();
       toast.success('Face Match validé !');
