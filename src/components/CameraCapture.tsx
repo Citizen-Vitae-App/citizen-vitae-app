@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, X, RotateCcw } from 'lucide-react';
+import { Camera, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CameraCaptureProps {
@@ -120,12 +120,9 @@ export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      {/* Header with close button */}
-      <div className="w-full flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-foreground">Prenez un selfie</h3>
-        <Button variant="ghost" size="icon" onClick={handleCancel}>
-          <X className="h-5 w-5" />
-        </Button>
+      {/* Header */}
+      <div className="w-full">
+        <h3 className="text-lg font-semibold text-foreground text-center">Prenez un selfie</h3>
       </div>
 
       {/* Instructions */}

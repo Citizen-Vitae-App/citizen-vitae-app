@@ -18,6 +18,7 @@ interface RegistrationWithEvent {
   status: string;
   attended_at: string | null;
   face_match_passed: boolean | null;
+  qr_token: string | null;
   event_id: string;
   events: {
     id: string;
@@ -53,6 +54,7 @@ const MyMissions = () => {
           status,
           attended_at,
           face_match_passed,
+          qr_token,
           event_id,
           events!inner (
             id,
@@ -288,6 +290,7 @@ const MyMissions = () => {
           registrationId={selectedEventForFaceMatch.id}
           eventName={selectedEventForFaceMatch.events.name}
           eventDate={selectedEventForFaceMatch.events.start_date}
+          existingQrToken={selectedEventForFaceMatch.qr_token}
           onSuccess={handleFaceMatchComplete}
           onClose={() => {
             setShowFaceMatch(false);

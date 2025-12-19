@@ -17,6 +17,7 @@ interface FaceMatchVerificationProps {
   registrationId: string;
   eventName: string;
   eventDate: string;
+  existingQrToken?: string | null;
   onSuccess: () => void;
 }
 
@@ -28,11 +29,14 @@ export const FaceMatchVerification = ({
   registrationId,
   eventName,
   eventDate,
+  existingQrToken,
   onSuccess,
 }: FaceMatchVerificationProps) => {
-  const [stage, setStage] = useState<VerificationStage>('instructions');
+  // If we already have a QR token, go directly to qr-code stage
+  const initialStage: VerificationStage = existingQrToken ? 'qr-code' : 'instructions';
+  const [stage, setStage] = useState<VerificationStage>(initialStage);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [qrToken, setQrToken] = useState<string>('');
+  const [qrToken, setQrToken] = useState<string>(existingQrToken || '');
 
   const handleStartCapture = () => {
     setStage('camera');
@@ -108,9 +112,10 @@ export const FaceMatchVerification = ({
   };
 
   const handleClose = () => {
-    setStage('instructions');
+    // Reset to initial stage based on whether we have an existing token
+    setStage(existingQrToken ? 'qr-code' : 'instructions');
     setErrorMessage('');
-    setQrToken('');
+    setQrToken(existingQrToken || '');
     onClose();
   };
 
