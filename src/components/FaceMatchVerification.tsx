@@ -62,7 +62,13 @@ export const FaceMatchVerification = ({
 
       if (!data.success) {
         console.error('Face match failed:', data.error);
-        setErrorMessage(data.error || 'La vérification a échoué.');
+        
+        // Handle needs_reverification case
+        if (data.needs_reverification) {
+          setErrorMessage('Votre vérification d\'identité a expiré. Veuillez retourner dans les paramètres pour re-vérifier votre identité.');
+        } else {
+          setErrorMessage(data.error || 'La vérification a échoué.');
+        }
         setStage('error');
         return;
       }

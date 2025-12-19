@@ -338,6 +338,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           date_of_birth: string | null
+          didit_session_id: string | null
           email: string | null
           first_name: string | null
           id: string
@@ -350,6 +351,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          didit_session_id?: string | null
           email?: string | null
           first_name?: string | null
           id: string
@@ -362,6 +364,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          didit_session_id?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
