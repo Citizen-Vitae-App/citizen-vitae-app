@@ -10,13 +10,23 @@ interface CameraCaptureProps {
 export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const hasStartedRef = useRef(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   const startCamera = useCallback(async () => {
+    // Prevent multiple camera initialization calls
+    if (hasStartedRef.current) {
+      console.log('[CameraCapture] Camera already started, skipping');
+      return;
+    }
+    hasStartedRef.current = true;
+    
     try {
       setError(null);
+      console.log('[CameraCapture] Requesting camera access...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
@@ -26,6 +36,8 @@ export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
         audio: false,
       });
       
+      console.log('[CameraCapture] Camera access granted');
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       
       if (videoRef.current) {
@@ -36,7 +48,8 @@ export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
         };
       }
     } catch (err) {
-      console.error('Camera error:', err);
+      console.error('[CameraCapture] Camera error:', err);
+      hasStartedRef.current = false; // Allow retry on error
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
           setError('Accès à la caméra refusé. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.');
@@ -50,8 +63,10 @@ export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
   }, []);
 
   const stopCamera = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    const currentStream = streamRef.current || stream;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
       setStream(null);
     }
     setIsReady(false);
@@ -60,11 +75,12 @@ export const CameraCapture = ({ onCapture, onCancel }: CameraCaptureProps) => {
   useEffect(() => {
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Use ref for cleanup to avoid stale closure
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [startCamera]);
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current || !isReady) return;
