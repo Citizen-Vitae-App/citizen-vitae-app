@@ -229,6 +229,7 @@ export const CertificationCard = ({
         registrationId={registrationId}
         eventName={eventName}
         eventDate={formatEventDate()}
+        existingQrToken={localQrToken}
         onSuccess={handleFaceMatchSuccess}
       />
     </>

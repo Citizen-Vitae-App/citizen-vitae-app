@@ -504,6 +504,7 @@ const EventDetail = () => {
         registrationId={registration?.id || ''}
         eventName={event.name}
         eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", { locale: fr })}`}
+        existingQrToken={registration?.qr_token}
         onSuccess={() => setShowFaceMatch(false)}
       />
 
