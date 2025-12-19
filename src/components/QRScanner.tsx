@@ -64,16 +64,16 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-full px-2 sm:px-0">
       <div 
         ref={containerRef}
         id="qr-reader" 
-        className="w-full max-w-sm aspect-square bg-muted rounded-lg overflow-hidden relative"
+        className="w-full max-w-[320px] sm:max-w-sm aspect-square bg-muted rounded-lg overflow-hidden relative"
       >
         {!isStarted && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-            <Camera className="h-16 w-16 text-muted-foreground" />
-            <Button onClick={startScanner}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4">
+            <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+            <Button onClick={startScanner} size="sm" className="text-sm">
               <Camera className="mr-2 h-4 w-4" />
               Démarrer le scanner
             </Button>
@@ -81,8 +81,8 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
         )}
         {error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center">
-            <p className="text-sm text-destructive">{error}</p>
-            <Button variant="outline" onClick={startScanner}>
+            <p className="text-xs sm:text-sm text-destructive">{error}</p>
+            <Button variant="outline" onClick={startScanner} size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
               Réessayer
             </Button>
@@ -96,7 +96,7 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
       </div>
       
       {isStarted && (
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">
           Placez le QR code du participant dans le cadre
         </p>
       )}

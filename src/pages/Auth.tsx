@@ -1,22 +1,29 @@
-import { LogIn } from "lucide-react";
+import { LogIn, Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signInWithOtp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  const redirectUrl = searchParams.get('redirect');
+  const message = searchParams.get('message');
 
   useEffect(() => {
-    if (user) navigate('/');
-  }, [user, navigate]);
+    if (user) {
+      // Redirect to the original URL if provided, otherwise home
+      navigate(redirectUrl || '/');
+    }
+  }, [user, navigate, redirectUrl]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +81,16 @@ const Auth = () => {
               <LogIn className="w-6 h-6 text-muted-foreground" />
             </div>
           </div>
+
+          {/* Auth required message */}
+          {message === 'auth_required' && (
+            <Alert className="mb-6 border-primary/20 bg-primary/5">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm">
+                Authentification requise pour valider la présence d'un participant.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Title - Left Aligned */}
           <h1 className="text-2xl font-bold mb-2">
