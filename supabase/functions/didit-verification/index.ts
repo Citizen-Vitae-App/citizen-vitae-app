@@ -344,9 +344,9 @@ serve(async (req) => {
         || faceMatchResult.similarity 
         || 0;
       
-      // Le score Didit est déjà en pourcentage (0-100)
+      // Le score Didit est déjà en pourcentage (0-100), seuil à 60%
       const score = rawScore;
-      const passed = score >= 75;
+      const passed = score >= 60;
       
       log('FACE-MATCH', `Raw score: ${rawScore}, Passed: ${passed}`);
       
