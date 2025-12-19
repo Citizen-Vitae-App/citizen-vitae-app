@@ -338,10 +338,17 @@ serve(async (req) => {
       const faceMatchResult = await faceMatchResponse.json();
       log('FACE-MATCH', 'Face match result', faceMatchResult);
       
-      const score = faceMatchResult.score || faceMatchResult.similarity || 0;
-      const passed = score >= 0.75;
+      // Le score est imbriqué dans face_match.score et est un pourcentage (0-100)
+      const rawScore = faceMatchResult.face_match?.score 
+        || faceMatchResult.score 
+        || faceMatchResult.similarity 
+        || 0;
       
-      log('FACE-MATCH', `Score: ${score}, Passed: ${passed}`);
+      // Le score Didit est déjà en pourcentage (0-100)
+      const score = rawScore;
+      const passed = score >= 75;
+      
+      log('FACE-MATCH', `Raw score: ${rawScore}, Passed: ${passed}`);
       
       if (passed) {
         // Generate QR token
