@@ -180,10 +180,13 @@ serve(async (req) => {
           // Continue even if selfie storage fails
         }
         
-        log('WEBHOOK', 'Updating id_verified to true...');
+        log('WEBHOOK', 'Updating id_verified to true and storing session_id...');
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ id_verified: true })
+          .update({ 
+            id_verified: true,
+            didit_session_id: sessionId, // Store session ID for later validation
+          })
           .eq('id', vendorData);
         
         if (updateError) {
@@ -223,22 +226,62 @@ serve(async (req) => {
       
       log('FACE-MATCH', `Starting face match for user: ${user_id}, event: ${event_id}`);
       
-      // Fetch the reference selfie URL from profile
+      // Fetch the reference selfie URL and session ID from profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('reference_selfie_url, id_verified')
+        .select('reference_selfie_url, id_verified, didit_session_id')
         .eq('id', user_id)
         .single();
       
       log('FACE-MATCH', 'Profile state', { 
         id_verified: profile?.id_verified, 
-        has_reference_selfie: !!profile?.reference_selfie_url 
+        has_reference_selfie: !!profile?.reference_selfie_url,
+        has_session_id: !!profile?.didit_session_id
       });
+      
+      // If user is verified and has a stored session ID, check if it still exists in Didit
+      if (profile?.id_verified && profile?.didit_session_id) {
+        log('FACE-MATCH', `Checking if Didit session still exists: ${profile.didit_session_id}`);
+        
+        const sessionCheck = await fetch(
+          `https://verification.didit.me/v2/session/${profile.didit_session_id}/decision/`,
+          { headers: { 'x-api-key': DIDIT_API_KEY! } }
+        );
+        
+        log('FACE-MATCH', `Session check status: ${sessionCheck.status}`);
+        
+        // If session no longer exists in Didit (404), reset verification
+        if (sessionCheck.status === 404) {
+          log('FACE-MATCH', 'Session deleted from Didit, resetting verification...');
+          
+          const { error: resetError } = await supabase
+            .from('profiles')
+            .update({
+              id_verified: false,
+              reference_selfie_url: null,
+              didit_session_id: null,
+            })
+            .eq('id', user_id);
+          
+          if (resetError) {
+            logError('FACE-MATCH', 'Failed to reset verification', resetError);
+          }
+          
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'Votre vérification d\'identité a expiré ou a été supprimée. Veuillez recommencer le processus de vérification.',
+              needs_reverification: true
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
       
       if (profileError || !profile?.reference_selfie_url) {
         logError('FACE-MATCH', 'No reference selfie found', profileError);
         return new Response(
-          JSON.stringify({ success: false, error: 'Aucune photo de référence trouvée. Veuillez compléter la vérification d\'identité.' }),
+          JSON.stringify({ success: false, error: 'Aucune photo de référence trouvée. Veuillez compléter la vérification d\'identité.', needs_reverification: true }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
