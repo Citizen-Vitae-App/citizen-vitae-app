@@ -81,19 +81,26 @@ export const FaceMatchVerification = ({
 
       // Face match passed - show QR code
       const token = data.qr_token;
-      console.log('Face match success, qr_token:', token);
+      console.log('[FaceMatch] Success! qr_token received:', token);
 
       if (!token) {
-        console.error('No QR token received from server');
+        console.error('[FaceMatch] No QR token received from server');
         setErrorMessage('Erreur: aucun QR code généré. Veuillez réessayer.');
         setStage('error');
         return;
       }
 
+      // Set token first, then change stage with a small delay to ensure React processes the state update
       setQrToken(token);
-      setStage('qr-code');
-      onSuccess();
-      toast.success('Face Match validé !');
+      console.log('[FaceMatch] qrToken state set, now changing stage to qr-code');
+      
+      // Use requestAnimationFrame to ensure DOM is ready before state change
+      requestAnimationFrame(() => {
+        setStage('qr-code');
+        console.log('[FaceMatch] Stage set to qr-code');
+        onSuccess();
+        toast.success('Face Match validé !');
+      });
     } catch (err) {
       console.error('Face match error:', err);
       setErrorMessage('Une erreur est survenue. Veuillez réessayer.');
