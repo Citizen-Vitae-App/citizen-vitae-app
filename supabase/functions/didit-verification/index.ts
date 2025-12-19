@@ -82,17 +82,41 @@ serve(async (req) => {
           
           if (decisionResponse.ok) {
             const decisionData = await decisionResponse.json();
-            log('SELFIE', 'Decision data received', {
-              has_selfie_url: !!decisionData.selfie?.url,
-              has_source_image: !!decisionData.source_image,
-              selfie_url_preview: decisionData.selfie?.url?.substring(0, 50) + '...',
-              source_image_preview: decisionData.source_image?.substring(0, 50) + '...'
+            
+            // Log the full structure to understand the response
+            log('SELFIE', 'Decision data structure', {
+              root_keys: Object.keys(decisionData),
+              has_face_match: !!decisionData.face_match,
+              has_liveness: !!decisionData.liveness,
+              has_id_verification: !!decisionData.id_verification,
+              face_match_keys: decisionData.face_match ? Object.keys(decisionData.face_match) : [],
+              liveness_keys: decisionData.liveness ? Object.keys(decisionData.liveness) : [],
+              id_verification_keys: decisionData.id_verification ? Object.keys(decisionData.id_verification) : [],
+            });
+            
+            // Try multiple paths to find the selfie image (Didit API v2)
+            const selfieUrl = 
+              decisionData.face_match?.source_image ||
+              decisionData.face_match?.target_image ||
+              decisionData.liveness?.image ||
+              decisionData.liveness?.selfie ||
+              decisionData.id_verification?.portrait_image ||
+              decisionData.id_verification?.selfie ||
+              decisionData.selfie?.url ||
+              decisionData.source_image ||
+              decisionData.image;
+            
+            log('SELFIE', 'Selfie URL search result', {
+              found: !!selfieUrl,
+              url_preview: selfieUrl ? selfieUrl.substring(0, 80) + '...' : 'not found',
+              face_match_source: decisionData.face_match?.source_image?.substring(0, 50),
+              liveness_image: decisionData.liveness?.image?.substring(0, 50),
+              portrait_image: decisionData.id_verification?.portrait_image?.substring(0, 50),
             });
             
             // Store the reference selfie if available
-            if (decisionData.selfie?.url || decisionData.source_image) {
-              const selfieUrl = decisionData.selfie?.url || decisionData.source_image;
-              log('SELFIE', `Downloading selfie from: ${selfieUrl.substring(0, 50)}...`);
+            if (selfieUrl) {
+              log('SELFIE', `Downloading selfie from: ${selfieUrl.substring(0, 80)}...`);
               
               // Download the selfie image
               const selfieResponse = await fetch(selfieUrl);
@@ -145,7 +169,7 @@ serve(async (req) => {
                 logError('SELFIE', `Failed to download selfie, status: ${selfieResponse.status}`);
               }
             } else {
-              log('SELFIE', 'No selfie URL in decision data');
+              log('SELFIE', 'No selfie URL found in any expected path of decision data');
             }
           } else {
             const errorText = await decisionResponse.text();
