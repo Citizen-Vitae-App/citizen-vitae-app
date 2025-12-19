@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import sigle from '@/assets/icon-sigle.svg';
 
 interface CertificationQRCodeProps {
   qrToken: string;
@@ -19,34 +19,35 @@ export const CertificationQRCode = ({
   const verificationUrl = `${window.location.origin}/verify/${registrationId}?token=${qrToken}`;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col items-center gap-3 sm:gap-4 w-full px-2 sm:px-0">
       {/* Success indicator */}
       <div className="flex items-center gap-2 text-green-600">
         <CheckCircle2 className="h-5 w-5" />
-        <span className="font-medium">Face Match validé</span>
+        <span className="font-medium text-sm sm:text-base">Face Match validé</span>
       </div>
 
-      {/* QR Code with logo */}
-      <div className="bg-white p-4 rounded-lg">
+      {/* QR Code with sigle - responsive sizing */}
+      <div className="bg-white p-3 sm:p-4 rounded-lg">
         <QRCodeSVG
           value={verificationUrl}
-          size={200}
-          level="H" // High error correction for logo overlay
+          size={180}
+          level="H"
           includeMargin={true}
+          className="w-[160px] h-[160px] sm:w-[200px] sm:h-[200px]"
           imageSettings={{
-            src: logo,
+            src: sigle,
             x: undefined,
             y: undefined,
-            height: 40,
-            width: 40,
+            height: 36,
+            width: 36,
             excavate: true,
           }}
         />
       </div>
 
       {/* Instructions */}
-      <div className="text-center space-y-2">
-        <p className="text-sm font-medium text-foreground">
+      <div className="text-center space-y-1 sm:space-y-2 px-2">
+        <p className="text-xs sm:text-sm font-medium text-foreground">
           Présentez ce QR code à l'organisateur
         </p>
         <p className="text-xs text-muted-foreground">
@@ -55,8 +56,8 @@ export const CertificationQRCode = ({
       </div>
 
       {/* Event info */}
-      <div className="w-full bg-muted/30 rounded-lg p-3 text-center">
-        <p className="font-medium text-foreground text-sm">{eventName}</p>
+      <div className="w-full bg-muted/30 rounded-lg p-2 sm:p-3 text-center">
+        <p className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">{eventName}</p>
         <p className="text-xs text-muted-foreground mt-1">{eventDate}</p>
       </div>
     </div>
