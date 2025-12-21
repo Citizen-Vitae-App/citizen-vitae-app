@@ -38,15 +38,35 @@ export default function ScanParticipant() {
     setIsProcessing(true);
     setLastResult(null);
     
+    console.log('[QR-SCAN] Raw content:', qrContent);
+    
     try {
-      // Parse QR content - it should be JSON with qr_token
       let qrToken: string;
-      try {
-        const parsed = JSON.parse(qrContent);
-        qrToken = parsed.qr_token || parsed.token || qrContent;
-      } catch {
-        // If not JSON, assume it's the raw token
-        qrToken = qrContent;
+      
+      // Check if it's a URL (from CertificationQRCode component)
+      if (qrContent.includes('/verify/') && qrContent.includes('token=')) {
+        try {
+          const url = new URL(qrContent);
+          qrToken = url.searchParams.get('token') || '';
+          console.log('[QR-SCAN] Extracted token from URL:', qrToken);
+        } catch {
+          qrToken = qrContent;
+        }
+      } else {
+        // Try parsing as JSON
+        try {
+          const parsed = JSON.parse(qrContent);
+          qrToken = parsed.qr_token || parsed.token || qrContent;
+          console.log('[QR-SCAN] Parsed from JSON:', qrToken);
+        } catch {
+          // Assume it's the raw token
+          qrToken = qrContent;
+          console.log('[QR-SCAN] Using raw content as token');
+        }
+      }
+      
+      if (!qrToken) {
+        throw new Error('QR code invalide - token manquant');
       }
       
       const { data, error } = await supabase.functions.invoke('didit-verification', {
