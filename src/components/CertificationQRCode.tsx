@@ -17,6 +17,7 @@ export const CertificationQRCode = ({
 }: CertificationQRCodeProps) => {
   // Create verification URL that admin will scan
   const verificationUrl = `${window.location.origin}/verify/${registrationId}?token=${qrToken}`;
+  const tokenPreview = `${qrToken.slice(0, 8)}…${qrToken.slice(-6)}`;
 
   return (
     <div className="flex flex-col items-center gap-3 sm:gap-4 w-full px-2 sm:px-0">
@@ -27,7 +28,7 @@ export const CertificationQRCode = ({
       </div>
 
       {/* QR Code with sigle - responsive sizing */}
-      <div className="bg-white p-3 sm:p-4 rounded-lg">
+      <div className="bg-background border border-border p-3 sm:p-4 rounded-lg">
         <QRCodeSVG
           value={verificationUrl}
           size={180}
@@ -43,6 +44,11 @@ export const CertificationQRCode = ({
             excavate: true,
           }}
         />
+      </div>
+
+      {/* Debug-friendly token preview (helps validate we're scanning the correct QR) */}
+      <div className="text-xs text-muted-foreground">
+        Token: <span className="font-mono text-foreground">{tokenPreview}</span>
       </div>
 
       {/* Instructions */}

@@ -68,6 +68,11 @@ export default function ScanParticipant() {
       if (!qrToken) {
         throw new Error('QR code invalide - token manquant');
       }
+
+      // Our QR tokens are long (secure random). Short tokens usually mean a non-app/test QR code.
+      if (qrToken.length < 20) {
+        throw new Error('QR code invalide : ce QR ne semble pas provenir de Citizen Vitae');
+      }
       
       const { data, error } = await supabase.functions.invoke('didit-verification', {
         body: {
