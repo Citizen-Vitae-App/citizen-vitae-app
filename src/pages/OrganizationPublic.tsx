@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import logo from '@/assets/logo.png';
 import EventCard from '@/components/EventCard';
 import { format, parseISO } from 'date-fns';
@@ -41,8 +42,10 @@ interface Event {
   id: string;
   name: string;
   start_date: string;
+  end_date: string;
   location: string;
   cover_image_url: string | null;
+  cause_themes: CauseTheme[];
 }
 
 const OrganizationPublic = () => {
@@ -99,18 +102,30 @@ const OrganizationPublic = () => {
           setCauseThemes(themes);
         }
 
-        // Fetch upcoming events
+        // Fetch upcoming events (events that haven't ended yet)
         const { data: eventsData } = await supabase
           .from('events')
-          .select('id, name, start_date, location, cover_image_url')
+          .select(`
+            id, name, start_date, end_date, location, cover_image_url,
+            event_cause_themes (
+              cause_themes (
+                id, name, color, icon
+              )
+            )
+          `)
           .eq('organization_id', orgId)
           .eq('is_public', true)
-          .gte('start_date', new Date().toISOString())
-          .order('start_date', { ascending: true })
-          .limit(4);
+          .gte('end_date', new Date().toISOString())
+          .order('start_date', { ascending: true });
 
         if (eventsData) {
-          setUpcomingEvents(eventsData);
+          const eventsWithCauses = eventsData.map((event: any) => ({
+            ...event,
+            cause_themes: event.event_cause_themes
+              ?.map((ect: any) => ect.cause_themes)
+              .filter(Boolean) || []
+          }));
+          setUpcomingEvents(eventsWithCauses);
         }
       }
 
@@ -271,24 +286,101 @@ const OrganizationPublic = () => {
               </div>
             )}
 
-            {/* Upcoming Events */}
+            {/* Events by Category */}
             {upcomingEvents.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Événements à venir</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {upcomingEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      id={event.id}
-                      title={event.name}
-                      shortTitle={getShortTitle(event.name)}
-                      organization={organization.name}
-                      date={formatEventDate(event.start_date)}
-                      location={event.location}
-                      image={event.cover_image_url || '/placeholder.svg'}
-                    />
-                  ))}
-                </div>
+              <div className="space-y-8">
+                <h2 className="text-xl font-semibold text-foreground">Événements à venir</h2>
+                
+                {/* Group events by cause theme */}
+                {(() => {
+                  // Get all unique cause themes from events
+                  const themesMap = new Map<string, { theme: CauseTheme; events: Event[] }>();
+                  const eventsWithoutTheme: Event[] = [];
+                  
+                  upcomingEvents.forEach((event) => {
+                    if (event.cause_themes.length === 0) {
+                      eventsWithoutTheme.push(event);
+                    } else {
+                      event.cause_themes.forEach((theme) => {
+                        if (!themesMap.has(theme.id)) {
+                          themesMap.set(theme.id, { theme, events: [] });
+                        }
+                        themesMap.get(theme.id)!.events.push(event);
+                      });
+                    }
+                  });
+
+                  const groupedThemes = Array.from(themesMap.values());
+
+                  return (
+                    <>
+                      {groupedThemes.map(({ theme, events }) => (
+                        <div key={theme.id} className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: theme.color }}
+                            />
+                            <span className="text-lg">{theme.icon}</span>
+                            <h3 className="font-semibold text-foreground">{theme.name}</h3>
+                            <Badge variant="secondary" className="ml-2">
+                              {events.length} événement{events.length > 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                          <ScrollArea className="w-full whitespace-nowrap">
+                            <div className="flex gap-4 pb-4">
+                              {events.map((event) => (
+                                <div key={`${theme.id}-${event.id}`} className="w-[280px] flex-shrink-0">
+                                  <EventCard
+                                    id={event.id}
+                                    title={event.name}
+                                    shortTitle={getShortTitle(event.name)}
+                                    organization={organization.name}
+                                    date={formatEventDate(event.start_date)}
+                                    location={event.location}
+                                    image={event.cover_image_url || '/placeholder.svg'}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                        </div>
+                      ))}
+
+                      {/* Events without theme */}
+                      {eventsWithoutTheme.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+                            <h3 className="font-semibold text-foreground">Autres événements</h3>
+                            <Badge variant="secondary" className="ml-2">
+                              {eventsWithoutTheme.length} événement{eventsWithoutTheme.length > 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                          <ScrollArea className="w-full whitespace-nowrap">
+                            <div className="flex gap-4 pb-4">
+                              {eventsWithoutTheme.map((event) => (
+                                <div key={event.id} className="w-[280px] flex-shrink-0">
+                                  <EventCard
+                                    id={event.id}
+                                    title={event.name}
+                                    shortTitle={getShortTitle(event.name)}
+                                    organization={organization.name}
+                                    date={formatEventDate(event.start_date)}
+                                    location={event.location}
+                                    image={event.cover_image_url || '/placeholder.svg'}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
