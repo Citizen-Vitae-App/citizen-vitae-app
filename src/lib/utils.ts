@@ -34,3 +34,26 @@ export function calculateDistance(
 function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
+
+/**
+ * Génère un titre court pour l'affichage sur les visuels des cartes événement
+ * - Maximum 24 caractères (espaces compris) par défaut
+ * - Uniquement des mots complets (pas de coupure en milieu de mot)
+ * - Pas de "..." à la fin (pour l'overlay sur l'image)
+ */
+export function generateShortTitle(name: string, maxChars: number = 24): string {
+  const words = name.split(' ');
+  let result = '';
+  
+  for (const word of words) {
+    const potentialResult = result ? `${result} ${word}` : word;
+    
+    if (potentialResult.length <= maxChars) {
+      result = potentialResult;
+    } else {
+      break;
+    }
+  }
+  
+  return result || words[0];
+}

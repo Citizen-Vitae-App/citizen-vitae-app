@@ -66,7 +66,7 @@ const EventCard = ({ id, title, shortTitle, organization, date, location, image,
           </div>
         )}
       </div>
-      <h4 className="text-lg font-bold text-foreground">{title}</h4>
+      <h4 className="text-lg font-bold text-foreground truncate">{title}</h4>
       <p className="text-sm text-muted-foreground">{date}</p>
       <p className="text-sm text-muted-foreground">
         Organisé par{" "}

@@ -11,6 +11,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
+import { generateShortTitle } from '@/lib/utils';
 
 interface EventWithOrganization {
   id: string;
@@ -68,10 +69,6 @@ const Favorites = () => {
     return format(parseISO(dateString), "d MMMM yyyy", { locale: fr });
   };
 
-  const generateShortTitle = (name: string) => {
-    const words = name.split(' ');
-    return words.slice(0, 2).join(' ');
-  };
 
   return (
     <div className="min-h-screen bg-background">
