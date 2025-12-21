@@ -54,10 +54,13 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
       await scanner.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
+          fps: 15,
+          qrbox: { width: 200, height: 200 },
+          aspectRatio: 1,
+          disableFlip: false,
         },
         (decodedText) => {
+          console.log('[QR-SCANNER] Decoded:', decodedText);
           if (!isProcessing && isMountedRef.current) {
             onScan(decodedText);
           }
@@ -103,10 +106,11 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
   return (
     <div className="flex flex-col items-center gap-4 w-full px-2 sm:px-0">
       {/* Use a wrapper div that React controls, with a child div for html5-qrcode */}
-      <div className="w-full max-w-[320px] sm:max-w-sm aspect-square bg-muted rounded-lg overflow-hidden relative">
+      <div className="w-full max-w-[280px] sm:max-w-[320px] aspect-square bg-muted rounded-lg overflow-hidden relative">
         <div 
           id={scannerContainerId.current}
-          className="w-full h-full"
+          className="w-full h-full [&_video]:!object-cover [&_video]:!w-full [&_video]:!h-full"
+          style={{ aspectRatio: '1 / 1' }}
         />
         {!isStarted && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 bg-muted">
