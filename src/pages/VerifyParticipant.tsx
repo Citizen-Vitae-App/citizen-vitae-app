@@ -107,8 +107,7 @@ const VerifyParticipant = () => {
         // User has permission, proceed with verification
         const { data, error } = await supabase.functions.invoke('didit-verification', {
           body: {
-            action: 'verify-qr',
-            registration_id: registrationId,
+            action: 'verify-qr-code',
             qr_token: token,
           },
         });
@@ -119,11 +118,24 @@ const VerifyParticipant = () => {
             message: 'Erreur lors de la vérification. Veuillez réessayer.',
           });
         } else if (data?.success) {
+          // Parse the response from the edge function
+          // Edge function returns: user_name, event_name, scan_type, duration_minutes, etc.
+          const nameParts = (data.user_name || '').split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
           setResult({
             success: true,
             message: data.message || 'Présence validée avec succès',
-            participant: data.participant,
-            event: data.event,
+            participant: {
+              firstName,
+              lastName,
+              avatarUrl: null,
+            },
+            event: {
+              name: data.event_name || event?.name || '',
+              date: event?.start_date || '',
+            },
             timestamp: new Date().toISOString(),
           });
         } else {
