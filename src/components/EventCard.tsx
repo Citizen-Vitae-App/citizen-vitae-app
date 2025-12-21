@@ -16,7 +16,16 @@ interface EventCardProps {
 }
 
 const EventCard = ({ id, title, shortTitle, organization, date, location, image, isNew = false }: EventCardProps) => {
-  const titleWords = shortTitle.split(" ");
+  const words = shortTitle.split(" ");
+  // Split into max 2 lines
+  const lines: string[] = [];
+  if (words.length <= 2) {
+    lines.push(...words);
+  } else {
+    const midpoint = Math.ceil(words.length / 2);
+    lines.push(words.slice(0, midpoint).join(" "));
+    lines.push(words.slice(midpoint).join(" "));
+  }
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -47,8 +56,8 @@ const EventCard = ({ id, title, shortTitle, organization, date, location, image,
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="absolute bottom-6 left-6">
         <div className="text-white font-extrabold text-2xl uppercase leading-tight">
-          {titleWords.map((word, index) => (
-            <div key={index}>{word}</div>
+          {lines.map((line, index) => (
+            <div key={index}>{line}</div>
           ))}
         </div>
       </div>
