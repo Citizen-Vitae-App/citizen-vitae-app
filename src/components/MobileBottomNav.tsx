@@ -54,9 +54,9 @@ export const MobileBottomNav = () => {
     },
     {
       label: 'Profil',
-      href: '/settings',
+      href: '/profile',
       icon: User,
-      isActive: location.pathname === '/settings',
+      isActive: location.pathname === '/profile',
     },
   ];
 
