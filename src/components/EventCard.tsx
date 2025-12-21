@@ -9,13 +9,14 @@ interface EventCardProps {
   title: string;
   shortTitle: string;
   organization: string;
+  organizationId?: string;
   date: string;
   location: string;
   image: string;
   isNew?: boolean;
 }
 
-const EventCard = ({ id, title, shortTitle, organization, date, location, image, isNew = false }: EventCardProps) => {
+const EventCard = ({ id, title, shortTitle, organization, organizationId, date, location, image, isNew = false }: EventCardProps) => {
   const words = shortTitle.split(" ");
   // Split into max 2 lines
   const lines: string[] = [];
@@ -79,9 +80,19 @@ const EventCard = ({ id, title, shortTitle, organization, date, location, image,
       <p className="text-sm text-muted-foreground">{date}</p>
       <p className="text-sm text-muted-foreground">
         Organisé par{" "}
-        <span className="text-foreground font-semibold underline hover:opacity-80 transition-opacity">
-          {organization}
-        </span>
+        {organizationId ? (
+          <Link
+            to={`/organization/${organizationId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-foreground font-semibold underline hover:opacity-80 transition-opacity"
+          >
+            {organization}
+          </Link>
+        ) : (
+          <span className="text-foreground font-semibold">
+            {organization}
+          </span>
+        )}
       </p>
     </div>
   );

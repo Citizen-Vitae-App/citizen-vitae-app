@@ -314,7 +314,7 @@ const EventDetail = () => {
             </div>
 
             {/* Organizer - Simple aligned style */}
-            <div className="flex items-center gap-4">
+            <Link to={`/organization/${event.organizations.id}`} className="flex items-center gap-4 group">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={event.organizations.logo_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
@@ -323,9 +323,9 @@ const EventDetail = () => {
               </Avatar>
               <div>
                 <p className="text-sm text-muted-foreground">Organisé par</p>
-                <p className="font-semibold text-foreground">{event.organizations.name}</p>
+                <p className="font-semibold text-foreground group-hover:underline">{event.organizations.name}</p>
               </div>
-            </div>
+            </Link>
 
             {/* Description */}
             {event.description && (
