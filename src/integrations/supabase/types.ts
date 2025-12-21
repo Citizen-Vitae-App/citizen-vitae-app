@@ -259,6 +259,42 @@ export type Database = {
           },
         ]
       }
+      organization_cause_themes: {
+        Row: {
+          cause_theme_id: string
+          created_at: string | null
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          cause_theme_id: string
+          created_at?: string | null
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          cause_theme_id?: string
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_cause_themes_cause_theme_id_fkey"
+            columns: ["cause_theme_id"]
+            isOneToOne: false
+            referencedRelation: "cause_themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_cause_themes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string | null
@@ -294,44 +330,77 @@ export type Database = {
       organizations: {
         Row: {
           address: string | null
+          bio: string | null
+          cover_image_url: string | null
           created_at: string | null
           description: string | null
           email: string | null
+          employee_count: number | null
           id: string
+          instagram_url: string | null
           is_verified: boolean | null
+          latitude: number | null
+          linkedin_url: string | null
           logo_url: string | null
+          longitude: number | null
           name: string
           phone: string | null
+          sector: string | null
           siret: string | null
+          slug: string | null
+          twitter_url: string | null
           type: string | null
+          visibility: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
+          bio?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           email?: string | null
+          employee_count?: number | null
           id?: string
+          instagram_url?: string | null
           is_verified?: boolean | null
+          latitude?: number | null
+          linkedin_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           phone?: string | null
+          sector?: string | null
           siret?: string | null
+          slug?: string | null
+          twitter_url?: string | null
           type?: string | null
+          visibility?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
+          bio?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           email?: string | null
+          employee_count?: number | null
           id?: string
+          instagram_url?: string | null
           is_verified?: boolean | null
+          latitude?: number | null
+          linkedin_url?: string | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           phone?: string | null
+          sector?: string | null
           siret?: string | null
+          slug?: string | null
+          twitter_url?: string | null
           type?: string | null
+          visibility?: string | null
           website?: string | null
         }
         Relationships: []
