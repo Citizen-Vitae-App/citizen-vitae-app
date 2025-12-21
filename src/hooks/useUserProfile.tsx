@@ -36,7 +36,7 @@ export interface UserCauseTheme {
 }
 
 export function useUserProfile() {
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading: isAuthLoading } = useAuth();
 
   // Fetch user's organizations with member count
   const { data: organizations = [], isLoading: isLoadingOrgs } = useQuery({
@@ -242,6 +242,6 @@ export function useUserProfile() {
     isRadarEligible,
     totalCertifiedMissions,
     distinctCausesCount,
-    isLoading: isLoadingOrgs || isLoadingCauses || isLoadingMissions,
+    isLoading: isAuthLoading || isLoadingOrgs || isLoadingCauses || isLoadingMissions,
   };
 }
