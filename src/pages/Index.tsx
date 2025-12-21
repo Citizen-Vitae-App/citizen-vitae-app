@@ -300,6 +300,7 @@ const Index = () => {
                 title={event.name}
                 shortTitle={generateShortTitle(event.name)}
                 organization={event.organization_name || 'Organisation'}
+                organizationId={event.organization_id}
                 date={formatEventDate(event.start_date)}
                 location={event.location}
                 image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
