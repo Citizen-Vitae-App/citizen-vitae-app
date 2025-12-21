@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,43 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
   const [isStarted, setIsStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
+  const scannerContainerId = useRef(`qr-reader-${Date.now()}`);
+
+  const stopScanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    if (scanner) {
+      try {
+        const state = scanner.getState();
+        // Only stop if scanner is actually running (state 2 = SCANNING)
+        if (state === 2) {
+          await scanner.stop();
+        }
+        // Clear the scanner
+        scanner.clear();
+      } catch (err) {
+        // Ignore errors during cleanup
+        console.log('Scanner cleanup:', err);
+      } finally {
+        scannerRef.current = null;
+        if (isMountedRef.current) {
+          setIsStarted(false);
+        }
+      }
+    }
+  }, []);
 
   const startScanner = async () => {
-    if (!containerRef.current) return;
+    // Stop any existing scanner first
+    await stopScanner();
+    
+    const containerId = scannerContainerId.current;
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
     try {
       setError(null);
-      const scanner = new Html5Qrcode('qr-reader');
+      const scanner = new Html5Qrcode(containerId);
       scannerRef.current = scanner;
       
       await scanner.start(
@@ -29,7 +58,7 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
           qrbox: { width: 250, height: 250 },
         },
         (decodedText) => {
-          if (!isProcessing) {
+          if (!isProcessing && isMountedRef.current) {
             onScan(decodedText);
           }
         },
@@ -38,40 +67,49 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
         }
       );
       
-      setIsStarted(true);
+      if (isMountedRef.current) {
+        setIsStarted(true);
+      }
     } catch (err) {
       console.error('Error starting scanner:', err);
-      setError('Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès.');
-    }
-  };
-
-  const stopScanner = async () => {
-    if (scannerRef.current && isStarted) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current = null;
-        setIsStarted(false);
-      } catch (err) {
-        console.error('Error stopping scanner:', err);
+      if (isMountedRef.current) {
+        setError('Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès.');
       }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
-      stopScanner();
+      isMountedRef.current = false;
+      // Synchronous cleanup to prevent React DOM conflicts
+      const scanner = scannerRef.current;
+      if (scanner) {
+        try {
+          const state = scanner.getState();
+          if (state === 2) {
+            scanner.stop().catch(() => {});
+          }
+          scanner.clear();
+        } catch {
+          // Ignore errors during unmount
+        }
+        scannerRef.current = null;
+      }
     };
   }, []);
 
   return (
     <div className="flex flex-col items-center gap-4 w-full px-2 sm:px-0">
-      <div 
-        ref={containerRef}
-        id="qr-reader" 
-        className="w-full max-w-[320px] sm:max-w-sm aspect-square bg-muted rounded-lg overflow-hidden relative"
-      >
+      {/* Use a wrapper div that React controls, with a child div for html5-qrcode */}
+      <div className="w-full max-w-[320px] sm:max-w-sm aspect-square bg-muted rounded-lg overflow-hidden relative">
+        <div 
+          id={scannerContainerId.current}
+          className="w-full h-full"
+        />
         {!isStarted && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 bg-muted">
             <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
             <Button onClick={startScanner} size="sm" className="text-sm">
               <Camera className="mr-2 h-4 w-4" />
@@ -80,7 +118,7 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
           </div>
         )}
         {error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center bg-muted">
             <p className="text-xs sm:text-sm text-destructive">{error}</p>
             <Button variant="outline" onClick={startScanner} size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
