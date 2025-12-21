@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle } from "lucide-react";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
@@ -163,49 +163,64 @@ const Index = () => {
                 <>
                   <NotificationDropdown />
                   
+                  {/* Avatar cliquable vers profil */}
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full p-0"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <Avatar className="h-10 w-10 cursor-pointer">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+
+                  {/* Menu burger style Airbnb */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                        <Avatar className="h-10 w-10 cursor-pointer">
-                          <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {getInitials()}
-                          </AvatarFallback>
-                        </Avatar>
+                      <Button 
+                        variant="outline" 
+                        className="h-10 px-3 rounded-full border-border hover:shadow-md transition-shadow"
+                      >
+                        <Menu className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64 p-0">
-                      <div className="flex items-center gap-3 px-4 py-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {getInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-base text-foreground">
-                            {profile?.first_name} {profile?.last_name?.toLowerCase()}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {user.email}
-                          </span>
-                        </div>
-                      </div>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {/* Section principale */}
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/my-missions')}>
+                        <ClipboardList className="mr-3 h-4 w-4" />
+                        <span>Mes Missions</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/profile')}>
+                        <User className="mr-3 h-4 w-4" />
+                        <span>Profil</span>
+                      </DropdownMenuItem>
+                      
                       <DropdownMenuSeparator />
-                      <div className="py-2 px-2 space-y-1">
-                        <DropdownMenuItem className="cursor-pointer px-3 py-3 text-base">
-                          <User className="mr-3 h-4 w-4" />
-                          <span>Voir le profil</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer px-3 py-3 text-base">
-                          <Settings className="mr-3 h-4 w-4" />
-                          <span>Paramètres</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={signOut} className="cursor-pointer px-3 py-3 text-base">
-                          <LogOut className="mr-3 h-4 w-4" />
-                          <span>Se déconnecter</span>
-                        </DropdownMenuItem>
-                      </div>
+                      
+                      {/* Section paramètres */}
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/settings')}>
+                        <Settings className="mr-3 h-4 w-4" />
+                        <span>Paramètres</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/settings')}>
+                        <Globe className="mr-3 h-4 w-4" />
+                        <span>Langue</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer py-3">
+                        <HelpCircle className="mr-3 h-4 w-4" />
+                        <span>Centre d'aide</span>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Déconnexion */}
+                      <DropdownMenuItem onClick={signOut} className="cursor-pointer py-3">
+                        <LogOut className="mr-3 h-4 w-4" />
+                        <span>Déconnexion</span>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </>
