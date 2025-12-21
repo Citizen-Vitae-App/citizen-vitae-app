@@ -11,6 +11,9 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ organizations, onVerificationComplete }: ProfileHeaderProps) {
   const { user, profile, refreshProfile } = useAuth();
 
+  // Don't render until profile is loaded to prevent flash
+  if (!profile) return null;
+
   const getInitials = () => {
     const first = profile?.first_name?.[0] || '';
     const last = profile?.last_name?.[0] || '';

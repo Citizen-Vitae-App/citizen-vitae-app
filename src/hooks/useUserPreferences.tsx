@@ -23,7 +23,7 @@ export interface UpdatePreferencesData {
 }
 
 export const useUserPreferences = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch user preferences
@@ -102,7 +102,7 @@ export const useUserPreferences = () => {
 
   return {
     preferences,
-    isLoading,
+    isLoading: isAuthLoading || isLoading,
     error,
     updatePreferences,
     isUpdating: updateMutation.isPending,
