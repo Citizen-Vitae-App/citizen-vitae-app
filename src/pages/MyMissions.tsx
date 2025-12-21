@@ -135,7 +135,7 @@ const MyMissions = () => {
         </div>
         <div className="p-4 space-y-4" onClick={(e) => e.stopPropagation()}>
           <div onClick={() => navigate(`/events/${event.id}`)} className="cursor-pointer">
-            <h3 className="font-semibold text-lg text-foreground">{event.name}</h3>
+            <h3 className="font-semibold text-lg text-foreground truncate">{event.name}</h3>
             <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
           </div>
           <MissionCertificationButton
@@ -159,7 +159,7 @@ const MyMissions = () => {
         onClick={() => navigate(`/events/${event.id}`)}
       >
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground line-clamp-2">{event.name}</h3>
+          <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
           <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
         </div>
         <div className="w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">

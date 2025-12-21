@@ -10,6 +10,7 @@ import EventCard from "@/components/EventCard";
 import EventFilters, { DateRange } from "@/components/EventFilters";
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicEvents } from '@/hooks/useEvents';
+import { generateShortTitle } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -60,10 +61,6 @@ const Index = () => {
     return format(parseISO(startDate), "d MMMM yyyy 'à' HH'h'mm", { locale: fr });
   };
 
-  const generateShortTitle = (name: string) => {
-    const words = name.split(' ').slice(0, 2);
-    return words.join(' ');
-  };
 
   const getDateButtonLabel = () => {
     if (!dateRange.start) return 'Quand ?';
