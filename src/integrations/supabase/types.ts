@@ -303,6 +303,7 @@ export type Database = {
           name: string
           phone: string | null
           siret: string | null
+          type: string | null
           website: string | null
         }
         Insert: {
@@ -316,6 +317,7 @@ export type Database = {
           name: string
           phone?: string | null
           siret?: string | null
+          type?: string | null
           website?: string | null
         }
         Update: {
@@ -329,6 +331,7 @@ export type Database = {
           name?: string
           phone?: string | null
           siret?: string | null
+          type?: string | null
           website?: string | null
         }
         Relationships: []
