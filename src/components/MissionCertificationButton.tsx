@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Info, CheckCircle2, Loader2, QrCode } from 'lucide-react';
+import { Info, CheckCircle2, Loader2, QrCode, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -10,6 +10,7 @@ interface MissionCertificationButtonProps {
   eventEndDate: string;
   eventLatitude: number | null;
   eventLongitude: number | null;
+  allowSelfCertification?: boolean;
   onClick: () => void;
   disabled?: boolean;
 }
@@ -19,6 +20,7 @@ export const MissionCertificationButton = ({
   eventEndDate,
   eventLatitude,
   eventLongitude,
+  allowSelfCertification = false,
   onClick,
   disabled = false,
 }: MissionCertificationButtonProps) => {
@@ -102,6 +104,10 @@ export const MissionCertificationButton = ({
     );
   }
 
+  // Button label and icon based on self-certification mode
+  const buttonLabel = allowSelfCertification ? 'Certifier ma présence' : 'Démarrer la mission';
+  const ButtonIcon = allowSelfCertification ? Shield : QrCode;
+
   if (isEligible) {
     return (
       <Button
@@ -110,8 +116,8 @@ export const MissionCertificationButton = ({
         className="w-full h-12 font-semibold"
         style={{ backgroundColor: '#012573' }}
       >
-        <QrCode className="h-5 w-5 mr-2" />
-        Démarrer la mission
+        <ButtonIcon className="h-5 w-5 mr-2" />
+        {buttonLabel}
         <CheckCircle2 className="h-5 w-5 ml-2 text-green-400" />
       </Button>
     );
@@ -123,8 +129,8 @@ export const MissionCertificationButton = ({
         disabled
         className="w-full h-12 font-semibold bg-muted text-muted-foreground pr-12"
       >
-        <QrCode className="h-5 w-5 mr-2" />
-        Démarrer la mission
+        <ButtonIcon className="h-5 w-5 mr-2" />
+        {buttonLabel}
       </Button>
       <Popover>
         <PopoverTrigger asChild>

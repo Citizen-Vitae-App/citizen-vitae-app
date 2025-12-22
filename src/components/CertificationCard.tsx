@@ -18,6 +18,7 @@ interface CertificationCardProps {
   eventId: string;
   userId: string;
   registrationId: string;
+  organizationId: string;
   faceMatchPassed?: boolean;
   qrToken?: string | null;
   attendedAt?: string | null;
@@ -34,6 +35,7 @@ export const CertificationCard = ({
   eventId,
   userId,
   registrationId,
+  organizationId,
   faceMatchPassed = false,
   qrToken = null,
   attendedAt = null,
@@ -281,6 +283,7 @@ export const CertificationCard = ({
         eventName={eventName}
         eventStartDate={eventStartDate}
         eventEndDate={eventEndDate}
+        organizationId={organizationId}
         onSuccess={handleSelfCertificationSuccess}
       />
     </>
