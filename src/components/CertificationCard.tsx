@@ -125,7 +125,7 @@ export const CertificationCard = ({
     return null;
   }
 
-  // If already self-certified
+  // If already self-certified - NO QR code for self-certification
   if (localStatus === 'self_certified') {
     return (
       <div className="bg-card border border-border rounded-lg p-4 space-y-3">
@@ -136,9 +136,12 @@ export const CertificationCard = ({
         <div className="flex items-center gap-2 text-green-600">
           <CheckCircle2 className="h-4 w-4" />
           <span className="text-sm">
-            Votre présence a été auto-certifiée
+            Votre présence a été auto-certifiée avec succès
           </span>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Aucun QR code n'est nécessaire pour les missions en auto-certification.
+        </p>
       </div>
     );
   }
@@ -162,7 +165,8 @@ export const CertificationCard = ({
   }
 
   // If Face Match passed but not yet scanned by admin - show QR code
-  if (localFaceMatchPassed && localQrToken) {
+  // But NOT for self-certification (already handled above)
+  if (localFaceMatchPassed && localQrToken && !allowSelfCertification) {
     return (
       <div className="bg-card border border-border rounded-lg p-4 space-y-4">
         <div className="flex items-center gap-2">
