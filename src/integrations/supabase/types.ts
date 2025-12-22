@@ -78,6 +78,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           attended_at: string | null
+          certificate_url: string | null
           certification_end_at: string | null
           certification_start_at: string | null
           created_at: string
@@ -89,10 +90,12 @@ export type Database = {
           registered_at: string
           status: string
           user_id: string
+          validated_by: string | null
         }
         Insert: {
           approved_at?: string | null
           attended_at?: string | null
+          certificate_url?: string | null
           certification_end_at?: string | null
           certification_start_at?: string | null
           created_at?: string
@@ -104,10 +107,12 @@ export type Database = {
           registered_at?: string
           status?: string
           user_id: string
+          validated_by?: string | null
         }
         Update: {
           approved_at?: string | null
           attended_at?: string | null
+          certificate_url?: string | null
           certification_end_at?: string | null
           certification_start_at?: string | null
           created_at?: string
@@ -119,6 +124,7 @@ export type Database = {
           registered_at?: string
           status?: string
           user_id?: string
+          validated_by?: string | null
         }
         Relationships: [
           {
@@ -131,6 +137,13 @@ export type Database = {
           {
             foreignKeyName: "event_registrations_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_validated_by_fkey"
+            columns: ["validated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -301,6 +314,7 @@ export type Database = {
       organization_members: {
         Row: {
           created_at: string | null
+          custom_role_title: string | null
           id: string
           organization_id: string
           role: string
@@ -308,6 +322,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          custom_role_title?: string | null
           id?: string
           organization_id: string
           role: string
@@ -315,6 +330,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          custom_role_title?: string | null
           id?: string
           organization_id?: string
           role?: string

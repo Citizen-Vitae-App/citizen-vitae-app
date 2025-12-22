@@ -300,6 +300,24 @@ export const SelfCertificationFlow = ({
         return;
       }
 
+      // Generate certificate
+      try {
+        const { data: certData, error: certError } = await supabase.functions.invoke('generate-certificate', {
+          body: {
+            registration_id: registrationId,
+            // No validated_by since it's self-certified
+          },
+        });
+        if (certError) {
+          console.error('Error generating certificate:', certError);
+        } else {
+          console.log('Certificate generated:', certData?.certificate_url);
+        }
+      } catch (certErr) {
+        console.error('Error generating certificate:', certErr);
+        // Don't fail if certificate generation fails
+      }
+
       // Send notification to organization admins
       try {
         await supabase.functions.invoke('send-notification', {

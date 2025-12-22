@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ import defaultCover from '@/assets/default-event-cover.jpg';
 import { MissionCertificationButton } from '@/components/MissionCertificationButton';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
+import { CertificateCard } from '@/components/CertificateCard';
 
 interface RegistrationWithEvent {
   id: string;
@@ -21,6 +22,8 @@ interface RegistrationWithEvent {
   face_match_passed: boolean | null;
   qr_token: string | null;
   event_id: string;
+  certificate_url: string | null;
+  validated_by: string | null;
   events: {
     id: string;
     name: string;
@@ -34,6 +37,7 @@ interface RegistrationWithEvent {
     organization_id: string;
     organizations: {
       name: string;
+      logo_url: string | null;
     };
   };
 }
@@ -41,6 +45,8 @@ interface RegistrationWithEvent {
 const MyMissions = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'upcoming';
   const [registrations, setRegistrations] = useState<RegistrationWithEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
@@ -61,6 +67,8 @@ const MyMissions = () => {
           face_match_passed,
           qr_token,
           event_id,
+          certificate_url,
+          validated_by,
           events!inner (
             id,
             name,
@@ -72,7 +80,7 @@ const MyMissions = () => {
             longitude,
             allow_self_certification,
             organization_id,
-            organizations!inner (name)
+            organizations!inner (name, logo_url)
           )
         `)
         .eq('user_id', user.id);
@@ -226,7 +234,7 @@ const MyMissions = () => {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
 
-        <Tabs defaultValue="upcoming" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
             <TabsTrigger 
               value="upcoming" 
@@ -266,14 +274,16 @@ const MyMissions = () => {
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                  <Skeleton key={i} className="h-64 w-full rounded-xl" />
                 ))}
               </div>
             ) : completedEvents.length === 0 ? (
               renderEmptyState("Aucun certificat disponible")
             ) : (
-              <div className="space-y-3">
-                {completedEvents.map(renderCompactCard)}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {completedEvents.map((registration) => (
+                  <CertificateCard key={registration.id} registration={registration} />
+                ))}
               </div>
             )}
           </TabsContent>

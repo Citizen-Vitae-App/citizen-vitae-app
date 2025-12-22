@@ -119,10 +119,27 @@ const VerifyParticipant = () => {
           });
         } else if (data?.success) {
           // Parse the response from the edge function
-          // Edge function returns: user_name, event_name, scan_type, duration_minutes, etc.
           const nameParts = (data.user_name || '').split(' ');
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || '';
+          
+          // Generate certificate for this registration
+          try {
+            const { data: certData, error: certError } = await supabase.functions.invoke('generate-certificate', {
+              body: {
+                registration_id: registrationId,
+                validated_by: user.id, // The admin who scanned
+              },
+            });
+            if (certError) {
+              console.error('Error generating certificate:', certError);
+            } else {
+              console.log('Certificate generated:', certData?.certificate_url);
+            }
+          } catch (certErr) {
+            console.error('Error generating certificate:', certErr);
+            // Don't fail the verification if certificate generation fails
+          }
           
           setResult({
             success: true,
