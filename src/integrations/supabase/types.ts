@@ -139,6 +139,7 @@ export type Database = {
       }
       events: {
         Row: {
+          allow_self_certification: boolean | null
           capacity: number | null
           cover_image_url: string | null
           created_at: string
@@ -157,6 +158,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_self_certification?: boolean | null
           capacity?: number | null
           cover_image_url?: string | null
           created_at?: string
@@ -175,6 +177,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_self_certification?: boolean | null
           capacity?: number | null
           cover_image_url?: string | null
           created_at?: string
