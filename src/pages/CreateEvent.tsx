@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Pencil, Loader2, Check } from 'lucide-react';
+import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Pencil, Loader2, Check, ShieldCheck } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ const eventSchema = z.object({
   description: z.string().optional(),
   capacity: z.string().optional(),
   requireApproval: z.boolean().default(false),
+  allowSelfCertification: z.boolean().default(false),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -70,6 +71,7 @@ export default function CreateEvent() {
     defaultValues: {
       name: '',
       requireApproval: false,
+      allowSelfCertification: false,
       capacity: '',
       startDate: now,
       startTime: now.toTimeString().slice(0, 5),
@@ -171,6 +173,7 @@ export default function CreateEvent() {
           capacity: data.capacity ? parseInt(data.capacity) : null,
           has_waitlist: hasWaitlist,
           require_approval: data.requireApproval,
+          allow_self_certification: data.allowSelfCertification,
           is_public: isPublic,
           cover_image_url: imageUrl,
           latitude: coordinates?.latitude || null,
@@ -492,6 +495,32 @@ export default function CreateEvent() {
                             />
                           </FormControl>
                         </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Allow Self-Certification */}
+                  <FormField
+                    control={form.control}
+                    name="allowSelfCertification"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                            <FormLabel className="text-sm font-normal">Auto-certification</FormLabel>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </div>
+                        <p className="text-xs text-muted-foreground pl-6">
+                          Permet aux participants de valider eux-mêmes leur présence
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
