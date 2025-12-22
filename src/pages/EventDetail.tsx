@@ -382,6 +382,7 @@ const EventDetail = () => {
                     eventId={event.id}
                     userId={user?.id || ''}
                     registrationId={registration?.id || ''}
+                    organizationId={event.organization_id}
                     faceMatchPassed={registration?.face_match_passed}
                     qrToken={registration?.qr_token}
                     attendedAt={registration?.attended_at}
@@ -530,6 +531,7 @@ const EventDetail = () => {
         eventName={event.name}
         eventStartDate={event.start_date}
         eventEndDate={event.end_date}
+        organizationId={event.organization_id}
         onSuccess={() => setShowSelfCertification(false)}
       />
 

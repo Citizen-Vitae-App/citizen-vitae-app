@@ -31,6 +31,7 @@ interface SelfCertificationFlowProps {
   eventName: string;
   eventStartDate: string;
   eventEndDate: string;
+  organizationId: string;
   onSuccess: () => void;
 }
 
@@ -43,6 +44,7 @@ export const SelfCertificationFlow = ({
   eventName,
   eventStartDate,
   eventEndDate,
+  organizationId,
   onSuccess,
 }: SelfCertificationFlowProps) => {
   const [stage, setStage] = useState<CertificationStage>('instructions');
@@ -296,6 +298,25 @@ export const SelfCertificationFlow = ({
         setErrorMessage('Une erreur est survenue lors de l\'enregistrement.');
         setStage('error');
         return;
+      }
+
+      // Send notification to organization admins
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            organization_id: organizationId,
+            type: 'self_certification',
+            event_id: eventId,
+            event_name: eventName,
+            action_url: `/events/${eventId}`,
+            custom_message_fr: `Un participant a auto-certifié sa présence à la mission : ${eventName}`,
+            custom_message_en: `A participant has self-certified their attendance at the mission: ${eventName}`,
+          },
+        });
+        console.log('Admin notification sent successfully');
+      } catch (notifError) {
+        console.error('Error sending admin notification:', notifError);
+        // Don't fail the certification if notification fails
       }
 
       // Show success

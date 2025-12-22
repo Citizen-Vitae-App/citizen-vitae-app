@@ -12,6 +12,7 @@ import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
 import { MissionCertificationButton } from '@/components/MissionCertificationButton';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
+import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 
 interface RegistrationWithEvent {
   id: string;
@@ -29,6 +30,8 @@ interface RegistrationWithEvent {
     cover_image_url: string | null;
     latitude: number | null;
     longitude: number | null;
+    allow_self_certification: boolean | null;
+    organization_id: string;
     organizations: {
       name: string;
     };
@@ -41,7 +44,9 @@ const MyMissions = () => {
   const [registrations, setRegistrations] = useState<RegistrationWithEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
+  const [showSelfCertification, setShowSelfCertification] = useState(false);
   const [selectedEventForFaceMatch, setSelectedEventForFaceMatch] = useState<RegistrationWithEvent | null>(null);
+  const [selectedEventForSelfCert, setSelectedEventForSelfCert] = useState<RegistrationWithEvent | null>(null);
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -65,6 +70,8 @@ const MyMissions = () => {
             cover_image_url,
             latitude,
             longitude,
+            allow_self_certification,
+            organization_id,
             organizations!inner (name)
           )
         `)
@@ -99,13 +106,26 @@ const MyMissions = () => {
   );
 
   const handleCertificationClick = (registration: RegistrationWithEvent) => {
-    setSelectedEventForFaceMatch(registration);
-    setShowFaceMatch(true);
+    // If event allows self-certification, use that flow instead
+    if (registration.events.allow_self_certification) {
+      setSelectedEventForSelfCert(registration);
+      setShowSelfCertification(true);
+    } else {
+      setSelectedEventForFaceMatch(registration);
+      setShowFaceMatch(true);
+    }
   };
 
   const handleFaceMatchComplete = () => {
     setShowFaceMatch(false);
     setSelectedEventForFaceMatch(null);
+    // Refresh registrations to get updated data
+    window.location.reload();
+  };
+
+  const handleSelfCertificationComplete = () => {
+    setShowSelfCertification(false);
+    setSelectedEventForSelfCert(null);
     // Refresh registrations to get updated data
     window.location.reload();
   };
@@ -143,6 +163,7 @@ const MyMissions = () => {
             eventEndDate={event.end_date}
             eventLatitude={event.latitude}
             eventLongitude={event.longitude}
+            allowSelfCertification={event.allow_self_certification || false}
             onClick={() => handleCertificationClick(registration)}
           />
         </div>
@@ -296,6 +317,25 @@ const MyMissions = () => {
             setShowFaceMatch(false);
             setSelectedEventForFaceMatch(null);
           }}
+        />
+      )}
+
+      {/* Self Certification Modal */}
+      {showSelfCertification && selectedEventForSelfCert && user && (
+        <SelfCertificationFlow
+          isOpen={showSelfCertification}
+          onClose={() => {
+            setShowSelfCertification(false);
+            setSelectedEventForSelfCert(null);
+          }}
+          userId={user.id}
+          eventId={selectedEventForSelfCert.event_id}
+          registrationId={selectedEventForSelfCert.id}
+          eventName={selectedEventForSelfCert.events.name}
+          eventStartDate={selectedEventForSelfCert.events.start_date}
+          eventEndDate={selectedEventForSelfCert.events.end_date}
+          organizationId={selectedEventForSelfCert.events.organization_id}
+          onSuccess={handleSelfCertificationComplete}
         />
       )}
     </div>
