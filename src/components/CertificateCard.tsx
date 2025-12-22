@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, FileText, Share2, Shield, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, FileText, Share2, Shield, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ShareCertificateDialog } from './ShareCertificateDialog';
+import { CertificateViewerDialog } from './CertificateViewerDialog';
+import { CertificateData } from './CertificatePDF';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import defaultCover from '@/assets/default-event-cover.jpg';
@@ -33,7 +37,12 @@ interface CertificateCardProps {
 
 export function CertificateCard({ registration }: CertificateCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const event = registration.events;
   const organization = event.organizations;
   const isSelfCertified = registration.status === 'self_certified' || !registration.validated_by;
@@ -49,16 +58,95 @@ export function CertificateCard({ registration }: CertificateCardProps) {
     return `${format(start, "HH'h'mm", { locale: fr })} - ${format(end, "HH'h'mm", { locale: fr })}`;
   };
 
-  const handleViewCertificate = () => {
-    if (registration.certificate_url) {
-      window.open(registration.certificate_url, '_blank');
+  const formatEventStartTime = () => {
+    const start = parseISO(event.start_date);
+    return format(start, "HH'h'mm", { locale: fr });
+  };
+
+  const formatEventEndTime = () => {
+    const end = parseISO(event.end_date);
+    return format(end, "HH'h'mm", { locale: fr });
+  };
+
+  const handleViewCertificate = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Fetch user profile for date of birth
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, date_of_birth')
+        .eq('id', user.id)
+        .single();
+
+      // Get validator info if exists
+      let validatorName = 'Auto-certifié';
+      let validatorRole = '';
+      
+      if (registration.validated_by) {
+        const { data: validator } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', registration.validated_by)
+          .single();
+        
+        if (validator) {
+          validatorName = `${validator.first_name || ''} ${validator.last_name || ''}`.trim() || 'Responsable';
+        }
+
+        // Get validator's custom role
+        const { data: eventData } = await supabase
+          .from('events')
+          .select('organization_id')
+          .eq('id', event.id)
+          .single();
+
+        if (eventData) {
+          const { data: membership } = await supabase
+            .from('organization_members')
+            .select('custom_role_title, role')
+            .eq('user_id', registration.validated_by)
+            .eq('organization_id', eventData.organization_id)
+            .single();
+
+          if (membership) {
+            validatorRole = membership.custom_role_title || (membership.role === 'admin' ? 'Administrateur' : 'Membre');
+          }
+        }
+      }
+
+      const formatDateOfBirth = (dob: string | null) => {
+        if (!dob) return 'Non renseignée';
+        return format(parseISO(dob), 'd MMMM yyyy', { locale: fr });
+      };
+
+      const data: CertificateData = {
+        firstName: profile?.first_name || '',
+        lastName: profile?.last_name || '',
+        dateOfBirth: formatDateOfBirth(profile?.date_of_birth),
+        eventName: event.name,
+        organizationName: organization.name,
+        organizationLogoUrl: organization.logo_url,
+        eventDate: formatEventDate(),
+        eventStartTime: formatEventStartTime(),
+        eventEndTime: formatEventEndTime(),
+        eventLocation: event.location,
+        validatorName,
+        validatorRole,
+        isSelfCertified,
+      };
+
+      setCertificateData(data);
+      setViewerOpen(true);
+    } catch (error) {
+      console.error('Error loading certificate data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getCertificateShareUrl = () => {
-    if (registration.certificate_url) {
-      return registration.certificate_url;
-    }
     return `${window.location.origin}/events/${event.id}`;
   };
 
@@ -143,9 +231,13 @@ export function CertificateCard({ registration }: CertificateCardProps) {
               size="sm" 
               className="flex-1"
               onClick={handleViewCertificate}
-              disabled={!registration.certificate_url}
+              disabled={isLoading}
             >
-              <FileText className="h-4 w-4 mr-2" />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2" />
+              )}
               Voir le certificat
             </Button>
             <Button 
@@ -166,6 +258,14 @@ export function CertificateCard({ registration }: CertificateCardProps) {
         eventName={event.name}
         organizationName={organization.name}
       />
+
+      {certificateData && (
+        <CertificateViewerDialog
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+          certificateData={certificateData}
+        />
+      )}
     </>
   );
 }
