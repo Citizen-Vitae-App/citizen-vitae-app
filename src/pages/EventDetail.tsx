@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
+import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 
 interface EventWithOrganization {
   id: string;
@@ -43,6 +44,7 @@ interface EventWithOrganization {
   latitude: number | null;
   longitude: number | null;
   organization_id: string;
+  allow_self_certification: boolean | null;
   organizations: {
     id: string;
     name: string;
@@ -61,6 +63,7 @@ const EventDetail = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
+  const [showSelfCertification, setShowSelfCertification] = useState(false);
   
   const isLiked = eventId ? isFavorite(eventId) : false;
 
@@ -382,6 +385,8 @@ const EventDetail = () => {
                     faceMatchPassed={registration?.face_match_passed}
                     qrToken={registration?.qr_token}
                     attendedAt={registration?.attended_at}
+                    allowSelfCertification={event.allow_self_certification}
+                    registrationStatus={registration?.status}
                   />
                   <Button
                     onClick={handleUnregister}
@@ -454,7 +459,14 @@ const EventDetail = () => {
               eventEndDate={event.end_date}
               eventLatitude={event.latitude}
               eventLongitude={event.longitude}
-              onClick={() => setShowFaceMatch(true)}
+              onClick={() => {
+                if (event.allow_self_certification) {
+                  setShowSelfCertification(true);
+                } else {
+                  setShowFaceMatch(true);
+                }
+              }}
+              disabled={registration?.status === 'self_certified' || !!registration?.attended_at}
             />
             <Button
               onClick={handleUnregister}
@@ -506,6 +518,19 @@ const EventDetail = () => {
         eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", { locale: fr })}`}
         existingQrToken={registration?.qr_token}
         onSuccess={() => setShowFaceMatch(false)}
+      />
+
+      {/* Self Certification Dialog */}
+      <SelfCertificationFlow
+        isOpen={showSelfCertification}
+        onClose={() => setShowSelfCertification(false)}
+        userId={user?.id || ''}
+        eventId={event.id}
+        registrationId={registration?.id || ''}
+        eventName={event.name}
+        eventStartDate={event.start_date}
+        eventEndDate={event.end_date}
+        onSuccess={() => setShowSelfCertification(false)}
       />
 
       {/* Share Dialog */}
