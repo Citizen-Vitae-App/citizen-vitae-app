@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,8 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useOrganizationSettings, OrganizationSettings as OrgSettings } from '@/hooks/useOrganizationSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -25,6 +27,7 @@ const emailSchema = z.string().email().optional().or(z.literal(''));
 
 export default function OrganizationSettings() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     organization,
     organizationId,
@@ -42,10 +45,31 @@ export default function OrganizationSettings() {
 
   const [formData, setFormData] = useState<Partial<OrgSettings>>({});
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
+  const [customRoleTitle, setCustomRoleTitle] = useState<string>('');
   const [slugError, setSlugError] = useState<string | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch current user's custom role title
+  useEffect(() => {
+    const fetchCustomRoleTitle = async () => {
+      if (!user?.id || !organizationId) return;
+      
+      const { data, error } = await supabase
+        .from('organization_members')
+        .select('custom_role_title')
+        .eq('user_id', user.id)
+        .eq('organization_id', organizationId)
+        .single();
+      
+      if (!error && data?.custom_role_title) {
+        setCustomRoleTitle(data.custom_role_title);
+      }
+    };
+    
+    fetchCustomRoleTitle();
+  }, [user?.id, organizationId]);
 
   // Initialize form data when organization loads
   useEffect(() => {
@@ -201,6 +225,15 @@ export default function OrganizationSettings() {
       
       if (causesChanged) {
         await updateCauses.mutateAsync(selectedCauses);
+      }
+
+      // Update custom role title
+      if (user?.id && organizationId) {
+        await supabase
+          .from('organization_members')
+          .update({ custom_role_title: customRoleTitle || null })
+          .eq('user_id', user.id)
+          .eq('organization_id', organizationId);
       }
       
       setHasChanges(false);
@@ -658,6 +691,28 @@ export default function OrganizationSettings() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="customRoleTitle" className="flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Titre du signataire (certificats)
+                    </Label>
+                    <Input
+                      id="customRoleTitle"
+                      value={customRoleTitle}
+                      onChange={(e) => {
+                        setCustomRoleTitle(e.target.value.slice(0, 50));
+                        setHasChanges(true);
+                      }}
+                      placeholder="Ex: Directeur RSE, Présidente, Responsable Engagement..."
+                      maxLength={50}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ce titre apparaîtra sur les certificats que vous validez ({customRoleTitle.length}/50)
+                    </p>
                   </div>
                 </CardContent>
               </Card>
