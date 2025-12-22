@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink, icons } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,13 @@ import logo from '@/assets/logo.png';
 import EventCard from '@/components/EventCard';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+// Dynamic icon component
+const DynamicIcon = ({ name, color, size = 18 }: { name: string; color?: string; size?: number }) => {
+  const IconComponent = icons[name as keyof typeof icons];
+  if (!IconComponent) return null;
+  return <IconComponent size={size} color={color} />;
+};
 
 interface Organization {
   id: string;
@@ -316,16 +323,20 @@ const OrganizationPublic = () => {
                     <>
                       {groupedThemes.map(({ theme, events }) => (
                         <div key={theme.id} className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: theme.color }}
-                            />
-                            <span className="text-lg">{theme.icon}</span>
-                            <h3 className="font-semibold text-foreground">{theme.name}</h3>
-                            <Badge variant="secondary" className="ml-2">
+                          <div className="flex items-center gap-3">
+                            <DynamicIcon name={theme.icon} color={theme.color} size={20} />
+                            <span 
+                              className="px-3 py-1 rounded-full border text-sm font-medium"
+                              style={{ 
+                                borderColor: theme.color, 
+                                color: theme.color 
+                              }}
+                            >
+                              {theme.name}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
                               {events.length} événement{events.length > 1 ? 's' : ''}
-                            </Badge>
+                            </span>
                           </div>
                           <ScrollArea className="w-full whitespace-nowrap">
                             <div className="flex gap-4 pb-4">
