@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Shield, MapPin, Clock, Loader2, AlertCircle, CheckCircle2, QrCode } from 'lucide-react';
+import { Shield, MapPin, Clock, Loader2, AlertCircle, CheckCircle2, QrCode, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useCertificationEligibility } from '@/hooks/useCertificationEligibility';
 import { FaceMatchVerification } from './FaceMatchVerification';
+import { SelfCertificationFlow } from './SelfCertificationFlow';
 import { CertificationQRCode } from './CertificationQRCode';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -20,6 +21,8 @@ interface CertificationCardProps {
   faceMatchPassed?: boolean;
   qrToken?: string | null;
   attendedAt?: string | null;
+  allowSelfCertification?: boolean | null;
+  registrationStatus?: string | null;
 }
 
 export const CertificationCard = ({
@@ -34,11 +37,15 @@ export const CertificationCard = ({
   faceMatchPassed = false,
   qrToken = null,
   attendedAt = null,
+  allowSelfCertification = false,
+  registrationStatus = null,
 }: CertificationCardProps) => {
   const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
+  const [showSelfCertification, setShowSelfCertification] = useState(false);
   const [localFaceMatchPassed, setLocalFaceMatchPassed] = useState(faceMatchPassed);
   const [localQrToken, setLocalQrToken] = useState(qrToken);
+  const [localStatus, setLocalStatus] = useState(registrationStatus);
   
   const {
     latitude: userLatitude,
@@ -78,10 +85,19 @@ export const CertificationCard = ({
   useEffect(() => {
     setLocalFaceMatchPassed(faceMatchPassed);
     setLocalQrToken(qrToken);
-  }, [faceMatchPassed, qrToken]);
+    setLocalStatus(registrationStatus);
+  }, [faceMatchPassed, qrToken, registrationStatus]);
 
   const handleStartCertification = () => {
-    setShowFaceMatch(true);
+    if (allowSelfCertification) {
+      setShowSelfCertification(true);
+    } else {
+      setShowFaceMatch(true);
+    }
+  };
+
+  const handleSelfCertificationSuccess = () => {
+    setLocalStatus('self_certified');
   };
 
   const handleFaceMatchSuccess = () => {
@@ -100,13 +116,31 @@ export const CertificationCard = ({
   };
 
   // If event is over and user didn't certify, show nothing
-  if (isAfterEvent && !attendedAt) {
+  if (isAfterEvent && !attendedAt && localStatus !== 'self_certified') {
     return null;
   }
 
   // If event has no coordinates, don't show certification
   if (eventLatitude === null || eventLongitude === null) {
     return null;
+  }
+
+  // If already self-certified
+  if (localStatus === 'self_certified') {
+    return (
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <UserCheck className="h-5 w-5 text-green-600" />
+          <h3 className="font-semibold text-foreground">Présence auto-certifiée</h3>
+        </div>
+        <div className="flex items-center gap-2 text-green-600">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm">
+            Votre présence a été auto-certifiée
+          </span>
+        </div>
+      </div>
+    );
   }
 
   // If already fully certified (attended)
@@ -231,6 +265,19 @@ export const CertificationCard = ({
         eventDate={formatEventDate()}
         existingQrToken={localQrToken}
         onSuccess={handleFaceMatchSuccess}
+      />
+
+      {/* Self Certification Dialog */}
+      <SelfCertificationFlow
+        isOpen={showSelfCertification}
+        onClose={() => setShowSelfCertification(false)}
+        userId={userId}
+        eventId={eventId}
+        registrationId={registrationId}
+        eventName={eventName}
+        eventStartDate={eventStartDate}
+        eventEndDate={eventEndDate}
+        onSuccess={handleSelfCertificationSuccess}
       />
     </>
   );
