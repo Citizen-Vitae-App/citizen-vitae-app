@@ -60,6 +60,7 @@ const OrganizationPublic = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -133,6 +134,33 @@ const OrganizationPublic = () => {
               .filter(Boolean) || []
           }));
           setUpcomingEvents(eventsWithCauses);
+        }
+
+        // Fetch past events (last 3 events that have ended)
+        const { data: pastEventsData } = await supabase
+          .from('events')
+          .select(`
+            id, name, start_date, end_date, location, cover_image_url,
+            event_cause_themes (
+              cause_themes (
+                id, name, color, icon
+              )
+            )
+          `)
+          .eq('organization_id', orgId)
+          .eq('is_public', true)
+          .lt('end_date', new Date().toISOString())
+          .order('end_date', { ascending: false })
+          .limit(3);
+
+        if (pastEventsData) {
+          const pastWithCauses = pastEventsData.map((event: any) => ({
+            ...event,
+            cause_themes: event.event_cause_themes
+              ?.map((ect: any) => ect.cause_themes)
+              .filter(Boolean) || []
+          }));
+          setPastEvents(pastWithCauses);
         }
       }
 
@@ -324,14 +352,14 @@ const OrganizationPublic = () => {
                       {groupedThemes.map(({ theme, events }) => (
                         <div key={theme.id} className="space-y-3">
                           <div className="flex items-center gap-3">
-                            <DynamicIcon name={theme.icon} color={theme.color} size={20} />
                             <span 
-                              className="px-3 py-1 rounded-full border text-sm font-medium"
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-medium"
                               style={{ 
                                 borderColor: theme.color, 
                                 color: theme.color 
                               }}
                             >
+                              <DynamicIcon name={theme.icon} color={theme.color} size={14} />
                               {theme.name}
                             </span>
                             <span className="text-sm text-muted-foreground">
@@ -392,6 +420,36 @@ const OrganizationPublic = () => {
                     </>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* Past Events Section */}
+            {pastEvents.length > 0 && (
+              <div className="space-y-4 mt-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Événements passés</h2>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                    Voir plus
+                  </Button>
+                </div>
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <div className="flex gap-4 pb-4">
+                    {pastEvents.map((event) => (
+                      <div key={event.id} className="w-[280px] flex-shrink-0 opacity-70">
+                        <EventCard
+                          id={event.id}
+                          title={event.name}
+                          shortTitle={getShortTitle(event.name)}
+                          organization={organization.name}
+                          date={formatEventDate(event.start_date)}
+                          location={event.location}
+                          image={event.cover_image_url || '/placeholder.svg'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </div>
             )}
           </div>
