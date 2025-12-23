@@ -9,136 +9,155 @@ interface CertificatePreviewProps {
 
 export const CertificatePreview = ({ data }: CertificatePreviewProps) => {
   return (
-    <div 
-      className="relative bg-[#FDF8F0] w-full overflow-hidden"
+    <article 
+      className="relative bg-white overflow-hidden w-full min-w-[890px] border-[3px] border-solid border-[#3c2c00]"
       style={{ 
-        aspectRatio: '297/210', // A4 landscape ratio
+        aspectRatio: '890/501',
         fontFamily: 'Questrial, sans-serif'
       }}
     >
-      {/* Inner container with border */}
-      <div className="absolute inset-[3%] border-2 border-[#012573] rounded-lg bg-[#FFFBF5] flex flex-col">
-        
-        {/* Badge - top right */}
-        <div 
-          className={`absolute top-[4%] right-[4%] px-3 py-1.5 rounded text-[0.6rem] font-medium tracking-wide uppercase text-white ${
-            data.isSelfCertified ? 'bg-emerald-600' : 'bg-[#012573]'
-          }`}
-        >
-          ✓ {data.isSelfCertified ? 'AUTO-CERTIFIÉ' : 'CERTIFIÉ'}
-        </div>
+      {/* Inner golden border */}
+      <div className="absolute top-[7px] left-[7px] right-[7px] bottom-[7px] rounded-[3px] border-2 border-solid border-[#D79806] pointer-events-none z-10" />
 
-        {/* Content container */}
-        <div className="flex-1 flex flex-col items-center px-[8%] py-[4%]">
-          
-          {/* Logo */}
-          <div className="mb-[2%]">
-            <img 
-              src={logo} 
-              alt="Citizen Vitae" 
-              className="h-[3.5vw] max-h-12 object-contain"
-            />
-          </div>
+      {/* Footer background */}
+      <div className="absolute bottom-0 left-0 right-0 h-[24.5%] bg-[#FAF7EF]" />
 
-          {/* Title */}
-          <h1 
-            className="text-[#012573] text-[2vw] italic mb-[1%]"
-            style={{ fontFamily: 'Questrial, sans-serif' }}
-          >
-            Certificat d'action citoyenne
-          </h1>
+      {/* Large laurel/crown as background - centered */}
+      <img
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[51%] h-auto opacity-100 pointer-events-none"
+        alt=""
+        src={laurelSvg}
+        style={{ maxHeight: '94%' }}
+      />
 
-          {/* Subtitle */}
-          <p className="text-[#666] text-[1vw] mb-[1.5%]">
-            Attribué à
-          </p>
+      {/* Cocarde - top right area */}
+      <img
+        className="absolute top-[34%] right-[10%] w-[8.4%] h-auto z-20"
+        alt="Cocarde française"
+        src={cocardeSvg}
+        style={{ aspectRatio: '75/118' }}
+      />
 
-          {/* Name with decorations */}
-          <div className="flex items-center justify-center gap-[3%] w-full mb-[3%]">
-            {/* Left laurel */}
-            <img 
-              src={laurelSvg} 
-              alt="" 
-              className="h-[6vw] max-h-20 object-contain"
-              style={{ transform: 'scaleX(-1)' }}
-            />
-            
-            {/* Name */}
-            <h2 
-              className="text-[#012573] text-[3.5vw] font-medium whitespace-nowrap"
-              style={{ fontFamily: '"EB Garamond", serif' }}
-            >
-              {data.firstName} {data.lastName}
-            </h2>
-            
-            {/* Right laurel */}
-            <img 
-              src={laurelSvg} 
-              alt="" 
-              className="h-[6vw] max-h-20 object-contain"
-            />
-            
-            {/* Cocarde */}
-            <img 
-              src={cocardeSvg} 
-              alt="" 
-              className="h-[5vw] max-h-16 object-contain ml-[1%]"
-            />
-          </div>
-
-          {/* Body text */}
-          <p 
-            className="text-[#333] text-[1vw] text-center leading-relaxed max-w-[85%] mb-[4%]"
-            style={{ fontFamily: 'Questrial, sans-serif' }}
-          >
-            Né(e) le {data.dateOfBirth}, en reconnaissance de sa participation à l'événement
-            <br />
-            "{data.eventName}" organisé par {data.organizationName} le {data.eventDate}
-            <br />
-            de {data.eventStartTime} à {data.eventEndTime} au {data.eventLocation}.
-          </p>
-
-          {/* Footer section */}
-          <div className="w-full flex justify-between items-end mt-auto px-[5%]">
-            {/* Date column */}
-            <div className="flex flex-col items-center">
-              <span className="text-[#666] text-[0.7vw] mb-1">Date</span>
-              <span className="text-[#333] text-[0.9vw] font-semibold">{data.eventDate}</span>
-            </div>
-
-            {/* Organization logo */}
-            <div className="flex flex-col items-center">
-              {data.organizationLogoUrl ? (
-                <img 
-                  src={data.organizationLogoUrl} 
-                  alt={data.organizationName}
-                  className="w-[5vw] h-[5vw] max-w-16 max-h-16 rounded-full object-contain border border-gray-200"
-                />
-              ) : (
-                <div 
-                  className="w-[5vw] h-[5vw] max-w-16 max-h-16 rounded-full bg-[#012573] flex items-center justify-center text-white text-[2vw] font-bold"
-                >
-                  {data.organizationName.charAt(0)}
-                </div>
-              )}
-            </div>
-
-            {/* Validator column */}
-            <div className="flex flex-col items-center">
-              <span className="text-[#666] text-[0.7vw] mb-1">Signataire</span>
-              <span className="text-[#333] text-[0.9vw] font-semibold">{data.validatorName}</span>
-              {data.validatorRole && (
-                <span className="text-[#666] text-[0.7vw] italic">{data.validatorRole}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Watermark */}
-          <p className="text-[#999] text-[0.65vw] italic mt-[3%] text-center">
-            Sécurisé par <span className="text-[#012573] font-semibold not-italic">Citizen Vitae®</span>, l'authenticité de l'engagement, vérifiée.
-          </p>
-        </div>
+      {/* Logo Citizen Vitae - centered top */}
+      <div className="absolute top-[6.8%] left-1/2 -translate-x-1/2 z-20">
+        <img 
+          src={logo} 
+          alt="Citizen Vitae" 
+          className="h-[7.8%] w-auto object-contain"
+          style={{ height: '39px' }}
+        />
       </div>
-    </div>
+
+      {/* Title */}
+      <h1 
+        className="absolute top-[19.6%] left-1/2 -translate-x-1/2 text-[#012573] text-[30px] text-center whitespace-nowrap z-20"
+        style={{ 
+          fontFamily: 'Questrial, sans-serif',
+          WebkitTextStroke: '0.5px #000000',
+          fontWeight: 500
+        }}
+      >
+        Certificat d'action citoyenne
+      </h1>
+
+      {/* "Attribué à" */}
+      <p 
+        className="absolute top-[30.3%] left-1/2 -translate-x-1/2 text-[#012573] text-[15px] text-center whitespace-nowrap z-20"
+        style={{ fontFamily: 'Questrial, sans-serif', fontWeight: 500 }}
+      >
+        Attribué à
+      </p>
+
+      {/* Recipient name */}
+      <h2 
+        className="absolute top-[35%] left-1/2 -translate-x-1/2 text-[#012573] text-[40px] text-center whitespace-nowrap z-20"
+        style={{ fontFamily: '"EB Garamond", "Times New Roman", serif', fontWeight: 700 }}
+      >
+        {data.firstName} {data.lastName}
+      </h2>
+
+      {/* Horizontal line under name */}
+      <div className="absolute top-[46.5%] left-1/2 -translate-x-1/2 w-[52.8%] h-[2px] bg-[#D79806] z-20" />
+
+      {/* Body text */}
+      <p 
+        className="absolute top-[51.3%] left-1/2 -translate-x-1/2 w-[51%] text-[#012573] text-[12px] text-center leading-relaxed z-20"
+        style={{ fontFamily: 'Questrial, sans-serif', fontWeight: 500 }}
+      >
+        Né(e) le {data.dateOfBirth}, en reconnaissance de sa participation à l'évènement
+        <br />
+        "{data.eventName}" organisé par {data.organizationName} le {data.eventDate} de
+        <br />
+        {data.eventStartTime} à {data.eventEndTime} au {data.eventLocation}.
+      </p>
+
+      {/* Footer section */}
+      {/* Date column - left */}
+      <div className="absolute top-[77.2%] left-[14.6%] flex flex-col items-start z-20">
+        <span 
+          className="text-[#012573] text-[12px] whitespace-nowrap"
+          style={{ fontFamily: 'Questrial, sans-serif', fontWeight: 500 }}
+        >
+          Date
+        </span>
+        <span 
+          className="text-[#012573] text-[12px] mt-1 whitespace-nowrap"
+          style={{ fontFamily: 'Questrial, sans-serif', fontWeight: 500 }}
+        >
+          {data.eventDate}
+        </span>
+      </div>
+
+      {/* Organization logo - center */}
+      <div className="absolute top-[67%] left-1/2 -translate-x-1/2 w-[118px] h-[118px] z-20">
+        {data.organizationLogoUrl ? (
+          <img 
+            src={data.organizationLogoUrl} 
+            alt={data.organizationName}
+            className="w-full h-full rounded-full object-cover border border-gray-200"
+          />
+        ) : (
+          <div 
+            className="w-full h-full rounded-full bg-[#012573] flex items-center justify-center text-white text-[24px] font-bold"
+            style={{ fontFamily: 'Questrial, sans-serif' }}
+          >
+            {data.organizationName.charAt(0)}
+          </div>
+        )}
+      </div>
+
+      {/* Validator column - right */}
+      <div className="absolute top-[77.2%] right-[10.7%] flex flex-col items-start z-20">
+        <span 
+          className="text-[#012573] text-[12px] whitespace-nowrap"
+          style={{ fontFamily: 'Questrial, sans-serif', fontWeight: 500 }}
+        >
+          Signataire
+        </span>
+        <span 
+          className="text-[#012573] text-[12px] font-semibold mt-1"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          {data.validatorName}
+        </span>
+        {data.validatorRole && (
+          <span 
+            className="text-[#012573] text-[11px] italic"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+          >
+            {data.validatorRole}
+          </span>
+        )}
+      </div>
+
+      {/* Watermark */}
+      <p 
+        className="absolute top-[92.6%] left-1/2 -translate-x-1/2 text-[#1c56d3] text-[8px] whitespace-nowrap z-20"
+        style={{ fontFamily: 'Inter, sans-serif' }}
+      >
+        <span className="font-semibold">Sécurisé par Citizen Vitae</span>
+        <span className="font-normal">, l'authenticité de l'engagement, vérifiée</span>
+      </p>
+    </article>
   );
 };
