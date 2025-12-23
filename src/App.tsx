@@ -22,6 +22,7 @@ import MyMissions from "./pages/MyMissions";
 import Notifications from "./pages/Notifications";
 import ScanParticipant from "./pages/ScanParticipant";
 import VerifyParticipant from "./pages/VerifyParticipant";
+import Certificate from "./pages/Certificate";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/my-missions" element={<ProtectedRoute><MyMissions /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/verify/:registrationId" element={<VerifyParticipant />} />
+            <Route path="/certificate/:certificateId" element={<Certificate />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
