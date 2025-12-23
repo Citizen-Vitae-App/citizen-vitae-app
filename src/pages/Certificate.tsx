@@ -209,21 +209,38 @@ const Certificate = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6 text-center font-questrial">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-6 text-center font-questrial">
           Certificat d'action citoyenne
         </h1>
 
-        {/* Certificate Preview - HTML version for fast rendering */}
+        {/* Certificate Preview - Responsive container */}
         <div className="max-w-5xl mx-auto">
-          <div className="border border-border rounded-lg overflow-hidden shadow-xl">
-            <CertificatePreview data={certificateData} />
+          {/* Mobile: scrollable horizontally if needed, with zoom hint */}
+          <div className="relative">
+            <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:overflow-visible">
+              <div 
+                className="border border-border rounded-lg overflow-hidden shadow-xl min-w-[320px] sm:min-w-0"
+                style={{ 
+                  // On mobile, scale down but keep readable
+                  transform: 'scale(1)',
+                  transformOrigin: 'top left',
+                }}
+              >
+                <CertificatePreview data={certificateData} />
+              </div>
+            </div>
+            
+            {/* Mobile scroll hint */}
+            <p className="text-xs text-muted-foreground text-center mt-2 sm:hidden">
+              ← Faites glisser pour voir l'intégralité →
+            </p>
           </div>
           
-          {/* Download CTA for mobile */}
-          <div className="mt-6 md:hidden">
+          {/* Mobile action buttons */}
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 md:hidden">
             <Button 
-              className="w-full" 
+              className="flex-1" 
               size="lg"
               onClick={handleDownload}
               disabled={isDownloading}
@@ -234,6 +251,15 @@ const Certificate = () => {
                 <Download className="h-4 w-4 mr-2" />
               )}
               Télécharger le PDF
+            </Button>
+            <Button 
+              variant="outline"
+              className="flex-1" 
+              size="lg"
+              onClick={() => setShareOpen(true)}
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Partager
             </Button>
           </div>
         </div>

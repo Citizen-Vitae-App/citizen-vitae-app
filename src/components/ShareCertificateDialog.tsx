@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, Linkedin, Twitter, Mail } from 'lucide-react';
+import { Copy, Check, Linkedin, Twitter, Mail, Instagram } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,13 @@ export function ShareCertificateDialog({
 }: ShareCertificateDialogProps) {
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
+  const [textCopied, setTextCopied] = useState(false);
 
-  const shareText = `J'ai participé à la mission citoyenne "${eventName}" avec ${organizationName}. Mon engagement citoyen, certifié par Citizen Vitae.`;
+  // Texte avec les @ pour les réseaux sociaux
+  const shareTextWithTags = `J'ai participé à la mission citoyenne "${eventName}" avec @${organizationName.replace(/\s+/g, '')}. Mon engagement citoyen, certifié par @CitizenVitae.`;
+  
+  // Texte pour affichage (sans encodage)
+  const displayShareText = `J'ai participé à la mission citoyenne "${eventName}" avec @${organizationName.replace(/\s+/g, '')}. Mon engagement citoyen, certifié par @CitizenVitae.`;
 
   const handleCopy = async () => {
     try {
@@ -33,6 +38,17 @@ export function ShareCertificateDialog({
       setCopied(true);
       toast.success('Lien copié !');
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Erreur lors de la copie');
+    }
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(`${shareTextWithTags}\n\n${certificateUrl}`);
+      setTextCopied(true);
+      toast.success('Texte copié pour Instagram !');
+      setTimeout(() => setTextCopied(false), 2000);
     } catch {
       toast.error('Erreur lors de la copie');
     }
@@ -48,7 +64,7 @@ export function ShareCertificateDialog({
   };
 
   const shareViaTwitter = () => {
-    const text = encodeURIComponent(shareText);
+    const text = encodeURIComponent(shareTextWithTags);
     const url = encodeURIComponent(certificateUrl);
     window.open(
       `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
@@ -57,13 +73,24 @@ export function ShareCertificateDialog({
     );
   };
 
+  const shareViaInstagram = () => {
+    // Instagram n'a pas d'API de partage direct web, on copie le texte et ouvre Instagram
+    handleCopyText();
+    // Sur mobile, on peut ouvrir l'app Instagram
+    if (isMobile) {
+      window.open('instagram://app', '_blank');
+    } else {
+      window.open('https://www.instagram.com/', '_blank');
+    }
+  };
+
   const shareViaEmail = () => {
     const subject = encodeURIComponent(`Mon certificat d'engagement citoyen - ${eventName}`);
-    const body = encodeURIComponent(`${shareText}\n\nVoir mon certificat : ${certificateUrl}`);
+    const body = encodeURIComponent(`${shareTextWithTags}\n\nVoir mon certificat : ${certificateUrl}`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
-  const truncatedUrl = certificateUrl.length > 45 ? certificateUrl.substring(0, 45) + '...' : certificateUrl;
+  const truncatedUrl = certificateUrl.length > 40 ? certificateUrl.substring(0, 40) + '...' : certificateUrl;
 
   const ShareContent = () => (
     <div className="space-y-6 p-2">
@@ -74,7 +101,7 @@ export function ShareCertificateDialog({
           <Input 
             readOnly 
             value={truncatedUrl}
-            className="flex-1 bg-muted/50 border-border/50"
+            className="flex-1 bg-muted/50 border-border/50 text-sm"
           />
           <Button 
             variant="outline" 
@@ -90,47 +117,74 @@ export function ShareCertificateDialog({
       {/* Share buttons */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-muted-foreground">Partager sur</label>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {/* LinkedIn */}
           <button
             onClick={shareViaLinkedIn}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors flex-1"
+            className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
           >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#0A66C2' }}>
-              <Linkedin className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#0A66C2' }}>
+              <Linkedin className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
-            <span className="text-sm font-medium">LinkedIn</span>
+            <span className="text-xs font-medium">LinkedIn</span>
           </button>
 
           {/* Twitter/X */}
           <button
             onClick={shareViaTwitter}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors flex-1"
+            className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
           >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground">
-              <Twitter className="h-6 w-6 text-background" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-foreground">
+              <Twitter className="h-5 w-5 md:h-6 md:w-6 text-background" />
             </div>
-            <span className="text-sm font-medium">X</span>
+            <span className="text-xs font-medium">X</span>
+          </button>
+
+          {/* Instagram */}
+          <button
+            onClick={shareViaInstagram}
+            className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <div 
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' 
+              }}
+            >
+              <Instagram className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <span className="text-xs font-medium">Instagram</span>
           </button>
 
           {/* Email */}
           <button
             onClick={shareViaEmail}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors flex-1"
+            className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
           >
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <Mail className="h-6 w-6 text-foreground" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center">
+              <Mail className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
             </div>
-            <span className="text-sm font-medium">Email</span>
+            <span className="text-xs font-medium">Email</span>
           </button>
         </div>
       </div>
 
       {/* Message preview */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-muted-foreground">Aperçu du message</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-muted-foreground">Aperçu du message</label>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleCopyText}
+            className="h-8 text-xs"
+          >
+            {textCopied ? <Check className="h-3 w-3 mr-1 text-green-600" /> : <Copy className="h-3 w-3 mr-1" />}
+            Copier
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg italic">
-          "{shareText}"
+          "{displayShareText}"
         </p>
       </div>
     </div>
