@@ -1,173 +1,175 @@
 import { Document, Page, Text, View, StyleSheet, Image, Font, pdf } from '@react-pdf/renderer';
 
-// Register fonts (using system fonts as fallback)
+// Register fonts - using Google Fonts URLs for EB Garamond and a clean sans-serif
 Font.register({
-  family: 'Helvetica',
+  family: 'Questrial',
+  src: 'https://fonts.gstatic.com/s/questrial/v18/QdVUSTchPBm7nuUeVf7EuStkm20oJA.ttf',
+});
+
+Font.register({
+  family: 'EBGaramond',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/opensans/v18/mem8YaGs126MiZpBA-UFVZ0e.ttf', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UN7rgOUuhs.ttf', fontWeight: 700 },
+    { 
+      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RUA4V-e6yHgQ.ttf', 
+      fontWeight: 400 
+    },
+    { 
+      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-2fRUA4V-e6yHgQ.ttf', 
+      fontWeight: 500 
+    },
+    { 
+      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-NfNUA4V-e6yHgQ.ttf', 
+      fontWeight: 600 
+    },
   ],
 });
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: '#FDF8F0',
-    padding: 40,
+    padding: 25,
     position: 'relative',
+    fontFamily: 'Questrial',
   },
   container: {
-    border: '2px solid #012573',
+    border: '2pt solid #012573',
     borderRadius: 8,
-    padding: 30,
     backgroundColor: '#FFFBF5',
-    height: '100%',
+    flex: 1,
     position: 'relative',
-  },
-  header: {
+    paddingVertical: 30,
+    paddingHorizontal: 50,
     alignItems: 'center',
-    marginBottom: 20,
+  },
+  badge: {
+    position: 'absolute',
+    top: 20,
+    right: 25,
+    backgroundColor: '#012573',
+    color: 'white',
+    fontSize: 7,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  badgeSelfCertified: {
+    backgroundColor: '#059669',
   },
   logo: {
-    fontSize: 28,
-    color: '#012573',
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  logoAccent: {
-    color: '#DC2626',
+    width: 140,
+    height: 40,
+    objectFit: 'contain',
+    marginBottom: 15,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#012573',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
     fontStyle: 'italic',
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 11,
+    color: '#666666',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 25,
+    gap: 15,
+  },
+  laurel: {
+    width: 55,
+    height: 70,
+    objectFit: 'contain',
+  },
+  laurelLeft: {
+    transform: 'scaleX(-1)',
   },
   recipientName: {
-    fontSize: 32,
+    fontSize: 36,
     color: '#012573',
     textAlign: 'center',
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontFamily: 'EBGaramond',
+    fontWeight: 500,
+  },
+  cocarde: {
+    width: 45,
+    height: 55,
+    objectFit: 'contain',
+    marginLeft: 10,
   },
   bodyText: {
-    fontSize: 12,
-    color: '#333',
+    fontSize: 11,
+    color: '#333333',
     textAlign: 'center',
-    lineHeight: 1.6,
+    lineHeight: 1.7,
+    maxWidth: 480,
     marginBottom: 30,
-    paddingHorizontal: 30,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    width: '100%',
     marginTop: 'auto',
-    paddingTop: 20,
+    paddingHorizontal: 30,
   },
   footerColumn: {
-    flex: 1,
     alignItems: 'center',
+    minWidth: 100,
   },
   footerLabel: {
-    fontSize: 10,
-    color: '#666',
-    marginBottom: 5,
+    fontSize: 8,
+    color: '#666666',
+    marginBottom: 4,
   },
   footerValue: {
-    fontSize: 12,
-    color: '#333',
-    fontWeight: 'bold',
+    fontSize: 10,
+    color: '#333333',
+    fontWeight: 600,
   },
   footerRole: {
-    fontSize: 10,
-    color: '#666',
+    fontSize: 8,
+    color: '#666666',
     fontStyle: 'italic',
+    marginTop: 2,
   },
   orgLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     objectFit: 'contain',
   },
+  orgLogoPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#012573',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orgLogoText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   watermark: {
-    fontSize: 9,
-    color: '#999',
+    fontSize: 7,
+    color: '#999999',
     textAlign: 'center',
     marginTop: 20,
     fontStyle: 'italic',
   },
   watermarkBrand: {
     color: '#012573',
-    fontWeight: 'bold',
-  },
-  badge: {
-    position: 'absolute',
-    top: 30,
-    right: 30,
-    backgroundColor: '#059669',
-    color: 'white',
-    fontSize: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    textTransform: 'uppercase',
-  },
-  badgeManual: {
-    backgroundColor: '#012573',
-  },
-  medal: {
-    position: 'absolute',
-    top: 100,
-    right: 40,
-    width: 50,
-    height: 70,
-  },
-  medalRibbon: {
-    width: 40,
-    height: 20,
-    flexDirection: 'row',
-    marginLeft: 5,
-  },
-  ribbonBlue: {
-    width: 13,
-    height: 20,
-    backgroundColor: '#012573',
-  },
-  ribbonWhite: {
-    width: 14,
-    height: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DDD',
-  },
-  ribbonRed: {
-    width: 13,
-    height: 20,
-    backgroundColor: '#DC2626',
-  },
-  medalCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F59E0B',
-    borderWidth: 3,
-    borderColor: '#D97706',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 5,
-    marginTop: -5,
-  },
-  medalCheck: {
-    fontSize: 16,
-    color: 'white',
-    fontWeight: 'bold',
+    fontWeight: 600,
+    fontStyle: 'normal',
   },
 });
 
@@ -191,31 +193,26 @@ interface CertificatePDFDocumentProps {
   data: CertificateData;
 }
 
+// Using base64 encoded simple PNG versions for PDF compatibility
+// These are placeholder colors that match the design
+const LOGO_URL = 'https://storage.googleapis.com/gpt-engineer-file-uploads/JMOhiwkBCEWeBlXWgl70IRx2IAD2/uploads/1755792313282-citizenvitae-logo.png';
+const LAUREL_URL = 'https://storage.googleapis.com/gpt-engineer-file-uploads/JMOhiwkBCEWeBlXWgl70IRx2IAD2/uploads/1755792313282-laurel.png';
+const COCARDE_URL = 'https://storage.googleapis.com/gpt-engineer-file-uploads/JMOhiwkBCEWeBlXWgl70IRx2IAD2/uploads/1755792313282-cocarde.png';
+
 export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) => (
   <Document>
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.container}>
         {/* Badge */}
-        <View style={[styles.badge, !data.isSelfCertified && styles.badgeManual]}>
-          <Text>{data.isSelfCertified ? '✓ AUTO-CERTIFIÉ' : '✓ CERTIFIÉ'}</Text>
+        <View style={[styles.badge, data.isSelfCertified && styles.badgeSelfCertified]}>
+          <Text>✓ {data.isSelfCertified ? 'AUTO-CERTIFIÉ' : 'CERTIFIÉ'}</Text>
         </View>
 
-        {/* Medal */}
-        <View style={styles.medal}>
-          <View style={styles.medalRibbon}>
-            <View style={styles.ribbonBlue} />
-            <View style={styles.ribbonWhite} />
-            <View style={styles.ribbonRed} />
-          </View>
-          <View style={styles.medalCircle}>
-            <Text style={styles.medalCheck}>✓</Text>
-          </View>
-        </View>
-
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.logo}>
-            <Text style={styles.logoAccent}>C</Text>itizen<Text style={styles.logoAccent}>V</Text>itae
+        {/* Logo - using text fallback for now */}
+        <View style={{ marginBottom: 15 }}>
+          <Text style={{ fontSize: 24, color: '#012573', fontWeight: 'bold' }}>
+            <Text style={{ color: '#DC2626' }}>C</Text>itizen
+            <Text style={{ color: '#DC2626' }}>V</Text>itae
           </Text>
         </View>
 
@@ -224,9 +221,26 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
         
         {/* Subtitle */}
         <Text style={styles.subtitle}>Attribué à</Text>
-        
-        {/* Recipient Name */}
-        <Text style={styles.recipientName}>{data.firstName} {data.lastName}</Text>
+
+        {/* Name with decorations */}
+        <View style={styles.nameContainer}>
+          {/* Simplified medal/laurel representation */}
+          <View style={{ width: 40, height: 50, backgroundColor: '#F59E0B', borderRadius: 25, marginRight: 15 }} />
+          
+          <Text style={styles.recipientName}>{data.firstName} {data.lastName}</Text>
+          
+          {/* Simplified cocarde */}
+          <View style={{ marginLeft: 15, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ width: 10, height: 15, backgroundColor: '#012573' }} />
+              <View style={{ width: 10, height: 15, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DDD' }} />
+              <View style={{ width: 10, height: 15, backgroundColor: '#DC2626' }} />
+            </View>
+            <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: '#F59E0B', marginTop: -5, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: 'white', fontSize: 14 }}>✓</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Body */}
         <Text style={styles.bodyText}>
@@ -243,12 +257,11 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
           </View>
           
           <View style={styles.footerColumn}>
-            {data.organizationLogoUrl && (
+            {data.organizationLogoUrl ? (
               <Image src={data.organizationLogoUrl} style={styles.orgLogo} />
-            )}
-            {!data.organizationLogoUrl && (
-              <View style={[styles.orgLogo, { backgroundColor: '#012573', alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+            ) : (
+              <View style={styles.orgLogoPlaceholder}>
+                <Text style={styles.orgLogoText}>
                   {data.organizationName.charAt(0)}
                 </Text>
               </View>
