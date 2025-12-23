@@ -4,10 +4,9 @@ import { ArrowLeft, Download, Share2, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { CertificateData, CertificatePDFDocument, downloadCertificatePDF } from '@/components/CertificatePDF';
+import { CertificateData, downloadCertificatePDF } from '@/components/CertificatePDF';
+import { CertificatePreview } from '@/components/certificate/CertificatePreview';
 import { ShareCertificateDialog } from '@/components/ShareCertificateDialog';
-import { PDFViewer } from '@react-pdf/renderer';
-import { useIsMobile } from '@/hooks/use-mobile';
 import logo from '@/assets/logo.png';
 
 interface CertificateDataFromDB {
@@ -39,7 +38,6 @@ interface CertificateDataFromDB {
 
 const Certificate = () => {
   const { certificateId } = useParams<{ certificateId: string }>();
-  const isMobile = useIsMobile();
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,8 +135,8 @@ const Certificate = () => {
           </div>
         </nav>
         <main className="container mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-64 mb-6" />
-          <Skeleton className="w-full aspect-[1.414/1] max-w-4xl mx-auto" />
+          <Skeleton className="h-8 w-64 mb-6 mx-auto" />
+          <Skeleton className="w-full max-w-5xl mx-auto" style={{ aspectRatio: '297/210' }} />
         </main>
       </div>
     );
@@ -212,68 +210,32 @@ const Certificate = () => {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6 text-center">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6 text-center font-questrial">
           Certificat d'action citoyenne
         </h1>
 
-        {/* PDF Preview */}
+        {/* Certificate Preview - HTML version for fast rendering */}
         <div className="max-w-5xl mx-auto">
-          {!isMobile ? (
-            <div className="w-full aspect-[1.414/1] border border-border rounded-lg overflow-hidden shadow-lg">
-              <PDFViewer width="100%" height="100%" showToolbar={false}>
-                <CertificatePDFDocument data={certificateData} />
-              </PDFViewer>
-            </div>
-          ) : (
-            /* Mobile: Show summary card */
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Attribué à</p>
-                <h2 className="text-2xl font-bold text-primary">
-                  {certificateData.firstName} {certificateData.lastName}
-                </h2>
-              </div>
-              
-              <div className="border-t border-border pt-4 space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground">Événement</p>
-                  <p className="font-medium text-foreground">{certificateData.eventName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Organisation</p>
-                  <p className="font-medium text-foreground">{certificateData.organizationName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium text-foreground capitalize">{certificateData.eventDate}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Lieu</p>
-                  <p className="font-medium text-foreground">{certificateData.eventLocation}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Validé par</p>
-                  <p className="font-medium text-foreground">{certificateData.validatorName}</p>
-                  {certificateData.validatorRole && (
-                    <p className="text-sm text-muted-foreground">{certificateData.validatorRole}</p>
-                  )}
-                </div>
-              </div>
-
-              <Button 
-                className="w-full mt-4" 
-                onClick={handleDownload}
-                disabled={isDownloading}
-              >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                Télécharger le PDF complet
-              </Button>
-            </div>
-          )}
+          <div className="border border-border rounded-lg overflow-hidden shadow-xl">
+            <CertificatePreview data={certificateData} />
+          </div>
+          
+          {/* Download CTA for mobile */}
+          <div className="mt-6 md:hidden">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={handleDownload}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Télécharger le PDF
+            </Button>
+          </div>
         </div>
 
         {/* Link to event */}
