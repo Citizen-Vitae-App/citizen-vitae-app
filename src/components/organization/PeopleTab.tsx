@@ -65,7 +65,7 @@ export function PeopleTab() {
           status,
           registered_at,
           attended_at,
-          profiles!inner(
+          profiles:profiles!event_registrations_user_id_fkey(
             first_name,
             last_name,
             email,
