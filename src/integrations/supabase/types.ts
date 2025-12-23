@@ -78,6 +78,8 @@ export type Database = {
         Row: {
           approved_at: string | null
           attended_at: string | null
+          certificate_data: Json | null
+          certificate_id: string | null
           certificate_url: string | null
           certification_end_at: string | null
           certification_start_at: string | null
@@ -95,6 +97,8 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           attended_at?: string | null
+          certificate_data?: Json | null
+          certificate_id?: string | null
           certificate_url?: string | null
           certification_end_at?: string | null
           certification_start_at?: string | null
@@ -112,6 +116,8 @@ export type Database = {
         Update: {
           approved_at?: string | null
           attended_at?: string | null
+          certificate_data?: Json | null
+          certificate_id?: string | null
           certificate_url?: string | null
           certification_end_at?: string | null
           certification_start_at?: string | null

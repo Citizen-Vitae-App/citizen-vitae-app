@@ -35,6 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
         event_id,
         attended_at,
         status,
+        certificate_id,
         events (
           id,
           name,
@@ -126,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
       return new Date(dob).toLocaleDateString('fr-FR');
     };
 
-    // Build certificate data
+    // Build certificate data (stored as JSONB)
     const certificateData = {
       user: {
         firstName: profile.first_name || '',
@@ -134,6 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         dateOfBirth: formatDateOfBirth(profile.date_of_birth),
       },
       event: {
+        id: event.id,
         name: event.name,
         date: formatDate(startDate),
         startTime: formatTime(startDate),
@@ -141,6 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
         location: event.location,
       },
       organization: {
+        id: organization.id,
         name: organization.name,
         logoUrl: organization.logo_url,
       },
@@ -152,232 +155,27 @@ const handler = async (req: Request): Promise<Response> => {
       isSelfCertified: registration.status === 'self_certified' || !validated_by,
     };
 
-    // Generate a simple HTML certificate
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Certificat d'Engagement Citoyen</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Georgia', serif; 
-      background: #f5f5f5; 
-      padding: 20px; 
-    }
-    .certificate { 
-      max-width: 800px; 
-      margin: 0 auto; 
-      background: white; 
-      padding: 50px; 
-      border: 3px solid #012573;
-      position: relative;
-    }
-    .header { 
-      text-align: center; 
-      margin-bottom: 40px; 
-    }
-    .badge {
-      display: inline-block;
-      padding: 8px 24px;
-      background: ${certificateData.isSelfCertified ? '#059669' : '#012573'};
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-    }
-    .title { 
-      font-size: 28px; 
-      color: #012573; 
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .subtitle { 
-      font-size: 14px; 
-      color: #666;
-      font-style: italic;
-    }
-    .participant-name { 
-      font-size: 36px; 
-      color: #012573; 
-      text-align: center;
-      margin: 30px 0;
-      font-weight: bold;
-    }
-    .dob {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
-    }
-    .main-text {
-      text-align: center;
-      font-size: 16px;
-      line-height: 1.8;
-      margin-bottom: 30px;
-    }
-    .event-details {
-      background: #f8f9fa;
-      padding: 25px;
-      border-radius: 8px;
-      margin: 30px 0;
-    }
-    .event-name {
-      font-size: 20px;
-      font-weight: bold;
-      color: #012573;
-      margin-bottom: 15px;
-    }
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-label { 
-      font-weight: bold; 
-      color: #333; 
-    }
-    .detail-value { 
-      color: #666; 
-    }
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 40px;
-      padding-top: 30px;
-      border-top: 1px solid #ddd;
-    }
-    .org-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .org-logo {
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-    .org-name {
-      font-weight: bold;
-      color: #333;
-    }
-    .validator-info {
-      text-align: right;
-    }
-    .validator-name {
-      font-weight: bold;
-      color: #333;
-    }
-    .validator-role {
-      font-size: 12px;
-      color: #666;
-    }
-    .watermark {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 11px;
-      color: #999;
-      font-style: italic;
-    }
-    .cv-logo {
-      color: #012573;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="certificate">
-    <div class="header">
-      <div class="badge">${certificateData.isSelfCertified ? '✓ Auto-certifié' : '✓ Certifié manuellement'}</div>
-      <h1 class="title">Certificat d'Engagement Citoyen</h1>
-      <p class="subtitle">Attestation de participation à une action citoyenne</p>
-    </div>
-    
-    <p class="participant-name">${certificateData.user.firstName} ${certificateData.user.lastName}</p>
-    <p class="dob">Né(e) le ${certificateData.user.dateOfBirth}</p>
-    
-    <p class="main-text">
-      A participé à la mission citoyenne organisée par <strong>${certificateData.organization.name}</strong>.
-    </p>
-    
-    <div class="event-details">
-      <div class="event-name">${certificateData.event.name}</div>
-      <div class="detail-row">
-        <span class="detail-label">Date</span>
-        <span class="detail-value">${certificateData.event.date}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Horaires</span>
-        <span class="detail-value">${certificateData.event.startTime} → ${certificateData.event.endTime}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Lieu</span>
-        <span class="detail-value">${certificateData.event.location}</span>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <div class="org-info">
-        ${certificateData.organization.logoUrl ? `<img src="${certificateData.organization.logoUrl}" alt="Logo" class="org-logo" />` : ''}
-        <div>
-          <div class="org-name">${certificateData.organization.name}</div>
-          <div class="validator-role">Organisateur</div>
-        </div>
-      </div>
-      <div class="validator-info">
-        <div class="validator-name">${certificateData.validator.name}</div>
-        ${certificateData.validator.role ? `<div class="validator-role">${certificateData.validator.role}</div>` : ''}
-      </div>
-    </div>
-    
-    <p class="watermark">
-      Sécurisé par <span class="cv-logo">Citizen Vitae®</span>, l'authenticité de l'engagement, vérifiée.
-    </p>
-  </div>
-</body>
-</html>`;
+    // Use existing certificate_id or generate new one
+    const certificateId = registration.certificate_id;
+    const certificateUrl = `/certificate/${certificateId}`;
 
-    // Store the HTML certificate as a file in storage
-    const fileName = `${registration.user_id}/${registration_id}/certificate.html`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from("certificates")
-      .upload(fileName, htmlContent, {
-        contentType: "text/html",
-        upsert: true,
-      });
+    console.log(`[generate-certificate] Storing certificate data for ID: ${certificateId}`);
 
-    if (uploadError) {
-      console.error(`[generate-certificate] Upload error:`, uploadError);
-      throw new Error(`Failed to upload certificate: ${uploadError.message}`);
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("certificates")
-      .getPublicUrl(fileName);
-
-    const certificateUrl = urlData.publicUrl;
-
-    // Update registration with certificate URL
+    // Update registration with certificate data and URL
     const { error: updateError } = await supabase
       .from("event_registrations")
-      .update({ certificate_url: certificateUrl })
+      .update({ 
+        certificate_url: certificateUrl,
+        certificate_data: certificateData
+      })
       .eq("id", registration_id);
 
     if (updateError) {
       console.error(`[generate-certificate] Update error:`, updateError);
+      throw new Error(`Failed to store certificate data: ${updateError.message}`);
     }
 
-    console.log(`[generate-certificate] Certificate generated: ${certificateUrl}`);
+    console.log(`[generate-certificate] Certificate data stored, URL: ${certificateUrl}`);
 
     // Send notification to user
     try {
@@ -401,6 +199,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
+        certificate_id: certificateId,
         certificate_url: certificateUrl,
         certificate_data: certificateData,
       }),

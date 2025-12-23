@@ -15,6 +15,33 @@ import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { CertificateCard } from '@/components/CertificateCard';
 
+interface CertificateDataFromDB {
+  user: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+  };
+  event: {
+    id: string;
+    name: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+  };
+  organization: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+  };
+  validator: {
+    name: string;
+    role: string;
+  };
+  certifiedAt: string;
+  isSelfCertified: boolean;
+}
+
 interface RegistrationWithEvent {
   id: string;
   status: string;
@@ -23,6 +50,8 @@ interface RegistrationWithEvent {
   qr_token: string | null;
   event_id: string;
   certificate_url: string | null;
+  certificate_id: string | null;
+  certificate_data: CertificateDataFromDB | null;
   validated_by: string | null;
   events: {
     id: string;
@@ -68,6 +97,8 @@ const MyMissions = () => {
           qr_token,
           event_id,
           certificate_url,
+          certificate_id,
+          certificate_data,
           validated_by,
           events!inner (
             id,
