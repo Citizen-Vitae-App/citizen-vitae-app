@@ -14,18 +14,9 @@ export function OrganizationsSection({ organizations }: OrganizationsSectionProp
     (org) => org.type === 'association' || org.type === 'foundation'
   );
 
+  // Don't render anything if user has no organizations
   if (organizations.length === 0) {
-    return (
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-muted-foreground" />
-          Mes organisations
-        </h2>
-        <div className="bg-muted/50 rounded-xl p-6 text-center text-muted-foreground">
-          <p>Vous n'êtes membre d'aucune organisation pour le moment.</p>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
