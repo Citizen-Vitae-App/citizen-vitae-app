@@ -37,7 +37,7 @@ export const useEventParticipants = (eventId: string | undefined) => {
           certification_start_at,
           certification_end_at,
           face_match_passed,
-          profiles!inner(
+          profiles!event_registrations_user_id_fkey(
             first_name,
             last_name,
             email,
@@ -84,7 +84,7 @@ export const useEventsParticipantCounts = (eventIds: string[]) => {
           certification_start_at,
           certification_end_at,
           face_match_passed,
-          profiles!inner(
+          profiles!event_registrations_user_id_fkey(
             first_name,
             last_name,
             email,
