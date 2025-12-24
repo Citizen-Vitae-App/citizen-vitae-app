@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { EventsTab } from '@/components/organization/EventsTab';
 import { PeopleTab } from '@/components/organization/PeopleTab';
+import { MembersTab } from '@/components/organization/MembersTab';
 import { OrganizationTab } from '@/components/organization/OrganizationTab';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
@@ -16,6 +17,7 @@ export default function OrganizationDashboard() {
         <div className="max-w-5xl mx-auto">
           {activeTab === 'events' && <EventsTab />}
           {activeTab === 'people' && <PeopleTab />}
+          {activeTab === 'members' && <MembersTab />}
           {activeTab === 'organization' && <OrganizationTab />}
         </div>
       </main>
