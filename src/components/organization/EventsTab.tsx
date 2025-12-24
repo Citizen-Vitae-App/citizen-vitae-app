@@ -110,7 +110,7 @@ export function EventsTab() {
   return <div className="space-y-4 md:space-y-6">
       {/* Header avec titre et boutons */}
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl md:text-3xl font-bold">My Events</h2>
+        
         <div className="flex items-center gap-2">
           <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
             <Link to="/organization/scan">
