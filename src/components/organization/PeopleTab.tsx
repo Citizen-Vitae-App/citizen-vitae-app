@@ -72,10 +72,10 @@ interface Participant {
 }
 
 interface Filters {
-  status: string | null;
-  missionsOperator: 'gte' | 'lte' | null;
+  statuses: string[];
+  missionsOperator: 'gte' | 'lte' | 'eq' | null;
   missionsValue: number | null;
-  certificatesOperator: 'gte' | 'lte' | null;
+  certificatesOperator: 'gte' | 'lte' | 'eq' | null;
   certificatesValue: number | null;
   dateOperator: 'before' | 'after' | null;
   dateValue: Date | null;
@@ -107,7 +107,7 @@ const getStatusBadge = (status: string, isPending?: boolean) => {
 export function PeopleTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
-    status: null,
+    statuses: [],
     missionsOperator: null,
     missionsValue: null,
     certificatesOperator: null,
@@ -350,16 +350,18 @@ export function PeopleTab() {
         if (!fullName.includes(query) && !email.includes(query)) return false;
       }
       
-      if (filters.status && p.last_status !== filters.status) return false;
+      if (filters.statuses.length > 0 && !filters.statuses.includes(p.last_status)) return false;
       
       if (filters.missionsOperator && filters.missionsValue !== null) {
         if (filters.missionsOperator === 'gte' && p.event_count < filters.missionsValue) return false;
         if (filters.missionsOperator === 'lte' && p.event_count > filters.missionsValue) return false;
+        if (filters.missionsOperator === 'eq' && p.event_count !== filters.missionsValue) return false;
       }
       
       if (filters.certificatesOperator && filters.certificatesValue !== null) {
         if (filters.certificatesOperator === 'gte' && p.tickets_scanned < filters.certificatesValue) return false;
         if (filters.certificatesOperator === 'lte' && p.tickets_scanned > filters.certificatesValue) return false;
+        if (filters.certificatesOperator === 'eq' && p.tickets_scanned !== filters.certificatesValue) return false;
       }
       
       if (filters.dateOperator && filters.dateValue) {
@@ -419,7 +421,7 @@ export function PeopleTab() {
 
   const clearFilters = () => {
     setFilters({
-      status: null,
+      statuses: [],
       missionsOperator: null,
       missionsValue: null,
       certificatesOperator: null,
@@ -429,7 +431,7 @@ export function PeopleTab() {
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== null);
+  const hasActiveFilters = filters.statuses.length > 0 || filters.missionsOperator !== null || filters.certificatesOperator !== null || filters.dateOperator !== null;
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
     const first = firstName?.[0] || '';
@@ -495,7 +497,7 @@ export function PeopleTab() {
     className?: string;
   }) => {
     const isActive = sortField === field;
-    const hasFilter = filterType === 'status' ? filters.status !== null :
+    const hasFilter = filterType === 'status' ? filters.statuses.length > 0 :
                      filterType === 'number' && field === 'missions' ? filters.missionsOperator !== null :
                      filterType === 'number' && field === 'certificates' ? filters.certificatesOperator !== null :
                      filterType === 'date' ? filters.dateOperator !== null : false;
@@ -533,35 +535,61 @@ export function PeopleTab() {
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer</DropdownMenuLabel>
                 
                 {filterType === 'status' && (
-                  <>
-                    <DropdownMenuItem onClick={() => setFilters(prev => ({ ...prev, status: null }))}>
-                      Tous
-                      {filters.status === null && <span className="ml-auto text-primary">✓</span>}
-                    </DropdownMenuItem>
-                    {availableStatuses.map(status => (
-                      <DropdownMenuItem key={status} onClick={() => setFilters(prev => ({ ...prev, status }))}>
-                        {status === 'registered' ? 'Inscrit' :
+                  <div className="p-2 space-y-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7"
+                      onClick={() => setFilters(prev => ({ ...prev, statuses: [] }))}
+                    >
+                      Réinitialiser
+                    </Button>
+                    {availableStatuses.map(status => {
+                      const isSelected = filters.statuses.includes(status);
+                      const statusLabel = status === 'registered' ? 'Inscrit' :
                          status === 'approved' ? 'Approuvé' :
                          status === 'attended' ? 'Présent' :
                          status === 'waitlist' ? 'Liste d\'attente' :
-                         status === 'pending' ? 'En attente' : status}
-                        {filters.status === status && <span className="ml-auto text-primary">✓</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </>
+                         status === 'pending' ? 'En attente' : status;
+                      return (
+                        <div 
+                          key={status} 
+                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
+                          onClick={() => {
+                            setFilters(prev => ({
+                              ...prev,
+                              statuses: isSelected 
+                                ? prev.statuses.filter(s => s !== status)
+                                : [...prev.statuses, status]
+                            }));
+                          }}
+                        >
+                          <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                            {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                          </div>
+                          <span className="text-sm">{statusLabel}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
                 
                 {filterType === 'number' && field === 'missions' && (
-                  <div className="p-2 space-y-2">
+                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                     <Select 
                       value={filters.missionsOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ ...prev, missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
+                      onValueChange={(v) => setFilters(prev => ({ 
+                        ...prev, 
+                        missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
+                        missionsValue: v === '_none' ? null : prev.missionsValue
+                      }))}
                     >
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Opérateur" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="eq">= Égal à</SelectItem>
                         <SelectItem value="gte">≥ Plus grand que</SelectItem>
                         <SelectItem value="lte">≤ Plus petit que</SelectItem>
                       </SelectContent>
@@ -575,21 +603,27 @@ export function PeopleTab() {
                         missionsValue: e.target.value ? parseInt(e.target.value) : null 
                       }))}
                       className="h-8"
+                      disabled={filters.missionsOperator === null}
                     />
                   </div>
                 )}
                 
                 {filterType === 'number' && field === 'certificates' && (
-                  <div className="p-2 space-y-2">
+                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                     <Select 
                       value={filters.certificatesOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ ...prev, certificatesOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
+                      onValueChange={(v) => setFilters(prev => ({ 
+                        ...prev, 
+                        certificatesOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
+                        certificatesValue: v === '_none' ? null : prev.certificatesValue
+                      }))}
                     >
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Opérateur" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="eq">= Égal à</SelectItem>
                         <SelectItem value="gte">≥ Plus grand que</SelectItem>
                         <SelectItem value="lte">≤ Plus petit que</SelectItem>
                       </SelectContent>
@@ -603,6 +637,7 @@ export function PeopleTab() {
                         certificatesValue: e.target.value ? parseInt(e.target.value) : null 
                       }))}
                       className="h-8"
+                      disabled={filters.certificatesOperator === null}
                     />
                   </div>
                 )}
@@ -840,24 +875,24 @@ export function PeopleTab() {
         </div>
       ) : (
         // Desktop: Table view
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead className="w-[160px]">
+                <TableHead className="min-w-[140px] w-[20%]">
                   <SortableColumnHeader label="Nom" field="name" />
                 </TableHead>
-                <TableHead className="w-[200px]">
+                <TableHead className="min-w-[180px] w-[25%]">
                   <SortableColumnHeader label="e-mail" field="email" />
                 </TableHead>
-                <TableHead className="w-[120px] pl-8">
+                <TableHead className="w-[110px] pl-6">
                   <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                 </TableHead>
-                <TableHead className="w-[70px]">
+                <TableHead className="w-[60px] text-left">
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
-                <TableHead className="w-[70px]">
+                <TableHead className="w-[60px] text-left">
                   <ColumnHeaderWithFilter 
                     label="Certif." 
                     field="certificates" 
@@ -865,7 +900,7 @@ export function PeopleTab() {
                     icon={<Award className="h-3.5 w-3.5" />}
                   />
                 </TableHead>
-                <TableHead className="w-[90px]">
+                <TableHead className="w-[90px] text-left">
                   <ColumnHeaderWithFilter 
                     label="Dern. part." 
                     field="lastParticipation" 
@@ -886,8 +921,8 @@ export function PeopleTab() {
                       </AvatarFallback>
                     </Avatar>
                   </TableCell>
-                  <TableCell className={`py-2 font-medium max-w-[140px] ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                    <span className="block truncate">
+                  <TableCell className={`py-2 font-medium ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                    <span className="block truncate max-w-[200px]">
                       {participant.is_pending_invitation
                         ? '—'
                         : participant.first_name && participant.last_name 
@@ -895,21 +930,21 @@ export function PeopleTab() {
                           : 'Non renseigné'}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 text-muted-foreground max-w-[180px]">
-                    <span className="block truncate">
+                  <TableCell className="py-2 text-muted-foreground">
+                    <span className="block truncate max-w-[250px]">
                       {participant.email || 'Non renseigné'}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 pl-8">
+                  <TableCell className="py-2 pl-6">
                     {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
-                  <TableCell className="py-2 font-medium">
+                  <TableCell className="py-2 font-medium text-left">
                     {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
-                  <TableCell className="py-2 font-medium">
+                  <TableCell className="py-2 font-medium text-left">
                     {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
                   </TableCell>
-                  <TableCell className="py-2 text-muted-foreground text-sm">
+                  <TableCell className="py-2 text-muted-foreground text-sm text-left">
                     {participant.is_pending_invitation 
                       ? '—'
                       : format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}
