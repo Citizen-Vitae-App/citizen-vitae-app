@@ -18,13 +18,17 @@ import { Upload, X, Mail, Loader2 } from 'lucide-react';
 interface InviteContributorsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  organizationId: string;
   organizationName: string;
+  userId?: string;
 }
 
 export function InviteContributorsDialog({ 
   open, 
   onOpenChange,
-  organizationName 
+  organizationId,
+  organizationName,
+  userId
 }: InviteContributorsDialogProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
@@ -122,8 +126,10 @@ export function InviteContributorsDialog({
       const { data, error } = await supabase.functions.invoke('send-invitation', {
         body: {
           emails,
+          organizationId,
           organizationName,
           customMessage: customMessage || undefined,
+          invitedBy: userId,
         },
       });
 

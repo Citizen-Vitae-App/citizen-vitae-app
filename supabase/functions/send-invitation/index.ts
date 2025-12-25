@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -9,10 +10,17 @@ const corsHeaders = {
 
 interface InvitationRequest {
   emails: string[];
+  organizationId: string;
   organizationName: string;
   customMessage?: string;
   subject?: string;
   isContactEmail?: boolean;
+  invitedBy?: string;
+}
+
+// Helper function to delay between emails to respect rate limits
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -23,7 +31,7 @@ async function sendEmail(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Citizen Vitae <onboarding@resend.dev>",
+      from: "Citizen Vitae <noreply@citizenvitae.com>",
       to: [to],
       subject,
       html,
@@ -49,7 +57,15 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const { emails, organizationName, customMessage, subject, isContactEmail }: InvitationRequest = await req.json();
+    const { 
+      emails, 
+      organizationId,
+      organizationName, 
+      customMessage, 
+      subject, 
+      isContactEmail,
+      invitedBy
+    }: InvitationRequest = await req.json();
 
     if (!emails || emails.length === 0) {
       throw new Error("No emails provided");
@@ -61,27 +77,57 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${isContactEmail ? 'contact email' : 'invitations'} to ${emails.length} recipients`);
 
-    const results = await Promise.all(
-      emails.map(async (email) => {
-        try {
-          const emailSubject = isContactEmail 
-            ? subject || `Message de ${organizationName}`
-            : `${organizationName} vous invite à rejoindre Citizen Vitae`;
+    // Create Supabase client with service role for inserting invitations
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-          const htmlContent = isContactEmail 
-            ? generateContactEmailHtml(organizationName, customMessage || '')
-            : generateInvitationEmailHtml(organizationName, customMessage);
+    const results: Array<{ email: string; success: boolean; id?: string; error?: string }> = [];
 
-          const response = await sendEmail(email, emailSubject, htmlContent);
+    // Send emails sequentially with delay to respect rate limits (2 req/sec)
+    for (const email of emails) {
+      try {
+        const emailSubject = isContactEmail 
+          ? subject || `Message de ${organizationName}`
+          : `${organizationName} vous invite à rejoindre Citizen Vitae`;
 
-          console.log(`Email sent successfully to ${email}:`, response);
-          return { email, success: true, id: response.id };
-        } catch (error: any) {
-          console.error(`Failed to send email to ${email}:`, error);
-          return { email, success: false, error: error.message };
+        const htmlContent = isContactEmail 
+          ? generateContactEmailHtml(organizationName, customMessage || '')
+          : generateInvitationEmailHtml(organizationName, customMessage);
+
+        const response = await sendEmail(email, emailSubject, htmlContent);
+        console.log(`Email sent successfully to ${email}:`, response);
+        
+        // If not a contact email, save the invitation to database
+        if (!isContactEmail && organizationId) {
+          const { error: insertError } = await supabase
+            .from('organization_invitations')
+            .upsert({
+              organization_id: organizationId,
+              email: email.toLowerCase(),
+              status: 'pending',
+              invited_by: invitedBy || null,
+              custom_message: customMessage || null,
+            }, {
+              onConflict: 'organization_id,email',
+            });
+
+          if (insertError) {
+            console.error(`Failed to save invitation for ${email}:`, insertError);
+          }
         }
-      })
-    );
+
+        results.push({ email, success: true, id: response.id });
+
+        // Wait 600ms between emails to stay under 2 req/sec limit
+        if (emails.indexOf(email) < emails.length - 1) {
+          await delay(600);
+        }
+      } catch (error: any) {
+        console.error(`Failed to send email to ${email}:`, error);
+        results.push({ email, success: false, error: error.message });
+      }
+    }
 
     const successful = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
@@ -156,7 +202,7 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="https://citizen-vitae.lovable.app/auth" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                      <a href="https://dev.citizenvitae.com/auth" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                         Créer mon compte
                       </a>
                     </div>
