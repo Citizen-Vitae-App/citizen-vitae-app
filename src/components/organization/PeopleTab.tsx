@@ -113,7 +113,7 @@ export function PeopleTab() {
   
   const isMobile = useIsMobile();
 
-  const { data: organization } = useQuery({
+  const { data: organizationData } = useQuery({
     queryKey: ['user-organization'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -125,9 +125,15 @@ export function PeopleTab() {
         .eq('user_id', user.id)
         .single();
       
-      return membership?.organizations || null;
+      return {
+        organization: membership?.organizations || null,
+        userId: user.id,
+      };
     }
   });
+
+  const organization = organizationData?.organization;
+  const currentUserId = organizationData?.userId;
 
   const { data: participants, isLoading } = useQuery({
     queryKey: ['organization-participants-detailed'],
@@ -749,7 +755,9 @@ export function PeopleTab() {
       <InviteContributorsDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
+        organizationId={organization?.id || ''}
         organizationName={organization?.name || 'Votre organisation'}
+        userId={currentUserId}
       />
 
       <ContributorContactDialog

@@ -317,6 +317,47 @@ export type Database = {
           },
         ]
       }
+      organization_invitations: {
+        Row: {
+          created_at: string
+          custom_message: string | null
+          email: string
+          id: string
+          invited_by: string | null
+          organization_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message?: string | null
+          email: string
+          id?: string
+          invited_by?: string | null
+          organization_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          custom_message?: string | null
+          email?: string
+          id?: string
+          invited_by?: string | null
+          organization_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string | null
