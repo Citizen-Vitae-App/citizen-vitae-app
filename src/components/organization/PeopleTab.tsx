@@ -416,14 +416,14 @@ export function PeopleTab() {
           {/* Filters */}
           <div className="flex flex-wrap gap-2">
             <Select 
-              value={filters.status || ''} 
-              onValueChange={(v) => setFilters(prev => ({ ...prev, status: v || null }))}
+              value={filters.status || '_all'} 
+              onValueChange={(v) => setFilters(prev => ({ ...prev, status: v === '_all' ? null : v }))}
             >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous</SelectItem>
+                <SelectItem value="_all">Tous</SelectItem>
                 {availableStatuses.map(status => (
                   <SelectItem key={status} value={status}>
                     {status === 'registered' ? 'Inscrit' :
@@ -452,14 +452,14 @@ export function PeopleTab() {
                     <label className="text-sm text-muted-foreground">Missions</label>
                     <div className="flex gap-2">
                       <Select 
-                        value={filters.missionsOperator || ''} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, missionsOperator: v as 'gte' | 'lte' || null }))}
+                        value={filters.missionsOperator || '_none'} 
+                        onValueChange={(v) => setFilters(prev => ({ ...prev, missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
                       >
                         <SelectTrigger className="w-24">
                           <SelectValue placeholder="Op." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="_none">-</SelectItem>
                           <SelectItem value="gte">≥</SelectItem>
                           <SelectItem value="lte">≤</SelectItem>
                         </SelectContent>
@@ -482,14 +482,14 @@ export function PeopleTab() {
                     <label className="text-sm text-muted-foreground">Scannées</label>
                     <div className="flex gap-2">
                       <Select 
-                        value={filters.scannedOperator || ''} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, scannedOperator: v as 'gte' | 'lte' || null }))}
+                        value={filters.scannedOperator || '_none'} 
+                        onValueChange={(v) => setFilters(prev => ({ ...prev, scannedOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
                       >
                         <SelectTrigger className="w-24">
                           <SelectValue placeholder="Op." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="_none">-</SelectItem>
                           <SelectItem value="gte">≥</SelectItem>
                           <SelectItem value="lte">≤</SelectItem>
                         </SelectContent>
@@ -512,14 +512,14 @@ export function PeopleTab() {
                     <label className="text-sm text-muted-foreground">Dernière participation</label>
                     <div className="flex gap-2">
                       <Select 
-                        value={filters.dateOperator || ''} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, dateOperator: v as 'before' | 'after' || null }))}
+                        value={filters.dateOperator || '_none'} 
+                        onValueChange={(v) => setFilters(prev => ({ ...prev, dateOperator: v === '_none' ? null : v as 'before' | 'after' }))}
                       >
                         <SelectTrigger className="w-24">
                           <SelectValue placeholder="Op." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="_none">-</SelectItem>
                           <SelectItem value="before">Avant</SelectItem>
                           <SelectItem value="after">Après</SelectItem>
                         </SelectContent>
