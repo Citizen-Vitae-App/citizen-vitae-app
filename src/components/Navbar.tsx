@@ -34,7 +34,7 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   
   const tabs = activeTab && onTabChange ? [
     { value: 'events', label: 'Events' },
-    { value: 'people', label: 'People' },
+    { value: 'people', label: 'Contributeurs' },
     { value: 'members', label: 'Members' },
     { value: 'organization', label: 'Organization' }
   ] : null;
