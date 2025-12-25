@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Clock, UserCheck, AlertCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,49 +31,66 @@ export default function ScanParticipant() {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<ScanResult | null>(null);
+  
+  // Track last processed token to prevent duplicate processing
+  const lastProcessedTokenRef = useRef<string | null>(null);
 
   const handleScan = useCallback(async (qrContent: string) => {
     if (isProcessing) return;
     
-    setIsProcessing(true);
-    setLastResult(null);
-    
     console.log('[QR-SCAN] Raw content:', qrContent);
     
-    try {
-      let qrToken: string;
-      
-      // Check if it's a URL (from CertificationQRCode component)
-      if (qrContent.includes('/verify/') && qrContent.includes('token=')) {
-        try {
-          const url = new URL(qrContent);
-          qrToken = url.searchParams.get('token') || '';
-          console.log('[QR-SCAN] Extracted token from URL:', qrToken);
-        } catch {
-          qrToken = qrContent;
-        }
-      } else {
-        // Try parsing as JSON
-        try {
-          const parsed = JSON.parse(qrContent);
-          qrToken = parsed.qr_token || parsed.token || qrContent;
-          console.log('[QR-SCAN] Parsed from JSON:', qrToken);
-        } catch {
-          // Assume it's the raw token
-          qrToken = qrContent;
-          console.log('[QR-SCAN] Using raw content as token');
-        }
+    let qrToken: string;
+    
+    // Extract token from content
+    if (qrContent.includes('/verify/') && qrContent.includes('token=')) {
+      try {
+        const url = new URL(qrContent);
+        qrToken = url.searchParams.get('token') || '';
+        console.log('[QR-SCAN] Extracted token from URL:', qrToken.substring(0, 20) + '...');
+      } catch {
+        qrToken = qrContent;
       }
-      
-      if (!qrToken) {
-        throw new Error('QR code invalide - token manquant');
+    } else {
+      try {
+        const parsed = JSON.parse(qrContent);
+        qrToken = parsed.qr_token || parsed.token || qrContent;
+        console.log('[QR-SCAN] Parsed from JSON:', qrToken.substring(0, 20) + '...');
+      } catch {
+        qrToken = qrContent;
+        console.log('[QR-SCAN] Using raw content as token');
       }
+    }
+    
+    if (!qrToken) {
+      setLastResult({
+        success: false,
+        error: 'QR code invalide - token manquant',
+      });
+      return;
+    }
 
-      // Our QR tokens are long (secure random). Short tokens usually mean a non-app/test QR code.
-      if (qrToken.length < 20) {
-        throw new Error('QR code invalide : ce QR ne semble pas provenir de Citizen Vitae');
-      }
-      
+    // Check for duplicate token processing
+    if (qrToken === lastProcessedTokenRef.current) {
+      console.log('[QR-SCAN] Ignoring duplicate token - already processed');
+      return;
+    }
+    
+    // Our QR tokens are long (secure random). Short tokens usually mean a non-app/test QR code.
+    if (qrToken.length < 20) {
+      setLastResult({
+        success: false,
+        error: 'QR code invalide : ce QR ne semble pas provenir de Citizen Vitae',
+      });
+      return;
+    }
+    
+    // Mark as processing and store token
+    setIsProcessing(true);
+    setLastResult(null);
+    lastProcessedTokenRef.current = qrToken;
+    
+    try {
       const { data, error } = await supabase.functions.invoke('didit-verification', {
         body: {
           action: 'verify-qr-code',
