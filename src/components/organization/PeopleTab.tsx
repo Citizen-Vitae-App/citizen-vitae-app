@@ -36,7 +36,7 @@ import {
   Award, 
   Search, 
   UserPlus, 
-  MoreHorizontal, 
+  MoreVertical, 
   Eye, 
   Mail,
   ArrowUp,
@@ -46,7 +46,9 @@ import {
   TrendingUp,
   CalendarIcon,
   RefreshCw,
-  Clock
+  Clock,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContributorProfilePanel } from './ContributorProfilePanel';
@@ -451,7 +453,34 @@ export function PeopleTab() {
     resendInvitation.mutate(email);
   };
 
-  // Column header with filter dropdown
+  // Simple sortable column header (name & email - no filter dropdown)
+  const SortableColumnHeader = ({ 
+    label, 
+    field, 
+    className = ""
+  }: { 
+    label: string; 
+    field: SortField;
+    className?: string;
+  }) => {
+    const isActive = sortField === field;
+
+    return (
+      <button 
+        onClick={() => toggleSort(field)}
+        className={`flex items-center gap-1 hover:text-foreground transition-colors ${className}`}
+      >
+        <span className="whitespace-nowrap">{label}</span>
+        {isActive && (
+          sortDirection === 'asc' 
+            ? <ChevronUp className="h-4 w-4" />
+            : <ChevronDown className="h-4 w-4" />
+        )}
+      </button>
+    );
+  };
+
+  // Column header with filter dropdown (shown on hover)
   const ColumnHeaderWithFilter = ({ 
     label, 
     field, 
@@ -472,13 +501,17 @@ export function PeopleTab() {
                      filterType === 'date' ? filters.dateOperator !== null : false;
 
     return (
-      <div className={`flex items-center gap-1 ${className}`}>
+      <div className={`flex items-center gap-1 group ${className}`}>
         {icon}
-        <span>{label}</span>
+        <span className="whitespace-nowrap">{label}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6 ml-1">
-              <MoreHorizontal className={`h-4 w-4 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-5 w-5 ml-0.5 ${isActive || hasFilter ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+            >
+              <MoreVertical className={`h-3.5 w-3.5 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
@@ -758,7 +791,7 @@ export function PeopleTab() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -807,16 +840,16 @@ export function PeopleTab() {
         </div>
       ) : (
         // Desktop: Table view
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-14">Photo</TableHead>
-                <TableHead>
-                  <ColumnHeaderWithFilter label="Nom complet" field="name" />
+                <TableHead className="w-10"></TableHead>
+                <TableHead className="max-w-[140px]">
+                  <SortableColumnHeader label="Nom" field="name" />
                 </TableHead>
-                <TableHead>
-                  <ColumnHeaderWithFilter label="Email" field="email" />
+                <TableHead className="max-w-[180px]">
+                  <SortableColumnHeader label="Email" field="email" />
                 </TableHead>
                 <TableHead>
                   <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
@@ -826,64 +859,68 @@ export function PeopleTab() {
                 </TableHead>
                 <TableHead className="text-right">
                   <ColumnHeaderWithFilter 
-                    label="Certificats" 
+                    label="Certif." 
                     field="certificates" 
                     filterType="number" 
-                    icon={<Award className="h-4 w-4" />}
+                    icon={<Award className="h-3.5 w-3.5" />}
                     className="justify-end"
                   />
                 </TableHead>
                 <TableHead className="text-right">
                   <ColumnHeaderWithFilter 
-                    label="Dernière participation" 
+                    label="Dern. part." 
                     field="lastParticipation" 
                     filterType="date"
                     className="justify-end"
                   />
                 </TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredParticipants.map(participant => (
                 <TableRow key={participant.user_id}>
-                  <TableCell>
-                    <Avatar className={`h-10 w-10 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
+                  <TableCell className="py-2">
+                    <Avatar className={`h-8 w-8 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
                       <AvatarImage src={participant.avatar_url || undefined} />
                       <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
-                        {participant.is_pending_invitation ? <Clock className="h-4 w-4" /> : getInitials(participant.first_name, participant.last_name)}
+                        {participant.is_pending_invitation ? <Clock className="h-3.5 w-3.5" /> : getInitials(participant.first_name, participant.last_name)}
                       </AvatarFallback>
                     </Avatar>
                   </TableCell>
-                  <TableCell className={`font-medium ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                    {participant.is_pending_invitation
-                      ? '—'
-                      : participant.first_name && participant.last_name 
-                        ? `${participant.first_name} ${participant.last_name}` 
-                        : 'Nom non renseigné'}
+                  <TableCell className={`py-2 font-medium max-w-[140px] ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                    <span className="block truncate">
+                      {participant.is_pending_invitation
+                        ? '—'
+                        : participant.first_name && participant.last_name 
+                          ? `${participant.first_name} ${participant.last_name}` 
+                          : 'Non renseigné'}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {participant.email || 'Email non renseigné'}
+                  <TableCell className="py-2 text-muted-foreground max-w-[180px]">
+                    <span className="block truncate">
+                      {participant.email || 'Non renseigné'}
+                    </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="py-2 text-right font-medium">
                     {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="py-2 text-right font-medium">
                     {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="py-2 text-right text-muted-foreground text-sm">
                     {participant.is_pending_invitation 
                       ? '—'
-                      : format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
+                      : format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
