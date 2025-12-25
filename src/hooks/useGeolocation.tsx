@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 interface GeolocationState {
   latitude: number | null;
@@ -7,6 +7,36 @@ interface GeolocationState {
   isLoading: boolean;
   permissionDenied: boolean;
 }
+
+// Detect platform for better error messages
+const getDeviceInfo = () => {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isChrome = /Chrome/.test(ua) && !/(Edge|Edg)/.test(ua);
+  
+  return { isIOS, isAndroid, isSafari, isChrome };
+};
+
+const getPermissionDeniedMessage = (): string => {
+  const { isIOS, isAndroid, isChrome } = getDeviceInfo();
+  
+  if (isIOS) {
+    return 'Géolocalisation refusée. Pour l\'activer : Réglages > Confidentialité > Service de localisation > Safari > "Lors de l\'utilisation"';
+  }
+  
+  if (isAndroid && isChrome) {
+    return 'Géolocalisation refusée. Appuyez sur le cadenas 🔒 à côté de l\'URL, puis sur "Autorisations" et activez "Position"';
+  }
+  
+  if (isAndroid) {
+    return 'Géolocalisation refusée. Allez dans les paramètres de votre navigateur pour autoriser la position';
+  }
+  
+  // Desktop Chrome/Firefox/Edge
+  return 'Géolocalisation refusée. Cliquez sur le cadenas 🔒 dans la barre d\'adresse, puis activez "Position"';
+};
 
 export const useGeolocation = () => {
   const [state, setState] = useState<GeolocationState>({
@@ -29,12 +59,11 @@ export const useGeolocation = () => {
 
     setState(prev => ({ ...prev, isLoading: true, error: null, permissionDenied: false }));
 
-    // Detect iOS/Safari for adjusted timeout
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const { isIOS } = getDeviceInfo();
     
     const options: PositionOptions = {
       enableHighAccuracy: true,
-      timeout: isIOS ? 15000 : 10000, // More time for iOS
+      timeout: isIOS ? 15000 : 10000,
       maximumAge: 60000,
     };
 
@@ -55,18 +84,13 @@ export const useGeolocation = () => {
         switch (error.code) {
           case error.PERMISSION_DENIED:
             permissionDenied = true;
-            // Different message for iOS Safari (settings guidance)
-            if (isIOS) {
-              errorMessage = 'Accès refusé. Allez dans Réglages > Safari > Localisation pour réactiver.';
-            } else {
-              errorMessage = 'Accès refusé. Cliquez sur le cadenas dans la barre d\'adresse pour réactiver.';
-            }
+            errorMessage = getPermissionDeniedMessage();
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Position non disponible';
+            errorMessage = 'Position non disponible. Vérifiez que le GPS est activé sur votre appareil.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Délai d\'attente dépassé. Réessayez.';
+            errorMessage = 'Délai d\'attente dépassé. Réessayez dans un endroit avec une meilleure réception.';
             break;
         }
 

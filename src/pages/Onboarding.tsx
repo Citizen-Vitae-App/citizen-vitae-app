@@ -9,6 +9,7 @@ import { IdentityVerificationCard } from '@/components/IdentityVerificationCard'
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MapPin, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface CauseTheme {
   id: string;
@@ -28,6 +29,10 @@ export default function Onboarding() {
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasGoogleData, setHasGoogleData] = useState(false);
+  
+  // Geolocation state
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'error'>('idle');
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   // Thèmes par défaut au cas où la base ne renvoie rien
   const defaultThemes: CauseTheme[] = [
@@ -132,10 +137,64 @@ export default function Onboarding() {
 
   const handleStep2 = () => {
     // Step 2: Identity verification - user can proceed, verification is optional during onboarding
-    setStep(3);
+    setStep(3); // Go to geolocation step
+  };
+
+  // Request geolocation permission
+  const requestGeolocation = async () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      setGeoError('La géolocalisation n\'est pas supportée par votre navigateur');
+      return;
+    }
+
+    setGeoStatus('requesting');
+    setGeoError(null);
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    navigator.geolocation.getCurrentPosition(
+      async () => {
+        // Success - save preference
+        setGeoStatus('granted');
+        
+        // Save to user_preferences
+        if (user?.id) {
+          await supabase
+            .from('user_preferences')
+            .upsert({
+              user_id: user.id,
+              geolocation_enabled: true,
+            }, { onConflict: 'user_id' });
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeoStatus('denied');
+          if (isIOS) {
+            setGeoError('Accès refusé. Allez dans Réglages > Confidentialité > Service de localisation > Safari et autorisez l\'accès.');
+          } else {
+            setGeoError('Accès refusé. Cliquez sur le cadenas 🔒 dans la barre d\'adresse, puis activez "Position".');
+          }
+        } else {
+          setGeoStatus('error');
+          setGeoError('Impossible d\'obtenir votre position. Réessayez.');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: isIOS ? 15000 : 10000,
+        maximumAge: 60000,
+      }
+    );
   };
 
   const handleStep3 = async () => {
+    // Step 3: Geolocation - user can skip or enable
+    setStep(4); // Go to date of birth
+  };
+
+  const handleStep4 = async () => {
     if (!day || !month || !year) {
       toast.error('Veuillez sélectionner votre date de naissance complète');
       return;
@@ -155,7 +214,7 @@ export default function Onboarding() {
     }
 
     setIsLoading(false);
-    setStep(4);
+    setStep(5);
   };
 
   const handleFinish = async () => {
@@ -238,9 +297,9 @@ export default function Onboarding() {
       </div>
 
       <div className="w-full max-w-2xl bg-background rounded-2xl shadow-lg p-8">
-        {/* Progress indicator - now 4 steps */}
+        {/* Progress indicator - now 5 steps */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <div 
               key={s}
               className={`h-2 w-12 rounded-full transition-colors ${
@@ -333,8 +392,98 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 3: Date of Birth */}
+        {/* Step 3: Geolocation */}
         {step === 3 && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Géolocalisation</h1>
+              <p className="text-muted-foreground">
+                Pour certifier votre présence sur place lors des missions, nous avons besoin d'accéder à votre position
+              </p>
+            </div>
+
+            <div className="bg-muted/30 rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Pourquoi la géolocalisation ?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Elle permet de vérifier que vous êtes bien sur le lieu de la mission pour valider votre participation
+                  </p>
+                </div>
+              </div>
+
+              {geoStatus === 'idle' && (
+                <Button 
+                  onClick={requestGeolocation} 
+                  className="w-full"
+                  size="lg"
+                >
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Activer la géolocalisation
+                </Button>
+              )}
+
+              {geoStatus === 'requesting' && (
+                <div className="flex items-center justify-center gap-2 p-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Demande d'autorisation...</span>
+                </div>
+              )}
+
+              {geoStatus === 'granted' && (
+                <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-700 dark:text-green-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Géolocalisation activée avec succès !</span>
+                </div>
+              )}
+
+              {(geoStatus === 'denied' || geoStatus === 'error') && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-700 dark:text-amber-400">
+                    <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+                    <span className="text-sm">{geoError}</span>
+                  </div>
+                  <Button 
+                    onClick={requestGeolocation} 
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Réessayer
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground text-center">
+              Vous pourrez modifier ce paramètre à tout moment dans vos réglages
+            </p>
+
+            <div className="flex gap-4">
+              <Button 
+                onClick={() => setStep(2)} 
+                variant="outline"
+                className="w-full" 
+                size="lg"
+              >
+                Retour
+              </Button>
+              <Button 
+                onClick={handleStep3} 
+                className="w-full" 
+                size="lg"
+                variant={geoStatus === 'granted' ? "default" : "outline"}
+              >
+                {geoStatus === 'granted' ? 'Continuer' : 'Passer cette étape'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Date of Birth */}
+        {step === 4 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold mb-2">Date de naissance</h1>
@@ -393,7 +542,7 @@ export default function Onboarding() {
 
             <div className="flex gap-4">
               <Button 
-                onClick={() => setStep(2)} 
+                onClick={() => setStep(3)} 
                 variant="outline"
                 className="w-full" 
                 size="lg"
@@ -401,7 +550,7 @@ export default function Onboarding() {
                 Retour
               </Button>
               <Button 
-                onClick={handleStep3} 
+                onClick={handleStep4} 
                 className="w-full" 
                 size="lg"
                 disabled={isLoading}
@@ -412,8 +561,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 4: Cause Themes */}
-        {step === 4 && (
+        {/* Step 5: Cause Themes */}
+        {step === 5 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold mb-2">Vos centres d'intérêt</h1>
@@ -440,7 +589,7 @@ export default function Onboarding() {
 
             <div className="flex gap-4">
               <Button 
-                onClick={() => setStep(3)} 
+                onClick={() => setStep(4)} 
                 variant="outline"
                 className="w-full" 
                 size="lg"

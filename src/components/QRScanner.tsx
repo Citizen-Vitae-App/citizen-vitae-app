@@ -8,12 +8,19 @@ interface QRScannerProps {
   isProcessing?: boolean;
 }
 
+// Cooldown duration in ms to prevent multi-scans
+const SCAN_COOLDOWN_MS = 2000;
+
 export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
   const [isStarted, setIsStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isMountedRef = useRef(true);
   const scannerContainerId = useRef(`qr-reader-${Date.now()}`);
+  
+  // Anti-duplicate scan tracking
+  const lastScannedTokenRef = useRef<string | null>(null);
+  const lastScanTimeRef = useRef<number>(0);
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current;
@@ -42,6 +49,10 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
     // Stop any existing scanner first
     await stopScanner();
     
+    // Reset scan tracking when starting fresh
+    lastScannedTokenRef.current = null;
+    lastScanTimeRef.current = 0;
+    
     const containerId = scannerContainerId.current;
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -54,19 +65,44 @@ export function QRScanner({ onScan, isProcessing }: QRScannerProps) {
       await scanner.start(
         { facingMode: 'environment' },
         {
-          fps: 15,
+          fps: 10, // Reduced from 15 to prevent rapid scans
           qrbox: { width: 200, height: 200 },
           aspectRatio: 1,
           disableFlip: false,
         },
         (decodedText) => {
-          console.log('[QR-SCANNER] Decoded:', decodedText);
-          if (!isProcessing && isMountedRef.current) {
+          const now = Date.now();
+          
+          // Check cooldown - ignore if within cooldown period
+          if (now - lastScanTimeRef.current < SCAN_COOLDOWN_MS) {
+            console.log('[QR-SCANNER] Ignoring scan - cooldown active');
+            return;
+          }
+          
+          // Check for duplicate token
+          if (decodedText === lastScannedTokenRef.current) {
+            console.log('[QR-SCANNER] Ignoring duplicate token');
+            return;
+          }
+          
+          // Check if already processing
+          if (isProcessing) {
+            console.log('[QR-SCANNER] Ignoring scan - still processing');
+            return;
+          }
+          
+          // Valid new scan - update tracking
+          lastScannedTokenRef.current = decodedText;
+          lastScanTimeRef.current = now;
+          
+          console.log('[QR-SCANNER] New scan accepted:', decodedText.substring(0, 30) + '...');
+          
+          if (isMountedRef.current) {
             onScan(decodedText);
           }
         },
         () => {
-          // Ignore errors during scanning
+          // Ignore errors during scanning (no QR found is normal)
         }
       );
       

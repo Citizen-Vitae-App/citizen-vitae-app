@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Info, CheckCircle2, Loader2, QrCode, Shield } from 'lucide-react';
+import { Info, CheckCircle2, Loader2, QrCode, Shield, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -30,6 +30,8 @@ export const MissionCertificationButton = ({
     latitude: userLatitude,
     longitude: userLongitude,
     isLoading: isLoadingLocation,
+    error: locationError,
+    permissionDenied,
     requestLocation,
   } = useGeolocation();
 
@@ -64,7 +66,6 @@ export const MissionCertificationButton = ({
   }
 
   const handleGeolocationClick = (e: React.MouseEvent) => {
-    // Only preventDefault, no stopPropagation - Safari needs direct user interaction
     e.preventDefault();
     requestLocation();
   };
@@ -75,17 +76,44 @@ export const MissionCertificationButton = ({
       return <p className="text-muted-foreground">{timeMessage}</p>;
     }
     
+    // Geolocation denied or error - show detailed message
+    if (permissionDenied || locationError) {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <MapPin className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+            <p className="text-sm text-destructive">
+              {locationError || 'Géolocalisation désactivée'}
+            </p>
+          </div>
+          <Button
+            onClick={handleGeolocationClick}
+            size="sm"
+            variant="outline"
+            className="w-full"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Réessayer
+          </Button>
+        </div>
+      );
+    }
+    
     if (needsGeolocation) {
       return (
-        <p className="text-muted-foreground">
-          Position non disponible.{' '}
-          <button
+        <div className="space-y-3">
+          <p className="text-muted-foreground">
+            Position non disponible. Activez la géolocalisation pour certifier votre présence.
+          </p>
+          <Button
             onClick={handleGeolocationClick}
-            className="text-primary underline hover:text-primary/80 transition-colors"
+            size="sm"
+            className="w-full"
           >
-            Activez la géolocalisation
-          </button>
-        </p>
+            <MapPin className="h-4 w-4 mr-2" />
+            Activer la géolocalisation
+          </Button>
+        </div>
       );
     }
     
@@ -141,7 +169,7 @@ export const MissionCertificationButton = ({
             <Info className="h-5 w-5 text-orange-500" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 text-sm" side="top">
+        <PopoverContent className="w-80 text-sm" side="top">
           {renderInfoMessage()}
         </PopoverContent>
       </Popover>

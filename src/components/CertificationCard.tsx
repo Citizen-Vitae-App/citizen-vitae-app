@@ -232,11 +232,15 @@ export const CertificationCard = ({
                     <span className="text-sm">Vérification de votre position...</span>
                   </div>
                 ) : permissionDenied ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-start gap-2 text-destructive bg-destructive/10 rounded-md p-3">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                      <span className="text-sm">Accès à la position refusé. Autorisez la géolocalisation dans les paramètres de votre navigateur.</span>
+                      <span className="text-sm">{locationError || 'Géolocalisation désactivée. Activez-la dans les paramètres de votre navigateur.'}</span>
                     </div>
+                    <Button variant="outline" size="sm" onClick={handleRetryLocation} className="w-full">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Réactiver la localisation
+                    </Button>
                   </div>
                 ) : locationError ? (
                   <div className="space-y-2">
