@@ -845,33 +845,31 @@ export function PeopleTab() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead className="max-w-[140px]">
+                <TableHead className="w-[160px]">
                   <SortableColumnHeader label="Nom" field="name" />
                 </TableHead>
-                <TableHead className="max-w-[180px]">
-                  <SortableColumnHeader label="Email" field="email" />
+                <TableHead className="w-[200px]">
+                  <SortableColumnHeader label="e-mail" field="email" />
                 </TableHead>
-                <TableHead>
+                <TableHead className="w-[120px] pl-8">
                   <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                 </TableHead>
-                <TableHead className="text-right">
-                  <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" className="justify-end" />
+                <TableHead className="w-[70px]">
+                  <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="w-[70px]">
                   <ColumnHeaderWithFilter 
                     label="Certif." 
                     field="certificates" 
                     filterType="number" 
                     icon={<Award className="h-3.5 w-3.5" />}
-                    className="justify-end"
                   />
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="w-[90px]">
                   <ColumnHeaderWithFilter 
                     label="Dern. part." 
                     field="lastParticipation" 
                     filterType="date"
-                    className="justify-end"
                   />
                 </TableHead>
                 <TableHead className="w-10"></TableHead>
@@ -902,16 +900,16 @@ export function PeopleTab() {
                       {participant.email || 'Non renseigné'}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 pl-8">
                     {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
-                  <TableCell className="py-2 text-right font-medium">
+                  <TableCell className="py-2 font-medium">
                     {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
-                  <TableCell className="py-2 text-right font-medium">
+                  <TableCell className="py-2 font-medium">
                     {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
                   </TableCell>
-                  <TableCell className="py-2 text-right text-muted-foreground text-sm">
+                  <TableCell className="py-2 text-muted-foreground text-sm">
                     {participant.is_pending_invitation 
                       ? '—'
                       : format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}

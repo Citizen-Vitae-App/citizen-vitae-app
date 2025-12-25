@@ -100,20 +100,48 @@ const handler = async (req: Request): Promise<Response> => {
         
         // If not a contact email, save the invitation to database
         if (!isContactEmail && organizationId) {
-          const { error: insertError } = await supabase
+          // Check if invitation already exists
+          const { data: existing } = await supabase
             .from('organization_invitations')
-            .upsert({
-              organization_id: organizationId,
-              email: email.toLowerCase(),
-              status: 'pending',
-              invited_by: invitedBy || null,
-              custom_message: customMessage || null,
-            }, {
-              onConflict: 'organization_id,email',
-            });
+            .select('id')
+            .eq('organization_id', organizationId)
+            .eq('email', email.toLowerCase())
+            .maybeSingle();
 
-          if (insertError) {
-            console.error(`Failed to save invitation for ${email}:`, insertError);
+          if (existing) {
+            // Update existing invitation
+            const { error: updateError } = await supabase
+              .from('organization_invitations')
+              .update({
+                status: 'pending',
+                invited_by: invitedBy || null,
+                custom_message: customMessage || null,
+                created_at: new Date().toISOString(),
+              })
+              .eq('id', existing.id);
+
+            if (updateError) {
+              console.error(`Failed to update invitation for ${email}:`, updateError);
+            } else {
+              console.log(`Updated existing invitation for ${email}`);
+            }
+          } else {
+            // Insert new invitation
+            const { error: insertError } = await supabase
+              .from('organization_invitations')
+              .insert({
+                organization_id: organizationId,
+                email: email.toLowerCase(),
+                status: 'pending',
+                invited_by: invitedBy || null,
+                custom_message: customMessage || null,
+              });
+
+            if (insertError) {
+              console.error(`Failed to save invitation for ${email}:`, insertError);
+            } else {
+              console.log(`Created new invitation for ${email}`);
+            }
           }
         }
 
