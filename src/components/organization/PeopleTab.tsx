@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,7 +10,9 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import {
   Select,
@@ -31,25 +33,26 @@ import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
   Users, 
-  Ticket, 
+  Award, 
   Search, 
   UserPlus, 
   MoreHorizontal, 
   Eye, 
   Mail,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Filter,
   Info,
   TrendingUp,
   CalendarIcon,
-  X
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContributorProfilePanel } from './ContributorProfilePanel';
 import { InviteContributorsDialog } from './InviteContributorsDialog';
 import { ContributorContactDialog } from './ContributorContactDialog';
+import { toast } from 'sonner';
 
 interface Participant {
   user_id: string;
@@ -62,22 +65,27 @@ interface Participant {
   last_participation: string;
   last_status: string;
   first_registered_at: string;
+  is_pending_invitation?: boolean;
+  invitation_id?: string;
 }
 
 interface Filters {
   status: string | null;
   missionsOperator: 'gte' | 'lte' | null;
   missionsValue: number | null;
-  scannedOperator: 'gte' | 'lte' | null;
-  scannedValue: number | null;
+  certificatesOperator: 'gte' | 'lte' | null;
+  certificatesValue: number | null;
   dateOperator: 'before' | 'after' | null;
   dateValue: Date | null;
 }
 
-type SortField = 'name' | 'email' | null;
+type SortField = 'name' | 'email' | 'status' | 'missions' | 'certificates' | 'lastParticipation' | null;
 type SortDirection = 'asc' | 'desc';
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, isPending?: boolean) => {
+  if (isPending) {
+    return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">En attente</Badge>;
+  }
   switch (status) {
     case 'registered':
       return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Inscrit</Badge>;
@@ -87,6 +95,8 @@ const getStatusBadge = (status: string) => {
       return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">Présent</Badge>;
     case 'waitlist':
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Liste d'attente</Badge>;
+    case 'pending':
+      return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">En attente</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -98,8 +108,8 @@ export function PeopleTab() {
     status: null,
     missionsOperator: null,
     missionsValue: null,
-    scannedOperator: null,
-    scannedValue: null,
+    certificatesOperator: null,
+    certificatesValue: null,
     dateOperator: null,
     dateValue: null,
   });
@@ -112,6 +122,7 @@ export function PeopleTab() {
   const [contactContributor, setContactContributor] = useState<Participant | null>(null);
   
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
   const { data: organizationData } = useQuery({
     queryKey: ['user-organization'],
@@ -134,6 +145,24 @@ export function PeopleTab() {
 
   const organization = organizationData?.organization;
   const currentUserId = organizationData?.userId;
+
+  // Fetch pending invitations
+  const { data: pendingInvitations } = useQuery({
+    queryKey: ['organization-invitations', organization?.id],
+    queryFn: async () => {
+      if (!organization?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('organization_invitations')
+        .select('*')
+        .eq('organization_id', organization.id)
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!organization?.id
+  });
 
   const { data: participants, isLoading } = useQuery({
     queryKey: ['organization-participants-detailed'],
@@ -211,11 +240,65 @@ export function PeopleTab() {
     }
   });
 
+  // Combine participants and pending invitations
+  const allContributors = useMemo(() => {
+    const contributors: Participant[] = [...(participants || [])];
+    
+    // Add pending invitations as contributors
+    pendingInvitations?.forEach(invitation => {
+      // Check if email is not already in participants
+      const emailExists = contributors.some(p => p.email === invitation.email);
+      if (!emailExists) {
+        contributors.push({
+          user_id: `invitation-${invitation.id}`,
+          first_name: null,
+          last_name: null,
+          email: invitation.email,
+          avatar_url: null,
+          event_count: 0,
+          tickets_scanned: 0,
+          last_participation: invitation.created_at,
+          last_status: 'pending',
+          first_registered_at: invitation.created_at,
+          is_pending_invitation: true,
+          invitation_id: invitation.id,
+        });
+      }
+    });
+    
+    return contributors;
+  }, [participants, pendingInvitations]);
+
+  // Resend invitation mutation
+  const resendInvitation = useMutation({
+    mutationFn: async (email: string) => {
+      const { data, error } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          emails: [email],
+          organizationName: organization?.name || 'Votre organisation',
+          organizationId: organization?.id,
+          invitedBy: currentUserId,
+        }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Invitation renvoyée avec succès');
+    },
+    onError: (error) => {
+      console.error('Error resending invitation:', error);
+      toast.error('Erreur lors du renvoi de l\'invitation');
+    }
+  });
+
   // Calculate KPIs
   const kpis = useMemo(() => {
-    if (!participants) return { total: 0, engagementRate: 0, newThisMonth: 0, growthPercent: null };
+    if (!participants) return { total: 0, engagementRate: 0, newThisMonth: 0, growthPercent: null, pendingCount: 0 };
     
     const total = participants.length;
+    const pendingCount = pendingInvitations?.length || 0;
     const totalMissions = participants.reduce((sum, p) => sum + p.event_count, 0);
     const totalScanned = participants.reduce((sum, p) => sum + p.tickets_scanned, 0);
     const engagementRate = totalMissions > 0 ? Math.round((totalScanned / totalMissions) * 100) : 0;
@@ -240,20 +323,24 @@ export function PeopleTab() {
       ? Math.round(((newThisMonth - newLastMonth) / newLastMonth) * 100)
       : newThisMonth > 0 ? 100 : null;
     
-    return { total, engagementRate, newThisMonth, growthPercent };
-  }, [participants]);
+    return { total, engagementRate, newThisMonth, growthPercent, pendingCount };
+  }, [participants, pendingInvitations]);
 
   // Get unique statuses
   const availableStatuses = useMemo(() => {
-    if (!participants) return [];
-    return [...new Set(participants.map(p => p.last_status))];
-  }, [participants]);
+    if (!allContributors) return [];
+    const statuses = [...new Set(allContributors.map(p => p.last_status))];
+    if (!statuses.includes('pending') && (pendingInvitations?.length || 0) > 0) {
+      statuses.push('pending');
+    }
+    return statuses;
+  }, [allContributors, pendingInvitations]);
 
-  // Filter and sort participants
+  // Filter and sort contributors
   const filteredParticipants = useMemo(() => {
-    if (!participants) return [];
+    if (!allContributors) return [];
     
-    let result = participants.filter(p => {
+    let result = allContributors.filter(p => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
@@ -268,9 +355,9 @@ export function PeopleTab() {
         if (filters.missionsOperator === 'lte' && p.event_count > filters.missionsValue) return false;
       }
       
-      if (filters.scannedOperator && filters.scannedValue !== null) {
-        if (filters.scannedOperator === 'gte' && p.tickets_scanned < filters.scannedValue) return false;
-        if (filters.scannedOperator === 'lte' && p.tickets_scanned > filters.scannedValue) return false;
+      if (filters.certificatesOperator && filters.certificatesValue !== null) {
+        if (filters.certificatesOperator === 'gte' && p.tickets_scanned < filters.certificatesValue) return false;
+        if (filters.certificatesOperator === 'lte' && p.tickets_scanned > filters.certificatesValue) return false;
       }
       
       if (filters.dateOperator && filters.dateValue) {
@@ -284,27 +371,43 @@ export function PeopleTab() {
     
     if (sortField) {
       result = [...result].sort((a, b) => {
-        let aVal = '';
-        let bVal = '';
+        let comparison = 0;
         
-        if (sortField === 'name') {
-          aVal = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
-          bVal = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
-        } else if (sortField === 'email') {
-          aVal = (a.email || '').toLowerCase();
-          bVal = (b.email || '').toLowerCase();
+        switch (sortField) {
+          case 'name':
+            const aName = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
+            const bName = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+            comparison = aName.localeCompare(bName);
+            break;
+          case 'email':
+            comparison = (a.email || '').localeCompare(b.email || '');
+            break;
+          case 'status':
+            comparison = a.last_status.localeCompare(b.last_status);
+            break;
+          case 'missions':
+            comparison = a.event_count - b.event_count;
+            break;
+          case 'certificates':
+            comparison = a.tickets_scanned - b.tickets_scanned;
+            break;
+          case 'lastParticipation':
+            comparison = new Date(a.last_participation).getTime() - new Date(b.last_participation).getTime();
+            break;
         }
         
-        const comparison = aVal.localeCompare(bVal);
         return sortDirection === 'asc' ? comparison : -comparison;
       });
     }
     
     return result;
-  }, [participants, searchQuery, filters, sortField, sortDirection]);
+  }, [allContributors, searchQuery, filters, sortField, sortDirection]);
 
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
+  const toggleSort = (field: SortField, direction?: SortDirection) => {
+    if (direction) {
+      setSortField(field);
+      setSortDirection(direction);
+    } else if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
@@ -312,20 +415,13 @@ export function PeopleTab() {
     }
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
-    return sortDirection === 'asc' 
-      ? <ArrowUp className="h-4 w-4 ml-1" /> 
-      : <ArrowDown className="h-4 w-4 ml-1" />;
-  };
-
   const clearFilters = () => {
     setFilters({
       status: null,
       missionsOperator: null,
       missionsValue: null,
-      scannedOperator: null,
-      scannedValue: null,
+      certificatesOperator: null,
+      certificatesValue: null,
       dateOperator: null,
       dateValue: null,
     });
@@ -340,13 +436,184 @@ export function PeopleTab() {
   };
 
   const handleViewProfile = (participant: Participant) => {
+    if (participant.is_pending_invitation) return;
     setSelectedContributor(participant);
     setProfilePanelOpen(true);
   };
 
   const handleContact = (participant: Participant) => {
+    if (participant.is_pending_invitation) return;
     setContactContributor(participant);
     setContactDialogOpen(true);
+  };
+
+  const handleResendInvitation = (email: string) => {
+    resendInvitation.mutate(email);
+  };
+
+  // Column header with filter dropdown
+  const ColumnHeaderWithFilter = ({ 
+    label, 
+    field, 
+    filterType,
+    icon,
+    className = ""
+  }: { 
+    label: string; 
+    field: SortField;
+    filterType?: 'status' | 'number' | 'date';
+    icon?: React.ReactNode;
+    className?: string;
+  }) => {
+    const isActive = sortField === field;
+    const hasFilter = filterType === 'status' ? filters.status !== null :
+                     filterType === 'number' && field === 'missions' ? filters.missionsOperator !== null :
+                     filterType === 'number' && field === 'certificates' ? filters.certificatesOperator !== null :
+                     filterType === 'date' ? filters.dateOperator !== null : false;
+
+    return (
+      <div className={`flex items-center gap-1 ${className}`}>
+        {icon}
+        <span>{label}</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6 ml-1">
+              <MoreHorizontal className={`h-4 w-4 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Trier</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => toggleSort(field, 'asc')}>
+              <ArrowUp className="h-4 w-4 mr-2" />
+              Croissant
+              {sortField === field && sortDirection === 'asc' && <span className="ml-auto text-primary">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toggleSort(field, 'desc')}>
+              <ArrowDown className="h-4 w-4 mr-2" />
+              Décroissant
+              {sortField === field && sortDirection === 'desc' && <span className="ml-auto text-primary">✓</span>}
+            </DropdownMenuItem>
+            
+            {filterType && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer</DropdownMenuLabel>
+                
+                {filterType === 'status' && (
+                  <>
+                    <DropdownMenuItem onClick={() => setFilters(prev => ({ ...prev, status: null }))}>
+                      Tous
+                      {filters.status === null && <span className="ml-auto text-primary">✓</span>}
+                    </DropdownMenuItem>
+                    {availableStatuses.map(status => (
+                      <DropdownMenuItem key={status} onClick={() => setFilters(prev => ({ ...prev, status }))}>
+                        {status === 'registered' ? 'Inscrit' :
+                         status === 'approved' ? 'Approuvé' :
+                         status === 'attended' ? 'Présent' :
+                         status === 'waitlist' ? 'Liste d\'attente' :
+                         status === 'pending' ? 'En attente' : status}
+                        {filters.status === status && <span className="ml-auto text-primary">✓</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+                
+                {filterType === 'number' && field === 'missions' && (
+                  <div className="p-2 space-y-2">
+                    <Select 
+                      value={filters.missionsOperator || '_none'} 
+                      onValueChange={(v) => setFilters(prev => ({ ...prev, missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Opérateur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="gte">≥ Plus grand que</SelectItem>
+                        <SelectItem value="lte">≤ Plus petit que</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      type="number" 
+                      placeholder="Valeur"
+                      value={filters.missionsValue ?? ''}
+                      onChange={(e) => setFilters(prev => ({ 
+                        ...prev, 
+                        missionsValue: e.target.value ? parseInt(e.target.value) : null 
+                      }))}
+                      className="h-8"
+                    />
+                  </div>
+                )}
+                
+                {filterType === 'number' && field === 'certificates' && (
+                  <div className="p-2 space-y-2">
+                    <Select 
+                      value={filters.certificatesOperator || '_none'} 
+                      onValueChange={(v) => setFilters(prev => ({ ...prev, certificatesOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Opérateur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="gte">≥ Plus grand que</SelectItem>
+                        <SelectItem value="lte">≤ Plus petit que</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      type="number" 
+                      placeholder="Valeur"
+                      value={filters.certificatesValue ?? ''}
+                      onChange={(e) => setFilters(prev => ({ 
+                        ...prev, 
+                        certificatesValue: e.target.value ? parseInt(e.target.value) : null 
+                      }))}
+                      className="h-8"
+                    />
+                  </div>
+                )}
+                
+                {filterType === 'date' && (
+                  <div className="p-2 space-y-2">
+                    <Select 
+                      value={filters.dateOperator || '_none'} 
+                      onValueChange={(v) => setFilters(prev => ({ ...prev, dateOperator: v === '_none' ? null : v as 'before' | 'after' }))}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Opérateur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="before">Avant</SelectItem>
+                        <SelectItem value="after">Après</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal h-8">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.dateValue ? format(filters.dateValue, 'dd/MM/yyyy') : 'Date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filters.dateValue || undefined}
+                          onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
   };
 
   return (
@@ -357,7 +624,15 @@ export function PeopleTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total contributeurs</p>
-              <p className="text-2xl font-bold mt-1">{kpis.total}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-2xl font-bold">{kpis.total}</p>
+                {kpis.pendingCount > 0 && (
+                  <span className="text-sm text-amber-600 flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    +{kpis.pendingCount} en attente
+                  </span>
+                )}
+              </div>
             </div>
             <Users className="h-8 w-8 text-muted-foreground/50" />
           </div>
@@ -383,7 +658,7 @@ export function PeopleTab() {
               </div>
               <p className="text-2xl font-bold mt-1">{kpis.engagementRate}%</p>
             </div>
-            <Ticket className="h-8 w-8 text-muted-foreground/50" />
+            <Award className="h-8 w-8 text-muted-foreground/50" />
           </div>
         </div>
         
@@ -408,164 +683,28 @@ export function PeopleTab() {
 
       {/* Search and Actions Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col md:flex-row gap-2 flex-1">
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher par nom ou email..." 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-10 bg-muted border-0" 
-            />
-          </div>
-          
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2">
-            <Select 
-              value={filters.status || '_all'} 
-              onValueChange={(v) => setFilters(prev => ({ ...prev, status: v === '_all' ? null : v }))}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">Tous</SelectItem>
-                {availableStatuses.map(status => (
-                  <SelectItem key={status} value={status}>
-                    {status === 'registered' ? 'Inscrit' :
-                     status === 'approved' ? 'Approuvé' :
-                     status === 'attended' ? 'Présent' :
-                     status === 'waitlist' ? 'Liste d\'attente' : status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1">
-                  <Filter className="h-4 w-4" />
-                  Filtres
-                  {hasActiveFilters && <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">!</Badge>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="start">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm">Filtres avancés</h4>
-                  
-                  {/* Missions filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Missions</label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={filters.missionsOperator || '_none'} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
-                      >
-                        <SelectTrigger className="w-24">
-                          <SelectValue placeholder="Op." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">-</SelectItem>
-                          <SelectItem value="gte">≥</SelectItem>
-                          <SelectItem value="lte">≤</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        type="number" 
-                        placeholder="Valeur"
-                        value={filters.missionsValue ?? ''}
-                        onChange={(e) => setFilters(prev => ({ 
-                          ...prev, 
-                          missionsValue: e.target.value ? parseInt(e.target.value) : null 
-                        }))}
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Scanned filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Scannées</label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={filters.scannedOperator || '_none'} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, scannedOperator: v === '_none' ? null : v as 'gte' | 'lte' }))}
-                      >
-                        <SelectTrigger className="w-24">
-                          <SelectValue placeholder="Op." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">-</SelectItem>
-                          <SelectItem value="gte">≥</SelectItem>
-                          <SelectItem value="lte">≤</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        type="number" 
-                        placeholder="Valeur"
-                        value={filters.scannedValue ?? ''}
-                        onChange={(e) => setFilters(prev => ({ 
-                          ...prev, 
-                          scannedValue: e.target.value ? parseInt(e.target.value) : null 
-                        }))}
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Date filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Dernière participation</label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={filters.dateOperator || '_none'} 
-                        onValueChange={(v) => setFilters(prev => ({ ...prev, dateOperator: v === '_none' ? null : v as 'before' | 'after' }))}
-                      >
-                        <SelectTrigger className="w-24">
-                          <SelectValue placeholder="Op." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">-</SelectItem>
-                          <SelectItem value="before">Avant</SelectItem>
-                          <SelectItem value="after">Après</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="flex-1 justify-start text-left font-normal">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filters.dateValue ? format(filters.dateValue, 'dd/MM/yyyy') : 'Date'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateValue || undefined}
-                            onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                  
-                  {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full">
-                      <X className="h-4 w-4 mr-2" />
-                      Effacer les filtres
-                    </Button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Rechercher par nom ou email..." 
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)} 
+            className="pl-10 bg-muted border-0" 
+          />
         </div>
         
-        <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Inviter des bénévoles
-        </Button>
+        <div className="flex items-center gap-2">
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              <Filter className="h-4 w-4 mr-2" />
+              Effacer les filtres
+            </Button>
+          )}
+          <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Inviter des bénévoles
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -594,26 +733,28 @@ export function PeopleTab() {
         <div className="space-y-3">
           {filteredParticipants.map(participant => (
             <div key={participant.user_id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-              <Avatar className="h-12 w-12 flex-shrink-0">
+              <Avatar className={`h-12 w-12 flex-shrink-0 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
                 <AvatarImage src={participant.avatar_url || undefined} />
-                <AvatarFallback>
-                  {getInitials(participant.first_name, participant.last_name)}
+                <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
+                  {participant.is_pending_invitation ? <Clock className="h-5 w-5" /> : getInitials(participant.first_name, participant.last_name)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-medium text-sm truncate">
-                      {participant.first_name && participant.last_name 
-                        ? `${participant.first_name} ${participant.last_name}` 
-                        : 'Nom non renseigné'}
+                    <h3 className={`font-medium text-sm truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                      {participant.is_pending_invitation
+                        ? 'Invitation en attente'
+                        : participant.first_name && participant.last_name 
+                          ? `${participant.first_name} ${participant.last_name}` 
+                          : 'Nom non renseigné'}
                     </h3>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {participant.email || 'Email non renseigné'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {getStatusBadge(participant.last_status)}
+                    {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -621,14 +762,26 @@ export function PeopleTab() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Voir le profil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleContact(participant)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Contacter
-                        </DropdownMenuItem>
+                        {participant.is_pending_invitation ? (
+                          <DropdownMenuItem 
+                            onClick={() => handleResendInvitation(participant.email!)}
+                            disabled={resendInvitation.isPending}
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
+                            Renvoyer l'invitation
+                          </DropdownMenuItem>
+                        ) : (
+                          <>
+                            <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir le profil
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleContact(participant)}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Contacter
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -639,12 +792,14 @@ export function PeopleTab() {
                     {participant.event_count} mission{participant.event_count > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Ticket className="h-3 w-3" />
-                    {participant.tickets_scanned} scanné{participant.tickets_scanned > 1 ? 's' : ''}
+                    <Award className="h-3 w-3" />
+                    {participant.tickets_scanned} certificat{participant.tickets_scanned > 1 ? 's' : ''}
                   </span>
-                  <span>
-                    {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
-                  </span>
+                  {!participant.is_pending_invitation && (
+                    <span>
+                      {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -656,34 +811,36 @@ export function PeopleTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Photo</TableHead>
+                <TableHead className="w-14">Photo</TableHead>
                 <TableHead>
-                  <button 
-                    className="flex items-center hover:text-foreground transition-colors"
-                    onClick={() => toggleSort('name')}
-                  >
-                    Nom complet
-                    {getSortIcon('name')}
-                  </button>
+                  <ColumnHeaderWithFilter label="Nom complet" field="name" />
                 </TableHead>
                 <TableHead>
-                  <button 
-                    className="flex items-center hover:text-foreground transition-colors"
-                    onClick={() => toggleSort('email')}
-                  >
-                    Email
-                    {getSortIcon('email')}
-                  </button>
+                  <ColumnHeaderWithFilter label="Email" field="email" />
                 </TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Missions</TableHead>
+                <TableHead>
+                  <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
+                </TableHead>
                 <TableHead className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Ticket className="h-4 w-4" />
-                    Scannés
-                  </div>
+                  <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" className="justify-end" />
                 </TableHead>
-                <TableHead className="text-right">Dernière participation</TableHead>
+                <TableHead className="text-right">
+                  <ColumnHeaderWithFilter 
+                    label="Certificats" 
+                    field="certificates" 
+                    filterType="number" 
+                    icon={<Award className="h-4 w-4" />}
+                    className="justify-end"
+                  />
+                </TableHead>
+                <TableHead className="text-right">
+                  <ColumnHeaderWithFilter 
+                    label="Dernière participation" 
+                    field="lastParticipation" 
+                    filterType="date"
+                    className="justify-end"
+                  />
+                </TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -691,32 +848,36 @@ export function PeopleTab() {
               {filteredParticipants.map(participant => (
                 <TableRow key={participant.user_id}>
                   <TableCell>
-                    <Avatar className="h-10 w-10">
+                    <Avatar className={`h-10 w-10 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
                       <AvatarImage src={participant.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {getInitials(participant.first_name, participant.last_name)}
+                      <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
+                        {participant.is_pending_invitation ? <Clock className="h-4 w-4" /> : getInitials(participant.first_name, participant.last_name)}
                       </AvatarFallback>
                     </Avatar>
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {participant.first_name && participant.last_name 
-                      ? `${participant.first_name} ${participant.last_name}` 
-                      : 'Nom non renseigné'}
+                  <TableCell className={`font-medium ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                    {participant.is_pending_invitation
+                      ? '—'
+                      : participant.first_name && participant.last_name 
+                        ? `${participant.first_name} ${participant.last_name}` 
+                        : 'Nom non renseigné'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {participant.email || 'Email non renseigné'}
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(participant.last_status)}
+                    {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {participant.event_count}
+                    {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {participant.tickets_scanned}
+                    {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
+                    {participant.is_pending_invitation 
+                      ? '—'
+                      : format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -726,14 +887,26 @@ export function PeopleTab() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Voir le profil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleContact(participant)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Contacter
-                        </DropdownMenuItem>
+                        {participant.is_pending_invitation ? (
+                          <DropdownMenuItem 
+                            onClick={() => handleResendInvitation(participant.email!)}
+                            disabled={resendInvitation.isPending}
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
+                            Renvoyer l'invitation
+                          </DropdownMenuItem>
+                        ) : (
+                          <>
+                            <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Voir le profil
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleContact(participant)}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Contacter
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
