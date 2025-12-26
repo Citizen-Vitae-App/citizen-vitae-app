@@ -939,7 +939,7 @@ export function EventsTab() {
                   </TableHead>
                   <TableHead className="font-semibold w-[10%]">
                     <ColumnHeaderWithFilter 
-                      label="Part." 
+                      label="Participants" 
                       field="participants" 
                       filterType="participants"
                       icon={<Users className="h-4 w-4" />}
