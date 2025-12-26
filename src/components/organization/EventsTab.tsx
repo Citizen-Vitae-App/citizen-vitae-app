@@ -461,14 +461,14 @@ export function EventsTab() {
               <MoreVertical className={`h-3.5 w-3.5 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuContent align="start" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
             <DropdownMenuLabel className="text-xs text-muted-foreground">Trier</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => toggleSort(field, 'asc')}>
+            <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleSort(field, 'asc'); }}>
               <ArrowUp className="h-4 w-4 mr-2" />
               Croissant
               {sortField === field && sortDirection === 'asc' && <span className="ml-auto text-primary">✓</span>}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toggleSort(field, 'desc')}>
+            <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleSort(field, 'desc'); }}>
               <ArrowDown className="h-4 w-4 mr-2" />
               Décroissant
               {sortField === field && sortDirection === 'desc' && <span className="ml-auto text-primary">✓</span>}
@@ -480,12 +480,12 @@ export function EventsTab() {
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer</DropdownMenuLabel>
                 
                 {filterType === 'status' && (
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-1" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="w-full justify-start text-xs h-7"
-                      onClick={() => setFilters(prev => ({ ...prev, statuses: [] }))}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFilters(prev => ({ ...prev, statuses: [] })); }}
                     >
                       Réinitialiser
                     </Button>
@@ -495,7 +495,9 @@ export function EventsTab() {
                         <div 
                           key={status} 
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setFilters(prev => ({
                               ...prev,
                               statuses: isSelected 
@@ -515,12 +517,12 @@ export function EventsTab() {
                 )}
                 
                 {filterType === 'visibility' && (
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-1" onClick={(e) => e.stopPropagation()}>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="w-full justify-start text-xs h-7"
-                      onClick={() => setFilters(prev => ({ ...prev, visibilities: [] }))}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFilters(prev => ({ ...prev, visibilities: [] })); }}
                     >
                       Réinitialiser
                     </Button>
@@ -530,7 +532,9 @@ export function EventsTab() {
                         <div 
                           key={value} 
                           className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setFilters(prev => ({
                               ...prev,
                               visibilities: isSelected 
@@ -785,22 +789,37 @@ export function EventsTab() {
       {/* Events list */}
       <div className="w-full max-w-[1400px]">
         {filteredEvents.length === 0 ? (
-          <div className="text-center py-12">
-            <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || hasActiveFilters 
-                ? 'Aucun événement ne correspond à vos critères' 
-                : 'Créez votre premier événement pour commencer'}
-            </p>
-            {!searchQuery && !hasActiveFilters && (
-              <Button asChild>
-                <Link to="/organization/create-event">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Créer un événement
-                </Link>
-              </Button>
-            )}
+          <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold min-w-[200px] w-[30%]">Titre</TableHead>
+                  <TableHead className="font-semibold w-[130px]">Date et heure</TableHead>
+                  <TableHead className="font-semibold w-[100px]">Statut</TableHead>
+                  <TableHead className="font-semibold w-[100px]">Visibilité</TableHead>
+                  <TableHead className="font-semibold min-w-[120px] w-[20%]">Lieu</TableHead>
+                  <TableHead className="font-semibold w-[100px]">Participants</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+            <div className="text-center py-12">
+              <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery || hasActiveFilters 
+                  ? 'Aucun événement ne correspond à vos critères' 
+                  : 'Créez votre premier événement pour commencer'}
+              </p>
+              {!searchQuery && !hasActiveFilters && (
+                <Button asChild>
+                  <Link to="/organization/create-event">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Créer un événement
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         ) : isMobile ? (
           // Mobile: Card list view
@@ -877,14 +896,14 @@ export function EventsTab() {
           </div>
         ) : (
           // Desktop: Table view
-          <div className="overflow-x-visible">
-            <Table className="table-fixed w-full">
+          <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
+            <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-t border-b border-border">
-                  <TableHead className="font-semibold w-[22%]">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold min-w-[200px] w-[30%]">
                     <SortableColumnHeader label="Titre" field="title" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[14%]">
+                  <TableHead className="font-semibold w-[130px]">
                     <ColumnHeaderWithFilter 
                       label="Date et heure" 
                       field="date" 
@@ -892,16 +911,16 @@ export function EventsTab() {
                       icon={<CalendarIcon className="h-4 w-4" />}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
+                  <TableHead className="font-semibold w-[100px]">
                     <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
+                  <TableHead className="font-semibold w-[100px]">
                     <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[16%]">
+                  <TableHead className="font-semibold min-w-[120px] w-[20%]">
                     <SortableColumnHeader label="Lieu" field="location" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[12%]">
+                  <TableHead className="font-semibold w-[100px]">
                     <ColumnHeaderWithFilter 
                       label="Participants" 
                       field="participants" 
@@ -920,12 +939,11 @@ export function EventsTab() {
                   const participants = eventParticipants?.participants || [];
                   const capacity = event.capacity;
                   const fillRatio = capacity ? (participantCount / capacity) * 100 : null;
-                  const truncatedTitle = event.name.length > 26 ? `${event.name.substring(0, 26)}...` : event.name;
                   
                   return (
                     <TableRow 
                       key={event.id} 
-                      className="cursor-pointer hover:bg-muted/50 border-b border-border" 
+                      className="cursor-pointer hover:bg-muted/50" 
                       onClick={() => navigate(`/organization/events/${event.id}/edit`)}
                     >
                       <TableCell className="py-3">
@@ -935,7 +953,7 @@ export function EventsTab() {
                             alt={event.name} 
                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0" 
                           />
-                          <span className="font-medium" title={event.name}>{truncatedTitle}</span>
+                          <span className="font-medium truncate" title={event.name}>{event.name}</span>
                         </div>
                       </TableCell>
                       <TableCell>
