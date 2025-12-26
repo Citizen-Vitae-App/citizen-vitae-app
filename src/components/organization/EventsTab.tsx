@@ -21,7 +21,8 @@ import {
   Copy,
   TrendingUp,
   Activity,
-  Tag
+  Tag,
+  X
 } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
 import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
@@ -37,16 +38,8 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,7 +50,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -76,6 +68,7 @@ interface EventFilters {
 
 type SortField = 'title' | 'date' | 'status' | 'visibility' | 'location' | 'participants' | null;
 type SortDirection = 'asc' | 'desc';
+type FilterPanelType = 'status' | 'visibility' | 'participants' | 'date' | null;
 
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
@@ -105,8 +98,9 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-const getVisibilityBadge = (isPublic: boolean) => {
-  if (isPublic) {
+const getVisibilityBadge = (isPublic: boolean | null) => {
+  const isActuallyPublic = isPublic ?? true;
+  if (isActuallyPublic) {
     return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
         <Globe className="h-3 w-3 mr-1" />
         Public
@@ -163,6 +157,7 @@ export function EventsTab() {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const [openFilterPanel, setOpenFilterPanel] = useState<FilterPanelType>(null);
   
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -290,9 +285,10 @@ export function EventsTab() {
         if (!filters.statuses.includes(status)) return false;
       }
       
-      // Visibility filter
+      // Visibility filter - use consistent logic (null = public)
       if (filters.visibilities.length > 0) {
-        const visibility = event.is_public ? 'public' : 'private';
+        const isPublic = event.is_public ?? true;
+        const visibility = isPublic ? 'public' : 'private';
         if (!filters.visibilities.includes(visibility)) return false;
       }
       
@@ -301,7 +297,7 @@ export function EventsTab() {
         const count = participantCounts?.get(event.id)?.count || 0;
         if (filters.participantsOperator === 'gte' && count < filters.participantsValue) return false;
         if (filters.participantsOperator === 'lte' && count > filters.participantsValue) return false;
-      if (filters.participantsOperator === 'eq' && count !== filters.participantsValue) return false;
+        if (filters.participantsOperator === 'eq' && count !== filters.participantsValue) return false;
       }
       
       // Date filter
@@ -333,7 +329,7 @@ export function EventsTab() {
             comparison = getEventStatus(a.start_date, a.end_date).localeCompare(getEventStatus(b.start_date, b.end_date));
             break;
           case 'visibility':
-            comparison = (a.is_public ? 1 : 0) - (b.is_public ? 1 : 0);
+            comparison = ((a.is_public ?? true) ? 1 : 0) - ((b.is_public ?? true) ? 1 : 0);
             break;
           case 'location':
             comparison = a.location.localeCompare(b.location);
@@ -427,237 +423,260 @@ export function EventsTab() {
     }
   };
 
-  // Column header with filter dropdown
+  // Column header with controlled Popover for filter
   const ColumnHeaderWithFilter = ({ 
     label, 
     field, 
     filterType,
-    icon,
-    className = ""
+    icon
   }: { 
     label: string; 
     field: SortField;
-    filterType?: 'status' | 'visibility' | 'number' | 'date';
+    filterType: 'status' | 'visibility' | 'participants' | 'date';
     icon?: React.ReactNode;
-    className?: string;
   }) => {
     const isActive = sortField === field;
     const hasFilter = filterType === 'status' ? filters.statuses.length > 0 :
                      filterType === 'visibility' ? filters.visibilities.length > 0 :
-                     filterType === 'number' ? filters.participantsOperator !== null :
+                     filterType === 'participants' ? filters.participantsOperator !== null :
                      filterType === 'date' ? filters.dateOperator !== null : false;
 
+    const isOpen = openFilterPanel === filterType;
+
     return (
-      <div className={`flex items-center gap-1 group ${className}`}>
+      <div className="flex items-center gap-1 group">
         {icon}
         <span className="whitespace-nowrap">{label}</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <Popover open={isOpen} onOpenChange={(open) => setOpenFilterPanel(open ? filterType : null)}>
+          <PopoverTrigger asChild>
             <Button 
               variant="ghost" 
               size="icon" 
-              className={`h-5 w-5 ml-0.5 ${isActive || hasFilter ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+              className={`h-5 w-5 ml-0.5 ${isActive || hasFilter || isOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
             >
               <MoreVertical className={`h-3.5 w-3.5 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Trier</DropdownMenuLabel>
-            <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleSort(field, 'asc'); }}>
-              <ArrowUp className="h-4 w-4 mr-2" />
-              Croissant
-              {sortField === field && sortDirection === 'asc' && <span className="ml-auto text-primary">✓</span>}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleSort(field, 'desc'); }}>
-              <ArrowDown className="h-4 w-4 mr-2" />
-              Décroissant
-              {sortField === field && sortDirection === 'desc' && <span className="ml-auto text-primary">✓</span>}
-            </DropdownMenuItem>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+            {/* Sort section */}
+            <div className="p-2 border-b border-border">
+              <p className="text-xs text-muted-foreground font-medium mb-1.5 px-1">Trier</p>
+              <div className="flex gap-1">
+                <Button 
+                  variant={sortField === field && sortDirection === 'asc' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => toggleSort(field, 'asc')}
+                >
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                  Croissant
+                </Button>
+                <Button 
+                  variant={sortField === field && sortDirection === 'desc' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => toggleSort(field, 'desc')}
+                >
+                  <ArrowDown className="h-3 w-3 mr-1" />
+                  Décroissant
+                </Button>
+              </div>
+            </div>
             
-            {filterType && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer</DropdownMenuLabel>
-                
-                {filterType === 'status' && (
-                  <div className="p-2 space-y-1" onClick={(e) => e.stopPropagation()}>
+            {/* Filter section */}
+            <div className="p-2">
+              <p className="text-xs text-muted-foreground font-medium mb-1.5 px-1">Filtrer</p>
+              
+              {filterType === 'status' && (
+                <div className="space-y-1">
+                  {['À venir', 'En cours', 'Passé'].map(status => {
+                    const isSelected = filters.statuses.includes(status);
+                    return (
+                      <button 
+                        key={status} 
+                        className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-muted rounded text-left"
+                        onClick={() => {
+                          setFilters(prev => ({
+                            ...prev,
+                            statuses: isSelected 
+                              ? prev.statuses.filter(s => s !== status)
+                              : [...prev.statuses, status]
+                          }));
+                        }}
+                      >
+                        <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                        </div>
+                        <span className="text-sm">{status}</span>
+                      </button>
+                    );
+                  })}
+                  {filters.statuses.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7 mt-1"
+                      onClick={() => setFilters(prev => ({ ...prev, statuses: [] }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'visibility' && (
+                <div className="space-y-1">
+                  {[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Privé' }].map(({ value, label }) => {
+                    const isSelected = filters.visibilities.includes(value);
+                    return (
+                      <button 
+                        key={value} 
+                        className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-muted rounded text-left"
+                        onClick={() => {
+                          setFilters(prev => ({
+                            ...prev,
+                            visibilities: isSelected 
+                              ? prev.visibilities.filter(s => s !== value)
+                              : [...prev.visibilities, value]
+                          }));
+                        }}
+                      >
+                        <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                        </div>
+                        <span className="text-sm">{label}</span>
+                      </button>
+                    );
+                  })}
+                  {filters.visibilities.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7 mt-1"
+                      onClick={() => setFilters(prev => ({ ...prev, visibilities: [] }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'participants' && (
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    {[
+                      { value: 'eq', label: '=' },
+                      { value: 'gte', label: '≥' },
+                      { value: 'lte', label: '≤' }
+                    ].map(({ value, label }) => (
+                      <Button
+                        key={value}
+                        variant={filters.participantsOperator === value ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="flex-1 h-7 text-xs"
+                        onClick={() => setFilters(prev => ({ 
+                          ...prev, 
+                          participantsOperator: prev.participantsOperator === value ? null : value as 'gte' | 'lte' | 'eq'
+                        }))}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                  <Input 
+                    type="number" 
+                    placeholder="Valeur"
+                    value={filters.participantsValue ?? ''}
+                    onChange={(e) => setFilters(prev => ({ 
+                      ...prev, 
+                      participantsValue: e.target.value ? parseInt(e.target.value) : null 
+                    }))}
+                    className="h-8"
+                    disabled={filters.participantsOperator === null}
+                  />
+                  {filters.participantsOperator !== null && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="w-full justify-start text-xs h-7"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFilters(prev => ({ ...prev, statuses: [] })); }}
+                      onClick={() => setFilters(prev => ({ ...prev, participantsOperator: null, participantsValue: null }))}
                     >
+                      <X className="h-3 w-3 mr-1" />
                       Réinitialiser
                     </Button>
-                    {['À venir', 'En cours', 'Passé'].map(status => {
-                      const isSelected = filters.statuses.includes(status);
-                      return (
-                        <div 
-                          key={status} 
-                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setFilters(prev => ({
-                              ...prev,
-                              statuses: isSelected 
-                                ? prev.statuses.filter(s => s !== status)
-                                : [...prev.statuses, status]
-                            }));
-                          }}
-                        >
-                          <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
-                            {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
-                          </div>
-                          <span className="text-sm">{status}</span>
-                        </div>
-                      );
-                    })}
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'date' && (
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    {[
+                      { value: 'after', label: 'Après' },
+                      { value: 'before', label: 'Avant' },
+                      { value: 'range', label: 'Période' }
+                    ].map(({ value, label }) => (
+                      <Button
+                        key={value}
+                        variant={filters.dateOperator === value ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="flex-1 h-7 text-xs"
+                        onClick={() => setFilters(prev => ({ 
+                          ...prev, 
+                          dateOperator: prev.dateOperator === value ? null : value as 'after' | 'before' | 'range',
+                          dateValue: prev.dateOperator === value ? null : prev.dateValue,
+                          dateEndValue: prev.dateOperator === value ? null : prev.dateEndValue
+                        }))}
+                      >
+                        {label}
+                      </Button>
+                    ))}
                   </div>
-                )}
-                
-                {filterType === 'visibility' && (
-                  <div className="p-2 space-y-1" onClick={(e) => e.stopPropagation()}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start text-xs h-7"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFilters(prev => ({ ...prev, visibilities: [] })); }}
-                    >
-                      Réinitialiser
-                    </Button>
-                    {[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Privé' }].map(({ value, label }) => {
-                      const isSelected = filters.visibilities.includes(value);
-                      return (
-                        <div 
-                          key={value} 
-                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setFilters(prev => ({
-                              ...prev,
-                              visibilities: isSelected 
-                                ? prev.visibilities.filter(s => s !== value)
-                                : [...prev.visibilities, value]
-                            }));
-                          }}
-                        >
-                          <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
-                            {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
-                          </div>
-                          <span className="text-sm">{label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                
-                {filterType === 'number' && (
-                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <Select 
-                      value={filters.participantsOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ 
-                        ...prev, 
-                        participantsOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
-                        participantsValue: v === '_none' ? null : prev.participantsValue
-                      }))}
-                    >
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Opérateur" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_none">Aucun</SelectItem>
-                        <SelectItem value="eq">= Égal à</SelectItem>
-                        <SelectItem value="gte">≥ Plus grand que</SelectItem>
-                        <SelectItem value="lte">≤ Plus petit que</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input 
-                      type="number" 
-                      placeholder="Valeur"
-                      value={filters.participantsValue ?? ''}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        participantsValue: e.target.value ? parseInt(e.target.value) : null 
-                      }))}
-                      className="h-8"
-                      disabled={filters.participantsOperator === null}
-                    />
-                  </div>
-                )}
-                
-                {filterType === 'date' && (
-                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <Select 
-                      value={filters.dateOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ 
-                        ...prev, 
-                        dateOperator: v === '_none' ? null : v as 'after' | 'before' | 'range',
-                        dateValue: v === '_none' ? null : prev.dateValue,
-                        dateEndValue: v === '_none' ? null : prev.dateEndValue
-                      }))}
-                    >
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Filtre" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_none">Aucun</SelectItem>
-                        <SelectItem value="after">Après le</SelectItem>
-                        <SelectItem value="before">Avant le</SelectItem>
-                        <SelectItem value="range">Période</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    {filters.dateOperator && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal h-8">
-                            <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                            {filters.dateValue 
-                              ? format(filters.dateValue, 'dd/MM/yy') 
-                              : 'Choisir une date'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateValue || undefined}
-                            onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    
-                    {filters.dateOperator === 'range' && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal h-8">
-                            <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                            {filters.dateEndValue 
-                              ? format(filters.dateEndValue, 'dd/MM/yy') 
-                              : 'Date de fin'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                  
+                  {filters.dateOperator && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground">
+                        {filters.dateOperator === 'range' ? 'Date de début:' : 'Date:'}
+                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateValue || undefined}
+                        onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
+                        className="pointer-events-auto rounded-md border p-2"
+                      />
+                      
+                      {filters.dateOperator === 'range' && (
+                        <>
+                          <div className="text-xs text-muted-foreground">Date de fin:</div>
                           <Calendar
                             mode="single"
                             selected={filters.dateEndValue || undefined}
                             onSelect={(date) => setFilters(prev => ({ ...prev, dateEndValue: date || null }))}
-                            initialFocus
-                            className="pointer-events-auto"
+                            className="pointer-events-auto rounded-md border p-2"
                           />
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  
+                  {filters.dateOperator !== null && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7"
+                      onClick={() => setFilters(prev => ({ ...prev, dateOperator: null, dateValue: null, dateEndValue: null }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     );
   };
@@ -665,19 +684,17 @@ export function EventsTab() {
   // Sortable column header (no filter)
   const SortableColumnHeader = ({ 
     label, 
-    field, 
-    className = ""
+    field
   }: { 
     label: string; 
     field: SortField;
-    className?: string;
   }) => {
     const isActive = sortField === field;
 
     return (
       <button 
         onClick={() => toggleSort(field)}
-        className={`flex items-center gap-1 hover:text-foreground transition-colors ${className}`}
+        className="flex items-center gap-1 hover:text-foreground transition-colors"
       >
         <span className="whitespace-nowrap">{label}</span>
         {isActive && (
@@ -787,19 +804,19 @@ export function EventsTab() {
       </div>
 
       {/* Events list */}
-      <div className="w-full max-w-[1400px]">
+      <div className="w-full">
         {filteredEvents.length === 0 ? (
-          <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
-            <Table>
+          <div className="border rounded-lg overflow-hidden w-full">
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold min-w-[200px] w-[30%]">Titre</TableHead>
-                  <TableHead className="font-semibold w-[130px]">Date et heure</TableHead>
-                  <TableHead className="font-semibold w-[100px]">Statut</TableHead>
-                  <TableHead className="font-semibold w-[100px]">Visibilité</TableHead>
-                  <TableHead className="font-semibold min-w-[120px] w-[20%]">Lieu</TableHead>
-                  <TableHead className="font-semibold w-[100px]">Participants</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="font-semibold w-[35%]">Titre</TableHead>
+                  <TableHead className="font-semibold w-[12%]">Date et heure</TableHead>
+                  <TableHead className="font-semibold w-[10%]">Statut</TableHead>
+                  <TableHead className="font-semibold w-[10%]">Visibilité</TableHead>
+                  <TableHead className="font-semibold w-[18%]">Lieu</TableHead>
+                  <TableHead className="font-semibold w-[10%]">Part.</TableHead>
+                  <TableHead className="w-[5%]"></TableHead>
                 </TableRow>
               </TableHeader>
             </Table>
@@ -848,7 +865,7 @@ export function EventsTab() {
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       {getStatusBadge(status)}
-                      {getVisibilityBadge(event.is_public ?? true)}
+                      {getVisibilityBadge(event.is_public)}
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {participantCount}
@@ -896,14 +913,14 @@ export function EventsTab() {
           </div>
         ) : (
           // Desktop: Table view
-          <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
-            <Table>
+          <div className="border rounded-lg overflow-hidden w-full">
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold min-w-[200px] w-[30%]">
+                  <TableHead className="font-semibold w-[35%]">
                     <SortableColumnHeader label="Titre" field="title" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[130px]">
+                  <TableHead className="font-semibold w-[12%]">
                     <ColumnHeaderWithFilter 
                       label="Date et heure" 
                       field="date" 
@@ -911,24 +928,24 @@ export function EventsTab() {
                       icon={<CalendarIcon className="h-4 w-4" />}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold w-[100px]">
+                  <TableHead className="font-semibold w-[10%]">
                     <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[100px]">
+                  <TableHead className="font-semibold w-[10%]">
                     <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
                   </TableHead>
-                  <TableHead className="font-semibold min-w-[120px] w-[20%]">
+                  <TableHead className="font-semibold w-[18%]">
                     <SortableColumnHeader label="Lieu" field="location" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[100px]">
+                  <TableHead className="font-semibold w-[10%]">
                     <ColumnHeaderWithFilter 
-                      label="Participants" 
+                      label="Part." 
                       field="participants" 
-                      filterType="number"
+                      filterType="participants"
                       icon={<Users className="h-4 w-4" />}
                     />
                   </TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="w-[5%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -946,8 +963,8 @@ export function EventsTab() {
                       className="cursor-pointer hover:bg-muted/50" 
                       onClick={() => navigate(`/organization/events/${event.id}/edit`)}
                     >
-                      <TableCell className="py-3">
-                        <div className="flex items-center gap-3">
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-3 min-w-0">
                           <img 
                             src={event.cover_image_url || defaultEventCover} 
                             alt={event.name} 
@@ -956,19 +973,19 @@ export function EventsTab() {
                           <span className="font-medium truncate" title={event.name}>{event.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-2">
                         <span className="text-sm whitespace-nowrap">
-                          {format(parseISO(event.start_date), "dd/MM/yy 'à' HH'h'mm")}
+                          {format(parseISO(event.start_date), "dd/MM/yy HH'h'mm")}
                         </span>
                       </TableCell>
-                      <TableCell>{getStatusBadge(status)}</TableCell>
-                      <TableCell>{getVisibilityBadge(event.is_public ?? true)}</TableCell>
-                      <TableCell>
-                        <span className="truncate block" title={event.location}>
+                      <TableCell className="py-2">{getStatusBadge(status)}</TableCell>
+                      <TableCell className="py-2">{getVisibilityBadge(event.is_public)}</TableCell>
+                      <TableCell className="py-2">
+                        <span className="truncate block max-w-full" title={event.location}>
                           {event.location}
                         </span>
                       </TableCell>
-                      <TableCell onClick={e => e.stopPropagation()}>
+                      <TableCell className="py-2" onClick={e => e.stopPropagation()}>
                         <HoverCard openDelay={200}>
                           <HoverCardTrigger asChild>
                             <div className="space-y-1">
@@ -977,7 +994,7 @@ export function EventsTab() {
                                 {capacity && <span className="text-muted-foreground">/ {capacity}</span>}
                               </button>
                               {capacity && fillRatio !== null && (
-                                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                                   <div 
                                     className={`h-full rounded-full transition-all ${getCapacityProgressColor(participantCount, capacity)}`}
                                     style={{ width: `${Math.min(fillRatio, 100)}%` }}
@@ -1026,7 +1043,7 @@ export function EventsTab() {
                           </HoverCardContent>
                         </HoverCard>
                       </TableCell>
-                      <TableCell onClick={e => e.stopPropagation()} className="pr-4">
+                      <TableCell className="py-2" onClick={e => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
