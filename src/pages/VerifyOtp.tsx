@@ -62,7 +62,6 @@ const VerifyOtp = () => {
       setIsLoading(false);
     } else {
       console.log('OTP verification succeeded');
-      toast.success('Connexion réussie');
       // La redirection sera gérée par useAuth via onAuthStateChange
     }
   };

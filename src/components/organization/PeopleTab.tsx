@@ -86,7 +86,7 @@ type SortDirection = 'asc' | 'desc';
 
 const getStatusBadge = (status: string, isPending?: boolean) => {
   if (isPending) {
-    return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">En attente</Badge>;
+    return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 whitespace-nowrap">En attente</Badge>;
   }
   switch (status) {
     case 'registered':

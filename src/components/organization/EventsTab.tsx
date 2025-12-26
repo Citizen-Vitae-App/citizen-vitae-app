@@ -784,159 +784,162 @@ export function EventsTab() {
           </div>
         ) : (
           // Desktop: Table view
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="font-semibold w-[35%]">
-                  <SortableColumnHeader label="Titre, date et heure" field="title" />
-                </TableHead>
-                <TableHead className="font-semibold w-[12%]">
-                  <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
-                </TableHead>
-                <TableHead className="font-semibold w-[12%]">
-                  <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
-                </TableHead>
-                <TableHead className="font-semibold w-[20%]">
-                  <SortableColumnHeader label="Lieu" field="location" />
-                </TableHead>
-                <TableHead className="font-semibold w-[12%]">
-                  <ColumnHeaderWithFilter 
-                    label="Participants" 
-                    field="participants" 
-                    filterType="number"
-                    icon={<Users className="h-4 w-4" />}
-                  />
-                </TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map(event => {
-                const status = getEventStatus(event.start_date, event.end_date);
-                const eventParticipants = participantCounts?.get(event.id);
-                const participantCount = eventParticipants?.count || 0;
-                const participants = eventParticipants?.participants || [];
-                const capacity = event.capacity;
-                const fillRatio = capacity ? (participantCount / capacity) * 100 : null;
-                
-                return (
-                  <TableRow 
-                    key={event.id} 
-                    className="cursor-pointer hover:bg-muted/50 border-0" 
-                    onClick={() => navigate(`/organization/events/${event.id}/edit`)}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={event.cover_image_url || defaultEventCover} 
-                          alt={event.name} 
-                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0" 
-                        />
-                        <div className="flex flex-col min-w-0">
-                          <span className="font-medium truncate" title={event.name}>{event.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {format(parseISO(event.start_date), "d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
-                          </span>
+          <div className="overflow-x-visible">
+            <Table className="table-fixed w-full">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-t border-b border-border">
+                  <TableHead className="font-semibold w-[30%]">
+                    <SortableColumnHeader label="Titre, date et heure" field="title" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[12%]">
+                    <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[12%]">
+                    <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[18%]">
+                    <SortableColumnHeader label="Lieu" field="location" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[14%]">
+                    <ColumnHeaderWithFilter 
+                      label="Participants" 
+                      field="participants" 
+                      filterType="number"
+                      icon={<Users className="h-4 w-4" />}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.map(event => {
+                  const status = getEventStatus(event.start_date, event.end_date);
+                  const eventParticipants = participantCounts?.get(event.id);
+                  const participantCount = eventParticipants?.count || 0;
+                  const participants = eventParticipants?.participants || [];
+                  const capacity = event.capacity;
+                  const fillRatio = capacity ? (participantCount / capacity) * 100 : null;
+                  const truncatedTitle = event.name.length > 26 ? `${event.name.substring(0, 26)}...` : event.name;
+                  
+                  return (
+                    <TableRow 
+                      key={event.id} 
+                      className="cursor-pointer hover:bg-muted/50 border-b border-border" 
+                      onClick={() => navigate(`/organization/events/${event.id}/edit`)}
+                    >
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={event.cover_image_url || defaultEventCover} 
+                            alt={event.name} 
+                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0" 
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium" title={event.name}>{truncatedTitle}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {format(parseISO(event.start_date), "d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(status)}</TableCell>
-                    <TableCell>{getVisibilityBadge(event.is_public ?? true)}</TableCell>
-                    <TableCell>
-                      <span className="truncate block max-w-[200px]" title={event.location}>
-                        {event.location}
-                      </span>
-                    </TableCell>
-                    <TableCell onClick={e => e.stopPropagation()}>
-                      <HoverCard openDelay={200}>
-                        <HoverCardTrigger asChild>
-                          <div className="space-y-1">
-                            <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                              <span className="font-medium text-foreground">{participantCount}</span>
-                              {capacity && <span className="text-muted-foreground">/ {capacity}</span>}
-                            </button>
-                            {capacity && fillRatio !== null && (
-                              <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full rounded-full transition-all ${getCapacityProgressColor(participantCount, capacity)}`}
-                                  style={{ width: `${Math.min(fillRatio, 100)}%` }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent align="start" className="w-72 p-0">
-                          <div className="p-3 border-b border-border">
-                            <h4 className="font-semibold text-sm">Participants inscrits</h4>
-                          </div>
-                          {participants.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-muted-foreground">
-                              Aucun participant inscrit
-                            </div>
-                          ) : (
-                            <div className="max-h-60 overflow-y-auto">
-                              {participants.slice(0, 5).map(participant => (
-                                <div key={participant.user_id} className="flex items-center gap-3 p-3 border-b border-border last:border-0">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={participant.avatar_url || undefined} />
-                                    <AvatarFallback className="text-xs">
-                                      {getInitials(participant.first_name, participant.last_name)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">
-                                      {participant.first_name && participant.last_name 
-                                        ? `${participant.first_name} ${participant.last_name}` 
-                                        : 'Nom non renseigné'}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground truncate">
-                                      {participant.email}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                              {participants.length > 5 && (
-                                <div className="p-3 text-center text-sm text-muted-foreground bg-muted/50">
-                                  + {participants.length - 5} autres participants
+                      </TableCell>
+                      <TableCell>{getStatusBadge(status)}</TableCell>
+                      <TableCell>{getVisibilityBadge(event.is_public ?? true)}</TableCell>
+                      <TableCell>
+                        <span className="truncate block" title={event.location}>
+                          {event.location}
+                        </span>
+                      </TableCell>
+                      <TableCell onClick={e => e.stopPropagation()}>
+                        <HoverCard openDelay={200}>
+                          <HoverCardTrigger asChild>
+                            <div className="space-y-1">
+                              <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                                <span className="font-medium text-foreground">{participantCount}</span>
+                                {capacity && <span className="text-muted-foreground">/ {capacity}</span>}
+                              </button>
+                              {capacity && fillRatio !== null && (
+                                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className={`h-full rounded-full transition-all ${getCapacityProgressColor(participantCount, capacity)}`}
+                                    style={{ width: `${Math.min(fillRatio, 100)}%` }}
+                                  />
                                 </div>
                               )}
                             </div>
-                          )}
-                        </HoverCardContent>
-                      </HoverCard>
-                    </TableCell>
-                    <TableCell onClick={e => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Modifier l'événement
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDuplicateEvent(event)}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Dupliquer l'événement
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => setDeleteEventId(event.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer l'événement
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                          </HoverCardTrigger>
+                          <HoverCardContent align="start" className="w-72 p-0">
+                            <div className="p-3 border-b border-border">
+                              <h4 className="font-semibold text-sm">Participants inscrits</h4>
+                            </div>
+                            {participants.length === 0 ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                Aucun participant inscrit
+                              </div>
+                            ) : (
+                              <div className="max-h-60 overflow-y-auto">
+                                {participants.slice(0, 5).map(participant => (
+                                  <div key={participant.user_id} className="flex items-center gap-3 p-3 border-b border-border last:border-0">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage src={participant.avatar_url || undefined} />
+                                      <AvatarFallback className="text-xs">
+                                        {getInitials(participant.first_name, participant.last_name)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {participant.first_name && participant.last_name 
+                                          ? `${participant.first_name} ${participant.last_name}` 
+                                          : 'Nom non renseigné'}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {participant.email}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                                {participants.length > 5 && (
+                                  <div className="p-3 text-center text-sm text-muted-foreground bg-muted/50">
+                                    + {participants.length - 5} autres participants
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </HoverCardContent>
+                        </HoverCard>
+                      </TableCell>
+                      <TableCell onClick={e => e.stopPropagation()} className="pr-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Modifier l'événement
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicateEvent(event)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Dupliquer l'événement
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => setDeleteEventId(event.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer l'événement
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
 
