@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Search, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Users, 
   Globe, 
   Lock, 
@@ -61,15 +61,20 @@ import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface EventFilters {
   statuses: string[];
   visibilities: string[];
   participantsOperator: 'gte' | 'lte' | 'eq' | null;
   participantsValue: number | null;
+  dateOperator: 'after' | 'before' | 'range' | null;
+  dateValue: Date | null;
+  dateEndValue: Date | null;
 }
 
-type SortField = 'title' | 'status' | 'visibility' | 'location' | 'participants' | null;
+type SortField = 'title' | 'date' | 'status' | 'visibility' | 'location' | 'participants' | null;
 type SortDirection = 'asc' | 'desc';
 
 const getEventStatus = (startDate: string, endDate: string) => {
@@ -151,6 +156,9 @@ export function EventsTab() {
     visibilities: [],
     participantsOperator: null,
     participantsValue: null,
+    dateOperator: null,
+    dateValue: null,
+    dateEndValue: null,
   });
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -293,7 +301,17 @@ export function EventsTab() {
         const count = participantCounts?.get(event.id)?.count || 0;
         if (filters.participantsOperator === 'gte' && count < filters.participantsValue) return false;
         if (filters.participantsOperator === 'lte' && count > filters.participantsValue) return false;
-        if (filters.participantsOperator === 'eq' && count !== filters.participantsValue) return false;
+      if (filters.participantsOperator === 'eq' && count !== filters.participantsValue) return false;
+      }
+      
+      // Date filter
+      if (filters.dateOperator && filters.dateValue) {
+        const eventDate = parseISO(event.start_date);
+        if (filters.dateOperator === 'after' && !isAfter(eventDate, filters.dateValue)) return false;
+        if (filters.dateOperator === 'before' && !isBefore(eventDate, filters.dateValue)) return false;
+        if (filters.dateOperator === 'range' && filters.dateEndValue) {
+          if (isBefore(eventDate, filters.dateValue) || isAfter(eventDate, filters.dateEndValue)) return false;
+        }
       }
       
       return true;
@@ -307,6 +325,9 @@ export function EventsTab() {
         switch (sortField) {
           case 'title':
             comparison = a.name.localeCompare(b.name);
+            break;
+          case 'date':
+            comparison = new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
             break;
           case 'status':
             comparison = getEventStatus(a.start_date, a.end_date).localeCompare(getEventStatus(b.start_date, b.end_date));
@@ -349,10 +370,13 @@ export function EventsTab() {
       visibilities: [],
       participantsOperator: null,
       participantsValue: null,
+      dateOperator: null,
+      dateValue: null,
+      dateEndValue: null,
     });
   };
 
-  const hasActiveFilters = filters.statuses.length > 0 || filters.visibilities.length > 0 || filters.participantsOperator !== null;
+  const hasActiveFilters = filters.statuses.length > 0 || filters.visibilities.length > 0 || filters.participantsOperator !== null || filters.dateOperator !== null;
 
   // Event actions
   const handleDeleteEvent = async () => {
@@ -413,14 +437,15 @@ export function EventsTab() {
   }: { 
     label: string; 
     field: SortField;
-    filterType?: 'status' | 'visibility' | 'number';
+    filterType?: 'status' | 'visibility' | 'number' | 'date';
     icon?: React.ReactNode;
     className?: string;
   }) => {
     const isActive = sortField === field;
     const hasFilter = filterType === 'status' ? filters.statuses.length > 0 :
                      filterType === 'visibility' ? filters.visibilities.length > 0 :
-                     filterType === 'number' ? filters.participantsOperator !== null : false;
+                     filterType === 'number' ? filters.participantsOperator !== null :
+                     filterType === 'date' ? filters.dateOperator !== null : false;
 
     return (
       <div className={`flex items-center gap-1 group ${className}`}>
@@ -557,6 +582,74 @@ export function EventsTab() {
                     />
                   </div>
                 )}
+                
+                {filterType === 'date' && (
+                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+                    <Select 
+                      value={filters.dateOperator || '_none'} 
+                      onValueChange={(v) => setFilters(prev => ({ 
+                        ...prev, 
+                        dateOperator: v === '_none' ? null : v as 'after' | 'before' | 'range',
+                        dateValue: v === '_none' ? null : prev.dateValue,
+                        dateEndValue: v === '_none' ? null : prev.dateEndValue
+                      }))}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Filtre" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Aucun</SelectItem>
+                        <SelectItem value="after">Après le</SelectItem>
+                        <SelectItem value="before">Avant le</SelectItem>
+                        <SelectItem value="range">Période</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {filters.dateOperator && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal h-8">
+                            <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                            {filters.dateValue 
+                              ? format(filters.dateValue, 'dd/MM/yy') 
+                              : 'Choisir une date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateValue || undefined}
+                            onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    
+                    {filters.dateOperator === 'range' && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal h-8">
+                            <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                            {filters.dateEndValue 
+                              ? format(filters.dateEndValue, 'dd/MM/yy') 
+                              : 'Date de fin'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateEndValue || undefined}
+                            onSelect={(date) => setFilters(prev => ({ ...prev, dateEndValue: date || null }))}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </DropdownMenuContent>
@@ -622,7 +715,7 @@ export function EventsTab() {
                 )}
               </div>
             </div>
-            <Calendar className="h-8 w-8 text-muted-foreground/50" />
+            <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
           </div>
         </div>
         
@@ -693,7 +786,7 @@ export function EventsTab() {
       <div className="w-full max-w-[1400px]">
         {filteredEvents.length === 0 ? (
           <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement</h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery || hasActiveFilters 
@@ -788,19 +881,27 @@ export function EventsTab() {
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-t border-b border-border">
-                  <TableHead className="font-semibold w-[30%]">
-                    <SortableColumnHeader label="Titre, date et heure" field="title" />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[12%]">
-                    <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[12%]">
-                    <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[18%]">
-                    <SortableColumnHeader label="Lieu" field="location" />
+                  <TableHead className="font-semibold w-[22%]">
+                    <SortableColumnHeader label="Titre" field="title" />
                   </TableHead>
                   <TableHead className="font-semibold w-[14%]">
+                    <ColumnHeaderWithFilter 
+                      label="Date et heure" 
+                      field="date" 
+                      filterType="date"
+                      icon={<CalendarIcon className="h-4 w-4" />}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[16%]">
+                    <SortableColumnHeader label="Lieu" field="location" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[12%]">
                     <ColumnHeaderWithFilter 
                       label="Participants" 
                       field="participants" 
@@ -832,15 +933,15 @@ export function EventsTab() {
                           <img 
                             src={event.cover_image_url || defaultEventCover} 
                             alt={event.name} 
-                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0" 
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0" 
                           />
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-medium" title={event.name}>{truncatedTitle}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {format(parseISO(event.start_date), "d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
-                            </span>
-                          </div>
+                          <span className="font-medium" title={event.name}>{truncatedTitle}</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm whitespace-nowrap">
+                          {format(parseISO(event.start_date), "dd/MM/yy 'à' HH'h'mm")}
+                        </span>
                       </TableCell>
                       <TableCell>{getStatusBadge(status)}</TableCell>
                       <TableCell>{getVisibilityBadge(event.is_public ?? true)}</TableCell>
