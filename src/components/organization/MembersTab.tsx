@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useOrganizationMembers, OrganizationMember } from '@/hooks/useOrganizationMembers';
 import { useTeams } from '@/hooks/useTeams';
-import { useUserSupervisorStatus } from '@/hooks/useEventSupervisors';
+import { useOrganizationSupervisors } from '@/hooks/useEventSupervisors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -372,15 +372,8 @@ export function MembersTab() {
     currentUserId 
   } = useOrganizationMembers();
   
-  // Get supervisor status for all members
-  const memberUserIds = members?.map(m => m.user_id) || [];
-  const supervisorStatuses = memberUserIds.map(userId => 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useUserSupervisorStatus(userId, organizationId || '')
-  );
-  const supervisorUserIds = supervisorStatuses
-    .filter(status => status.isSupervisor)
-    .map((_, idx) => memberUserIds[idx]);
+  // Get all supervisor user IDs for this organization
+  const { supervisorUserIds } = useOrganizationSupervisors(organizationId);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);
