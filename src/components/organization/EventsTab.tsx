@@ -495,36 +495,38 @@ export function EventsTab() {
         </div>
       </div>
 
-      {/* Search and Actions Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Rechercher un événement..." 
-            value={searchQuery} 
-            onChange={e => setSearchQuery(e.target.value)} 
-            className="pl-10 bg-muted border-0" 
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              Effacer les filtres
+      {/* Search and Actions Bar - Sticky */}
+      <div className="sticky top-16 md:top-28 z-20 bg-background pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Rechercher un événement..." 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-10 bg-muted border-0" 
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Effacer les filtres
+              </Button>
+            )}
+            <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
+              <Link to="/organization/scan">
+                <QrCode className="mr-1 md:mr-2 h-4 w-4" />
+                {isMobile ? "Scan" : "Scanner"}
+              </Link>
             </Button>
-          )}
-          <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
-            <Link to="/organization/scan">
-              <QrCode className="mr-1 md:mr-2 h-4 w-4" />
-              {isMobile ? "Scan" : "Scanner"}
-            </Link>
-          </Button>
-          <Button asChild size={isMobile ? "sm" : "default"}>
-            <Link to="/organization/create-event">
-              <Plus className="mr-1 md:mr-2 h-4 w-4" />
-              Créer
-            </Link>
-          </Button>
+            <Button asChild size={isMobile ? "sm" : "default"}>
+              <Link to="/organization/create-event">
+                <Plus className="mr-1 md:mr-2 h-4 w-4" />
+                Créer
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
