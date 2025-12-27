@@ -3,6 +3,7 @@ import { Navbar } from '@/components/Navbar';
 import { EventsTab } from '@/components/organization/EventsTab';
 import { PeopleTab } from '@/components/organization/PeopleTab';
 import { MembersTab } from '@/components/organization/MembersTab';
+import { TeamsTab } from '@/components/organization/TeamsTab';
 import { OrganizationTab } from '@/components/organization/OrganizationTab';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
@@ -18,6 +19,7 @@ export default function OrganizationDashboard() {
           {activeTab === 'events' && <EventsTab />}
           {activeTab === 'people' && <PeopleTab />}
           {activeTab === 'members' && <MembersTab />}
+          {activeTab === 'teams' && <TeamsTab />}
           {activeTab === 'organization' && <OrganizationTab />}
         </div>
       </main>
