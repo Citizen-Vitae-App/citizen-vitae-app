@@ -9,6 +9,7 @@ export interface OrganizationMember {
   organization_id: string;
   role: string;
   custom_role_title: string | null;
+  is_owner: boolean;
   created_at: string | null;
   profile: {
     first_name: string | null;
@@ -16,6 +17,11 @@ export interface OrganizationMember {
     email: string | null;
     avatar_url: string | null;
   } | null;
+  team?: {
+    id: string;
+    name: string;
+  } | null;
+  isLeader?: boolean;
 }
 
 export const useOrganizationMembers = () => {
@@ -56,6 +62,7 @@ export const useOrganizationMembers = () => {
           organization_id,
           role,
           custom_role_title,
+          is_owner,
           created_at
         `)
         .eq('organization_id', organizationId)
@@ -72,11 +79,37 @@ export const useOrganizationMembers = () => {
 
       if (profilesError) throw profilesError;
 
+      // Fetch team memberships for each user
+      const { data: teamMemberships, error: teamError } = await supabase
+        .from('team_members')
+        .select(`
+          user_id,
+          is_leader,
+          team:teams(id, name, organization_id)
+        `)
+        .in('user_id', memberIds);
+
+      if (teamError) throw teamError;
+
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      // Create team map (only for this organization's teams)
+      const teamMap = new Map<string, { team: { id: string; name: string } | null; isLeader: boolean }>();
+      (teamMemberships || []).forEach(tm => {
+        const team = Array.isArray(tm.team) ? tm.team[0] : tm.team;
+        if (team?.organization_id === organizationId) {
+          teamMap.set(tm.user_id, {
+            team: { id: team.id, name: team.name },
+            isLeader: tm.is_leader,
+          });
+        }
+      });
 
       return data.map(member => ({
         ...member,
         profile: profileMap.get(member.user_id) || null,
+        team: teamMap.get(member.user_id)?.team || null,
+        isLeader: teamMap.get(member.user_id)?.isLeader || false,
       })) as OrganizationMember[];
     },
     enabled: !!organizationId,
