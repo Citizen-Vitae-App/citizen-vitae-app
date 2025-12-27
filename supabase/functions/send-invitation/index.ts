@@ -12,9 +12,13 @@ interface InvitationRequest {
   emails: string[];
   organizationId: string;
   organizationName: string;
+  organizationLogoUrl?: string;
   customMessage?: string;
   subject?: string;
   isContactEmail?: boolean;
+  isCollaboratorInvite?: boolean;
+  role?: string;
+  customRoleTitle?: string;
   invitedBy?: string;
 }
 
@@ -60,10 +64,14 @@ const handler = async (req: Request): Promise<Response> => {
     const { 
       emails, 
       organizationId,
-      organizationName, 
+      organizationName,
+      organizationLogoUrl,
       customMessage, 
       subject, 
       isContactEmail,
+      isCollaboratorInvite,
+      role,
+      customRoleTitle,
       invitedBy
     }: InvitationRequest = await req.json();
 
@@ -87,13 +95,19 @@ const handler = async (req: Request): Promise<Response> => {
     // Send emails sequentially with delay to respect rate limits (2 req/sec)
     for (const email of emails) {
       try {
-        const emailSubject = isContactEmail 
-          ? subject || `Message de ${organizationName}`
-          : `${organizationName} vous invite à rejoindre Citizen Vitae`;
+        let emailSubject: string;
+        let htmlContent: string;
 
-        const htmlContent = isContactEmail 
-          ? generateContactEmailHtml(organizationName, customMessage || '')
-          : generateInvitationEmailHtml(organizationName, customMessage);
+        if (isContactEmail) {
+          emailSubject = subject || `Message de ${organizationName}`;
+          htmlContent = generateContactEmailHtml(organizationName, customMessage || '');
+        } else if (isCollaboratorInvite) {
+          emailSubject = `Rejoignez l'équipe ${organizationName} sur Citizen Vitae`;
+          htmlContent = generateCollaboratorInviteHtml(organizationName, organizationLogoUrl, role, customRoleTitle);
+        } else {
+          emailSubject = `${organizationName} vous invite à rejoindre Citizen Vitae`;
+          htmlContent = generateInvitationEmailHtml(organizationName, customMessage);
+        }
 
         const response = await sendEmail(email, emailSubject, htmlContent);
         console.log(`Email sent successfully to ${email}:`, response);
@@ -186,7 +200,98 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
+function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string): string {
+  const roleLabel = customRoleTitle || (role === 'admin' ? 'Administrateur' : 'Membre');
+  const citizenVitaeLogo = 'https://dev.citizenvitae.com/lovable-uploads/8ad21a60-5520-4339-be68-fb3c7d91a8c5.png';
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invitation à collaborer - Citizen Vitae</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 auto;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <!-- Header with logos -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td style="text-align: center;">
+                          <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 50px; margin-bottom: 16px;" />
+                          ${organizationLogoUrl ? `
+                          <div style="margin: 16px 0;">
+                            <span style="color: rgba(255,255,255,0.7); font-size: 24px;">×</span>
+                          </div>
+                          <img src="${organizationLogoUrl}" alt="${organizationName}" style="height: 50px; max-width: 150px; object-fit: contain; background: white; border-radius: 8px; padding: 8px;" />
+                          ` : ''}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px 30px;">
+                    <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px; font-weight: 700; text-align: center;">
+                      Bienvenue dans l'équipe !
+                    </h2>
+                    
+                    <p style="margin: 0 0 20px; color: #4b5563; font-size: 16px; line-height: 1.7; text-align: center;">
+                      <strong>${organizationName}</strong> vous invite à rejoindre son équipe sur <strong>Citizen Vitae</strong> en tant que <strong>${roleLabel}</strong>.
+                    </p>
+                    
+                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; padding: 24px; margin: 24px 0; border-radius: 12px;">
+                      <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: 600;">En tant que collaborateur, vous pourrez :</h3>
+                      <ul style="margin: 0; padding-left: 20px; color: #15803d; font-size: 14px; line-height: 1.8;">
+                        <li>Gérer les événements et missions de l'organisation</li>
+                        <li>Certifier les participations des bénévoles</li>
+                        <li>Suivre l'impact citoyen de votre organisation</li>
+                        <li>Collaborer avec les autres membres de l'équipe</li>
+                      </ul>
+                    </div>
+                    
+                    <p style="margin: 0 0 30px; color: #6b7280; font-size: 14px; line-height: 1.6; text-align: center;">
+                      Créez votre compte en quelques clics pour commencer à collaborer dès maintenant.
+                    </p>
+                    
+                    <div style="text-align: center;">
+                      <a href="https://dev.citizenvitae.com/auth" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                        Créer mon compte collaborateur
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px;">
+                      Cette invitation vous a été envoyée par ${organizationName}
+                    </p>
+                    <p style="margin: 0; color: #9ca3af; font-size: 11px;">
+                      Citizen Vitae - La plateforme de valorisation de l'engagement citoyen
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+}
+
 function generateInvitationEmailHtml(organizationName: string, customMessage?: string): string {
+  const citizenVitaeLogo = 'https://dev.citizenvitae.com/lovable-uploads/8ad21a60-5520-4339-be68-fb3c7d91a8c5.png';
+  
   return `
     <!DOCTYPE html>
     <html>
@@ -203,8 +308,8 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
                 <!-- Header -->
                 <tr>
                   <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-                    <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Citizen Vitae</h1>
-                    <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Valorisez votre engagement citoyen</p>
+                    <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 50px; margin-bottom: 16px;" />
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Valorisez votre engagement citoyen</p>
                   </td>
                 </tr>
                 

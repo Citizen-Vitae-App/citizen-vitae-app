@@ -176,13 +176,15 @@ export const useOrganizationMembers = () => {
     },
   });
 
-  // Add new member by email
+  // Add new member by email (or send invitation if user doesn't exist)
   const addMember = useMutation({
-    mutationFn: async ({ email, role, customRoleTitle }: { 
+    mutationFn: async ({ email, role, customRoleTitle, organizationName, organizationLogoUrl }: { 
       email: string; 
       role: string;
       customRoleTitle?: string;
-    }) => {
+      organizationName?: string;
+      organizationLogoUrl?: string;
+    }): Promise<{ invited: boolean }> => {
       if (!organizationId) throw new Error('No organization found');
 
       // Find user by email using secure function
@@ -190,38 +192,64 @@ export const useOrganizationMembers = () => {
         .rpc('get_user_id_by_email', { _email: email });
 
       if (lookupError) throw lookupError;
-      if (!userId) throw new Error('Aucun utilisateur trouvé avec cet email');
 
-      // Check if already a member
-      const { data: existingMember } = await supabase
-        .from('organization_members')
-        .select('id')
-        .eq('organization_id', organizationId)
-        .eq('user_id', userId)
-        .maybeSingle();
+      // If user exists, add them directly
+      if (userId) {
+        // Check if already a member
+        const { data: existingMember } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('organization_id', organizationId)
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (existingMember) {
-        throw new Error('Cet utilisateur est déjà membre de l\'organisation');
+        if (existingMember) {
+          throw new Error('Cet utilisateur est déjà membre de l\'organisation');
+        }
+
+        // Add member
+        const { error } = await supabase
+          .from('organization_members')
+          .insert({
+            organization_id: organizationId,
+            user_id: userId,
+            role,
+            custom_role_title: customRoleTitle || null,
+          });
+
+        if (error) throw error;
+        return { invited: false };
       }
 
-      // Add member
-      const { error } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: organizationId,
-          user_id: userId,
+      // User doesn't exist - send invitation email
+      const { error: inviteError } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          emails: [email],
+          organizationId,
+          organizationName: organizationName || 'Votre organisation',
+          organizationLogoUrl: organizationLogoUrl || null,
+          isCollaboratorInvite: true,
           role,
-          custom_role_title: customRoleTitle || null,
-        });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organization-members'] });
-      toast({
-        title: 'Membre ajouté',
-        description: 'Le nouveau membre a été ajouté à l\'organisation.',
+          customRoleTitle: customRoleTitle || null,
+        },
       });
+
+      if (inviteError) throw inviteError;
+      return { invited: true };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['organization-members'] });
+      if (result.invited) {
+        toast({
+          title: 'Invitation envoyée',
+          description: 'Un email d\'invitation a été envoyé au collaborateur.',
+        });
+      } else {
+        toast({
+          title: 'Membre ajouté',
+          description: 'Le nouveau membre a été ajouté à l\'organisation.',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({

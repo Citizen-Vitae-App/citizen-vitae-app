@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useOrganizationMembers, OrganizationMember } from '@/hooks/useOrganizationMembers';
 import { useTeams } from '@/hooks/useTeams';
 import { useOrganizationSupervisors } from '@/hooks/useEventSupervisors';
+import { useOrganizationSettings } from '@/hooks/useOrganizationSettings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -226,9 +227,9 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ajouter un membre</DialogTitle>
+          <DialogTitle>Ajouter un collaborateur</DialogTitle>
           <DialogDescription>
-            Invitez un utilisateur existant à rejoindre votre organisation
+            Invitez un nouveau collaborateur à rejoindre votre organisation. S'il n'a pas encore de compte, il recevra un email d'invitation.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -237,13 +238,10 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
             <Input
               id="email"
               type="email"
-              placeholder="exemple@email.com"
+              placeholder="collaborateur@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <p className="text-sm text-muted-foreground">
-              L'utilisateur doit déjà avoir un compte sur la plateforme
-            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Rôle</Label>
@@ -278,7 +276,7 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
             Annuler
           </Button>
           <Button onClick={handleAdd} disabled={isLoading || !email}>
-            {isLoading ? 'Ajout en cours...' : 'Ajouter'}
+            {isLoading ? 'Envoi en cours...' : 'Inviter'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -372,6 +370,9 @@ export function MembersTab() {
     currentUserId 
   } = useOrganizationMembers();
   
+  // Get organization info for invitation emails
+  const { organization } = useOrganizationSettings();
+  
   // Get all supervisor user IDs for this organization
   const { supervisorUserIds } = useOrganizationSupervisors(organizationId);
   
@@ -408,7 +409,13 @@ export function MembersTab() {
 
   const handleAddMember = (email: string, role: string, customRoleTitle?: string) => {
     addMember.mutate(
-      { email, role, customRoleTitle },
+      { 
+        email, 
+        role, 
+        customRoleTitle,
+        organizationName: organization?.name,
+        organizationLogoUrl: organization?.logo_url || undefined,
+      },
       { onSuccess: () => setAddDialogOpen(false) }
     );
   };
