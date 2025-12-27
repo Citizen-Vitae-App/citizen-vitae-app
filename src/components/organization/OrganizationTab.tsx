@@ -1,9 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { Settings, Building2, Users, Globe, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Settings, Users, UsersRound, ChevronRight } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function OrganizationTab() {
+interface OrganizationTabProps {
+  onNavigateToMembers?: () => void;
+  onNavigateToTeams?: () => void;
+}
+
+export function OrganizationTab({ onNavigateToMembers, onNavigateToTeams }: OrganizationTabProps) {
   const navigate = useNavigate();
 
   return (
@@ -31,37 +35,43 @@ export function OrganizationTab() {
           </CardHeader>
         </Card>
 
-        <Card className="opacity-60">
+        <Card 
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          onClick={onNavigateToMembers}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <Users className="h-5 w-5 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Gestion des membres</CardTitle>
+                <CardTitle className="text-lg">Membres</CardTitle>
                 <CardDescription>
                   Gérez les rôles et permissions des membres
                 </CardDescription>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Bientôt</span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
         </Card>
 
-        <Card className="opacity-60">
+        <Card 
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          onClick={onNavigateToTeams}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <Globe className="h-5 w-5 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <UsersRound className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Page publique</CardTitle>
+                <CardTitle className="text-lg">Équipes</CardTitle>
                 <CardDescription>
-                  Prévisualisez votre page organisation publique
+                  Organisez vos équipes et leurs responsables
                 </CardDescription>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Bientôt</span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
         </Card>
       </div>

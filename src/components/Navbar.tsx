@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle } from 'lucide-react';
+import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -32,11 +32,12 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
   
-  const tabs = activeTab && onTabChange ? [
+  // Check if we're in organization dashboard mode (has tabs)
+  const isOrganizationMode = !!(activeTab && onTabChange);
+  
+  const tabs = isOrganizationMode ? [
     { value: 'events', label: 'Événements' },
     { value: 'people', label: 'Contributeurs' },
-    { value: 'members', label: 'Membres' },
-    { value: 'teams', label: 'Équipes' },
     { value: 'organization', label: 'Organisation' }
   ] : null;
 
@@ -111,6 +112,19 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                           {tab.label}
                         </button>
                       ))}
+                      
+                      {/* Separator and link to public page */}
+                      <div className="border-t border-border my-2" />
+                      <button
+                        onClick={() => {
+                          navigate('/');
+                          setDrawerOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-left text-base font-medium transition-all rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-3"
+                      >
+                        <Home className="h-4 w-4" />
+                        Page publique
+                      </button>
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -144,6 +158,17 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    {/* Link to public page when in organization mode */}
+                    {isOrganizationMode && (
+                      <>
+                        <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/')}>
+                          <Home className="mr-3 h-4 w-4" />
+                          <span>Page publique</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    
                     {/* Section principale */}
                     <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/my-missions')}>
                       <ClipboardList className="mr-3 h-4 w-4" />
