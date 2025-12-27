@@ -640,9 +640,9 @@ export function EventsTab() {
           </div>
         ) : (
           // Desktop: Table view
-          <div className="border rounded-lg overflow-hidden w-full">
+          <div className="border rounded-lg overflow-auto w-full max-h-[calc(100vh-280px)]">
             <Table className="table-fixed w-full">
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-background">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="font-semibold w-[35%]">
                     <SortableColumnHeader label="Titre" field="title" />
