@@ -156,6 +156,52 @@ export type Database = {
           },
         ]
       }
+      event_supervisors: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_supervisors_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_supervisors_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_supervisors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           allow_self_certification: boolean | null
@@ -174,6 +220,7 @@ export type Database = {
           organization_id: string
           require_approval: boolean | null
           start_date: string
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -193,6 +240,7 @@ export type Database = {
           organization_id: string
           require_approval?: boolean | null
           start_date: string
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -212,6 +260,7 @@ export type Database = {
           organization_id?: string
           require_approval?: boolean | null
           start_date?: string
+          team_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -220,6 +269,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -363,6 +419,7 @@ export type Database = {
           created_at: string | null
           custom_role_title: string | null
           id: string
+          is_owner: boolean | null
           organization_id: string
           role: string
           user_id: string
@@ -371,6 +428,7 @@ export type Database = {
           created_at?: string | null
           custom_role_title?: string | null
           id?: string
+          is_owner?: boolean | null
           organization_id: string
           role: string
           user_id: string
@@ -379,6 +437,7 @@ export type Database = {
           created_at?: string | null
           custom_role_title?: string | null
           id?: string
+          is_owner?: boolean | null
           organization_id?: string
           role?: string
           user_id?: string
@@ -516,6 +575,80 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_leader: boolean | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_leader?: boolean | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_leader?: boolean | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_cause_themes: {
         Row: {
           cause_theme_id: string
@@ -641,6 +774,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_team_in_org: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: string
+      }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_organization_admin: {
         Args: { _org_id: string; _user_id: string }
@@ -648,6 +785,10 @@ export type Database = {
       }
       is_organization_member: {
         Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_leader: {
+        Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
     }
