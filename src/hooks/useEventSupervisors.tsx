@@ -161,6 +161,36 @@ export function useUserSupervisorStatus(userId: string | null, organizationId: s
   };
 }
 
+// Hook to get all supervisor user IDs for an organization
+export function useOrganizationSupervisors(organizationId: string | null) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['organization-supervisors', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return [];
+
+      const { data, error } = await supabase
+        .from('event_supervisors')
+        .select(`
+          user_id,
+          event:events!inner(organization_id)
+        `)
+        .eq('event.organization_id', organizationId);
+
+      if (error) throw error;
+
+      // Get unique user IDs
+      const uniqueUserIds = [...new Set((data || []).map(s => s.user_id))];
+      return uniqueUserIds;
+    },
+    enabled: !!organizationId,
+  });
+
+  return {
+    supervisorUserIds: data ?? [],
+    isLoading,
+  };
+}
+
 // Hook to fetch contributors (event participants) that can be assigned as supervisors
 export function useContributorsForSupervisor(organizationId: string | null) {
   const { data: contributors, isLoading } = useQuery({
