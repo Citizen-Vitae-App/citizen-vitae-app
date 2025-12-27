@@ -749,29 +749,31 @@ export function PeopleTab() {
         </div>
       </div>
 
-      {/* Search and Actions Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Rechercher par nom ou email..." 
-            value={searchQuery} 
-            onChange={e => setSearchQuery(e.target.value)} 
-            className="pl-10 bg-muted border-0" 
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              <Filter className="h-4 w-4 mr-2" />
-              Effacer les filtres
+      {/* Search and Actions Bar - Sticky */}
+      <div className="sticky top-16 md:top-28 z-20 bg-background pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Rechercher par nom ou email..." 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-10 bg-muted border-0" 
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                <Filter className="h-4 w-4 mr-2" />
+                Effacer les filtres
+              </Button>
+            )}
+            <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Inviter des bénévoles
             </Button>
-          )}
-          <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Inviter des bénévoles
-          </Button>
+          </div>
         </div>
       </div>
 
