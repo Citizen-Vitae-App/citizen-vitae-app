@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building } from "lucide-react";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import EventCard from "@/components/EventCard";
 import EventFilters, { DateRange } from "@/components/EventFilters";
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicEvents } from '@/hooks/useEvents';
+import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 import { generateShortTitle } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
@@ -21,9 +22,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const Index = () => {
   const { user, profile, signOut, needsOnboarding, isLoading: isAuthLoading, hasRole } = useAuth();
+  const { activeOrganization, canAccessDashboard } = useUserOrganizations();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
@@ -38,14 +45,13 @@ const Index = () => {
 
   const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
 
+  // Only redirect for onboarding and super_admin - NOT for organization role
   useEffect(() => {
     if (!isAuthLoading && user) {
       if (needsOnboarding) {
         navigate('/onboarding');
       } else if (hasRole('super_admin')) {
         navigate('/admin');
-      } else if (hasRole('organization')) {
-        navigate('/organization/dashboard');
       }
     }
   }, [user, needsOnboarding, isAuthLoading, hasRole, navigate]);
@@ -55,6 +61,10 @@ const Index = () => {
       return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
     }
     return user?.email?.[0].toUpperCase() || 'U';
+  };
+
+  const getOrgInitials = (name: string) => {
+    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   };
 
   const formatEventDate = (startDate: string) => {
@@ -160,6 +170,28 @@ const Index = () => {
                 <>
                   <NotificationDropdown />
                   
+                  {/* Bouton accès console organisation */}
+                  {canAccessDashboard && activeOrganization && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="relative h-10 w-10 rounded-full p-0"
+                          onClick={() => navigate('/organization/dashboard')}
+                        >
+                          <Avatar className="h-10 w-10 cursor-pointer border-2 border-primary/20">
+                            <AvatarImage src={activeOrganization.logo_url || undefined} alt={activeOrganization.name} />
+                            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                              {getOrgInitials(activeOrganization.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Console organisation</TooltipContent>
+                    </Tooltip>
+                  )}
+                  <NotificationDropdown />
+                  
                   {/* Avatar cliquable vers profil */}
                   <Button
                     variant="ghost"
@@ -212,6 +244,14 @@ const Index = () => {
                       </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
+                      
+                      {/* Accès console organisation - Mobile menu */}
+                      {canAccessDashboard && (
+                        <DropdownMenuItem onClick={() => navigate('/organization/dashboard')} className="cursor-pointer py-3">
+                          <Building className="mr-3 h-4 w-4" />
+                          <span>Console organisation</span>
+                        </DropdownMenuItem>
+                      )}
                       
                       {/* Déconnexion */}
                       <DropdownMenuItem onClick={signOut} className="cursor-pointer py-3">
