@@ -158,17 +158,6 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    {/* Link to public page when in organization mode */}
-                    {isOrganizationMode && (
-                      <>
-                        <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/')}>
-                          <Home className="mr-3 h-4 w-4" />
-                          <span>Page publique</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    
                     {/* Section principale */}
                     <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/my-missions')}>
                       <ClipboardList className="mr-3 h-4 w-4" />
@@ -194,6 +183,17 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
                       <HelpCircle className="mr-3 h-4 w-4" />
                       <span>Centre d'aide</span>
                     </DropdownMenuItem>
+                    
+                    {/* Link to public page when in organization mode - after Centre d'aide */}
+                    {isOrganizationMode && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/')}>
+                          <Home className="mr-3 h-4 w-4" />
+                          <span>Page publique</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     
                     <DropdownMenuSeparator />
                     

@@ -774,6 +774,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_user_team_in_org: {
         Args: { _org_id: string; _user_id: string }
         Returns: string

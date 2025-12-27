@@ -185,22 +185,19 @@ export const useOrganizationMembers = () => {
     }) => {
       if (!organizationId) throw new Error('No organization found');
 
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+      // Find user by email using secure function
+      const { data: userId, error: lookupError } = await supabase
+        .rpc('get_user_id_by_email', { _email: email });
 
-      if (profileError) throw profileError;
-      if (!profile) throw new Error('Aucun utilisateur trouvé avec cet email');
+      if (lookupError) throw lookupError;
+      if (!userId) throw new Error('Aucun utilisateur trouvé avec cet email');
 
       // Check if already a member
       const { data: existingMember } = await supabase
         .from('organization_members')
         .select('id')
         .eq('organization_id', organizationId)
-        .eq('user_id', profile.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (existingMember) {
@@ -212,7 +209,7 @@ export const useOrganizationMembers = () => {
         .from('organization_members')
         .insert({
           organization_id: organizationId,
-          user_id: profile.id,
+          user_id: userId,
           role,
           custom_role_title: customRoleTitle || null,
         });
