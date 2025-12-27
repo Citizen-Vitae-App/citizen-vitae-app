@@ -877,46 +877,41 @@ export function PeopleTab() {
         </div>
       ) : (
         // Desktop: Table view
-        <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
-          <div className="sticky top-16 md:top-28 z-10 bg-background">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10"></TableHead>
-                  <TableHead className="min-w-[140px] w-[20%]">
-                    <SortableColumnHeader label="Nom" field="name" />
-                  </TableHead>
-                  <TableHead className="min-w-[180px] w-[25%]">
-                    <SortableColumnHeader label="e-mail" field="email" />
-                  </TableHead>
-                  <TableHead className="w-[110px] pl-6">
-                    <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
-                  </TableHead>
-                  <TableHead className="w-[60px] text-left">
-                    <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
-                  </TableHead>
-                  <TableHead className="w-[60px] text-left">
-                    <ColumnHeaderWithFilter 
-                      label="Certif." 
-                      field="certificates" 
-                      filterType="number" 
-                      icon={<Award className="h-3.5 w-3.5" />}
-                    />
-                  </TableHead>
-                  <TableHead className="w-[90px] text-left">
-                    <ColumnHeaderWithFilter 
-                      label="Dern. part." 
-                      field="lastParticipation" 
-                      filterType="date"
-                    />
-                  </TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
-          </div>
-
+        <div className="border rounded-lg overflow-auto w-full max-w-[1400px] max-h-[calc(100vh-280px)]">
           <Table>
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableRow>
+                <TableHead className="w-10"></TableHead>
+                <TableHead className="min-w-[140px] w-[20%]">
+                  <SortableColumnHeader label="Nom" field="name" />
+                </TableHead>
+                <TableHead className="min-w-[180px] w-[25%]">
+                  <SortableColumnHeader label="e-mail" field="email" />
+                </TableHead>
+                <TableHead className="w-[110px] pl-6">
+                  <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
+                </TableHead>
+                <TableHead className="w-[60px] text-left">
+                  <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
+                </TableHead>
+                <TableHead className="w-[60px] text-left">
+                  <ColumnHeaderWithFilter 
+                    label="Certif." 
+                    field="certificates" 
+                    filterType="number" 
+                    icon={<Award className="h-3.5 w-3.5" />}
+                  />
+                </TableHead>
+                <TableHead className="w-[90px] text-left">
+                  <ColumnHeaderWithFilter 
+                    label="Dern. part." 
+                    field="lastParticipation" 
+                    filterType="date"
+                  />
+                </TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {filteredParticipants.map(participant => (
                 <TableRow key={participant.user_id}>

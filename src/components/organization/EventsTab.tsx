@@ -640,83 +640,77 @@ export function EventsTab() {
           </div>
         ) : (
           // Desktop: Table view
-          <div className="border rounded-lg overflow-hidden w-full">
-            {/* Sticky: search/actions bar is above, so we keep the table header in the same sticky context */}
-            <div className="sticky top-16 md:top-28 z-10 bg-background">
-              <Table className="table-fixed w-full">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold w-[35%]">
-                      <SortableColumnHeader label="Titre" field="title" />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[12%]">
-                      <ColumnHeaderWithFilter 
-                        label="Date et heure" 
-                        field="date" 
-                        filterType="date"
-                        icon={<CalendarIcon className="h-4 w-4" />}
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Statut" 
-                        field="status" 
-                        filterType="status"
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Visibilité" 
-                        field="visibility" 
-                        filterType="visibility"
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[18%]">
-                      <SortableColumnHeader label="Lieu" field="location" />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Participants" 
-                        field="participants" 
-                        filterType="participants"
-                        icon={<Users className="h-4 w-4" />}
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="w-[5%]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
-            </div>
-
+          <div className="border rounded-lg overflow-auto w-full max-h-[calc(100vh-280px)]">
             <Table className="table-fixed w-full">
+              <TableHeader className="sticky top-0 z-10 bg-background">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold w-[35%]">
+                    <SortableColumnHeader label="Titre" field="title" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[12%]">
+                    <ColumnHeaderWithFilter 
+                      label="Date et heure" 
+                      field="date" 
+                      filterType="date"
+                      icon={<CalendarIcon className="h-4 w-4" />}
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Statut" 
+                      field="status" 
+                      filterType="status"
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Visibilité" 
+                      field="visibility" 
+                      filterType="visibility"
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[18%]">
+                    <SortableColumnHeader label="Lieu" field="location" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Participants" 
+                      field="participants" 
+                      filterType="participants"
+                      icon={<Users className="h-4 w-4" />}
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[5%]"></TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {filteredEvents.map(event => {
                   const status = getEventStatus(event.start_date, event.end_date);
