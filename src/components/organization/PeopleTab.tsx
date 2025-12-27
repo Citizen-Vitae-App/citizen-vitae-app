@@ -877,9 +877,9 @@ export function PeopleTab() {
         </div>
       ) : (
         // Desktop: Table view
-        <div className="border rounded-lg overflow-hidden w-full max-w-[1400px]">
+        <div className="border rounded-lg overflow-auto w-full max-w-[1400px] max-h-[calc(100vh-280px)]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
                 <TableHead className="w-10"></TableHead>
                 <TableHead className="min-w-[140px] w-[20%]">
