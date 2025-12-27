@@ -170,7 +170,7 @@ const Index = () => {
                 <>
                   <NotificationDropdown />
                   
-                  {/* Bouton accès console organisation */}
+                  {/* Bouton accès console organisation - juste avant l'avatar */}
                   {canAccessDashboard && activeOrganization && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -190,7 +190,6 @@ const Index = () => {
                       <TooltipContent>Console organisation</TooltipContent>
                     </Tooltip>
                   )}
-                  <NotificationDropdown />
                   
                   {/* Avatar cliquable vers profil */}
                   <Button
