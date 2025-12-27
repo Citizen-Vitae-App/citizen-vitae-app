@@ -20,7 +20,12 @@ export default function OrganizationDashboard() {
           {activeTab === 'people' && <PeopleTab />}
           {activeTab === 'members' && <MembersTab />}
           {activeTab === 'teams' && <TeamsTab />}
-          {activeTab === 'organization' && <OrganizationTab />}
+          {activeTab === 'organization' && (
+            <OrganizationTab 
+              onNavigateToMembers={() => setActiveTab('members')}
+              onNavigateToTeams={() => setActiveTab('teams')}
+            />
+          )}
         </div>
       </main>
       

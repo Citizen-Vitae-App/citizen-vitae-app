@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award, Eye, Heart } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -355,24 +356,35 @@ export default function OrganizationSettings() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {allCauseThemes.map(cause => <Badge key={cause.id} variant={selectedCauses.includes(cause.id) ? 'default' : 'outline'} className="cursor-pointer transition-colors py-1.5 px-3" style={{
-                    backgroundColor: selectedCauses.includes(cause.id) ? cause.color : 'transparent',
-                    borderColor: cause.color,
-                    color: selectedCauses.includes(cause.id) ? 'white' : cause.color
-                  }} onClick={() => toggleCause(cause.id)}>
-                        <span className="mr-1">{cause.icon}</span>
-                        {cause.name}
-                      </Badge>)}
+                    {allCauseThemes.map(cause => {
+                      const IconComponent = (Icons as any)[cause.icon] || Icons.Heart;
+                      return (
+                        <Badge 
+                          key={cause.id} 
+                          variant={selectedCauses.includes(cause.id) ? 'default' : 'outline'} 
+                          className="cursor-pointer transition-colors py-1.5 px-3" 
+                          style={{
+                            backgroundColor: selectedCauses.includes(cause.id) ? cause.color : 'transparent',
+                            borderColor: cause.color,
+                            color: selectedCauses.includes(cause.id) ? 'white' : cause.color
+                          }} 
+                          onClick={() => toggleCause(cause.id)}
+                        >
+                          <IconComponent className="h-4 w-4 mr-1" />
+                          {cause.name}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Visibility & URL */}
+              {/* Visibility */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Link2 className="h-5 w-5" />
-                    Visibilité & URL
+                    <Eye className="h-5 w-5" />
+                    Visibilité
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -407,23 +419,6 @@ export default function OrganizationSettings() {
                         </Label>
                       </div>
                     </RadioGroup>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="slug">URL publique</Label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                          citizenvitae.com/org/
-                        </span>
-                        <Input id="slug" value={formData.slug || ''} onChange={e => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))} className="pl-[155px]" placeholder="mon-organisation" />
-                      </div>
-                      <Button variant="outline" onClick={handleGenerateSlug} disabled={!formData.name}>
-                        Générer
-                      </Button>
-                    </div>
-                    {isCheckingSlug && <p className="text-xs text-muted-foreground">Vérification...</p>}
-                    {slugError && <p className="text-xs text-destructive">{slugError}</p>}
                   </div>
                 </CardContent>
               </Card>
