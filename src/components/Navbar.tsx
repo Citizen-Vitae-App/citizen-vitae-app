@@ -33,7 +33,7 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   const tabs = activeTab && onTabChange ? [
-    { value: 'events', label: 'Événements' },
+    { value: 'events', label: 'Events' },
     { value: 'people', label: 'Contributeurs' },
     { value: 'members', label: 'Members' },
     { value: 'organization', label: 'Organization' }

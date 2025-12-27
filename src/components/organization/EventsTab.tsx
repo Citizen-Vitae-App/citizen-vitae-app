@@ -12,6 +12,8 @@ import {
   Lock, 
   QrCode,
   MoreVertical,
+  ArrowUp,
+  ArrowDown,
   ChevronUp,
   ChevronDown,
   Edit,
@@ -19,7 +21,8 @@ import {
   Copy,
   TrendingUp,
   Activity,
-  Tag
+  Tag,
+  X
 } from 'lucide-react';
 import { useOrganizationEvents } from '@/hooks/useEvents';
 import { useEventsParticipantCounts } from '@/hooks/useEventParticipants';
@@ -50,7 +53,22 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ColumnHeaderWithFilter, EventFilters, SortField, SortDirection, FilterPanelType } from './ColumnHeaderWithFilter';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+interface EventFilters {
+  statuses: string[];
+  visibilities: string[];
+  participantsOperator: 'gte' | 'lte' | 'eq' | null;
+  participantsValue: number | null;
+  dateOperator: 'after' | 'before' | 'range' | null;
+  dateValue: Date | null;
+  dateEndValue: Date | null;
+}
+
+type SortField = 'title' | 'date' | 'status' | 'visibility' | 'location' | 'participants' | null;
+type SortDirection = 'asc' | 'desc';
+type FilterPanelType = 'status' | 'visibility' | 'participants' | 'date' | null;
 
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
@@ -405,6 +423,263 @@ export function EventsTab() {
     }
   };
 
+  // Column header with controlled Popover for filter
+  const ColumnHeaderWithFilter = ({ 
+    label, 
+    field, 
+    filterType,
+    icon
+  }: { 
+    label: string; 
+    field: SortField;
+    filterType: 'status' | 'visibility' | 'participants' | 'date';
+    icon?: React.ReactNode;
+  }) => {
+    const isActive = sortField === field;
+    const hasFilter = filterType === 'status' ? filters.statuses.length > 0 :
+                     filterType === 'visibility' ? filters.visibilities.length > 0 :
+                     filterType === 'participants' ? filters.participantsOperator !== null :
+                     filterType === 'date' ? filters.dateOperator !== null : false;
+
+    const isOpen = openFilterPanel === filterType;
+
+    return (
+      <div className="flex items-center gap-1 group">
+        {icon}
+        <span className="whitespace-nowrap">{label}</span>
+        <Popover open={isOpen} onOpenChange={(open) => setOpenFilterPanel(open ? filterType : null)}>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-5 w-5 ml-0.5 ${isActive || hasFilter || isOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+            >
+              <MoreVertical className={`h-3.5 w-3.5 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-56 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+            {/* Sort section */}
+            <div className="p-2 border-b border-border">
+              <p className="text-xs text-muted-foreground font-medium mb-1.5 px-1">Trier</p>
+              <div className="flex gap-1">
+                <Button 
+                  variant={sortField === field && sortDirection === 'asc' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => toggleSort(field, 'asc')}
+                >
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                  Croissant
+                </Button>
+                <Button 
+                  variant={sortField === field && sortDirection === 'desc' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => toggleSort(field, 'desc')}
+                >
+                  <ArrowDown className="h-3 w-3 mr-1" />
+                  Décroissant
+                </Button>
+              </div>
+            </div>
+            
+            {/* Filter section */}
+            <div className="p-2">
+              <p className="text-xs text-muted-foreground font-medium mb-1.5 px-1">Filtrer</p>
+              
+              {filterType === 'status' && (
+                <div className="space-y-1">
+                  {['À venir', 'En cours', 'Passé'].map(status => {
+                    const isSelected = filters.statuses.includes(status);
+                    return (
+                      <button 
+                        key={status} 
+                        className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-muted rounded text-left"
+                        onClick={() => {
+                          setFilters(prev => ({
+                            ...prev,
+                            statuses: isSelected 
+                              ? prev.statuses.filter(s => s !== status)
+                              : [...prev.statuses, status]
+                          }));
+                        }}
+                      >
+                        <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                        </div>
+                        <span className="text-sm">{status}</span>
+                      </button>
+                    );
+                  })}
+                  {filters.statuses.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7 mt-1"
+                      onClick={() => setFilters(prev => ({ ...prev, statuses: [] }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'visibility' && (
+                <div className="space-y-1">
+                  {[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Privé' }].map(({ value, label }) => {
+                    const isSelected = filters.visibilities.includes(value);
+                    return (
+                      <button 
+                        key={value} 
+                        className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-muted rounded text-left"
+                        onClick={() => {
+                          setFilters(prev => ({
+                            ...prev,
+                            visibilities: isSelected 
+                              ? prev.visibilities.filter(s => s !== value)
+                              : [...prev.visibilities, value]
+                          }));
+                        }}
+                      >
+                        <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                        </div>
+                        <span className="text-sm">{label}</span>
+                      </button>
+                    );
+                  })}
+                  {filters.visibilities.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7 mt-1"
+                      onClick={() => setFilters(prev => ({ ...prev, visibilities: [] }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'participants' && (
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    {[
+                      { value: 'eq', label: '=' },
+                      { value: 'gte', label: '≥' },
+                      { value: 'lte', label: '≤' }
+                    ].map(({ value, label }) => (
+                      <Button
+                        key={value}
+                        variant={filters.participantsOperator === value ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="flex-1 h-7 text-xs"
+                        onClick={() => setFilters(prev => ({ 
+                          ...prev, 
+                          participantsOperator: prev.participantsOperator === value ? null : value as 'gte' | 'lte' | 'eq'
+                        }))}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                  <Input 
+                    type="number" 
+                    placeholder="Valeur"
+                    value={filters.participantsValue ?? ''}
+                    onChange={(e) => setFilters(prev => ({ 
+                      ...prev, 
+                      participantsValue: e.target.value ? parseInt(e.target.value) : null 
+                    }))}
+                    className="h-8"
+                    disabled={filters.participantsOperator === null}
+                  />
+                  {filters.participantsOperator !== null && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7"
+                      onClick={() => setFilters(prev => ({ ...prev, participantsOperator: null, participantsValue: null }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {filterType === 'date' && (
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    {[
+                      { value: 'after', label: 'Après' },
+                      { value: 'before', label: 'Avant' },
+                      { value: 'range', label: 'Période' }
+                    ].map(({ value, label }) => (
+                      <Button
+                        key={value}
+                        variant={filters.dateOperator === value ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="flex-1 h-7 text-xs"
+                        onClick={() => setFilters(prev => ({ 
+                          ...prev, 
+                          dateOperator: prev.dateOperator === value ? null : value as 'after' | 'before' | 'range',
+                          dateValue: prev.dateOperator === value ? null : prev.dateValue,
+                          dateEndValue: prev.dateOperator === value ? null : prev.dateEndValue
+                        }))}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {filters.dateOperator && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground">
+                        {filters.dateOperator === 'range' ? 'Date de début:' : 'Date:'}
+                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={filters.dateValue || undefined}
+                        onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
+                        className="pointer-events-auto rounded-md border p-2"
+                      />
+                      
+                      {filters.dateOperator === 'range' && (
+                        <>
+                          <div className="text-xs text-muted-foreground">Date de fin:</div>
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateEndValue || undefined}
+                            onSelect={(date) => setFilters(prev => ({ ...prev, dateEndValue: date || null }))}
+                            className="pointer-events-auto rounded-md border p-2"
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
+                  
+                  {filters.dateOperator !== null && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start text-xs h-7"
+                      onClick={() => setFilters(prev => ({ ...prev, dateOperator: null, dateValue: null, dateEndValue: null }))}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  };
 
   // Sortable column header (no filter)
   const SortableColumnHeader = ({ 
@@ -495,38 +770,36 @@ export function EventsTab() {
         </div>
       </div>
 
-      {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-16 md:top-28 z-20 bg-background pb-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher un événement..." 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-10 bg-muted border-0" 
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Effacer les filtres
-              </Button>
-            )}
-            <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
-              <Link to="/organization/scan">
-                <QrCode className="mr-1 md:mr-2 h-4 w-4" />
-                {isMobile ? "Scan" : "Scanner"}
-              </Link>
+      {/* Search and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Rechercher un événement..." 
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)} 
+            className="pl-10 bg-muted border-0" 
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              Effacer les filtres
             </Button>
-            <Button asChild size={isMobile ? "sm" : "default"}>
-              <Link to="/organization/create-event">
-                <Plus className="mr-1 md:mr-2 h-4 w-4" />
-                Créer
-              </Link>
-            </Button>
-          </div>
+          )}
+          <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
+            <Link to="/organization/scan">
+              <QrCode className="mr-1 md:mr-2 h-4 w-4" />
+              {isMobile ? "Scan" : "Scanner"}
+            </Link>
+          </Button>
+          <Button asChild size={isMobile ? "sm" : "default"}>
+            <Link to="/organization/create-event">
+              <Plus className="mr-1 md:mr-2 h-4 w-4" />
+              Créer
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -641,82 +914,40 @@ export function EventsTab() {
         ) : (
           // Desktop: Table view
           <div className="border rounded-lg overflow-hidden w-full">
-            {/* Sticky: search/actions bar is above, so we keep the table header in the same sticky context */}
-            <div className="sticky top-16 md:top-28 z-10 bg-background">
-              <Table className="table-fixed w-full">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold w-[35%]">
-                      <SortableColumnHeader label="Titre" field="title" />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[12%]">
-                      <ColumnHeaderWithFilter 
-                        label="Date et heure" 
-                        field="date" 
-                        filterType="date"
-                        icon={<CalendarIcon className="h-4 w-4" />}
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Statut" 
-                        field="status" 
-                        filterType="status"
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Visibilité" 
-                        field="visibility" 
-                        filterType="visibility"
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[18%]">
-                      <SortableColumnHeader label="Lieu" field="location" />
-                    </TableHead>
-                    <TableHead className="font-semibold w-[10%]">
-                      <ColumnHeaderWithFilter 
-                        label="Participants" 
-                        field="participants" 
-                        filterType="participants"
-                        icon={<Users className="h-4 w-4" />}
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortField={sortField}
-                        sortDirection={sortDirection}
-                        toggleSort={toggleSort}
-                        openFilterPanel={openFilterPanel}
-                        setOpenFilterPanel={setOpenFilterPanel}
-                      />
-                    </TableHead>
-                    <TableHead className="w-[5%]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
-            </div>
-
             <Table className="table-fixed w-full">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold w-[35%]">
+                    <SortableColumnHeader label="Titre" field="title" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[12%]">
+                    <ColumnHeaderWithFilter 
+                      label="Date et heure" 
+                      field="date" 
+                      filterType="date"
+                      icon={<CalendarIcon className="h-4 w-4" />}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter label="Visibilité" field="visibility" filterType="visibility" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[18%]">
+                    <SortableColumnHeader label="Lieu" field="location" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Part." 
+                      field="participants" 
+                      filterType="participants"
+                      icon={<Users className="h-4 w-4" />}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[5%]"></TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {filteredEvents.map(event => {
                   const status = getEventStatus(event.start_date, event.end_date);
