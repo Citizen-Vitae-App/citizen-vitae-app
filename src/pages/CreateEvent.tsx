@@ -24,6 +24,8 @@ import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
+import { TeamSelector } from '@/components/organization/TeamSelector';
+import { useUserTeam } from '@/hooks/useTeams';
 
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
@@ -50,6 +52,9 @@ export default function CreateEvent() {
   const [selectedCauseThemes, setSelectedCauseThemes] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'leader' | 'member'>('member');
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   // Background image upload hook
   const {
@@ -82,23 +87,35 @@ export default function CreateEvent() {
     },
   });
 
-  // Fetch organization ID on mount for early image upload
+  // Get user's team info for leaders
+  const { userTeam, isLeader } = useUserTeam(currentUserId, organizationId);
+
+  // Fetch organization ID and user role on mount
   useEffect(() => {
-    const fetchOrgId = async () => {
+    const fetchOrgAndRole = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setCurrentUserId(user.id);
         const { data } = await supabase
           .from('organization_members')
-          .select('organization_id')
+          .select('organization_id, role')
           .eq('user_id', user.id)
           .single();
         if (data) {
           setOrganizationId(data.organization_id);
+          setUserRole(data.role as 'admin' | 'leader' | 'member');
         }
       }
     };
-    fetchOrgId();
+    fetchOrgAndRole();
   }, []);
+
+  // Auto-select team for leaders
+  useEffect(() => {
+    if (isLeader && userTeam?.teamId) {
+      setSelectedTeamId(userTeam.teamId);
+    }
+  }, [isLeader, userTeam]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -178,6 +195,7 @@ export default function CreateEvent() {
           cover_image_url: imageUrl,
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
+          team_id: selectedTeamId,
         })
         .select()
         .single();
@@ -356,6 +374,17 @@ export default function CreateEvent() {
                     )}
                   />
                 </div>
+
+                {/* Team Selector */}
+                {organizationId && (
+                  <TeamSelector
+                    organizationId={organizationId}
+                    selectedTeamId={selectedTeamId}
+                    onTeamChange={setSelectedTeamId}
+                    userRole={userRole}
+                    userTeamId={userTeam?.teamId}
+                  />
+                )}
 
                 {/* Description */}
                 <div className="space-y-2">
