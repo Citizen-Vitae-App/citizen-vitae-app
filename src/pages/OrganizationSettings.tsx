@@ -21,13 +21,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
-
 const urlSchema = z.string().url().optional().or(z.literal(''));
 const emailSchema = z.string().email().optional().or(z.literal(''));
-
 export default function OrganizationSettings() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const {
     organization,
     organizationId,
@@ -40,9 +40,8 @@ export default function OrganizationSettings() {
     updateCauses,
     uploadImage,
     checkSlugAvailability,
-    generateSlug,
+    generateSlug
   } = useOrganizationSettings();
-
   const [formData, setFormData] = useState<Partial<OrgSettings>>({});
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [customRoleTitle, setCustomRoleTitle] = useState<string>('');
@@ -55,19 +54,14 @@ export default function OrganizationSettings() {
   useEffect(() => {
     const fetchCustomRoleTitle = async () => {
       if (!user?.id || !organizationId) return;
-      
-      const { data, error } = await supabase
-        .from('organization_members')
-        .select('custom_role_title')
-        .eq('user_id', user.id)
-        .eq('organization_id', organizationId)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('organization_members').select('custom_role_title').eq('user_id', user.id).eq('organization_id', organizationId).single();
       if (!error && data?.custom_role_title) {
         setCustomRoleTitle(data.custom_role_title);
       }
     };
-    
     fetchCustomRoleTitle();
   }, [user?.id, organizationId]);
 
@@ -92,7 +86,7 @@ export default function OrganizationSettings() {
         instagram_url: organization.instagram_url || '',
         twitter_url: organization.twitter_url || '',
         sector: organization.sector || '',
-        employee_count: organization.employee_count,
+        employee_count: organization.employee_count
       });
     }
   }, [organization]);
@@ -110,13 +104,11 @@ export default function OrganizationSettings() {
       setSlugError(null);
       return;
     }
-    
     setIsCheckingSlug(true);
     const isAvailable = await checkSlugAvailability(slug);
     setSlugError(isAvailable ? null : 'Ce slug est déjà utilisé');
     setIsCheckingSlug(false);
   }, [checkSlugAvailability]);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       if (formData.slug && formData.slug !== organization?.slug) {
@@ -125,59 +117,55 @@ export default function OrganizationSettings() {
     }, 500);
     return () => clearTimeout(timer);
   }, [formData.slug, organization?.slug, checkSlug]);
-
   const handleInputChange = (field: keyof OrgSettings, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
     setHasChanges(true);
   };
-
   const handleGenerateSlug = () => {
     if (formData.name) {
       const newSlug = generateSlug(formData.name);
       handleInputChange('slug', newSlug);
     }
   };
-
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const url = await uploadImage(file, 'logo');
     if (url) {
       handleInputChange('logo_url', url);
     }
   };
-
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const url = await uploadImage(file, 'cover');
     if (url) {
       handleInputChange('cover_image_url', url);
     }
   };
-
   const toggleCause = (causeId: string) => {
     setSelectedCauses(prev => {
-      const newCauses = prev.includes(causeId)
-        ? prev.filter(id => id !== causeId)
-        : [...prev, causeId];
+      const newCauses = prev.includes(causeId) ? prev.filter(id => id !== causeId) : [...prev, causeId];
       setHasChanges(true);
       return newCauses;
     });
   };
-
-  const handleAddressSelect = (place: { address: string; latitude: number; longitude: number }) => {
+  const handleAddressSelect = (place: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  }) => {
     setFormData(prev => ({
       ...prev,
       address: place.address,
       latitude: place.latitude,
-      longitude: place.longitude,
+      longitude: place.longitude
     }));
     setHasChanges(true);
   };
-
   const validateForm = (): boolean => {
     // Validate URLs
     if (formData.website) {
@@ -207,55 +195,41 @@ export default function OrganizationSettings() {
     }
     return true;
   };
-
   const handleSave = async () => {
     if (!validateForm()) return;
-    
     setIsSaving(true);
-    
     try {
       // Update organization settings
       await updateSettings.mutateAsync(formData);
-      
+
       // Update causes if changed
       const currentCauseIds = organizationCauses.map(c => c.cause_theme_id);
-      const causesChanged = 
-        selectedCauses.length !== currentCauseIds.length ||
-        selectedCauses.some(id => !currentCauseIds.includes(id));
-      
+      const causesChanged = selectedCauses.length !== currentCauseIds.length || selectedCauses.some(id => !currentCauseIds.includes(id));
       if (causesChanged) {
         await updateCauses.mutateAsync(selectedCauses);
       }
 
       // Update custom role title
       if (user?.id && organizationId) {
-        await supabase
-          .from('organization_members')
-          .update({ custom_role_title: customRoleTitle || null })
-          .eq('user_id', user.id)
-          .eq('organization_id', organizationId);
+        await supabase.from('organization_members').update({
+          custom_role_title: customRoleTitle || null
+        }).eq('user_id', user.id).eq('organization_id', organizationId);
       }
-      
       setHasChanges(false);
     } finally {
       setIsSaving(false);
     }
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!isAdmin || !organization) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
           <p className="text-muted-foreground">Vous n'avez pas accès à cette page.</p>
@@ -263,12 +237,9 @@ export default function OrganizationSettings() {
             Retour au tableau de bord
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <>
+  return <>
       <Helmet>
         <title>Paramètres de l'organisation | Citizen Vitae</title>
       </Helmet>
@@ -280,11 +251,7 @@ export default function OrganizationSettings() {
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/organization/dashboard')}
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate('/organization/dashboard')}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
@@ -306,24 +273,11 @@ export default function OrganizationSettings() {
                 </CardHeader>
                 <CardContent>
                   <div className="relative w-full h-40 md:h-56 rounded-lg overflow-hidden bg-muted border border-border">
-                    {formData.cover_image_url ? (
-                      <img
-                        src={formData.cover_image_url}
-                        alt="Couverture"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                    {formData.cover_image_url ? <img src={formData.cover_image_url} alt="Couverture" className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-muted-foreground">
                         <Camera className="h-8 w-8" />
-                      </div>
-                    )}
+                      </div>}
                     <label className="absolute bottom-4 right-4 cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleCoverUpload}
-                      />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
                       <Button variant="secondary" size="sm" asChild>
                         <span>
                           <Upload className="h-4 w-4 mr-2" />
@@ -351,12 +305,7 @@ export default function OrganizationSettings() {
                         </AvatarFallback>
                       </Avatar>
                       <label className="cursor-pointer">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                        />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                         <Button variant="outline" size="sm" asChild>
                           <span>
                             <Upload className="h-4 w-4 mr-2" />
@@ -370,12 +319,7 @@ export default function OrganizationSettings() {
                     <div className="flex-1 space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Nom de l'organisation</Label>
-                        <Input
-                          id="name"
-                          value={formData.name || ''}
-                          onChange={(e) => handleInputChange('name', e.target.value)}
-                          placeholder="Nom de votre organisation"
-                        />
+                        <Input id="name" value={formData.name || ''} onChange={e => handleInputChange('name', e.target.value)} placeholder="Nom de votre organisation" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="description">
@@ -384,14 +328,7 @@ export default function OrganizationSettings() {
                             ({(formData.description || '').length}/400)
                           </span>
                         </Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description || ''}
-                          onChange={(e) => handleInputChange('description', e.target.value.slice(0, 400))}
-                          placeholder="Décrivez brièvement votre organisation..."
-                          className="resize-none"
-                          rows={3}
-                        />
+                        <Textarea id="description" value={formData.description || ''} onChange={e => handleInputChange('description', e.target.value.slice(0, 400))} placeholder="Décrivez brièvement votre organisation..." className="resize-none" rows={3} />
                       </div>
                     </div>
                   </div>
@@ -400,11 +337,7 @@ export default function OrganizationSettings() {
 
                   <div className="space-y-2">
                     <Label>Mission & Vision (optionnel)</Label>
-                    <RichTextEditor
-                      value={formData.bio || ''}
-                      onChange={(html) => handleInputChange('bio', html)}
-                      placeholder="Décrivez en détail la mission et les valeurs de votre organisation..."
-                    />
+                    <RichTextEditor value={formData.bio || ''} onChange={html => handleInputChange('bio', html)} placeholder="Décrivez en détail la mission et les valeurs de votre organisation..." />
                   </div>
                 </CardContent>
               </Card>
@@ -422,24 +355,14 @@ export default function OrganizationSettings() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {allCauseThemes.map((cause) => (
-                      <Badge
-                        key={cause.id}
-                        variant={selectedCauses.includes(cause.id) ? 'default' : 'outline'}
-                        className="cursor-pointer transition-colors py-1.5 px-3"
-                        style={{
-                          backgroundColor: selectedCauses.includes(cause.id) 
-                            ? cause.color 
-                            : 'transparent',
-                          borderColor: cause.color,
-                          color: selectedCauses.includes(cause.id) ? 'white' : cause.color,
-                        }}
-                        onClick={() => toggleCause(cause.id)}
-                      >
+                    {allCauseThemes.map(cause => <Badge key={cause.id} variant={selectedCauses.includes(cause.id) ? 'default' : 'outline'} className="cursor-pointer transition-colors py-1.5 px-3" style={{
+                    backgroundColor: selectedCauses.includes(cause.id) ? cause.color : 'transparent',
+                    borderColor: cause.color,
+                    color: selectedCauses.includes(cause.id) ? 'white' : cause.color
+                  }} onClick={() => toggleCause(cause.id)}>
                         <span className="mr-1">{cause.icon}</span>
                         {cause.name}
-                      </Badge>
-                    ))}
+                      </Badge>)}
                   </div>
                 </CardContent>
               </Card>
@@ -455,11 +378,7 @@ export default function OrganizationSettings() {
                 <CardContent className="space-y-6">
                   <div className="space-y-3">
                     <Label>Visibilité de la page</Label>
-                    <RadioGroup
-                      value={formData.visibility || 'public'}
-                      onValueChange={(value) => handleInputChange('visibility', value)}
-                      className="space-y-2"
-                    >
+                    <RadioGroup value={formData.visibility || 'public'} onValueChange={value => handleInputChange('visibility', value)} className="space-y-2">
                       <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                         <RadioGroupItem value="public" id="public" />
                         <Label htmlFor="public" className="flex-1 cursor-pointer">
@@ -497,28 +416,14 @@ export default function OrganizationSettings() {
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                           citizenvitae.com/org/
                         </span>
-                        <Input
-                          id="slug"
-                          value={formData.slug || ''}
-                          onChange={(e) => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                          className="pl-[155px]"
-                          placeholder="mon-organisation"
-                        />
+                        <Input id="slug" value={formData.slug || ''} onChange={e => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))} className="pl-[155px]" placeholder="mon-organisation" />
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleGenerateSlug}
-                        disabled={!formData.name}
-                      >
+                      <Button variant="outline" onClick={handleGenerateSlug} disabled={!formData.name}>
                         Générer
                       </Button>
                     </div>
-                    {isCheckingSlug && (
-                      <p className="text-xs text-muted-foreground">Vérification...</p>
-                    )}
-                    {slugError && (
-                      <p className="text-xs text-destructive">{slugError}</p>
-                    )}
+                    {isCheckingSlug && <p className="text-xs text-muted-foreground">Vérification...</p>}
+                    {slugError && <p className="text-xs text-destructive">{slugError}</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -537,28 +442,14 @@ export default function OrganizationSettings() {
                       <Label htmlFor="email">Email de contact</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email || ''}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          className="pl-10"
-                          placeholder="contact@organisation.com"
-                        />
+                        <Input id="email" type="email" value={formData.email || ''} onChange={e => handleInputChange('email', e.target.value)} className="pl-10" placeholder="contact@organisation.com" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Téléphone</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone || ''}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className="pl-10"
-                          placeholder="+33 1 23 45 67 89"
-                        />
+                        <Input id="phone" type="tel" value={formData.phone || ''} onChange={e => handleInputChange('phone', e.target.value)} className="pl-10" placeholder="+33 1 23 45 67 89" />
                       </div>
                     </div>
                   </div>
@@ -567,14 +458,7 @@ export default function OrganizationSettings() {
                     <Label htmlFor="website">Site web</Label>
                     <div className="relative">
                       <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="website"
-                        type="url"
-                        value={formData.website || ''}
-                        onChange={(e) => handleInputChange('website', e.target.value)}
-                        className="pl-10"
-                        placeholder="https://www.organisation.com"
-                      />
+                      <Input id="website" type="url" value={formData.website || ''} onChange={e => handleInputChange('website', e.target.value)} className="pl-10" placeholder="https://www.organisation.com" />
                     </div>
                   </div>
 
@@ -587,39 +471,21 @@ export default function OrganizationSettings() {
                         <Label htmlFor="linkedin" className="text-sm text-muted-foreground">LinkedIn</Label>
                         <div className="relative">
                           <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="linkedin"
-                            value={formData.linkedin_url || ''}
-                            onChange={(e) => handleInputChange('linkedin_url', e.target.value)}
-                            className="pl-10"
-                            placeholder="URL LinkedIn"
-                          />
+                          <Input id="linkedin" value={formData.linkedin_url || ''} onChange={e => handleInputChange('linkedin_url', e.target.value)} className="pl-10" placeholder="LinkedIn" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="instagram" className="text-sm text-muted-foreground">Instagram</Label>
                         <div className="relative">
                           <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="instagram"
-                            value={formData.instagram_url || ''}
-                            onChange={(e) => handleInputChange('instagram_url', e.target.value)}
-                            className="pl-10"
-                            placeholder="URL Instagram"
-                          />
+                          <Input id="instagram" value={formData.instagram_url || ''} onChange={e => handleInputChange('instagram_url', e.target.value)} className="pl-10" placeholder="Instagram" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="twitter" className="text-sm text-muted-foreground">X (Twitter)</Label>
                         <div className="relative">
                           <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="twitter"
-                            value={formData.twitter_url || ''}
-                            onChange={(e) => handleInputChange('twitter_url', e.target.value)}
-                            className="pl-10"
-                            placeholder="URL X/Twitter"
-                          />
+                          <Input id="twitter" value={formData.twitter_url || ''} onChange={e => handleInputChange('twitter_url', e.target.value)} className="pl-10" placeholder="X" />
                         </div>
                       </div>
                     </div>
@@ -638,12 +504,7 @@ export default function OrganizationSettings() {
                 <CardContent>
                   <div className="space-y-2">
                     <Label htmlFor="address">Adresse du siège</Label>
-                    <GooglePlacesAutocomplete
-                      value={formData.address || ''}
-                      onChange={(value) => handleInputChange('address', value)}
-                      onPlaceSelect={handleAddressSelect}
-                      placeholder="Rechercher une adresse..."
-                    />
+                    <GooglePlacesAutocomplete value={formData.address || ''} onChange={value => handleInputChange('address', value)} onPlaceSelect={handleAddressSelect} placeholder="Rechercher une adresse..." />
                   </div>
                 </CardContent>
               </Card>
@@ -660,19 +521,14 @@ export default function OrganizationSettings() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="sector">Secteur d'activité</Label>
-                      <Select
-                        value={formData.sector || ''}
-                        onValueChange={(value) => handleInputChange('sector', value)}
-                      >
+                      <Select value={formData.sector || ''} onValueChange={value => handleInputChange('sector', value)}>
                         <SelectTrigger id="sector">
                           <SelectValue placeholder="Sélectionner un secteur" />
                         </SelectTrigger>
                         <SelectContent>
-                          {sectors.map((sector) => (
-                            <SelectItem key={sector} value={sector}>
+                          {sectors.map(sector => <SelectItem key={sector} value={sector}>
                               {sector}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -680,15 +536,7 @@ export default function OrganizationSettings() {
                       <Label htmlFor="employee_count">Nombre d'employés / bénévoles</Label>
                       <div className="relative">
                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="employee_count"
-                          type="number"
-                          min={0}
-                          value={formData.employee_count || ''}
-                          onChange={(e) => handleInputChange('employee_count', e.target.value ? parseInt(e.target.value) : null)}
-                          className="pl-10"
-                          placeholder="Ex: 150"
-                        />
+                        <Input id="employee_count" type="number" min={0} value={formData.employee_count || ''} onChange={e => handleInputChange('employee_count', e.target.value ? parseInt(e.target.value) : null)} className="pl-10" placeholder="Ex: 150" />
                       </div>
                     </div>
                   </div>
@@ -700,16 +548,10 @@ export default function OrganizationSettings() {
                       <Award className="h-4 w-4" />
                       Titre du signataire (certificats)
                     </Label>
-                    <Input
-                      id="customRoleTitle"
-                      value={customRoleTitle}
-                      onChange={(e) => {
-                        setCustomRoleTitle(e.target.value.slice(0, 50));
-                        setHasChanges(true);
-                      }}
-                      placeholder="Ex: Directeur RSE, Présidente, Responsable Engagement..."
-                      maxLength={50}
-                    />
+                    <Input id="customRoleTitle" value={customRoleTitle} onChange={e => {
+                    setCustomRoleTitle(e.target.value.slice(0, 50));
+                    setHasChanges(true);
+                  }} placeholder="Ex: Directeur RSE, Présidente, Responsable Engagement..." maxLength={50} />
                     <p className="text-xs text-muted-foreground">
                       Ce titre apparaîtra sur les certificats que vous validez ({customRoleTitle.length}/50)
                     </p>
@@ -719,17 +561,8 @@ export default function OrganizationSettings() {
 
               {/* Save Button */}
               <div className="sticky bottom-20 md:bottom-4 bg-background/95 backdrop-blur-sm border-t border-border -mx-4 px-4 py-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent">
-                <Button
-                  onClick={handleSave}
-                  disabled={!hasChanges || isSaving || !!slugError}
-                  className="w-full md:w-auto"
-                  size="lg"
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
+                <Button onClick={handleSave} disabled={!hasChanges || isSaving || !!slugError} className="w-full md:w-auto" size="lg">
+                  {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                   Enregistrer les modifications
                 </Button>
               </div>
@@ -739,6 +572,5 @@ export default function OrganizationSettings() {
         
         <MobileBottomNav />
       </div>
-    </>
-  );
+    </>;
 }
