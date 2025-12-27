@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useOrganizationMembers, OrganizationMember } from '@/hooks/useOrganizationMembers';
+import { useTeams } from '@/hooks/useTeams';
+import { useUserSupervisorStatus } from '@/hooks/useEventSupervisors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -56,36 +57,72 @@ import {
   Shield, 
   UserCheck,
   Search,
-  Crown
+  Crown,
+  Eye,
+  Users2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const ROLES = [
   { value: 'admin', label: 'Administrateur', icon: Shield, description: 'Accès complet à toutes les fonctionnalités' },
   { value: 'member', label: 'Membre', icon: UserCheck, description: 'Peut voir et participer aux événements' },
 ];
 
-const getRoleBadge = (role: string) => {
-  switch (role) {
-    case 'admin':
-      return (
+interface RoleBadgesProps {
+  member: OrganizationMember;
+  supervisorUserIds?: string[];
+}
+
+function RoleBadges({ member, supervisorUserIds = [] }: RoleBadgesProps) {
+  const isSupervisor = supervisorUserIds.includes(member.user_id);
+  
+  return (
+    <div className="flex flex-wrap gap-1">
+      {/* Owner badge */}
+      {member.is_owner && (
+        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-400">
+          <Crown className="h-3 w-3 mr-1" />
+          Owner
+        </Badge>
+      )}
+      
+      {/* Admin badge */}
+      {member.role === 'admin' && !member.is_owner && (
         <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
           <Shield className="h-3 w-3 mr-1" />
           Admin
         </Badge>
-      );
-    case 'member':
-    default:
-      return (
-        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+      )}
+      
+      {/* Leader badge */}
+      {member.isLeader && (
+        <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-400">
+          <Users2 className="h-3 w-3 mr-1" />
+          Leader
+        </Badge>
+      )}
+      
+      {/* Supervisor badge */}
+      {isSupervisor && (
+        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-400">
+          <Eye className="h-3 w-3 mr-1" />
+          Superviseur
+        </Badge>
+      )}
+      
+      {/* Member badge (only if no other significant role) */}
+      {member.role === 'member' && !member.is_owner && !member.isLeader && !isSupervisor && (
+        <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
           <UserCheck className="h-3 w-3 mr-1" />
           Membre
         </Badge>
-      );
-  }
-};
+      )}
+    </div>
+  );
+}
 
 interface EditMemberDialogProps {
   member: OrganizationMember;
@@ -249,21 +286,107 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
   );
 }
 
+interface AssignTeamDialogProps {
+  member: OrganizationMember | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  organizationId: string;
+}
+
+function AssignTeamDialog({ member, open, onOpenChange, organizationId }: AssignTeamDialogProps) {
+  const { teams } = useTeams(organizationId);
+  const { addTeamMember, removeTeamMember } = useTeams(organizationId);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('none');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAssign = async () => {
+    if (!member) return;
+    setIsLoading(true);
+    
+    try {
+      // Remove from current team if exists
+      if (member.team) {
+        await removeTeamMember.mutateAsync({ teamId: member.team.id, userId: member.user_id });
+      }
+      
+      // Add to new team if selected
+      if (selectedTeamId !== 'none') {
+        await addTeamMember.mutateAsync({ teamId: selectedTeamId, userId: member.user_id });
+      }
+      
+      toast.success('Équipe mise à jour');
+      onOpenChange(false);
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assigner à une équipe</DialogTitle>
+          <DialogDescription>
+            Choisissez l'équipe pour {member?.profile?.first_name} {member?.profile?.last_name}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une équipe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Aucune équipe</SelectItem>
+              {teams?.map((team) => (
+                <SelectItem key={team.id} value={team.id}>
+                  {team.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleAssign} disabled={isLoading}>
+            {isLoading ? 'Mise à jour...' : 'Confirmer'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function MembersTab() {
   const { 
     members, 
     isLoading, 
     isAdmin, 
+    organizationId,
     updateMemberRole, 
     removeMember, 
     addMember,
     currentUserId 
   } = useOrganizationMembers();
   
+  // Get supervisor status for all members
+  const memberUserIds = members?.map(m => m.user_id) || [];
+  const supervisorStatuses = memberUserIds.map(userId => 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useUserSupervisorStatus(userId, organizationId || '')
+  );
+  const supervisorUserIds = supervisorStatuses
+    .filter(status => status.isSupervisor)
+    .map((_, idx) => memberUserIds[idx]);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [deleteConfirmMember, setDeleteConfirmMember] = useState<OrganizationMember | null>(null);
+  const [assignTeamMember, setAssignTeamMember] = useState<OrganizationMember | null>(null);
   const isMobile = useIsMobile();
 
   const filteredMembers = members?.filter(m => {
@@ -272,7 +395,8 @@ export function MembersTab() {
     const fullName = `${m.profile?.first_name || ''} ${m.profile?.last_name || ''}`.toLowerCase();
     const email = (m.profile?.email || '').toLowerCase();
     const customRole = (m.custom_role_title || '').toLowerCase();
-    return fullName.includes(query) || email.includes(query) || customRole.includes(query);
+    const teamName = (m.team?.name || '').toLowerCase();
+    return fullName.includes(query) || email.includes(query) || customRole.includes(query) || teamName.includes(query);
   });
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -382,14 +506,14 @@ export function MembersTab() {
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {member.profile?.email || 'Email non renseigné'}
                     </p>
-                    {member.custom_role_title && (
+                    {member.team && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {member.custom_role_title}
+                        Équipe: {member.team.name}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {getRoleBadge(member.role)}
+                    <RoleBadges member={member} supervisorUserIds={supervisorUserIds} />
                     {isAdmin && !isCurrentUser(member) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -401,6 +525,10 @@ export function MembersTab() {
                           <DropdownMenuItem onClick={() => setEditingMember(member)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setAssignTeamMember(member)}>
+                            <Users2 className="h-4 w-4 mr-2" />
+                            Assigner à une équipe
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -432,7 +560,8 @@ export function MembersTab() {
               <TableRow>
                 <TableHead>Membre</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
+                <TableHead>Rôles</TableHead>
+                <TableHead>Équipe</TableHead>
                 <TableHead>Titre</TableHead>
                 <TableHead>Membre depuis</TableHead>
                 {isAdmin && <TableHead className="w-[50px]"></TableHead>}
@@ -465,7 +594,22 @@ export function MembersTab() {
                     {member.profile?.email || 'Email non renseigné'}
                   </TableCell>
                   <TableCell>
-                    {getRoleBadge(member.role)}
+                    <RoleBadges member={member} supervisorUserIds={supervisorUserIds} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {member.team ? (
+                      <div className="flex items-center gap-2">
+                        <span>{member.team.name}</span>
+                        {member.isLeader && (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-400 text-xs">
+                            <Crown className="h-2.5 w-2.5 mr-0.5" />
+                            Leader
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {member.custom_role_title || '-'}
@@ -488,6 +632,10 @@ export function MembersTab() {
                             <DropdownMenuItem onClick={() => setEditingMember(member)}>
                               <Pencil className="h-4 w-4 mr-2" />
                               Modifier
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setAssignTeamMember(member)}>
+                              <Users2 className="h-4 w-4 mr-2" />
+                              Assigner à une équipe
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -527,6 +675,16 @@ export function MembersTab() {
         onAdd={handleAddMember}
         isLoading={addMember.isPending}
       />
+
+      {/* Assign Team Dialog */}
+      {organizationId && (
+        <AssignTeamDialog
+          member={assignTeamMember}
+          open={!!assignTeamMember}
+          onOpenChange={(open) => !open && setAssignTeamMember(null)}
+          organizationId={organizationId}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirmMember} onOpenChange={(open) => !open && setDeleteConfirmMember(null)}>
