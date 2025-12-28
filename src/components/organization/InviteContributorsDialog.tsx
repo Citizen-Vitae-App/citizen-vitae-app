@@ -130,6 +130,7 @@ export function InviteContributorsDialog({
           organizationName,
           customMessage: customMessage || undefined,
           invitedBy: userId,
+          baseUrl: window.location.origin,
         },
       });
 

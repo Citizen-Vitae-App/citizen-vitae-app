@@ -245,6 +245,7 @@ export const useOrganizationMembers = () => {
           role,
           customRoleTitle: customRoleTitle || null,
           teamId: teamId || null,
+          baseUrl: window.location.origin,
         },
       });
 

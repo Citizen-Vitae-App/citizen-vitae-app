@@ -104,6 +104,7 @@ export const usePendingInvitations = (organizationId: string | undefined) => {
           organizationLogoUrl: organizationLogoUrl || null,
           isCollaboratorInvite: true,
           role: 'member',
+          baseUrl: window.location.origin,
         },
       });
 
