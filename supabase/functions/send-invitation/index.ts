@@ -130,6 +130,8 @@ if (isContactEmail) {
                 status: 'pending',
                 invited_by: invitedBy || null,
                 custom_message: customMessage || null,
+                role: role || 'member',
+                custom_role_title: customRoleTitle || null,
                 created_at: new Date().toISOString(),
               })
               .eq('id', existing.id);
@@ -149,6 +151,8 @@ if (isContactEmail) {
                 status: 'pending',
                 invited_by: invitedBy || null,
                 custom_message: customMessage || null,
+                role: role || 'member',
+                custom_role_title: customRoleTitle || null,
               });
 
             if (insertError) {
