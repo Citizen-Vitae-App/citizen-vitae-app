@@ -253,6 +253,7 @@ export const useOrganizationMembers = () => {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-invitations', organizationId] });
       if (result.invited) {
         toast({
           title: 'Invitation envoyée',

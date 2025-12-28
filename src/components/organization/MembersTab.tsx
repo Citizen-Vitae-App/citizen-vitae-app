@@ -599,8 +599,6 @@ export function MembersTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Membre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Statut</TableHead>
                 <TableHead>Rôles</TableHead>
                 <TableHead>Équipe</TableHead>
                 <TableHead>Titre</TableHead>
@@ -619,19 +617,14 @@ export function MembersTab() {
                           <Mail className="h-4 w-4" />
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium text-muted-foreground italic">
-                        En attente...
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{invitation.email}</span>
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pending
+                        </Badge>
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {invitation.email}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
-                      <Clock className="h-3 w-3 mr-1" />
-                      Pending
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     {invitation.role === 'admin' ? (
@@ -717,26 +710,22 @@ export function MembersTab() {
                           {getInitials(member.profile?.first_name || null, member.profile?.last_name || null)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {member.profile?.first_name && member.profile?.last_name
-                            ? `${member.profile.first_name} ${member.profile.last_name}`
-                            : 'Nom non renseigné'}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {member.profile?.first_name && member.profile?.last_name
+                              ? `${member.profile.first_name} ${member.profile.last_name}`
+                              : 'Nom non renseigné'}
+                          </span>
+                          {isCurrentUser(member) && (
+                            <Badge variant="secondary" className="text-xs">Vous</Badge>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {member.profile?.email || 'Email non renseigné'}
                         </span>
-                        {isCurrentUser(member) && (
-                          <Badge variant="secondary" className="text-xs">Vous</Badge>
-                        )}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {member.profile?.email || 'Email non renseigné'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                      <UserCheck className="h-3 w-3 mr-1" />
-                      Actif
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <RoleBadges member={member} supervisorUserIds={supervisorUserIds} />
