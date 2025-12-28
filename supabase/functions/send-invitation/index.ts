@@ -19,6 +19,7 @@ interface InvitationRequest {
   isCollaboratorInvite?: boolean;
   role?: string;
   customRoleTitle?: string;
+  teamId?: string;
   invitedBy?: string;
 }
 
@@ -72,6 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
       isCollaboratorInvite,
       role,
       customRoleTitle,
+      teamId,
       invitedBy
     }: InvitationRequest = await req.json();
 
@@ -132,6 +134,7 @@ if (isContactEmail) {
                 custom_message: customMessage || null,
                 role: role || 'member',
                 custom_role_title: customRoleTitle || null,
+                team_id: teamId || null,
                 created_at: new Date().toISOString(),
               })
               .eq('id', existing.id);
@@ -153,6 +156,7 @@ if (isContactEmail) {
                 custom_message: customMessage || null,
                 role: role || 'member',
                 custom_role_title: customRoleTitle || null,
+                team_id: teamId || null,
               });
 
             if (insertError) {

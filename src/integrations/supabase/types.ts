@@ -385,6 +385,7 @@ export type Database = {
           responded_at: string | null
           role: string | null
           status: string
+          team_id: string | null
         }
         Insert: {
           created_at?: string
@@ -397,6 +398,7 @@ export type Database = {
           responded_at?: string | null
           role?: string | null
           status?: string
+          team_id?: string | null
         }
         Update: {
           created_at?: string
@@ -409,6 +411,7 @@ export type Database = {
           responded_at?: string | null
           role?: string | null
           status?: string
+          team_id?: string | null
         }
         Relationships: [
           {
@@ -416,6 +419,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]

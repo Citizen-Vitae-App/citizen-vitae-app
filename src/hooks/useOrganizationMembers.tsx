@@ -178,10 +178,11 @@ export const useOrganizationMembers = () => {
 
   // Add new member by email (or send invitation if user doesn't exist)
   const addMember = useMutation({
-    mutationFn: async ({ email, role, customRoleTitle, organizationName, organizationLogoUrl }: { 
+    mutationFn: async ({ email, role, customRoleTitle, teamId, organizationName, organizationLogoUrl }: { 
       email: string; 
       role: string;
       customRoleTitle?: string;
+      teamId?: string;
       organizationName?: string;
       organizationLogoUrl?: string;
     }): Promise<{ invited: boolean }> => {
@@ -218,6 +219,18 @@ export const useOrganizationMembers = () => {
           });
 
         if (error) throw error;
+        
+        // Add to team if specified
+        if (teamId) {
+          await supabase
+            .from('team_members')
+            .insert({
+              team_id: teamId,
+              user_id: userId,
+              is_leader: false,
+            });
+        }
+        
         return { invited: false };
       }
 
@@ -231,6 +244,7 @@ export const useOrganizationMembers = () => {
           isCollaboratorInvite: true,
           role,
           customRoleTitle: customRoleTitle || null,
+          teamId: teamId || null,
         },
       });
 
