@@ -8,10 +8,10 @@ import { toast } from "sonner";
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const { verifyOtp, signInWithOtp, user, getDefaultRoute } = useAuth();
+  const { verifyOtp, signInWithOtp, user, getDefaultRoute, needsOnboarding, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
@@ -24,10 +24,15 @@ const VerifyOtp = () => {
   }, [email, navigate]);
 
   useEffect(() => {
-    if (user) {
-      navigate(getDefaultRoute());
+    if (user && !authLoading) {
+      // Attendre que le profil soit chargé pour savoir si onboarding est nécessaire
+      if (needsOnboarding) {
+        navigate('/onboarding');
+      } else {
+        navigate(getDefaultRoute());
+      }
     }
-  }, [user, navigate, getDefaultRoute]);
+  }, [user, authLoading, needsOnboarding, navigate, getDefaultRoute]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -40,7 +45,7 @@ const VerifyOtp = () => {
 
   // Auto-submit when 6 digits are entered
   useEffect(() => {
-    if (otp.length === 6 && !isLoading) {
+    if (otp.length === 6 && !isSubmitting) {
       handleVerify();
     }
   }, [otp]);
@@ -51,7 +56,7 @@ const VerifyOtp = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     console.log('Attempting to verify OTP for email:', email);
     const { error } = await verifyOtp(email!, otp);
     
@@ -59,17 +64,17 @@ const VerifyOtp = () => {
       console.error('OTP verification failed:', error);
       toast.error(`Code invalide: ${error.message}`);
       setOtp(''); // Clear OTP on error
-      setIsLoading(false);
+      setIsSubmitting(false);
     } else {
       console.log('OTP verification succeeded');
-      // La redirection sera gérée par useAuth via onAuthStateChange
+      // La redirection sera gérée par le useEffect ci-dessus
     }
   };
 
   const handleResend = async () => {
     if (!canResend) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     const { error } = await signInWithOtp(email!);
     
     if (error) {
@@ -79,7 +84,7 @@ const VerifyOtp = () => {
       setCountdown(60);
       setCanResend(false);
     }
-    setIsLoading(false);
+    setIsSubmitting(false);
   };
 
   return (
@@ -126,7 +131,7 @@ const VerifyOtp = () => {
               maxLength={6}
               value={otp}
               onChange={setOtp}
-              disabled={isLoading}
+              disabled={isSubmitting}
               containerClassName="w-full"
             >
               <InputOTPGroup className="flex-1 gap-2">
@@ -146,9 +151,9 @@ const VerifyOtp = () => {
               className="w-full" 
               size="lg"
               onClick={handleVerify}
-              disabled={isLoading || otp.length !== 6}
+              disabled={isSubmitting || otp.length !== 6}
             >
-              {isLoading ? 'Vérification...' : 'Vérifier'}
+              {isSubmitting ? 'Vérification...' : 'Vérifier'}
             </Button>
           </div>
 
@@ -157,7 +162,7 @@ const VerifyOtp = () => {
             <Button
               variant="ghost"
               onClick={handleResend}
-              disabled={!canResend || isLoading}
+              disabled={!canResend || isSubmitting}
               className="text-muted-foreground hover:text-foreground"
             >
               {canResend ? 'Renvoyer le code' : `Renvoyer le code (${countdown}s)`}

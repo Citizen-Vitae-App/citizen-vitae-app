@@ -9,14 +9,16 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { signInWithOtp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   const redirectUrl = searchParams.get('redirect');
   const message = searchParams.get('message');
+  const emailFromUrl = searchParams.get('email');
+  
+  const [email, setEmail] = useState(emailFromUrl || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
