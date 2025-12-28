@@ -21,6 +21,7 @@ interface InvitationRequest {
   customRoleTitle?: string;
   teamId?: string;
   invitedBy?: string;
+  baseUrl?: string;
 }
 
 // Helper function to delay between emails to respect rate limits
@@ -74,7 +75,8 @@ const handler = async (req: Request): Promise<Response> => {
       role,
       customRoleTitle,
       teamId,
-      invitedBy
+      invitedBy,
+      baseUrl
     }: InvitationRequest = await req.json();
 
     if (!emails || emails.length === 0) {
@@ -105,10 +107,10 @@ if (isContactEmail) {
           htmlContent = generateContactEmailHtml(organizationName, customMessage || '');
         } else if (isCollaboratorInvite) {
           emailSubject = `Rejoignez l'équipe ${organizationName} sur Citizen Vitae`;
-          htmlContent = generateCollaboratorInviteHtml(organizationName, organizationLogoUrl, role, customRoleTitle, email);
+          htmlContent = generateCollaboratorInviteHtml(organizationName, organizationLogoUrl, role, customRoleTitle, email, baseUrl);
         } else {
           emailSubject = `${organizationName} vous invite à rejoindre Citizen Vitae`;
-          htmlContent = generateInvitationEmailHtml(organizationName, customMessage, email);
+          htmlContent = generateInvitationEmailHtml(organizationName, customMessage, email, baseUrl);
         }
 
         const response = await sendEmail(email, emailSubject, htmlContent);
@@ -208,12 +210,13 @@ if (isContactEmail) {
   }
 };
 
-function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string, recipientEmail?: string): string {
+function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string, recipientEmail?: string, baseUrl?: string): string {
   const roleLabel = customRoleTitle || (role === 'admin' ? 'Administrateur' : 'Membre');
-  const citizenVitaeLogo = 'https://dev.citizenvitae.com/images/citizen-vitae-logo.png';
+  const siteUrl = baseUrl || Deno.env.get("SITE_URL") || 'https://dev.citizenvitae.com';
+  const citizenVitaeLogo = `${siteUrl}/images/citizen-vitae-logo.png`;
   const authLink = recipientEmail 
-    ? `https://dev.citizenvitae.com/auth?email=${encodeURIComponent(recipientEmail)}`
-    : 'https://dev.citizenvitae.com/auth';
+    ? `${siteUrl}/auth?email=${encodeURIComponent(recipientEmail)}`
+    : `${siteUrl}/auth`;
   
   return `
     <!DOCTYPE html>
@@ -302,11 +305,12 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
   `;
 }
 
-function generateInvitationEmailHtml(organizationName: string, customMessage?: string, recipientEmail?: string): string {
-  const citizenVitaeLogo = 'https://dev.citizenvitae.com/images/citizen-vitae-logo.png';
+function generateInvitationEmailHtml(organizationName: string, customMessage?: string, recipientEmail?: string, baseUrl?: string): string {
+  const siteUrl = baseUrl || Deno.env.get("SITE_URL") || 'https://dev.citizenvitae.com';
+  const citizenVitaeLogo = `${siteUrl}/images/citizen-vitae-logo.png`;
   const authLink = recipientEmail 
-    ? `https://dev.citizenvitae.com/auth?email=${encodeURIComponent(recipientEmail)}`
-    : 'https://dev.citizenvitae.com/auth';
+    ? `${siteUrl}/auth?email=${encodeURIComponent(recipientEmail)}`
+    : `${siteUrl}/auth`;
   
   return `
     <!DOCTYPE html>

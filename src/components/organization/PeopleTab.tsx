@@ -280,6 +280,7 @@ export function PeopleTab() {
           organizationName: organization?.name || 'Votre organisation',
           organizationId: organization?.id,
           invitedBy: currentUserId,
+          baseUrl: window.location.origin,
         }
       });
       
