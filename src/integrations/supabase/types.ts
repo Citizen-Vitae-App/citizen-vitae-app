@@ -377,31 +377,37 @@ export type Database = {
         Row: {
           created_at: string
           custom_message: string | null
+          custom_role_title: string | null
           email: string
           id: string
           invited_by: string | null
           organization_id: string
           responded_at: string | null
+          role: string | null
           status: string
         }
         Insert: {
           created_at?: string
           custom_message?: string | null
+          custom_role_title?: string | null
           email: string
           id?: string
           invited_by?: string | null
           organization_id: string
           responded_at?: string | null
+          role?: string | null
           status?: string
         }
         Update: {
           created_at?: string
           custom_message?: string | null
+          custom_role_title?: string | null
           email?: string
           id?: string
           invited_by?: string | null
           organization_id?: string
           responded_at?: string | null
+          role?: string | null
           status?: string
         }
         Relationships: [
