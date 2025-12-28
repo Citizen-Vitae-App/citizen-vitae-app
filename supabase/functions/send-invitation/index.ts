@@ -98,15 +98,15 @@ const handler = async (req: Request): Promise<Response> => {
         let emailSubject: string;
         let htmlContent: string;
 
-        if (isContactEmail) {
+if (isContactEmail) {
           emailSubject = subject || `Message de ${organizationName}`;
           htmlContent = generateContactEmailHtml(organizationName, customMessage || '');
         } else if (isCollaboratorInvite) {
           emailSubject = `Rejoignez l'équipe ${organizationName} sur Citizen Vitae`;
-          htmlContent = generateCollaboratorInviteHtml(organizationName, organizationLogoUrl, role, customRoleTitle);
+          htmlContent = generateCollaboratorInviteHtml(organizationName, organizationLogoUrl, role, customRoleTitle, email);
         } else {
           emailSubject = `${organizationName} vous invite à rejoindre Citizen Vitae`;
-          htmlContent = generateInvitationEmailHtml(organizationName, customMessage);
+          htmlContent = generateInvitationEmailHtml(organizationName, customMessage, email);
         }
 
         const response = await sendEmail(email, emailSubject, htmlContent);
@@ -200,9 +200,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string): string {
+function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string, recipientEmail?: string): string {
   const roleLabel = customRoleTitle || (role === 'admin' ? 'Administrateur' : 'Membre');
-  const citizenVitaeLogo = 'https://dev.citizenvitae.com/lovable-uploads/8ad21a60-5520-4339-be68-fb3c7d91a8c5.png';
+  const citizenVitaeLogo = 'https://dev.citizenvitae.com/images/citizen-vitae-logo.png';
+  const authLink = recipientEmail 
+    ? `https://dev.citizenvitae.com/auth?email=${encodeURIComponent(recipientEmail)}`
+    : 'https://dev.citizenvitae.com/auth';
   
   return `
     <!DOCTYPE html>
@@ -228,7 +231,9 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
                           <div style="margin: 16px 0;">
                             <span style="color: rgba(255,255,255,0.7); font-size: 24px;">×</span>
                           </div>
-                          <img src="${organizationLogoUrl}" alt="${organizationName}" style="height: 50px; max-width: 150px; object-fit: contain; background: white; border-radius: 8px; padding: 8px;" />
+                          <div style="display: inline-block; width: 60px; height: 60px; border-radius: 50%; background: white; overflow: hidden; padding: 4px; box-sizing: border-box;">
+                            <img src="${organizationLogoUrl}" alt="${organizationName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                          </div>
                           ` : ''}
                         </td>
                       </tr>
@@ -262,7 +267,7 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="https://dev.citizenvitae.com/auth" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);">
                         Créer mon compte collaborateur
                       </a>
                     </div>
@@ -289,8 +294,11 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
   `;
 }
 
-function generateInvitationEmailHtml(organizationName: string, customMessage?: string): string {
-  const citizenVitaeLogo = 'https://dev.citizenvitae.com/lovable-uploads/8ad21a60-5520-4339-be68-fb3c7d91a8c5.png';
+function generateInvitationEmailHtml(organizationName: string, customMessage?: string, recipientEmail?: string): string {
+  const citizenVitaeLogo = 'https://dev.citizenvitae.com/images/citizen-vitae-logo.png';
+  const authLink = recipientEmail 
+    ? `https://dev.citizenvitae.com/auth?email=${encodeURIComponent(recipientEmail)}`
+    : 'https://dev.citizenvitae.com/auth';
   
   return `
     <!DOCTYPE html>
@@ -335,7 +343,7 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="https://dev.citizenvitae.com/auth" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);">
                         Créer mon compte
                       </a>
                     </div>
