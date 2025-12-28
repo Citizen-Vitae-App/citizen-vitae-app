@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useOrganizationMembers, OrganizationMember } from '@/hooks/useOrganizationMembers';
+import { usePendingInvitations } from '@/hooks/usePendingInvitations';
 import { useTeams } from '@/hooks/useTeams';
 import { useOrganizationSupervisors } from '@/hooks/useEventSupervisors';
 import { useOrganizationSettings } from '@/hooks/useOrganizationSettings';
@@ -60,7 +61,11 @@ import {
   Search,
   Crown,
   Eye,
-  Users2
+  Users2,
+  Clock,
+  Mail,
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -373,6 +378,9 @@ export function MembersTab() {
   // Get organization info for invitation emails
   const { organization } = useOrganizationSettings();
   
+  // Get pending invitations
+  const { invitations, cancelInvitation, resendInvitation } = usePendingInvitations(organizationId);
+  
   // Get all supervisor user IDs for this organization
   const { supervisorUserIds } = useOrganizationSupervisors(organizationId);
   
@@ -381,6 +389,7 @@ export function MembersTab() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [deleteConfirmMember, setDeleteConfirmMember] = useState<OrganizationMember | null>(null);
   const [assignTeamMember, setAssignTeamMember] = useState<OrganizationMember | null>(null);
+  const [cancelInvitationId, setCancelInvitationId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const filteredMembers = members?.filter(m => {
@@ -391,6 +400,11 @@ export function MembersTab() {
     const customRole = (m.custom_role_title || '').toLowerCase();
     const teamName = (m.team?.name || '').toLowerCase();
     return fullName.includes(query) || email.includes(query) || customRole.includes(query) || teamName.includes(query);
+  });
+  
+  const filteredInvitations = invitations.filter(inv => {
+    if (!searchQuery) return true;
+    return inv.email.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -560,6 +574,7 @@ export function MembersTab() {
               <TableRow>
                 <TableHead>Membre</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Rôles</TableHead>
                 <TableHead>Équipe</TableHead>
                 <TableHead>Titre</TableHead>
@@ -568,6 +583,72 @@ export function MembersTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {/* Pending invitations */}
+              {filteredInvitations.map((invitation) => (
+                <TableRow key={`inv-${invitation.id}`} className="bg-amber-50/50 dark:bg-amber-900/10">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-amber-100 text-amber-700">
+                          <Mail className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium text-muted-foreground italic">
+                        En attente...
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {invitation.email}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Pending
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {format(new Date(invitation.created_at), 'dd MMM yyyy', { locale: fr })}
+                  </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => resendInvitation.mutate({
+                              invitationId: invitation.id,
+                              email: invitation.email,
+                              organizationName: organization?.name,
+                              organizationLogoUrl: organization?.logo_url || undefined,
+                            })}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Renvoyer l'invitation
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => setCancelInvitationId(invitation.id)}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Annuler l'invitation
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+              
+              {/* Active members */}
               {filteredMembers.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell>
@@ -592,6 +673,12 @@ export function MembersTab() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {member.profile?.email || 'Email non renseigné'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Actif
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <RoleBadges member={member} supervisorUserIds={supervisorUserIds} />
@@ -702,6 +789,32 @@ export function MembersTab() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Retirer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Invitation Confirmation */}
+      <AlertDialog open={!!cancelInvitationId} onOpenChange={(open) => !open && setCancelInvitationId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler cette invitation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              L'invitation sera annulée et le destinataire ne pourra plus rejoindre l'organisation avec ce lien.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (cancelInvitationId) {
+                  cancelInvitation.mutate(cancelInvitationId);
+                  setCancelInvitationId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Annuler l'invitation
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
