@@ -206,17 +206,20 @@ function EditMemberDialog({ member, open, onOpenChange, onSave, isLoading }: Edi
 interface AddMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (email: string, role: string, customRoleTitle?: string) => void;
+  onAdd: (email: string, role: string, customRoleTitle?: string, teamId?: string) => void;
   isLoading: boolean;
+  organizationId?: string;
 }
 
-function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDialogProps) {
+function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId }: AddMemberDialogProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
   const [customRoleTitle, setCustomRoleTitle] = useState('');
+  const [teamId, setTeamId] = useState<string>('none');
+  const { teams } = useTeams(organizationId || '');
 
   const handleAdd = () => {
-    onAdd(email, role, customRoleTitle || undefined);
+    onAdd(email, role, customRoleTitle || undefined, teamId !== 'none' ? teamId : undefined);
   };
 
   const handleClose = (isOpen: boolean) => {
@@ -224,6 +227,7 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
       setEmail('');
       setRole('member');
       setCustomRoleTitle('');
+      setTeamId('none');
     }
     onOpenChange(isOpen);
   };
@@ -265,6 +269,25 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading }: AddMemberDial
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="team">Équipe</Label>
+            <Select value={teamId} onValueChange={setTeamId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une équipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Aucune équipe</SelectItem>
+                {teams?.map((team) => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              L'équipe dans laquelle le collaborateur sera ajouté
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="customRoleTitle">Titre personnalisé (optionnel)</Label>
@@ -379,7 +402,8 @@ export function MembersTab() {
   const { organization } = useOrganizationSettings();
   
   // Get pending invitations
-  const { invitations, cancelInvitation, resendInvitation } = usePendingInvitations(organizationId);
+  const { invitations, cancelInvitation, resendInvitation, updateInvitationTeam } = usePendingInvitations(organizationId);
+  const { teams } = useTeams(organizationId || '');
   
   // Get all supervisor user IDs for this organization
   const { supervisorUserIds } = useOrganizationSupervisors(organizationId);
@@ -389,6 +413,7 @@ export function MembersTab() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [deleteConfirmMember, setDeleteConfirmMember] = useState<OrganizationMember | null>(null);
   const [assignTeamMember, setAssignTeamMember] = useState<OrganizationMember | null>(null);
+  const [assignTeamInvitation, setAssignTeamInvitation] = useState<typeof invitations[0] | null>(null);
   const [cancelInvitationId, setCancelInvitationId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
@@ -421,12 +446,13 @@ export function MembersTab() {
     );
   };
 
-  const handleAddMember = (email: string, role: string, customRoleTitle?: string) => {
+  const handleAddMember = (email: string, role: string, customRoleTitle?: string, teamId?: string) => {
     addMember.mutate(
       { 
         email, 
         role, 
         customRoleTitle,
+        teamId,
         organizationName: organization?.name,
         organizationLogoUrl: organization?.logo_url || undefined,
       },
@@ -607,9 +633,37 @@ export function MembersTab() {
                       Pending
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">-</TableCell>
-                  <TableCell className="text-muted-foreground">-</TableCell>
-                  <TableCell className="text-muted-foreground">-</TableCell>
+                  <TableCell>
+                    {invitation.role === 'admin' ? (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Admin
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        Membre
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {invitation.team ? (
+                      <span className="text-muted-foreground">{invitation.team.name}</span>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setAssignTeamInvitation(invitation)}
+                      >
+                        <Users2 className="h-3 w-3 mr-1" />
+                        Assigner
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {invitation.custom_role_title || '-'}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(invitation.created_at), 'dd MMM yyyy', { locale: fr })}
                   </TableCell>
@@ -622,6 +676,10 @@ export function MembersTab() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setAssignTeamInvitation(invitation)}>
+                            <Users2 className="h-4 w-4 mr-2" />
+                            Assigner à une équipe
+                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => resendInvitation.mutate({
                               invitationId: invitation.id,
@@ -761,9 +819,10 @@ export function MembersTab() {
         onOpenChange={setAddDialogOpen}
         onAdd={handleAddMember}
         isLoading={addMember.isPending}
+        organizationId={organizationId}
       />
 
-      {/* Assign Team Dialog */}
+      {/* Assign Team Dialog for Members */}
       {organizationId && (
         <AssignTeamDialog
           member={assignTeamMember}
@@ -771,6 +830,44 @@ export function MembersTab() {
           onOpenChange={(open) => !open && setAssignTeamMember(null)}
           organizationId={organizationId}
         />
+      )}
+
+      {/* Assign Team Dialog for Pending Invitations */}
+      {organizationId && assignTeamInvitation && (
+        <Dialog open={!!assignTeamInvitation} onOpenChange={(open) => !open && setAssignTeamInvitation(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assigner à une équipe</DialogTitle>
+              <DialogDescription>
+                Choisissez l'équipe pour {assignTeamInvitation.email}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Select
+                defaultValue={assignTeamInvitation.team_id || 'none'}
+                onValueChange={(value) => {
+                  updateInvitationTeam.mutate({
+                    invitationId: assignTeamInvitation.id,
+                    teamId: value === 'none' ? null : value,
+                  });
+                  setAssignTeamInvitation(null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une équipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune équipe</SelectItem>
+                  {teams?.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Delete Confirmation */}

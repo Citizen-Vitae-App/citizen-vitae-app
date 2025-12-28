@@ -10,6 +10,13 @@ export interface PendingInvitation {
   status: string;
   created_at: string;
   invited_by: string | null;
+  role: string | null;
+  custom_role_title: string | null;
+  team_id: string | null;
+  team?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export const usePendingInvitations = (organizationId: string | undefined) => {
@@ -23,13 +30,42 @@ export const usePendingInvitations = (organizationId: string | undefined) => {
 
       const { data, error } = await supabase
         .from('organization_invitations')
-        .select('*')
+        .select(`
+          id,
+          email,
+          organization_id,
+          status,
+          created_at,
+          invited_by,
+          role,
+          custom_role_title,
+          team_id
+        `)
         .eq('organization_id', organizationId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as PendingInvitation[];
+      
+      // Fetch team info for invitations with team_id
+      const teamIds = data.filter(inv => inv.team_id).map(inv => inv.team_id as string);
+      let teamsMap = new Map<string, { id: string; name: string }>();
+      
+      if (teamIds.length > 0) {
+        const { data: teams } = await supabase
+          .from('teams')
+          .select('id, name')
+          .in('id', teamIds);
+        
+        if (teams) {
+          teams.forEach(t => teamsMap.set(t.id, { id: t.id, name: t.name }));
+        }
+      }
+      
+      return data.map(inv => ({
+        ...inv,
+        team: inv.team_id ? teamsMap.get(inv.team_id) || null : null,
+      })) as PendingInvitation[];
     },
     enabled: !!organizationId && !!user,
   });
@@ -81,10 +117,29 @@ export const usePendingInvitations = (organizationId: string | undefined) => {
     },
   });
 
+  const updateInvitationTeam = useMutation({
+    mutationFn: async ({ invitationId, teamId }: { invitationId: string; teamId: string | null }) => {
+      const { error } = await supabase
+        .from('organization_invitations')
+        .update({ team_id: teamId })
+        .eq('id', invitationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-invitations'] });
+      toast.success('Équipe mise à jour');
+    },
+    onError: () => {
+      toast.error('Impossible de modifier l\'équipe');
+    },
+  });
+
   return {
     invitations: invitations || [],
     isLoading,
     cancelInvitation,
     resendInvitation,
+    updateInvitationTeam,
   };
 };
