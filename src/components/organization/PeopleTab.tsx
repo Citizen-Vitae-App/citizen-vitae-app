@@ -67,6 +67,7 @@ interface Participant {
   last_participation: string;
   last_status: string;
   first_registered_at: string;
+  team_name: string | null;
   is_pending_invitation?: boolean;
   invitation_id?: string;
 }
@@ -208,7 +209,8 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
           ),
           events!inner(
             organization_id,
-            team_id
+            team_id,
+            teams(name)
           )
         `)
         .eq('events.organization_id', membership.organization_id)
@@ -229,6 +231,8 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
         const userId = registration.user_id;
         const profile = registration.profiles;
         const hasAttended = registration.attended_at !== null;
+        const event = registration.events;
+        const teamName = event?.teams?.name || null;
         
         if (userMap.has(userId)) {
           const existing = userMap.get(userId)!;
@@ -239,6 +243,7 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
           if (new Date(registration.registered_at) > new Date(existing.last_participation)) {
             existing.last_participation = registration.registered_at;
             existing.last_status = registration.status;
+            existing.team_name = teamName;
           }
           if (new Date(registration.registered_at) < new Date(existing.first_registered_at)) {
             existing.first_registered_at = registration.registered_at;
@@ -255,6 +260,7 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
             last_participation: registration.registered_at,
             last_status: registration.status,
             first_registered_at: registration.registered_at,
+            team_name: teamName,
           });
         }
       });
@@ -283,6 +289,7 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
           last_participation: invitation.created_at,
           last_status: 'pending',
           first_registered_at: invitation.created_at,
+          team_name: null,
           is_pending_invitation: true,
           invitation_id: invitation.id,
         });
@@ -904,19 +911,19 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead className="min-w-[140px] w-[20%]">
+                <TableHead className="min-w-[120px] w-[15%]">
                   <SortableColumnHeader label="Nom" field="name" />
                 </TableHead>
-                <TableHead className="min-w-[180px] w-[25%]">
-                  <SortableColumnHeader label="e-mail" field="email" />
+                <TableHead className="min-w-[150px] w-[18%]">
+                  <SortableColumnHeader label="E-mail" field="email" />
                 </TableHead>
-                <TableHead className="w-[110px] pl-6">
+                <TableHead className="w-[90px] pl-6">
                   <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                 </TableHead>
-                <TableHead className="w-[60px] text-left">
+                <TableHead className="w-[50px] text-left">
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
-                <TableHead className="w-[60px] text-left">
+                <TableHead className="w-[50px] text-left">
                   <ColumnHeaderWithFilter 
                     label="Certif." 
                     field="certificates" 
@@ -924,9 +931,12 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                     icon={<Award className="h-3.5 w-3.5" />}
                   />
                 </TableHead>
-                <TableHead className="w-[90px] text-left">
+                <TableHead className="w-[100px] text-left">
+                  <span className="text-muted-foreground text-xs font-medium">Équipe</span>
+                </TableHead>
+                <TableHead className="w-[100px] text-left">
                   <ColumnHeaderWithFilter 
-                    label="Dern. part." 
+                    label="Dernière participation" 
                     field="lastParticipation" 
                     filterType="date"
                   />
@@ -967,6 +977,11 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                   </TableCell>
                   <TableCell className="py-2 font-medium text-left">
                     {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
+                  </TableCell>
+                  <TableCell className="py-2 text-muted-foreground text-sm text-left">
+                    <span className="block truncate max-w-[100px]">
+                      {participant.is_pending_invitation ? '—' : (participant.team_name || '—')}
+                    </span>
                   </TableCell>
                   <TableCell className="py-2 text-muted-foreground text-sm text-left">
                     {participant.is_pending_invitation 
