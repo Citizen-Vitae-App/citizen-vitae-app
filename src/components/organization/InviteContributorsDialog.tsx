@@ -145,6 +145,7 @@ export function InviteContributorsDialog({
           invitedBy: userId,
           baseUrl: window.location.origin,
           teamId: selectedTeamId || undefined,
+          invitationType: 'contributor',
         },
       });
 

@@ -22,6 +22,7 @@ interface InvitationRequest {
   teamId?: string;
   invitedBy?: string;
   baseUrl?: string;
+  invitationType?: 'member' | 'contributor';
 }
 
 // Helper function to delay between emails to respect rate limits
@@ -76,7 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
       customRoleTitle,
       teamId,
       invitedBy,
-      baseUrl
+      baseUrl,
+      invitationType
     }: InvitationRequest = await req.json();
 
     if (!emails || emails.length === 0) {
@@ -138,6 +140,7 @@ if (isContactEmail) {
                 custom_role_title: customRoleTitle || null,
                 team_id: teamId || null,
                 created_at: new Date().toISOString(),
+                invitation_type: invitationType || 'member',
               })
               .eq('id', existing.id);
 
@@ -159,6 +162,7 @@ if (isContactEmail) {
                 role: role || 'member',
                 custom_role_title: customRoleTitle || null,
                 team_id: teamId || null,
+                invitation_type: invitationType || 'member',
               });
 
             if (insertError) {

@@ -380,6 +380,7 @@ export type Database = {
           custom_role_title: string | null
           email: string
           id: string
+          invitation_type: string
           invited_by: string | null
           organization_id: string
           responded_at: string | null
@@ -393,6 +394,7 @@ export type Database = {
           custom_role_title?: string | null
           email: string
           id?: string
+          invitation_type?: string
           invited_by?: string | null
           organization_id: string
           responded_at?: string | null
@@ -406,6 +408,7 @@ export type Database = {
           custom_role_title?: string | null
           email?: string
           id?: string
+          invitation_type?: string
           invited_by?: string | null
           organization_id?: string
           responded_at?: string | null

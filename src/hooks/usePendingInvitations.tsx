@@ -43,6 +43,7 @@ export const usePendingInvitations = (organizationId: string | undefined) => {
         `)
         .eq('organization_id', organizationId)
         .eq('status', 'pending')
+        .eq('invitation_type', 'member')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
