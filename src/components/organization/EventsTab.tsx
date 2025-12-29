@@ -125,7 +125,12 @@ const getCapacityProgressColor = (participantCount: number, capacity: number) =>
   return 'bg-red-500';
 };
 
-export function EventsTab() {
+interface EventsTabProps {
+  userTeamId?: string;
+  canManageAllEvents?: boolean;
+}
+
+export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
@@ -149,7 +154,7 @@ export function EventsTab() {
     isLoading,
     error,
     organizationId
-  } = useOrganizationEvents();
+  } = useOrganizationEvents(undefined, userTeamId);
 
   // Get all event IDs for participant counts
   const eventIds = useMemo(() => allEvents.map(e => e.id), [allEvents]);

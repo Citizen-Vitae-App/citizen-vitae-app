@@ -25,6 +25,7 @@ export interface DateRange {
 
 interface UseEventsOptions {
   organizationId?: string;
+  teamId?: string; // Filter by team for Leaders
   publicOnly?: boolean;
   searchQuery?: string;
   dateRange?: DateRange;
@@ -73,6 +74,11 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
         if (options.organizationId) {
           query = query.eq('organization_id', options.organizationId);
+        }
+
+        // Filter by team_id for Leaders
+        if (options.teamId) {
+          query = query.eq('team_id', options.teamId);
         }
 
         if (options.publicOnly) {
@@ -124,12 +130,12 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     };
 
     fetchEvents();
-  }, [options.organizationId, options.publicOnly, options.searchQuery, options.dateRange?.start, options.dateRange?.end, options.causeFilters]);
+  }, [options.organizationId, options.teamId, options.publicOnly, options.searchQuery, options.dateRange?.start, options.dateRange?.end, options.causeFilters]);
 
   return { events, isLoading, error };
 };
 
-export const useOrganizationEvents = (searchQuery?: string) => {
+export const useOrganizationEvents = (searchQuery?: string, teamId?: string) => {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
 
@@ -158,6 +164,7 @@ export const useOrganizationEvents = (searchQuery?: string) => {
 
   const { events, isLoading: isLoadingEvents, error } = useEvents({
     organizationId: organizationId || undefined,
+    teamId: teamId || undefined,
     searchQuery
   });
 

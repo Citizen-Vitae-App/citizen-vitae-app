@@ -386,7 +386,13 @@ function AssignTeamDialog({ member, open, onOpenChange, organizationId }: Assign
   );
 }
 
-export function MembersTab() {
+interface MembersTabProps {
+  userTeamId?: string;
+  canManageMembers?: boolean;
+  isLeader?: boolean;
+}
+
+export function MembersTab({ userTeamId, canManageMembers = true, isLeader = false }: MembersTabProps) {
   const { 
     members, 
     isLoading, 
@@ -417,7 +423,15 @@ export function MembersTab() {
   const [cancelInvitationId, setCancelInvitationId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
+  // Filter members by team for Leaders
   const filteredMembers = members?.filter(m => {
+    // First filter by team if user is a Leader
+    if (userTeamId && !canManageMembers) {
+      // Leaders only see members in their team
+      if (m.team?.id !== userTeamId) return false;
+    }
+    
+    // Then apply search filter
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const fullName = `${m.profile?.first_name || ''} ${m.profile?.last_name || ''}`.toLowerCase();
@@ -426,6 +440,7 @@ export function MembersTab() {
     const teamName = (m.team?.name || '').toLowerCase();
     return fullName.includes(query) || email.includes(query) || customRole.includes(query) || teamName.includes(query);
   });
+
   
   const filteredInvitations = invitations.filter(inv => {
     if (!searchQuery) return true;
@@ -473,9 +488,14 @@ export function MembersTab() {
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold">Membres</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            {isLeader && userTeamId ? 'Membres de mon équipe' : 'Membres'}
+          </h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Gérez les membres de votre organisation
+            {isLeader && userTeamId 
+              ? 'Gérez les membres de votre équipe'
+              : 'Gérez les membres de votre organisation'
+            }
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -488,7 +508,7 @@ export function MembersTab() {
               className="pl-10 bg-muted border-0"
             />
           </div>
-          {isAdmin && (
+          {(canManageMembers || isLeader) && (
             <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter

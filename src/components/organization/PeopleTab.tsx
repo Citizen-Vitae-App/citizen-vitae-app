@@ -104,7 +104,11 @@ const getStatusBadge = (status: string, isPending?: boolean) => {
   }
 };
 
-export function PeopleTab() {
+interface PeopleTabProps {
+  userTeamId?: string;
+}
+
+export function PeopleTab({ userTeamId }: PeopleTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
     statuses: [],
