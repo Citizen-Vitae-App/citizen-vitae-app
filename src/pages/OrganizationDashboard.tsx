@@ -20,6 +20,9 @@ export default function OrganizationDashboard() {
     isLoading 
   } = useUserRole();
 
+  // Debug log for role checking
+  console.log('useUserRole result:', { isOwner, isAdmin, isLeader, userTeamId, isLoading });
+
   // Redirect Leaders to appropriate default tab if they try to access organization settings
   useEffect(() => {
     if (!isLoading && isLeader && !isAdmin && !isOwner) {
