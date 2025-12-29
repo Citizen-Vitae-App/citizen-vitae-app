@@ -910,20 +910,16 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
-                <TableHead className="w-10"></TableHead>
-                <TableHead className="min-w-[120px] w-[15%]">
-                  <SortableColumnHeader label="Nom" field="name" />
+                <TableHead className="min-w-[200px]">
+                  <SortableColumnHeader label="Contributeur" field="name" />
                 </TableHead>
-                <TableHead className="min-w-[150px] w-[18%]">
-                  <SortableColumnHeader label="E-mail" field="email" />
-                </TableHead>
-                <TableHead className="w-[90px] pl-6">
+                <TableHead className="w-[100px]">
                   <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
                 </TableHead>
-                <TableHead className="w-[50px] text-left">
+                <TableHead className="w-[80px] text-center">
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
-                <TableHead className="w-[50px] text-left">
+                <TableHead className="w-[80px] text-center">
                   <ColumnHeaderWithFilter 
                     label="Certif." 
                     field="certificates" 
@@ -931,10 +927,10 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                     icon={<Award className="h-3.5 w-3.5" />}
                   />
                 </TableHead>
-                <TableHead className="w-[100px] text-left">
-                  <span className="text-muted-foreground text-xs font-medium">Équipe</span>
+                <TableHead className="w-[120px]">
+                  <SortableColumnHeader label="Équipe" field="name" className="text-muted-foreground" />
                 </TableHead>
-                <TableHead className="w-[100px] text-left">
+                <TableHead className="w-[130px]">
                   <ColumnHeaderWithFilter 
                     label="Dernière participation" 
                     field="lastParticipation" 
@@ -948,38 +944,38 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
               {filteredParticipants.map(participant => (
                 <TableRow key={participant.user_id}>
                   <TableCell className="py-2">
-                    <Avatar className={`h-8 w-8 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
-                      <AvatarImage src={participant.avatar_url || undefined} />
-                      <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
-                        {participant.is_pending_invitation ? <Clock className="h-3.5 w-3.5" /> : getInitials(participant.first_name, participant.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="flex items-center gap-3">
+                      <Avatar className={`h-9 w-9 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
+                        <AvatarImage src={participant.avatar_url || undefined} />
+                        <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
+                          {participant.is_pending_invitation ? <Clock className="h-3.5 w-3.5" /> : getInitials(participant.first_name, participant.last_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <span className={`block font-medium truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                          {participant.is_pending_invitation
+                            ? '—'
+                            : participant.first_name && participant.last_name 
+                              ? `${participant.first_name} ${participant.last_name}` 
+                              : 'Non renseigné'}
+                        </span>
+                        <span className="block text-sm text-muted-foreground truncate">
+                          {participant.email || 'Non renseigné'}
+                        </span>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className={`py-2 font-medium ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                    <span className="block truncate max-w-[200px]">
-                      {participant.is_pending_invitation
-                        ? '—'
-                        : participant.first_name && participant.last_name 
-                          ? `${participant.first_name} ${participant.last_name}` 
-                          : 'Non renseigné'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 text-muted-foreground">
-                    <span className="block truncate max-w-[250px]">
-                      {participant.email || 'Non renseigné'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 pl-6">
+                  <TableCell className="py-2">
                     {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
-                  <TableCell className="py-2 font-medium text-left">
+                  <TableCell className="py-2 font-medium text-center">
                     {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
-                  <TableCell className="py-2 font-medium text-left">
+                  <TableCell className="py-2 font-medium text-center">
                     {participant.is_pending_invitation ? '—' : participant.tickets_scanned}
                   </TableCell>
-                  <TableCell className="py-2 text-muted-foreground text-sm text-left">
-                    <span className="block truncate max-w-[100px]">
+                  <TableCell className="py-2 text-muted-foreground text-sm">
+                    <span className="block truncate">
                       {participant.is_pending_invitation ? '—' : (participant.team_name || '—')}
                     </span>
                   </TableCell>
