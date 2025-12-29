@@ -263,12 +263,12 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId,
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Rôle</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
+            <Select value={role} onValueChange={setRole} disabled={isLeader}>
+              <SelectTrigger className={isLeader ? 'opacity-70 cursor-not-allowed' : ''}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map((r) => (
+                {(isLeader ? ROLES.filter(r => r.value === 'member') : ROLES).map((r) => (
                   <SelectItem key={r.value} value={r.value}>
                     <div className="flex items-center gap-2">
                       <r.icon className="h-4 w-4" />
@@ -278,6 +278,11 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId,
                 ))}
               </SelectContent>
             </Select>
+            {isLeader && (
+              <p className="text-sm text-muted-foreground">
+                En tant que Team Leader, vous ne pouvez ajouter que des membres
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="team" className="flex items-center gap-2">
