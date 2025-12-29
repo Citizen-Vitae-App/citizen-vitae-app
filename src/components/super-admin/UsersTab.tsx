@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MoreHorizontal, Eye, Award, Building2 } from 'lucide-react';
+import { Search, MoreHorizontal, Eye, Award, Building2, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -19,13 +19,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useSuperAdminUsers } from '@/hooks/useSuperAdminUsers';
+import { useSuperAdminUsers, type User } from '@/hooks/useSuperAdminUsers';
+import { UserDetailsDialog } from './UserDetailsDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function UsersTab() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [dialogMode, setDialogMode] = useState<'registrations' | 'certifications'>('registrations');
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { users, isLoading } = useSuperAdminUsers();
 
   const filteredUsers = users?.filter(user =>
@@ -33,7 +37,13 @@ export function UsersTab() {
     user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const getRoleBadges = (user: typeof filteredUsers[0]) => {
+  const openDetails = (user: User, mode: 'registrations' | 'certifications') => {
+    setSelectedUser(user);
+    setDialogMode(mode);
+    setDialogOpen(true);
+  };
+
+  const getRoleBadges = (user: User) => {
     const badges = [];
     
     if (user.is_super_admin) {
@@ -110,7 +120,8 @@ export function UsersTab() {
                 <TableRow className="border-[hsl(217.2,32.6%,25%)] hover:bg-transparent">
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Utilisateur</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Rôles</TableHead>
-                  <TableHead className="text-[hsl(215,20.2%,65.1%)]">Organisations</TableHead>
+                  <TableHead className="text-[hsl(215,20.2%,65.1%)]">Organisation(s)</TableHead>
+                  <TableHead className="text-[hsl(215,20.2%,65.1%)]">Inscriptions</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Certifications</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Inscrit le</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)] text-right">Actions</TableHead>
@@ -122,6 +133,7 @@ export function UsersTab() {
                     <TableRow key={i} className="border-[hsl(217.2,32.6%,25%)]">
                       <TableCell><Skeleton className="h-10 w-full bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-24 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-24 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-12 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-12 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-24 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
@@ -130,7 +142,7 @@ export function UsersTab() {
                   ))
                 ) : filteredUsers.length === 0 ? (
                   <TableRow className="border-[hsl(217.2,32.6%,25%)]">
-                    <TableCell colSpan={6} className="text-center py-8 text-[hsl(215,20.2%,65.1%)]">
+                    <TableCell colSpan={7} className="text-center py-8 text-[hsl(215,20.2%,65.1%)]">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
@@ -157,16 +169,47 @@ export function UsersTab() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 text-[hsl(210,40%,98%)]">
-                          <Building2 className="w-3 h-3 text-[hsl(215,20.2%,65.1%)]" />
-                          {user.organization_count}
-                        </div>
+                        {user.organizations.length === 0 ? (
+                          <span className="text-[hsl(215,20.2%,65.1%)]">-</span>
+                        ) : (
+                          <div className="space-y-1">
+                            {user.organizations.slice(0, 2).map((org) => (
+                              <div key={org.id} className="flex items-center gap-1 text-xs">
+                                <Building2 className="w-3 h-3 text-[hsl(215,20.2%,65.1%)]" />
+                                <span className="text-[hsl(210,40%,98%)] truncate max-w-[120px]">{org.name}</span>
+                              </div>
+                            ))}
+                            {user.organizations.length > 2 && (
+                              <span className="text-xs text-[hsl(215,20.2%,65.1%)]">
+                                +{user.organizations.length - 2} autre(s)
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 text-[hsl(210,40%,98%)]">
+                        <button
+                          onClick={() => openDetails(user, 'registrations')}
+                          className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-blue-400 transition-colors"
+                          disabled={user.registration_count === 0}
+                        >
+                          <ClipboardList className="w-3 h-3 text-blue-400" />
+                          <span className={user.registration_count > 0 ? 'underline underline-offset-2' : ''}>
+                            {user.registration_count}
+                          </span>
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => openDetails(user, 'certifications')}
+                          className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-amber-400 transition-colors"
+                          disabled={user.certification_count === 0}
+                        >
                           <Award className="w-3 h-3 text-amber-400" />
-                          {user.certification_count}
-                        </div>
+                          <span className={user.certification_count > 0 ? 'underline underline-offset-2' : ''}>
+                            {user.certification_count}
+                          </span>
+                        </button>
                       </TableCell>
                       <TableCell className="text-[hsl(215,20.2%,65.1%)]">
                         {user.created_at ? format(new Date(user.created_at), 'dd MMM yyyy', { locale: fr }) : '-'}
@@ -194,6 +237,13 @@ export function UsersTab() {
           </div>
         </CardContent>
       </Card>
+
+      <UserDetailsDialog
+        user={selectedUser}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+      />
     </div>
   );
 }

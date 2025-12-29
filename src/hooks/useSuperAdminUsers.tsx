@@ -1,7 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-interface User {
+interface Organization {
+  id: string;
+  name: string;
+  type: string | null;
+}
+
+interface Registration {
+  id: string;
+  event_name: string;
+  organization_name: string;
+  status: string;
+  registered_at: string;
+  certificate_id: string | null;
+}
+
+export interface User {
   id: string;
   full_name: string;
   email: string | null;
@@ -11,7 +26,9 @@ interface User {
   is_org_admin: boolean;
   is_org_owner: boolean;
   is_team_leader: boolean;
-  organization_count: number;
+  organizations: Organization[];
+  registrations: Registration[];
+  registration_count: number;
   certification_count: number;
 }
 
@@ -34,10 +51,10 @@ export function useSuperAdminUsers() {
 
       if (rolesError) throw rolesError;
 
-      // Get organization memberships (for admin/owner status)
+      // Get organization memberships with organization details
       const { data: orgMembers, error: orgError } = await supabase
         .from('organization_members')
-        .select('user_id, role, is_owner');
+        .select('user_id, role, is_owner, organization_id, organizations(id, name, type)');
 
       if (orgError) throw orgError;
 
@@ -48,26 +65,29 @@ export function useSuperAdminUsers() {
 
       if (teamError) throw teamError;
 
-      // Get certifications count per user
-      const { data: certifications, error: certError } = await supabase
+      // Get all registrations with event and organization details
+      const { data: registrations, error: regError } = await supabase
         .from('event_registrations')
-        .select('user_id')
-        .not('certificate_id', 'is', null);
+        .select('id, user_id, status, registered_at, certificate_id, events(id, name, organization_id, organizations(name))');
 
-      if (certError) throw certError;
+      if (regError) throw regError;
 
       // Build lookup maps
       const superAdminSet = new Set(
         userRoles?.filter(r => r.role === 'super_admin').map(r => r.user_id)
       );
 
-      const orgMemberMap = new Map<string, { isAdmin: boolean; isOwner: boolean; count: number }>();
+      const orgMemberMap = new Map<string, { isAdmin: boolean; isOwner: boolean; organizations: Organization[] }>();
       orgMembers?.forEach(m => {
-        const existing = orgMemberMap.get(m.user_id) || { isAdmin: false, isOwner: false, count: 0 };
+        const existing = orgMemberMap.get(m.user_id) || { isAdmin: false, isOwner: false, organizations: [] };
+        const org = m.organizations as unknown as { id: string; name: string; type: string | null } | null;
+        if (org) {
+          existing.organizations.push(org);
+        }
         orgMemberMap.set(m.user_id, {
           isAdmin: existing.isAdmin || m.role === 'admin',
           isOwner: existing.isOwner || m.is_owner === true,
-          count: existing.count + 1,
+          organizations: existing.organizations,
         });
       });
 
@@ -75,14 +95,26 @@ export function useSuperAdminUsers() {
         teamMembers?.filter(t => t.is_leader).map(t => t.user_id)
       );
 
-      const certCountMap = new Map<string, number>();
-      certifications?.forEach(c => {
-        const current = certCountMap.get(c.user_id) || 0;
-        certCountMap.set(c.user_id, current + 1);
+      // Group registrations by user
+      const userRegistrationsMap = new Map<string, Registration[]>();
+      registrations?.forEach(r => {
+        const event = r.events as unknown as { id: string; name: string; organization_id: string; organizations: { name: string } | null } | null;
+        const reg: Registration = {
+          id: r.id,
+          event_name: event?.name || 'Événement inconnu',
+          organization_name: event?.organizations?.name || 'Organisation inconnue',
+          status: r.status,
+          registered_at: r.registered_at,
+          certificate_id: r.certificate_id,
+        };
+        const existing = userRegistrationsMap.get(r.user_id) || [];
+        existing.push(reg);
+        userRegistrationsMap.set(r.user_id, existing);
       });
 
       return (profiles || []).map(profile => {
         const orgData = orgMemberMap.get(profile.id);
+        const userRegs = userRegistrationsMap.get(profile.id) || [];
         return {
           id: profile.id,
           full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Sans nom',
@@ -93,8 +125,10 @@ export function useSuperAdminUsers() {
           is_org_admin: orgData?.isAdmin || false,
           is_org_owner: orgData?.isOwner || false,
           is_team_leader: teamLeaderSet.has(profile.id),
-          organization_count: orgData?.count || 0,
-          certification_count: certCountMap.get(profile.id) || 0,
+          organizations: orgData?.organizations || [],
+          registrations: userRegs,
+          registration_count: userRegs.length,
+          certification_count: userRegs.filter(r => r.certificate_id).length,
         };
       });
     },
