@@ -21,12 +21,20 @@ import {
 } from '@/components/ui/sheet';
 import { useState } from 'react';
 
+interface UserRoleProps {
+  isOwner: boolean;
+  isAdmin: boolean;
+  isLeader: boolean;
+  canViewOrganizationSettings: boolean;
+}
+
 interface NavbarProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  userRole?: UserRoleProps;
 }
 
-export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
+export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -35,11 +43,48 @@ export const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
   // Check if we're in organization dashboard mode (has tabs)
   const isOrganizationMode = !!(activeTab && onTabChange);
   
-  const tabs = isOrganizationMode ? [
-    { value: 'events', label: 'Événements' },
-    { value: 'people', label: 'Contributeurs' },
-    { value: 'organization', label: 'Organisation' }
-  ] : null;
+  // Determine tabs based on user role
+  const getTabs = () => {
+    if (!isOrganizationMode) return null;
+    
+    // If no role info, show default tabs
+    if (!userRole) {
+      return [
+        { value: 'events', label: 'Événements' },
+        { value: 'people', label: 'Contributeurs' },
+        { value: 'organization', label: 'Organisation' }
+      ];
+    }
+    
+    const { isOwner, isAdmin, isLeader, canViewOrganizationSettings } = userRole;
+    
+    // Owners and Admins see full tabs
+    if (isOwner || isAdmin) {
+      return [
+        { value: 'events', label: 'Événements' },
+        { value: 'people', label: 'Contributeurs' },
+        { value: 'organization', label: 'Organisation' }
+      ];
+    }
+    
+    // Leaders see limited tabs (no organization settings)
+    if (isLeader) {
+      return [
+        { value: 'events', label: 'Événements' },
+        { value: 'people', label: 'Contributeurs' },
+        { value: 'members', label: 'Mon équipe' }
+      ];
+    }
+    
+    // Default tabs
+    return [
+      { value: 'events', label: 'Événements' },
+      { value: 'people', label: 'Contributeurs' },
+      { value: 'organization', label: 'Organisation' }
+    ];
+  };
+  
+  const tabs = getTabs();
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
