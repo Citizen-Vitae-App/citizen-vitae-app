@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart } from "lucide-react";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
@@ -93,7 +93,7 @@ const Index = () => {
             {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8 items-center gap-4">
               {/* Search + Date Combined */}
-              <div className="flex-1 border border-border rounded-md px-6 py-2 flex items-center gap-4 shadow-sm bg-background/50 backdrop-blur-sm">
+              <div className="flex-1 border border-border rounded-md px-6 py-2 flex items-center gap-4 shadow-sm bg-background/50 backdrop-blur-sm hover:shadow-md hover:border-primary/30 transition-all duration-200">
                 <div className="flex items-center gap-3 flex-1">
                   <Search className="w-5 h-5 text-foreground flex-shrink-0" />
                   <Input
@@ -120,7 +120,7 @@ const Index = () => {
               {/* Filters Button - Desktop */}
               <button 
                 onClick={() => setIsFiltersOpen(true)}
-                className="border border-border rounded-md px-6 py-3.5 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70 relative"
+                className="border border-border rounded-md px-6 py-3.5 flex items-center gap-3 shadow-sm whitespace-nowrap bg-background/50 backdrop-blur-sm hover:bg-background/70 hover:shadow-md hover:border-primary/30 transition-all duration-200 relative"
               >
                 <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 <span className="text-foreground text-sm">Filtres</span>
@@ -134,7 +134,7 @@ const Index = () => {
 
             {/* Search Bar - Mobile (disabled when not logged in) */}
             <div className="flex md:hidden flex-1 items-center gap-2">
-              <div className={`flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className={`flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:shadow-md hover:border-primary/30'}`}>
                 <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <Input
                   type="search"
@@ -151,7 +151,7 @@ const Index = () => {
               <button
                 onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
                 disabled={showMobileLoginPrompt}
-                className={`border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 hover:bg-background/70 relative flex-shrink-0 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 relative flex-shrink-0 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:bg-background/70 hover:shadow-md hover:border-primary/30'}`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 {activeFiltersCount > 0 && (
@@ -223,6 +223,10 @@ const Index = () => {
                         <User className="mr-3 h-4 w-4" />
                         <span>Profil</span>
                       </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/favorites')}>
+                        <Heart className="mr-3 h-4 w-4" />
+                        <span>Mes favoris</span>
+                      </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
@@ -242,11 +246,19 @@ const Index = () => {
                       
                       <DropdownMenuSeparator />
                       
-                      {/* Accès console organisation - Mobile menu */}
+                      {/* Accès console organisation */}
                       {canAccessDashboard && (
                         <DropdownMenuItem onClick={() => navigate('/organization/dashboard')} className="cursor-pointer py-3">
                           <Building className="mr-3 h-4 w-4" />
                           <span>Console organisation</span>
+                        </DropdownMenuItem>
+                      )}
+                      
+                      {/* Console Super Admin */}
+                      {hasRole('super_admin') && (
+                        <DropdownMenuItem onClick={() => navigate('/super-admin')} className="cursor-pointer py-3">
+                          <Shield className="mr-3 h-4 w-4" />
+                          <span>Console Super Admin</span>
                         </DropdownMenuItem>
                       )}
                       
