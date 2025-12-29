@@ -65,7 +65,8 @@ import {
   Clock,
   Mail,
   X,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -209,17 +210,25 @@ interface AddMemberDialogProps {
   onAdd: (email: string, role: string, customRoleTitle?: string, teamId?: string) => void;
   isLoading: boolean;
   organizationId?: string;
+  userTeamId?: string;
+  isLeader?: boolean;
 }
 
-function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId }: AddMemberDialogProps) {
+function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId, userTeamId, isLeader = false }: AddMemberDialogProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
   const [customRoleTitle, setCustomRoleTitle] = useState('');
   const [teamId, setTeamId] = useState<string>('none');
   const { teams } = useTeams(organizationId || '');
 
+  // For leaders, auto-select and lock their team
+  const isTeamLocked = isLeader && !!userTeamId;
+  const effectiveTeamId = isTeamLocked ? userTeamId : teamId;
+  const userTeam = teams?.find(t => t.id === userTeamId);
+
   const handleAdd = () => {
-    onAdd(email, role, customRoleTitle || undefined, teamId !== 'none' ? teamId : undefined);
+    const finalTeamId = isTeamLocked ? userTeamId : (teamId !== 'none' ? teamId : undefined);
+    onAdd(email, role, customRoleTitle || undefined, finalTeamId);
   };
 
   const handleClose = (isOpen: boolean) => {
@@ -271,22 +280,36 @@ function AddMemberDialog({ open, onOpenChange, onAdd, isLoading, organizationId 
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="team">Équipe</Label>
-            <Select value={teamId} onValueChange={setTeamId}>
-              <SelectTrigger>
+            <Label htmlFor="team" className="flex items-center gap-2">
+              Équipe
+              {isTeamLocked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+            </Label>
+            <Select 
+              value={effectiveTeamId || 'none'} 
+              onValueChange={setTeamId}
+              disabled={isTeamLocked}
+            >
+              <SelectTrigger className={isTeamLocked ? 'opacity-70 cursor-not-allowed' : ''}>
                 <SelectValue placeholder="Sélectionner une équipe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucune équipe</SelectItem>
-                {teams?.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
+                {!isTeamLocked && <SelectItem value="none">Aucune équipe</SelectItem>}
+                {isTeamLocked && userTeam ? (
+                  <SelectItem value={userTeam.id}>{userTeam.name}</SelectItem>
+                ) : (
+                  teams?.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              L'équipe dans laquelle le collaborateur sera ajouté
+              {isTeamLocked 
+                ? 'En tant que Team Leader, vous ne pouvez ajouter des membres qu\'à votre équipe'
+                : 'L\'équipe dans laquelle le collaborateur sera ajouté'
+              }
             </p>
           </div>
           <div className="space-y-2">
@@ -829,6 +852,8 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
         onAdd={handleAddMember}
         isLoading={addMember.isPending}
         organizationId={organizationId}
+        userTeamId={userTeamId}
+        isLeader={isLeader}
       />
 
       {/* Assign Team Dialog for Members */}
