@@ -82,6 +82,7 @@ export default function OrganizationDashboard() {
           {activeTab === 'people' && (
             <PeopleTab 
               userTeamId={isLeader && !isAdmin && !isOwner ? userTeamId : undefined}
+              isLeader={isLeader && !isAdmin && !isOwner}
             />
           )}
           {activeTab === 'members' && (

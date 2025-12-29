@@ -105,10 +105,11 @@ const getStatusBadge = (status: string, isPending?: boolean) => {
 };
 
 interface PeopleTabProps {
-  userTeamId?: string;
+  userTeamId?: string | null;
+  isLeader?: boolean;
 }
 
-export function PeopleTab({ userTeamId }: PeopleTabProps) {
+export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
     statuses: [],
@@ -152,17 +153,24 @@ export function PeopleTab({ userTeamId }: PeopleTabProps) {
   const organization = organizationData?.organization;
   const currentUserId = organizationData?.userId;
 
-  // Fetch pending invitations
+  // Fetch pending invitations (filtered by team for leaders)
   const { data: pendingInvitations } = useQuery({
-    queryKey: ['organization-invitations', organization?.id],
+    queryKey: ['organization-invitations', organization?.id, userTeamId, isLeader],
     queryFn: async () => {
       if (!organization?.id) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('organization_invitations')
         .select('*')
         .eq('organization_id', organization.id)
         .eq('status', 'pending');
+      
+      // Leaders only see invitations for their team
+      if (isLeader && userTeamId) {
+        query = query.eq('team_id', userTeamId);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data || [];
@@ -171,7 +179,7 @@ export function PeopleTab({ userTeamId }: PeopleTabProps) {
   });
 
   const { data: participants, isLoading } = useQuery({
-    queryKey: ['organization-participants-detailed'],
+    queryKey: ['organization-participants-detailed', userTeamId, isLeader],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -184,7 +192,8 @@ export function PeopleTab({ userTeamId }: PeopleTabProps) {
       
       if (!membership) throw new Error('No organization found');
 
-      const { data, error } = await supabase
+      // Build query with team filter for leaders
+      let query = supabase
         .from('event_registrations')
         .select(`
           user_id,
@@ -198,11 +207,19 @@ export function PeopleTab({ userTeamId }: PeopleTabProps) {
             avatar_url
           ),
           events!inner(
-            organization_id
+            organization_id,
+            team_id
           )
         `)
         .eq('events.organization_id', membership.organization_id)
         .order('registered_at', { ascending: false });
+      
+      // Leaders only see participants from their team's events
+      if (isLeader && userTeamId) {
+        query = query.eq('events.team_id', userTeamId);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
 
@@ -1008,6 +1025,8 @@ export function PeopleTab({ userTeamId }: PeopleTabProps) {
         organizationId={organization?.id || ''}
         organizationName={organization?.name || 'Votre organisation'}
         userId={currentUserId}
+        userTeamId={userTeamId}
+        isLeader={isLeader}
       />
 
       <ContributorContactDialog
