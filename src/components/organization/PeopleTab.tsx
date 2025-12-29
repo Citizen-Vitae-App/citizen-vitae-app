@@ -48,7 +48,8 @@ import {
   RefreshCw,
   Clock,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Trash2
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContributorProfilePanel } from './ContributorProfilePanel';
@@ -323,6 +324,30 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
       toast.error('Erreur lors du renvoi de l\'invitation');
     }
   });
+
+  // Cancel invitation mutation
+  const cancelInvitation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { error } = await supabase
+        .from('organization_invitations')
+        .delete()
+        .eq('id', invitationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      toast.success('Invitation retirée');
+    },
+    onError: (error) => {
+      console.error('Error canceling invitation:', error);
+      toast.error('Erreur lors de la suppression de l\'invitation');
+    }
+  });
+
+  const handleCancelInvitation = (invitationId: string) => {
+    cancelInvitation.mutate(invitationId);
+  };
 
   // Calculate KPIs
   const kpis = useMemo(() => {
@@ -862,13 +887,24 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {participant.is_pending_invitation ? (
-                          <DropdownMenuItem 
-                            onClick={() => handleResendInvitation(participant.email!)}
-                            disabled={resendInvitation.isPending}
-                          >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
-                            Renvoyer l'invitation
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => handleResendInvitation(participant.email!)}
+                              disabled={resendInvitation.isPending}
+                            >
+                              <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
+                              Renvoyer l'invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleCancelInvitation(participant.invitation_id!)}
+                              disabled={cancelInvitation.isPending}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Retirer l'invitation
+                            </DropdownMenuItem>
+                          </>
                         ) : (
                           <>
                             <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
@@ -993,13 +1029,24 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {participant.is_pending_invitation ? (
-                          <DropdownMenuItem 
-                            onClick={() => handleResendInvitation(participant.email!)}
-                            disabled={resendInvitation.isPending}
-                          >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
-                            Renvoyer l'invitation
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => handleResendInvitation(participant.email!)}
+                              disabled={resendInvitation.isPending}
+                            >
+                              <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
+                              Renvoyer l'invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleCancelInvitation(participant.invitation_id!)}
+                              disabled={cancelInvitation.isPending}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Retirer l'invitation
+                            </DropdownMenuItem>
+                          </>
                         ) : (
                           <>
                             <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
