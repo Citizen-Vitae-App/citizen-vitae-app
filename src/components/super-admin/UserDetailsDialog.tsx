@@ -16,8 +16,9 @@ interface UserDetailsDialogProps {
 export function UserDetailsDialog({ user, open, onOpenChange, mode }: UserDetailsDialogProps) {
   if (!user) return null;
 
+  // Only show registrations with actual certificate data (not just auto-generated certificate_id)
   const items = mode === 'certifications' 
-    ? user.registrations.filter(r => r.certificate_id)
+    ? user.registrations.filter(r => r.has_certificate_data)
     : user.registrations;
 
   const title = mode === 'certifications' 
@@ -80,7 +81,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, mode }: UserDetail
                         <span>{format(new Date(item.registered_at), 'dd MMM yyyy', { locale: fr })}</span>
                       </div>
                     </div>
-                    {getStatusBadge(item.status, !!item.certificate_id)}
+                    {getStatusBadge(item.status, item.has_certificate_data)}
                   </div>
                 </div>
               ))}

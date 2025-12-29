@@ -251,12 +251,15 @@ export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
                       </>
                     )}
                     
-                    {/* Console Super Admin for super_admin users */}
+                    {/* Console Super Admin for super_admin users - Always visible */}
                     {hasRole('super_admin') && (
-                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/super-admin')}>
-                        <Shield className="mr-3 h-4 w-4" />
-                        <span>Console Super Admin</span>
-                      </DropdownMenuItem>
+                      <>
+                        {!hasRole('organization') && !isOrganizationMode && <DropdownMenuSeparator />}
+                        <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/super-admin')}>
+                          <Shield className="mr-3 h-4 w-4" />
+                          <span>Console Super Admin</span>
+                        </DropdownMenuItem>
+                      </>
                     )}
                     
                     <DropdownMenuSeparator />
