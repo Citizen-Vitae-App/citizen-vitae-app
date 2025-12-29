@@ -131,6 +131,9 @@ interface EventsTabProps {
 }
 
 export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabProps) {
+  // Debug log
+  console.log('EventsTab received:', { userTeamId, canManageAllEvents });
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
@@ -149,12 +152,18 @@ export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabPr
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   
+  // Debug log for hook call
+  console.log('Calling useOrganizationEvents with teamId:', userTeamId);
+  
   const {
     events: allEvents,
     isLoading,
     error,
     organizationId
   } = useOrganizationEvents(undefined, userTeamId);
+  
+  // Debug log for events result
+  console.log('Events received:', allEvents?.length, 'events');
 
   // Get all event IDs for participant counts
   const eventIds = useMemo(() => allEvents.map(e => e.id), [allEvents]);
