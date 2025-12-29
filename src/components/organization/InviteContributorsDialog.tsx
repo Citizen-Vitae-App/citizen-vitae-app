@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Upload, X, Mail, Loader2 } from 'lucide-react';
+import { TeamSelector } from './TeamSelector';
 
 interface InviteContributorsDialogProps {
   open: boolean;
@@ -21,6 +22,8 @@ interface InviteContributorsDialogProps {
   organizationId: string;
   organizationName: string;
   userId?: string;
+  userTeamId?: string | null;
+  isLeader?: boolean;
 }
 
 export function InviteContributorsDialog({ 
@@ -28,13 +31,23 @@ export function InviteContributorsDialog({
   onOpenChange,
   organizationId,
   organizationName,
-  userId
+  userId,
+  userTeamId,
+  isLeader = false
 }: InviteContributorsDialogProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-select team for leaders
+  useEffect(() => {
+    if (isLeader && userTeamId) {
+      setSelectedTeamId(userTeamId);
+    }
+  }, [isLeader, userTeamId, open]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -131,6 +144,7 @@ export function InviteContributorsDialog({
           customMessage: customMessage || undefined,
           invitedBy: userId,
           baseUrl: window.location.origin,
+          teamId: selectedTeamId || undefined,
         },
       });
 
@@ -144,6 +158,9 @@ export function InviteContributorsDialog({
       // Reset form
       setEmails([]);
       setCustomMessage('');
+      if (!isLeader) {
+        setSelectedTeamId(null);
+      }
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error sending invitations:', error);
@@ -168,6 +185,17 @@ export function InviteContributorsDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Team selector */}
+          {organizationId && (
+            <TeamSelector
+              organizationId={organizationId}
+              selectedTeamId={selectedTeamId}
+              onTeamChange={setSelectedTeamId}
+              userRole={isLeader ? 'leader' : 'admin'}
+              userTeamId={userTeamId}
+            />
+          )}
+
           {/* Email input */}
           <div className="space-y-2">
             <Label htmlFor="emails">Adresses email</Label>

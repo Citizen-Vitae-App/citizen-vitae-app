@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users2 } from 'lucide-react';
+import { Users2, Lock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 interface TeamSelectorProps {
@@ -16,6 +16,7 @@ interface TeamSelectorProps {
   userRole: 'admin' | 'leader' | 'member';
   userTeamId?: string | null;
   disabled?: boolean;
+  showLabel?: boolean;
 }
 
 export function TeamSelector({
@@ -25,6 +26,7 @@ export function TeamSelector({
   userRole,
   userTeamId,
   disabled = false,
+  showLabel = true,
 }: TeamSelectorProps) {
   const { teams, isLoading: isLoadingTeams } = useTeams(organizationId);
 
@@ -40,18 +42,29 @@ export function TeamSelector({
   // For leaders, auto-select their team
   const effectiveSelectedId = isLeader && userTeamId ? userTeamId : selectedTeamId;
 
+  // Get selected team name for display
+  const selectedTeamName = availableTeams.find(t => t.id === effectiveSelectedId)?.name;
+
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium">Équipe</Label>
+      {showLabel && <Label className="text-sm font-medium">Équipe</Label>}
       <Select
         value={effectiveSelectedId || 'none'}
         onValueChange={(value) => onTeamChange(value === 'none' ? null : value)}
         disabled={isDisabled || isLoadingTeams}
       >
         <SelectTrigger className="bg-black/[0.03] hover:bg-black/[0.05] border-0">
-          <div className="flex items-center gap-2">
-            <Users2 className="h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Sélectionner une équipe" />
+          <div className="flex items-center gap-2 w-full">
+            {isLeader ? (
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Users2 className="h-4 w-4 text-muted-foreground" />
+            )}
+            <SelectValue placeholder="Sélectionner une équipe">
+              {effectiveSelectedId && effectiveSelectedId !== 'none' 
+                ? selectedTeamName 
+                : 'Sélectionner une équipe'}
+            </SelectValue>
           </div>
         </SelectTrigger>
         <SelectContent>
@@ -69,7 +82,7 @@ export function TeamSelector({
       </Select>
       {isLeader && (
         <p className="text-xs text-muted-foreground">
-          En tant que leader d'équipe, vos événements sont associés à votre équipe
+          En tant que leader d'équipe, les invitations sont associées à votre équipe
         </p>
       )}
     </div>
