@@ -25,7 +25,8 @@ import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventParticipantsSection } from '@/components/organization/EventParticipantsSection';
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
-
+import { TeamSelector } from '@/components/organization/TeamSelector';
+import { useUserTeam } from '@/hooks/useTeams';
 const eventSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
   startDate: z.date({ required_error: 'Date de début requise' }),
@@ -67,6 +68,12 @@ export default function EditEvent() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [originalEvent, setOriginalEvent] = useState<OriginalEventData | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'leader' | 'member'>('member');
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  // Get user's team info for leaders
+  const { userTeam, isLeader } = useUserTeam(currentUserId, organizationId);
   
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -133,6 +140,7 @@ export default function EditEvent() {
         setIsPublic(event.is_public ?? true);
         setHasWaitlist(event.has_waitlist ?? false);
         setExistingImageUrl(event.cover_image_url);
+        setSelectedTeamId(event.team_id || null);
         if (event.latitude && event.longitude) {
           setCoordinates({ latitude: Number(event.latitude), longitude: Number(event.longitude) });
         }
@@ -157,6 +165,32 @@ export default function EditEvent() {
 
     loadEventData();
   }, [eventId, navigate, form]);
+
+  // Fetch user role on mount
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        const { data } = await supabase
+          .from('organization_members')
+          .select('organization_id, role')
+          .eq('user_id', user.id)
+          .single();
+        if (data) {
+          setUserRole(data.role as 'admin' | 'leader' | 'member');
+        }
+      }
+    };
+    fetchUserRole();
+  }, []);
+
+  // Auto-select team for leaders
+  useEffect(() => {
+    if (isLeader && userTeam?.teamId && !selectedTeamId) {
+      setSelectedTeamId(userTeam.teamId);
+    }
+  }, [isLeader, userTeam, selectedTeamId]);
 
   // Load cause themes
   useEffect(() => {
@@ -328,6 +362,7 @@ export default function EditEvent() {
           cover_image_url: finalImageUrl,
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
+          team_id: selectedTeamId,
         })
         .eq('id', eventId);
 
@@ -575,6 +610,17 @@ export default function EditEvent() {
                     )}
                   />
                 </div>
+
+                {/* Team Selector */}
+                {organizationId && (
+                  <TeamSelector
+                    organizationId={organizationId}
+                    selectedTeamId={selectedTeamId}
+                    onTeamChange={setSelectedTeamId}
+                    userRole={userRole}
+                    userTeamId={userTeam?.teamId}
+                  />
+                )}
 
                 {/* Description */}
                 <div className="space-y-2">

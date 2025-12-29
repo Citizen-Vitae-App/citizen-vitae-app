@@ -30,17 +30,17 @@ export function TeamSelector({
 }: TeamSelectorProps) {
   const { teams, isLoading: isLoadingTeams } = useTeams(organizationId);
 
-  // If user is a leader, only show their team and disable selection
-  const isLeader = userRole === 'leader';
-  const isDisabled = disabled || isLeader;
+  // If user is a leader or member, lock the team selection to their team
+  const isLocked = userRole === 'leader' || userRole === 'member';
+  const isDisabled = disabled || isLocked;
 
   // Filter teams based on user role
-  const availableTeams = isLeader && userTeamId
+  const availableTeams = isLocked && userTeamId
     ? teams?.filter(t => t.id === userTeamId) || []
     : teams || [];
 
-  // For leaders, auto-select their team
-  const effectiveSelectedId = isLeader && userTeamId ? userTeamId : selectedTeamId;
+  // For leaders/members, auto-select their team
+  const effectiveSelectedId = isLocked && userTeamId ? userTeamId : selectedTeamId;
 
   // Get selected team name for display
   const selectedTeamName = availableTeams.find(t => t.id === effectiveSelectedId)?.name;
@@ -55,7 +55,7 @@ export function TeamSelector({
       >
         <SelectTrigger className="bg-black/[0.03] hover:bg-black/[0.05] border-0">
           <div className="flex items-center gap-2 w-full">
-            {isLeader ? (
+            {isLocked ? (
               <Lock className="h-4 w-4 text-muted-foreground" />
             ) : (
               <Users2 className="h-4 w-4 text-muted-foreground" />
@@ -68,7 +68,7 @@ export function TeamSelector({
           </div>
         </SelectTrigger>
         <SelectContent>
-          {!isLeader && (
+          {!isLocked && (
             <SelectItem value="none">
               <span className="text-muted-foreground">Aucune (organisation entière)</span>
             </SelectItem>
@@ -80,9 +80,11 @@ export function TeamSelector({
           ))}
         </SelectContent>
       </Select>
-      {isLeader && (
+      {isLocked && (
         <p className="text-xs text-muted-foreground">
-          En tant que leader d'équipe, les invitations sont associées à votre équipe
+          {userRole === 'leader' 
+            ? "En tant que leader d'équipe, les événements sont associés à votre équipe"
+            : "En tant que membre, les événements sont associés à votre équipe"}
         </p>
       )}
     </div>
