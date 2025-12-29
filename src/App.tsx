@@ -15,6 +15,7 @@ import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/organization/scan" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
             <Route path="/organization/scan/:eventId" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="super_admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/super-admin" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
