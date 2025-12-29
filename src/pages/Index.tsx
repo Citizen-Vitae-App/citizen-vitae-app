@@ -45,16 +45,14 @@ const Index = () => {
 
   const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
 
-  // Only redirect for onboarding and super_admin - NOT for organization role
+  // Only redirect for onboarding - Super admin accesses console via menu
   useEffect(() => {
     if (!isAuthLoading && user) {
       if (needsOnboarding) {
         navigate('/onboarding');
-      } else if (hasRole('super_admin')) {
-        navigate('/admin');
       }
     }
-  }, [user, needsOnboarding, isAuthLoading, hasRole, navigate]);
+  }, [user, needsOnboarding, isAuthLoading, navigate]);
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
