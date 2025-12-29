@@ -15,11 +15,12 @@ export function useSuperAdminStats() {
     queryKey: ['super-admin-stats'],
     queryFn: async (): Promise<SuperAdminStats> => {
       // Fetch all counts in parallel
+      // Certifications = only those with certificate_data populated (actual certificates)
       const [orgsResult, usersResult, eventsResult, certificationsResult] = await Promise.all([
         supabase.from('organizations').select('id, is_verified', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }),
         supabase.from('events').select('id, is_public', { count: 'exact' }),
-        supabase.from('event_registrations').select('id', { count: 'exact' }).not('certificate_id', 'is', null),
+        supabase.from('event_registrations').select('id', { count: 'exact' }).not('certificate_data', 'is', null),
       ]);
 
       const activeOrgs = orgsResult.data?.filter(org => org.is_verified).length || 0;

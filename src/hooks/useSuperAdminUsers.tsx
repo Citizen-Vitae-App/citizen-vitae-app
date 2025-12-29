@@ -14,6 +14,7 @@ interface Registration {
   status: string;
   registered_at: string;
   certificate_id: string | null;
+  has_certificate_data: boolean;
 }
 
 export interface User {
@@ -68,7 +69,7 @@ export function useSuperAdminUsers() {
       // Get all registrations with event and organization details
       const { data: registrations, error: regError } = await supabase
         .from('event_registrations')
-        .select('id, user_id, status, registered_at, certificate_id, events(id, name, organization_id, organizations(name))');
+        .select('id, user_id, status, registered_at, certificate_id, certificate_data, events(id, name, organization_id, organizations(name))');
 
       if (regError) throw regError;
 
@@ -106,6 +107,8 @@ export function useSuperAdminUsers() {
           status: r.status,
           registered_at: r.registered_at,
           certificate_id: r.certificate_id,
+          // A real certification has certificate_data populated, not just certificate_id (which is auto-generated)
+          has_certificate_data: r.certificate_data !== null,
         };
         const existing = userRegistrationsMap.get(r.user_id) || [];
         existing.push(reg);
@@ -128,7 +131,8 @@ export function useSuperAdminUsers() {
           organizations: orgData?.organizations || [],
           registrations: userRegs,
           registration_count: userRegs.length,
-          certification_count: userRegs.filter(r => r.certificate_id).length,
+          // Only count actual certifications (certificate_data populated, not just certificate_id)
+          certification_count: userRegs.filter(r => r.has_certificate_data).length,
         };
       });
     },
