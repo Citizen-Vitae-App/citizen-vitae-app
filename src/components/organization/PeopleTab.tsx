@@ -165,7 +165,8 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
         .from('organization_invitations')
         .select('*')
         .eq('organization_id', organization.id)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .eq('invitation_type', 'contributor');
       
       // Leaders only see invitations for their team
       if (isLeader && userTeamId) {
