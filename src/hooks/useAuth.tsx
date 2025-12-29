@@ -135,7 +135,7 @@ export const useAuth = () => {
   const needsOnboarding = profile && !profile.onboarding_completed;
 
   const getDefaultRoute = () => {
-    if (hasRole('super_admin')) return '/admin';
+    // Super admins go to home like everyone else - they access super-admin via menu
     if (hasRole('organization')) return '/organization/dashboard';
     return '/';
   };

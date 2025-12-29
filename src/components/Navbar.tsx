@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle, Home } from 'lucide-react';
+import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle, Home, Shield, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -35,7 +35,7 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, hasRole } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -240,6 +240,25 @@ export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
                       </>
                     )}
                     
+                    {/* Console organisation for organization members */}
+                    {hasRole('organization') && !isOrganizationMode && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/organization/dashboard')}>
+                          <Building2 className="mr-3 h-4 w-4" />
+                          <span>Console organisation</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    
+                    {/* Console Super Admin for super_admin users */}
+                    {hasRole('super_admin') && (
+                      <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/super-admin')}>
+                        <Shield className="mr-3 h-4 w-4" />
+                        <span>Console Super Admin</span>
+                      </DropdownMenuItem>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     
                     {/* Déconnexion */}
@@ -294,6 +313,26 @@ export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Paramètres</span>
                     </DropdownMenuItem>
+                    
+                    {/* Console organisation for organization members - Mobile */}
+                    {hasRole('organization') && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/organization/dashboard')}>
+                          <Building2 className="mr-2 h-4 w-4" />
+                          <span>Console organisation</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    
+                    {/* Console Super Admin for super_admin users - Mobile */}
+                    {hasRole('super_admin') && (
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/super-admin')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Console Super Admin</span>
+                      </DropdownMenuItem>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
