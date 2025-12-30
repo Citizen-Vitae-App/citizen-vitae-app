@@ -64,6 +64,34 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    // Create Supabase client with service role
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // ===== JWT Authentication =====
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !authUser) {
+      console.error("Invalid authentication:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authenticated user:", authUser.id);
+
     const { 
       emails, 
       organizationId,
@@ -89,12 +117,54 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Organization name is required");
     }
 
-    console.log(`Sending ${isContactEmail ? 'contact email' : 'invitations'} to ${emails.length} recipients`);
+    // ===== Authorization: Verify user can send invitations for this organization =====
+    if (organizationId) {
+      // Check if user is an admin of this organization
+      const { data: membership, error: membershipError } = await supabase
+        .from("organization_members")
+        .select("role")
+        .eq("organization_id", organizationId)
+        .eq("user_id", authUser.id)
+        .maybeSingle();
 
-    // Create Supabase client with service role for inserting invitations
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      if (membershipError) {
+        console.error("Error checking membership:", membershipError);
+        return new Response(
+          JSON.stringify({ error: "Authorization check failed" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      let isAuthorized = membership?.role === "admin";
+
+      // If not admin but has teamId, check if user is team leader
+      if (!isAuthorized && teamId) {
+        const { data: teamMembership, error: teamError } = await supabase
+          .from("team_members")
+          .select("is_leader")
+          .eq("team_id", teamId)
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+
+        if (teamError) {
+          console.error("Error checking team membership:", teamError);
+        }
+
+        isAuthorized = teamMembership?.is_leader === true;
+      }
+
+      if (!isAuthorized) {
+        console.error("User not authorized to send invitations for this organization:", authUser.id);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: admin or team leader access required" }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log("User authorized for organization:", organizationId);
+    }
+
+    console.log(`Sending ${isContactEmail ? 'contact email' : 'invitations'} to ${emails.length} recipients`);
 
     const results: Array<{ email: string; success: boolean; id?: string; error?: string }> = [];
 
