@@ -21,8 +21,31 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("[generate-certificate] No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !authUser) {
+      console.error("[generate-certificate] Invalid authentication:", authError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[generate-certificate] Authenticated user: ${authUser.id}`);
+
     const body: GenerateCertificateRequest = await req.json();
-    const { registration_id, validated_by } = body;
+    const { registration_id } = body;
 
     console.log(`[generate-certificate] Processing registration: ${registration_id}`);
 
@@ -58,6 +81,49 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Registration not found");
     }
 
+    const event = registration.events as any;
+    const organizationId = event.organization_id;
+
+    // Authorization check: User must be one of:
+    // 1. The registration owner (self-certification)
+    // 2. An event supervisor
+    // 3. An organization admin
+    const isRegistrationOwner = registration.user_id === authUser.id;
+    
+    // Check if user is an event supervisor
+    const { data: supervisorData } = await supabase
+      .from("event_supervisors")
+      .select("id")
+      .eq("event_id", registration.event_id)
+      .eq("user_id", authUser.id)
+      .single();
+    const isEventSupervisor = !!supervisorData;
+
+    // Check if user is an organization admin
+    const { data: adminData } = await supabase
+      .from("organization_members")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("user_id", authUser.id)
+      .eq("role", "admin")
+      .single();
+    const isOrgAdmin = !!adminData;
+
+    if (!isRegistrationOwner && !isEventSupervisor && !isOrgAdmin) {
+      console.error(`[generate-certificate] Unauthorized: User ${authUser.id} cannot generate certificate for registration ${registration_id}`);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: You do not have permission to generate this certificate' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[generate-certificate] Authorization passed. Owner: ${isRegistrationOwner}, Supervisor: ${isEventSupervisor}, Admin: ${isOrgAdmin}`);
+
+    // Determine validated_by server-side: 
+    // If caller is supervisor/admin (not the owner), they are the validator
+    // If caller is the owner (self-cert), validated_by is null
+    const validated_by = (!isRegistrationOwner && (isEventSupervisor || isOrgAdmin)) ? authUser.id : null;
+
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -86,12 +152,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Get validator's role in the organization
-      const event = registration.events as any;
       const { data: membership } = await supabase
         .from("organization_members")
         .select("role, custom_role_title")
         .eq("user_id", validated_by)
-        .eq("organization_id", event.organization_id)
+        .eq("organization_id", organizationId)
         .single();
 
       if (membership) {
@@ -103,11 +168,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (validated_by) {
       await supabase
         .from("event_registrations")
-        .update({ validated_by })
+        .update({ validated_by: validated_by })
         .eq("id", registration_id);
     }
 
-    const event = registration.events as any;
     const organization = event.organizations as any;
 
     // Format dates
