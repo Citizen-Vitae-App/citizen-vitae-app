@@ -88,7 +88,17 @@ export const useEvents = (options: UseEventsOptions = {}) => {
         }
 
         if (options.searchQuery && options.searchQuery.trim()) {
-          query = query.or(`name.ilike.%${options.searchQuery}%,location.ilike.%${options.searchQuery}%`);
+          // Sanitize search input to prevent PostgREST filter injection
+          // Remove characters that could break or manipulate the query filter
+          const sanitized = options.searchQuery
+            .replace(/[%_,()]/g, ' ')  // Remove SQL wildcards and PostgREST operators
+            .replace(/\s+/g, ' ')       // Normalize whitespace
+            .trim()
+            .slice(0, 100);             // Limit length to prevent DoS
+          
+          if (sanitized) {
+            query = query.or(`name.ilike.%${sanitized}%,location.ilike.%${sanitized}%`);
+          }
         }
 
         // Date range filter - filter events with start_date within the range

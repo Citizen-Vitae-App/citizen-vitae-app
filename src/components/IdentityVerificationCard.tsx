@@ -23,20 +23,56 @@ export const IdentityVerificationCard = ({
   const [verificationStarted, setVerificationStarted] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
+  // Validate and parse session data with security checks
+  const getValidSession = useCallback(() => {
+    try {
+      const savedSession = sessionStorage.getItem(STORAGE_KEY);
+      if (!savedSession) return null;
+      
+      const parsed = JSON.parse(savedSession);
+      
+      // Validate required fields exist
+      if (!parsed.sessionId || !parsed.userId || !parsed.startedAt) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      
+      // Validate userId matches current user to prevent session hijacking
+      if (parsed.userId !== userId) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      
+      // Check session expiration (1 hour max)
+      const startedAt = new Date(parsed.startedAt);
+      if (isNaN(startedAt.getTime()) || Date.now() - startedAt.getTime() > 60 * 60 * 1000) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      
+      return parsed;
+    } catch {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+  }, [userId]);
+
   // Check if there's a pending verification session
   useEffect(() => {
-    const savedSession = localStorage.getItem(STORAGE_KEY);
-    if (savedSession && !isVerified) {
+    const validSession = getValidSession();
+    if (validSession && !isVerified) {
       setVerificationStarted(true);
+    } else if (!validSession) {
+      setVerificationStarted(false);
     }
-  }, [isVerified]);
+  }, [isVerified, getValidSession]);
 
   // Check verification status
   const checkVerificationStatus = useCallback(async () => {
-    const savedSession = localStorage.getItem(STORAGE_KEY);
-    if (!savedSession || isVerified) return;
+    const validSession = getValidSession();
+    if (!validSession || isVerified) return;
 
-    const { sessionId } = JSON.parse(savedSession);
+    const { sessionId } = validSession;
     
     setIsCheckingStatus(true);
     
@@ -61,7 +97,7 @@ export const IdentityVerificationCard = ({
       if (data?.verified) {
         // Success! Show animation and clean up
         setShowSuccessAnimation(true);
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(STORAGE_KEY);
         
         toast.success('Identité vérifiée avec succès !', {
           description: 'Vous pouvez maintenant vous inscrire aux missions.',
@@ -73,7 +109,7 @@ export const IdentityVerificationCard = ({
           onVerificationComplete?.();
         }, 1500);
       } else if (data?.status === 'Declined' || data?.status === 'Expired') {
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(STORAGE_KEY);
         setVerificationStarted(false);
         toast.error('La vérification a échoué', {
           description: 'Veuillez réessayer.',
@@ -84,7 +120,7 @@ export const IdentityVerificationCard = ({
     } finally {
       setIsCheckingStatus(false);
     }
-  }, [userId, isVerified, onVerificationComplete]);
+  }, [getValidSession, isVerified, onVerificationComplete]);
 
   // Listen for window focus to check status when user returns from Didit
   useEffect(() => {
@@ -144,8 +180,8 @@ export const IdentityVerificationCard = ({
         console.log('[IdentityVerificationCard] Session created:', data.session_id);
         console.log('[IdentityVerificationCard] Verification URL:', data.verification_url);
         
-        // Store session for later status check
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        // Store session for later status check (using sessionStorage for better security)
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
           sessionId: data.session_id,
           userId,
           startedAt: new Date().toISOString(),
@@ -242,7 +278,7 @@ export const IdentityVerificationCard = ({
             variant="ghost"
             size="sm"
             onClick={() => {
-              localStorage.removeItem(STORAGE_KEY);
+              sessionStorage.removeItem(STORAGE_KEY);
               setVerificationStarted(false);
             }}
             className="text-muted-foreground"
