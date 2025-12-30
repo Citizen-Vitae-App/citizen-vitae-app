@@ -72,10 +72,108 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('[send-notification] No authorization header provided');
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !authUser) {
+      console.error('[send-notification] Invalid authentication:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`[send-notification] Authenticated user: ${authUser.id}`);
+
     const body: NotificationRequest = await req.json();
     const { user_id, organization_id, type, event_id, event_name, action_url, custom_message_fr, custom_message_en, notify_participants } = body;
 
     console.log(`[send-notification] Received request:`, JSON.stringify(body));
+
+    // Authorization checks based on notification type
+    // For organization notifications: verify caller is admin of that organization
+    if (organization_id) {
+      const { data: membership, error: memberError } = await supabase
+        .from("organization_members")
+        .select("role")
+        .eq("organization_id", organization_id)
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (memberError || !membership || membership.role !== 'admin') {
+        console.error(`[send-notification] User ${authUser.id} is not admin of org ${organization_id}`);
+        return new Response(
+          JSON.stringify({ error: 'Not authorized to send notifications for this organization' }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      console.log(`[send-notification] User is admin of organization ${organization_id}`);
+    }
+
+    // For event-based notifications: verify caller is admin/supervisor of the event
+    if (event_id && (notify_participants || !user_id)) {
+      // Get event organization
+      const { data: event, error: eventError } = await supabase
+        .from("events")
+        .select("organization_id")
+        .eq("id", event_id)
+        .single();
+
+      if (eventError || !event) {
+        console.error(`[send-notification] Event ${event_id} not found`);
+        return new Response(
+          JSON.stringify({ error: 'Event not found' }),
+          { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Check if user is org admin
+      const { data: orgMembership } = await supabase
+        .from("organization_members")
+        .select("role")
+        .eq("organization_id", event.organization_id)
+        .eq("user_id", authUser.id)
+        .single();
+
+      // Check if user is event supervisor
+      const { data: supervisor } = await supabase
+        .from("event_supervisors")
+        .select("id")
+        .eq("event_id", event_id)
+        .eq("user_id", authUser.id)
+        .single();
+
+      const isOrgAdmin = orgMembership?.role === 'admin';
+      const isSupervisor = !!supervisor;
+
+      if (!isOrgAdmin && !isSupervisor) {
+        console.error(`[send-notification] User ${authUser.id} not authorized for event ${event_id}`);
+        return new Response(
+          JSON.stringify({ error: 'Not authorized to send notifications for this event' }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      console.log(`[send-notification] User authorized for event (admin: ${isOrgAdmin}, supervisor: ${isSupervisor})`);
+    }
+
+    // For direct user notifications: only allow sending to self unless caller is an org admin
+    if (user_id && user_id !== authUser.id && !organization_id && !event_id) {
+      console.error(`[send-notification] User ${authUser.id} cannot send notifications to other users directly`);
+      return new Response(
+        JSON.stringify({ error: 'Can only send notifications to yourself' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Determine target user(s)
     let targetUserIds: string[] = [];
