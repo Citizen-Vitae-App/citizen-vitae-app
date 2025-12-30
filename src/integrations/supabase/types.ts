@@ -790,7 +790,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_certificates: {
+        Row: {
+          certificate_data: Json | null
+          certificate_id: string | null
+          event_id: string | null
+        }
+        Insert: {
+          certificate_data?: Json | null
+          certificate_id?: string | null
+          event_id?: string | null
+        }
+        Update: {
+          certificate_data?: Json | null
+          certificate_id?: string | null
+          event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_user_id_by_email:
