@@ -813,6 +813,23 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      update_registration_certification: {
+        Args: {
+          _attended_at?: string
+          _certificate_data?: Json
+          _certificate_id?: string
+          _certificate_url?: string
+          _certification_end_at?: string
+          _certification_start_at?: string
+          _face_match_at?: string
+          _face_match_passed?: boolean
+          _qr_token?: string
+          _registration_id: string
+          _status?: string
+          _validated_by?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "super_admin" | "organization" | "participant"
