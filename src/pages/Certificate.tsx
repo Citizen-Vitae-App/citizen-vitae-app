@@ -54,13 +54,13 @@ const Certificate = () => {
       }
 
       try {
-        // SECURITY: Only select certificate_data and event_id to limit data exposure
-        // Don't expose user_id, qr_token, timestamps, or other sensitive fields
+        // SECURITY: Use the secure public_certificates view that only exposes safe fields
+        // This view is specifically designed for public certificate viewing without exposing
+        // user_id, qr_token, timestamps, face_match data, or other sensitive fields
         const { data, error: fetchError } = await supabase
-          .from('event_registrations')
+          .from('public_certificates')
           .select('certificate_data, event_id')
           .eq('certificate_id', certificateId)
-          .not('certificate_data', 'is', null)
           .maybeSingle();
 
         if (fetchError) {

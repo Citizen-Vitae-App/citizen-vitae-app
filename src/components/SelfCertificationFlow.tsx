@@ -71,32 +71,25 @@ export const SelfCertificationFlow = ({
     }
   }, [isOpen, requestLocation]);
 
-  // Reverse geocoding when we get coordinates
+  // Reverse geocoding when we get coordinates - using secure edge function
   useEffect(() => {
     const fetchAddress = async () => {
       if (userLatitude && userLongitude) {
         setLoadingAddress(true);
         try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${userLatitude}&lon=${userLongitude}&format=json&addressdetails=1`,
-            {
-              headers: {
-                'Accept-Language': 'fr',
-              },
-            }
-          );
-          const data = await response.json();
-          if (data.display_name) {
-            // Simplify address: keep only road, city
-            const address = data.address;
-            const parts = [];
-            if (address?.road) parts.push(address.road);
-            if (address?.house_number) parts.unshift(address.house_number);
-            if (address?.city || address?.town || address?.village) {
-              parts.push(address.city || address.town || address.village);
-            }
-            if (address?.postcode) parts.push(address.postcode);
-            setLocationAddress(parts.length > 0 ? parts.join(', ') : data.display_name);
+          // Use our secure edge function that proxies Nominatim with proper rate limiting
+          const { data, error } = await supabase.functions.invoke('reverse-geocode', {
+            body: {
+              latitude: userLatitude,
+              longitude: userLongitude,
+            },
+          });
+
+          if (error) {
+            console.error('Error fetching address:', error);
+            setLocationAddress(`${userLatitude.toFixed(4)}, ${userLongitude.toFixed(4)}`);
+          } else if (data?.address) {
+            setLocationAddress(data.address);
           } else {
             setLocationAddress(`${userLatitude.toFixed(4)}, ${userLongitude.toFixed(4)}`);
           }
