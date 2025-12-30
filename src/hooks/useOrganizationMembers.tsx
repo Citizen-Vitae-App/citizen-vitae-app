@@ -188,11 +188,17 @@ export const useOrganizationMembers = () => {
     }): Promise<{ invited: boolean }> => {
       if (!organizationId) throw new Error('No organization found');
 
-      // Find user by email using secure function
+      // Find user by email using secure function (requires org admin)
       const { data: userId, error: lookupError } = await supabase
-        .rpc('get_user_id_by_email', { _email: email });
+        .rpc('get_user_id_by_email', { _email: email, _org_id: organizationId });
 
-      if (lookupError) throw lookupError;
+      if (lookupError) {
+        // Handle authorization errors gracefully
+        if (lookupError.message.includes('Unauthorized')) {
+          throw new Error('Vous devez être administrateur pour ajouter des membres');
+        }
+        throw lookupError;
+      }
 
       // If user exists, add them directly
       if (userId) {
