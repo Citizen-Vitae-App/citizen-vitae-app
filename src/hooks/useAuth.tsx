@@ -62,7 +62,11 @@ export const useAuth = () => {
   const fetchProfileAndRoles = async (userId: string) => {
     try {
       const [profileData, rolesData] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
+        // Explicitly select only needed fields, excluding sensitive biometric data
+        supabase.from('profiles')
+          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified')
+          .eq('id', userId)
+          .single(),
         supabase.from('user_roles').select('role').eq('user_id', userId)
       ]);
 
@@ -79,9 +83,10 @@ export const useAuth = () => {
   const refreshProfile = async () => {
     if (!user?.id) return;
     try {
+      // Explicitly select only needed fields, excluding sensitive biometric data
       const { data } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified')
         .eq('id', user.id)
         .single();
       if (data) setProfile(data);
