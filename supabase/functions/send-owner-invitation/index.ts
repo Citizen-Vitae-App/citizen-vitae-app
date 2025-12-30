@@ -24,17 +24,75 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // ===== JWT Authentication =====
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser(token);
+
+    if (authError || !authUser) {
+      console.error("Invalid authentication:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authenticated user:", authUser.id);
+
+    // ===== Authorization: Only super_admins can send owner invitations =====
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", authUser.id)
+      .eq("role", "super_admin")
+      .maybeSingle();
+
+    if (roleError) {
+      console.error("Error checking user role:", roleError);
+      return new Response(
+        JSON.stringify({ error: "Authorization check failed" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!roleData) {
+      console.error("User is not a super admin:", authUser.id);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: super admin access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("User authorized as super admin");
+
     const { email }: OwnerInvitationRequest = await req.json();
+    
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return new Response(
+        JSON.stringify({ error: "Valid email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     console.log("Sending owner invitation to:", email);
 
     // Create invitation record
     const { error: inviteError } = await supabaseClient
       .from("organization_invitations")
       .insert({
-        email,
+        email: email.toLowerCase(),
         invitation_type: "owner",
         status: "pending",
         organization_id: "00000000-0000-0000-0000-000000000000", // Placeholder, will be created during onboarding
+        invited_by: authUser.id,
       });
 
     if (inviteError) {
