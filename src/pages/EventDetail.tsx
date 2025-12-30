@@ -11,16 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import EventMap from '@/components/EventMap';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 import logo from '@/assets/logo.png';
@@ -31,7 +22,6 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
-
 interface EventWithOrganization {
   id: string;
   name: string;
@@ -52,32 +42,36 @@ interface EventWithOrganization {
     description: string | null;
   };
 }
-
 const EventDetail = () => {
-  const { eventId } = useParams<{ eventId: string }>();
+  const {
+    eventId
+  } = useParams<{
+    eventId: string;
+  }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const {
+    user,
+    profile
+  } = useAuth();
+  const {
+    isFavorite,
+    toggleFavorite
+  } = useFavorites();
   const [event, setEvent] = useState<EventWithOrganization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
   const [showSelfCertification, setShowSelfCertification] = useState(false);
-  
   const isLiked = eventId ? isFavorite(eventId) : false;
-
   const handleLikeClick = async () => {
     if (!eventId) return;
-    
     if (!user) {
       navigate('/auth');
       return;
     }
-    
     await toggleFavorite(eventId);
   };
-
   const {
     isRegistered,
     registration,
@@ -86,21 +80,20 @@ const EventDetail = () => {
     isAnimating,
     register,
     unregister,
-    canUnregister,
+    canUnregister
   } = useEventRegistration(eventId);
 
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [eventId]);
-
   useEffect(() => {
     const fetchEvent = async () => {
       if (!eventId) return;
-
-      const { data, error } = await supabase
-        .from('events')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('events').select(`
           *,
           organizations!inner (
             id,
@@ -108,11 +101,7 @@ const EventDetail = () => {
             logo_url,
             description
           )
-        `)
-        .eq('id', eventId)
-        .eq('is_public', true)
-        .maybeSingle();
-
+        `).eq('id', eventId).eq('is_public', true).maybeSingle();
       if (error) {
         console.error('Error fetching event:', error);
       } else {
@@ -120,25 +109,23 @@ const EventDetail = () => {
       }
       setIsLoading(false);
     };
-
     fetchEvent();
   }, [eventId]);
-
   const formatDate = (dateString: string) => {
-    return format(parseISO(dateString), "EEEE d MMMM yyyy", { locale: fr });
+    return format(parseISO(dateString), "EEEE d MMMM yyyy", {
+      locale: fr
+    });
   };
-
   const formatTime = (dateString: string) => {
-    return format(parseISO(dateString), "HH'h'mm", { locale: fr });
+    return format(parseISO(dateString), "HH'h'mm", {
+      locale: fr
+    });
   };
-
   const handleShare = () => {
     setIsShareOpen(true);
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <Skeleton className="w-full h-[400px] rounded-xl mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -152,37 +139,37 @@ const EventDetail = () => {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!event) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Événement introuvable</h1>
           <Link to="/">
             <Button>Retour à l'accueil</Button>
           </Link>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Format date range for mobile (e.g., "9-11 dec.")
   const formatMobileDateRange = () => {
     const startDate = parseISO(event.start_date);
     const endDate = parseISO(event.end_date);
-    const startDay = format(startDate, 'd', { locale: fr });
-    const endDay = format(endDate, 'd', { locale: fr });
-    const month = format(endDate, 'MMM', { locale: fr }).replace('.', '');
-    
+    const startDay = format(startDate, 'd', {
+      locale: fr
+    });
+    const endDay = format(endDate, 'd', {
+      locale: fr
+    });
+    const month = format(endDate, 'MMM', {
+      locale: fr
+    }).replace('.', '');
     if (startDay === endDay) {
       return `${startDay} ${month}.`;
     }
     return `${startDay}-${endDay} ${month}.`;
   };
-
   const handleRegister = () => {
     if (!user) {
       navigate('/auth');
@@ -190,75 +177,36 @@ const EventDetail = () => {
     }
     register(event.name, event.organization_id, profile?.id_verified);
   };
-
   const handleUnregister = () => {
     setIsUnregisterDialogOpen(true);
   };
-
   const confirmUnregister = () => {
     setIsUnregisterDialogOpen(false);
     unregister(event.end_date);
   };
-
   const canUserUnregister = canUnregister(event.end_date);
 
   // Render CTA button based on registration state
   const renderCTAButton = (isMobile: boolean = false) => {
-    const baseClasses = isMobile 
-      ? "h-11 px-8 font-semibold transition-all duration-300" 
-      : "w-full h-12 text-lg font-semibold transition-all duration-300";
-
+    const baseClasses = isMobile ? "h-11 px-8 font-semibold transition-all duration-300" : "w-full h-12 text-lg font-semibold transition-all duration-300";
     if (isRegistered) {
-      return (
-        <Button
-          onClick={handleUnregister}
-          disabled={isUnregistering || !canUserUnregister}
-          variant="outline"
-          className={cn(
-            baseClasses,
-            "border-destructive text-destructive hover:bg-destructive/10",
-            !canUserUnregister && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          {isUnregistering ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <>
+      return <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn(baseClasses, "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
+          {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
               <X className="h-5 w-5 mr-2" />
               Me désinscrire
-            </>
-          )}
-        </Button>
-      );
+            </>}
+        </Button>;
     }
-
-    return (
-      <Button
-        onClick={handleRegister}
-        disabled={isRegistering}
-        className={cn(
-          baseClasses,
-          isRegistering && "bg-muted text-muted-foreground cursor-wait",
-          isAnimating && "bg-green-600 hover:bg-green-600"
-        )}
-        style={{ backgroundColor: isRegistering ? undefined : (isAnimating ? undefined : '#012573') }}
-      >
-        {isRegistering ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : isAnimating ? (
-          <>
+    return <Button onClick={handleRegister} disabled={isRegistering} className={cn(baseClasses, isRegistering && "bg-muted text-muted-foreground cursor-wait", isAnimating && "bg-green-600 hover:bg-green-600")} style={{
+      backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
+    }}>
+        {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : isAnimating ? <>
             <Check className="h-5 w-5 mr-2 animate-bounce" />
             Inscrit !
-          </>
-        ) : (
-          "Je m'engage"
-        )}
-      </Button>
-    );
+          </> : "Je m'engage"}
+      </Button>;
   };
-
-  return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+  return <div className="min-h-screen bg-background pb-24 lg:pb-0">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4">
@@ -275,25 +223,15 @@ const EventDetail = () => {
       {/* Cover Image - with container padding */}
       <div className="container mx-auto px-4 py-6">
         <div className="relative w-full h-[400px] lg:h-[500px] rounded-xl overflow-hidden">
-          <img
-            src={event.cover_image_url || defaultCover}
-            alt={event.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={event.cover_image_url || defaultCover} alt={event.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
           {/* Action buttons on cover */}
           <div className="absolute bottom-6 right-6 flex items-center gap-3">
-            <button
-              onClick={handleLikeClick}
-              className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
-            >
+            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
               <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
             </button>
-            <button
-              onClick={handleShare}
-              className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors"
-            >
+            <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
           </div>
@@ -331,15 +269,12 @@ const EventDetail = () => {
             </Link>
 
             {/* Description */}
-            {event.description && (
-              <div>
+            {event.description && <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">À propos de l'événement</h2>
-                <div 
-                  className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0"
-                  dangerouslySetInnerHTML={{ __html: event.description }}
-                />
-              </div>
-            )}
+                <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0" dangerouslySetInnerHTML={{
+              __html: event.description
+            }} />
+              </div>}
           </div>
 
           {/* Right Column - Sticky Booking Card (hidden on mobile) */}
@@ -353,11 +288,9 @@ const EventDetail = () => {
                     <p className="font-semibold text-foreground capitalize">
                       {formatDate(event.start_date)}
                     </p>
-                    {formatDate(event.start_date) !== formatDate(event.end_date) && (
-                      <p className="text-sm text-muted-foreground">
+                    {formatDate(event.start_date) !== formatDate(event.end_date) && <p className="text-sm text-muted-foreground">
                         au {formatDate(event.end_date)}
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -371,61 +304,25 @@ const EventDetail = () => {
               </div>
 
               {/* CTA Button or Certification Card */}
-              {isRegistered ? (
-                <>
-                  <CertificationCard
-                    eventStartDate={event.start_date}
-                    eventEndDate={event.end_date}
-                    eventLatitude={event.latitude}
-                    eventLongitude={event.longitude}
-                    eventName={event.name}
-                    eventId={event.id}
-                    userId={user?.id || ''}
-                    registrationId={registration?.id || ''}
-                    organizationId={event.organization_id}
-                    faceMatchPassed={registration?.face_match_passed}
-                    qrToken={registration?.qr_token}
-                    attendedAt={registration?.attended_at}
-                    allowSelfCertification={event.allow_self_certification}
-                    registrationStatus={registration?.status}
-                  />
-                  <Button
-                    onClick={handleUnregister}
-                    disabled={isUnregistering || !canUserUnregister}
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 text-lg font-semibold transition-all duration-300",
-                      "border-destructive text-destructive hover:bg-destructive/10",
-                      !canUserUnregister && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {isUnregistering ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
+              {isRegistered ? <>
+                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} />
+                  <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 text-lg font-semibold transition-all duration-300", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
+                    {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                         <X className="h-5 w-5 mr-2" />
                         Me désinscrire
-                      </>
-                    )}
+                      </>}
                   </Button>
-                  {!canUserUnregister && (
-                    <p className="text-xs text-muted-foreground text-center">
+                  {!canUserUnregister && <p className="text-xs text-muted-foreground text-center">
                       Désinscription impossible moins de 24h avant la fin de l'événement
-                    </p>
-                  )}
-                </>
-              ) : (
-                renderCTAButton()
-              )}
+                    </p>}
+                </> : renderCTAButton()}
 
               {/* Conditions */}
               <div className="border-t border-border pt-4">
                 <h3 className="font-semibold text-foreground mb-3">Conditions de participation</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  En vous inscrivant à cet événement, vous vous engagez à honorer votre participation. 
-                  Votre présence est importante pour l'organisateur et les autres participants. 
-                  En cas d'empêchement, veuillez annuler votre inscription au plus tôt afin de 
-                  libérer votre place pour d'autres personnes intéressées.
+                  En vous inscrivant, vous vous engagez à participer.
+En cas d’empêchement, merci de vous désinscrire au plus tôt.
                 </p>
               </div>
             </div>
@@ -437,61 +334,29 @@ const EventDetail = () => {
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
         <p className="text-muted-foreground mb-4">{event.location}</p>
-        {event.latitude && event.longitude ? (
-          <EventMap
-            lat={event.latitude}
-            lng={event.longitude}
-            zoom={14}
-            iconUrl={mapMarkerIcon}
-          />
-        ) : (
-          <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
+        {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Mobile Fixed Bottom Bar */}
-      {isRegistered ? (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+      {isRegistered ? <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
           <div className="flex flex-col gap-3">
-            <CertificationButton
-              eventStartDate={event.start_date}
-              eventEndDate={event.end_date}
-              eventLatitude={event.latitude}
-              eventLongitude={event.longitude}
-              onClick={() => {
-                if (event.allow_self_certification) {
-                  setShowSelfCertification(true);
-                } else {
-                  setShowFaceMatch(true);
-                }
-              }}
-              disabled={registration?.status === 'self_certified' || !!registration?.attended_at}
-            />
-            <Button
-              onClick={handleUnregister}
-              disabled={isUnregistering || !canUserUnregister}
-              variant="outline"
-              className={cn(
-                "w-full h-12 font-semibold",
-                "border-destructive text-destructive hover:bg-destructive/10",
-                !canUserUnregister && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              {isUnregistering ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
+            <CertificationButton eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} onClick={() => {
+          if (event.allow_self_certification) {
+            setShowSelfCertification(true);
+          } else {
+            setShowFaceMatch(true);
+          }
+        }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} />
+            <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
+              {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                   <X className="h-5 w-5 mr-2" />
                   Me désinscrire
-                </>
-              )}
+                </>}
             </Button>
           </div>
-        </div>
-      ) : (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+        </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2 text-foreground">
@@ -505,43 +370,18 @@ const EventDetail = () => {
             </div>
             {renderCTAButton(true)}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Face Match Dialog for mobile */}
-      <FaceMatchVerification
-        isOpen={showFaceMatch}
-        onClose={() => setShowFaceMatch(false)}
-        userId={user?.id || ''}
-        eventId={event.id}
-        registrationId={registration?.id || ''}
-        eventName={event.name}
-        eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", { locale: fr })}`}
-        existingQrToken={registration?.qr_token}
-        onSuccess={() => setShowFaceMatch(false)}
-      />
+      <FaceMatchVerification isOpen={showFaceMatch} onClose={() => setShowFaceMatch(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", {
+      locale: fr
+    })}`} existingQrToken={registration?.qr_token} onSuccess={() => setShowFaceMatch(false)} />
 
       {/* Self Certification Dialog */}
-      <SelfCertificationFlow
-        isOpen={showSelfCertification}
-        onClose={() => setShowSelfCertification(false)}
-        userId={user?.id || ''}
-        eventId={event.id}
-        registrationId={registration?.id || ''}
-        eventName={event.name}
-        eventStartDate={event.start_date}
-        eventEndDate={event.end_date}
-        organizationId={event.organization_id}
-        onSuccess={() => setShowSelfCertification(false)}
-      />
+      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} onSuccess={() => setShowSelfCertification(false)} />
 
       {/* Share Dialog */}
-      <ShareDialog
-        open={isShareOpen}
-        onOpenChange={setIsShareOpen}
-        url={window.location.href}
-        title={event.name}
-      />
+      <ShareDialog open={isShareOpen} onOpenChange={setIsShareOpen} url={window.location.href} title={event.name} />
 
       {/* Unregister Confirmation Dialog */}
       <AlertDialog open={isUnregisterDialogOpen} onOpenChange={setIsUnregisterDialogOpen}>
@@ -556,17 +396,12 @@ const EventDetail = () => {
             <AlertDialogCancel className="flex-1 m-0 text-primary hover:text-primary font-semibold">
               Non
             </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmUnregister}
-              className="flex-1 m-0 bg-transparent text-destructive hover:bg-destructive/10 font-semibold"
-            >
+            <AlertDialogAction onClick={confirmUnregister} className="flex-1 m-0 bg-transparent text-destructive hover:bg-destructive/10 font-semibold">
               Oui
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default EventDetail;
