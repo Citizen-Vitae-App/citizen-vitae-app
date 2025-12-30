@@ -92,7 +92,15 @@ const EventLocationMap = ({ latitude, longitude, locationName }: EventLocationMa
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.div.style.transform = 'translate(-50%, -50%)';
-        this.div.innerHTML = `<img src="${mapMarkerIcon}" alt="${locationName}" style="width: 64px; height: 64px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />`;
+        
+        const img = document.createElement('img');
+        img.src = mapMarkerIcon;
+        img.alt = locationName; // Browser safely escapes attribute values
+        img.style.width = '64px';
+        img.style.height = '64px';
+        img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))';
+        
+        this.div.appendChild(img);
         
         const panes = this.getPanes();
         panes?.overlayMouseTarget.appendChild(this.div);
