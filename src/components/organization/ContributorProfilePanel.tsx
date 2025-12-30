@@ -25,9 +25,10 @@ export function ContributorProfilePanel({
     queryKey: ['contributor-profile', userId],
     queryFn: async () => {
       if (!userId) return null;
+      // Explicitly exclude sensitive biometric fields (reference_selfie_url, didit_session_id)
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, first_name, last_name, email, avatar_url, bio, id_verified, created_at, date_of_birth, onboarding_completed')
         .eq('id', userId)
         .single();
       if (error) throw error;

@@ -143,10 +143,10 @@ serve(async (req) => {
                 } else {
                   log('SELFIE', 'Upload successful');
                   
-                  // Get signed URL for private bucket
+                  // Get signed URL for private bucket (1 hour expiration for security)
                   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
                     .from('verification-selfies')
-                    .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year
+                    .createSignedUrl(fileName, 60 * 60); // 1 hour (short-lived for security)
                   
                   if (signedUrlError) {
                     logError('SELFIE', 'Failed to create signed URL', signedUrlError);
