@@ -54,10 +54,13 @@ const Certificate = () => {
       }
 
       try {
+        // SECURITY: Only select certificate_data and event_id to limit data exposure
+        // Don't expose user_id, qr_token, timestamps, or other sensitive fields
         const { data, error: fetchError } = await supabase
           .from('event_registrations')
           .select('certificate_data, event_id')
           .eq('certificate_id', certificateId)
+          .not('certificate_data', 'is', null)
           .maybeSingle();
 
         if (fetchError) {

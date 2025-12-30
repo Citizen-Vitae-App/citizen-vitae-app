@@ -224,6 +224,58 @@ serve(async (req) => {
         );
       }
       
+      // SECURITY: Verify the caller is the actual user by checking JWT
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        logError('FACE-MATCH', 'No authorization header provided');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication required' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !authUser) {
+        logError('FACE-MATCH', 'Invalid authentication token', authError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid authentication' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Verify the authenticated user matches the user_id in the request
+      if (authUser.id !== user_id) {
+        logError('FACE-MATCH', 'User ID mismatch - potential attack', { 
+          authenticated_user: authUser.id, 
+          requested_user: user_id 
+        });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized - user mismatch' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Verify the user owns the registration
+      const { data: regOwnership, error: regOwnershipError } = await supabase
+        .from('event_registrations')
+        .select('id')
+        .eq('id', registration_id)
+        .eq('user_id', authUser.id)
+        .eq('event_id', event_id)
+        .single();
+      
+      if (regOwnershipError || !regOwnership) {
+        logError('FACE-MATCH', 'Registration not found or not owned by user', regOwnershipError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Registration not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      log('FACE-MATCH', `Authorization verified for user: ${authUser.id}`);
+      
       log('FACE-MATCH', `Starting face match for user: ${user_id}, event: ${event_id}`);
       
       // Check if face match was already validated within the last 2 hours
