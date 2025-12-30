@@ -11,6 +11,7 @@ import logo from '@/assets/logo.png';
 import EventCard from '@/components/EventCard';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 // Dynamic icon component
 const DynamicIcon = ({ name, color, size = 18 }: { name: string; color?: string; size?: number }) => {
@@ -298,7 +299,7 @@ const OrganizationPublic = () => {
                 <h2 className="text-xl font-semibold text-foreground mb-4">À propos</h2>
                 <div 
                   className="text-muted-foreground leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: organization.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(organization.description) }}
                 />
               </div>
             )}

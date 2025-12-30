@@ -20,6 +20,7 @@ import { useEventRegistration } from '@/hooks/useEventRegistration';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 interface EventWithOrganization {
@@ -272,7 +273,7 @@ const EventDetail = () => {
             {event.description && <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">À propos de l'événement</h2>
                 <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0" dangerouslySetInnerHTML={{
-              __html: event.description
+              __html: sanitizeHtml(event.description)
             }} />
               </div>}
           </div>
