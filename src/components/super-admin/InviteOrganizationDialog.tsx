@@ -36,19 +36,25 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.functions.invoke('send-owner-invitation', {
+      const { data, error } = await supabase.functions.invoke('send-owner-invitation', {
         body: { email: email.trim() },
       });
 
       if (error) throw error;
 
-      toast.success('Invitation envoyée avec succès');
+      if (data?.warning) {
+        toast.warning(data.warning);
+      } else {
+        toast.success('Invitation envoyée avec succès');
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['super-admin-organizations'] });
       setEmail('');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending invitation:', error);
-      toast.error('Erreur lors de l\'envoi de l\'invitation');
+      const message = error?.message || 'Erreur lors de l\'envoi de l\'invitation';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
