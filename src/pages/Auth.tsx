@@ -1,4 +1,4 @@
-import { LogIn, Info } from "lucide-react";
+import { LogIn, Info, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ const Auth = () => {
   const redirectUrl = searchParams.get('redirect');
   const message = searchParams.get('message');
   const emailFromUrl = searchParams.get('email');
+  const invitationType = searchParams.get('invitation');
+  const orgName = searchParams.get('orgName');
+  
+  const isOwnerInvitation = invitationType === 'owner';
   
   const [email, setEmail] = useState(emailFromUrl || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -94,12 +98,24 @@ const Auth = () => {
             </Alert>
           )}
 
+          {/* Owner invitation message */}
+          {isOwnerInvitation && orgName && (
+            <Alert className="mb-6 border-emerald-500/20 bg-emerald-500/5">
+              <Building2 className="h-4 w-4 text-emerald-600" />
+              <AlertDescription className="text-sm">
+                <span className="font-medium">Invitation Owner</span> — Créez votre compte pour configurer <span className="font-semibold">{orgName}</span>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Title - Left Aligned */}
           <h1 className="text-2xl font-bold mb-2">
-            Bienvenue sur CitizenVitae
+            {isOwnerInvitation ? 'Créez votre compte Owner' : 'Bienvenue sur CitizenVitae'}
           </h1>
           <p className="text-muted-foreground mb-8">
-            Veuillez vous connecter ou vous inscrire ci-dessous.
+            {isOwnerInvitation 
+              ? 'Entrez vos informations pour créer votre compte et gérer votre organisation.'
+              : 'Veuillez vous connecter ou vous inscrire ci-dessous.'}
           </p>
 
           {/* Email Form */}
@@ -113,8 +129,14 @@ const Auth = () => {
                 className="w-full"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || (isOwnerInvitation && !!emailFromUrl)}
+                readOnly={isOwnerInvitation && !!emailFromUrl}
               />
+              {isOwnerInvitation && emailFromUrl && (
+                <p className="text-xs text-muted-foreground">
+                  L'email est pré-rempli à partir de votre invitation
+                </p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" size="lg" disabled={isLoading}>

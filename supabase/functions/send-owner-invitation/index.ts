@@ -151,7 +151,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send invitation email
     const origin = req.headers.get("origin") || "https://citizenvitae.com";
-    const onboardingUrl = `${origin}/auth?redirect=/onboarding&invitation=owner&org=${newOrg.id}`;
+    const encodedEmail = encodeURIComponent(normalizedEmail);
+    const encodedOrgName = encodeURIComponent(pendingOrgName);
+    const onboardingUrl = `${origin}/auth?redirect=/onboarding&invitation=owner&org=${newOrg.id}&email=${encodedEmail}&orgName=${encodedOrgName}`;
 
     const emailResponse = await resend.emails.send({
       from: "Citizen Vitae <no-reply@citizenvitae.com>",

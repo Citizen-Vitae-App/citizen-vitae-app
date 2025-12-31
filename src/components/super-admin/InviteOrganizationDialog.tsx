@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Send } from 'lucide-react';
+import { Mail, Send, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,12 +22,18 @@ interface InviteOrganizationDialogProps {
 
 export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizationDialogProps) {
   const [email, setEmail] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!organizationName.trim()) {
+      toast.error('Veuillez entrer le nom de l\'organisation');
+      return;
+    }
+
     if (!email.trim()) {
       toast.error('Veuillez entrer une adresse email');
       return;
@@ -37,7 +43,10 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
 
     try {
       const { data, error } = await supabase.functions.invoke('send-owner-invitation', {
-        body: { email: email.trim() },
+        body: { 
+          email: email.trim(),
+          organizationName: organizationName.trim(),
+        },
       });
 
       if (error) throw error;
@@ -50,6 +59,7 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
       
       queryClient.invalidateQueries({ queryKey: ['super-admin-organizations'] });
       setEmail('');
+      setOrganizationName('');
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error sending invitation:', error);
@@ -72,6 +82,24 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="organizationName" className="text-[hsl(210,40%,98%)]">
+                Nom de l'organisation
+              </Label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(215,20.2%,65.1%)]" />
+                <Input
+                  id="organizationName"
+                  type="text"
+                  placeholder="Nom de l'organisation"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  className="pl-9 bg-[hsl(222.2,84%,4.9%)] border-[hsl(217.2,32.6%,25%)] text-[hsl(210,40%,98%)] placeholder:text-[hsl(215,20.2%,50%)]"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[hsl(210,40%,98%)]">
                 Email du futur Owner
