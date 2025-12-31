@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import VerifyOtp from "./pages/VerifyOtp";
 import Onboarding from "./pages/Onboarding";
+import OrganizationOnboarding from "./pages/OrganizationOnboarding";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import OrganizationPublic from "./pages/OrganizationPublic";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
+            <Route path="/organization/onboarding" element={<ProtectedRoute requireOnboarding={false}><OrganizationOnboarding /></ProtectedRoute>} />
             <Route path="/organization/dashboard" element={<ProtectedRoute requiredRole="organization"><OrganizationDashboard /></ProtectedRoute>} />
             <Route path="/organization/settings" element={<ProtectedRoute requiredRole="organization"><OrganizationSettings /></ProtectedRoute>} />
             <Route path="/organization/create-event" element={<ProtectedRoute requiredRole="organization"><CreateEvent /></ProtectedRoute>} />

@@ -149,11 +149,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Created invitation for organization:", newOrg.id);
 
-    // Send invitation email
+    // Send invitation email - redirect to organization onboarding after auth
     const origin = req.headers.get("origin") || "https://citizenvitae.com";
     const encodedEmail = encodeURIComponent(normalizedEmail);
     const encodedOrgName = encodeURIComponent(pendingOrgName);
-    const onboardingUrl = `${origin}/auth?redirect=/onboarding&invitation=owner&org=${newOrg.id}&email=${encodedEmail}&orgName=${encodedOrgName}`;
+    const redirectPath = `/organization/onboarding?org=${newOrg.id}&orgName=${encodedOrgName}`;
+    const onboardingUrl = `${origin}/auth?redirect=${encodeURIComponent(redirectPath)}&invitation=owner&org=${newOrg.id}&email=${encodedEmail}&orgName=${encodedOrgName}`;
 
     const emailResponse = await resend.emails.send({
       from: "Citizen Vitae <no-reply@citizenvitae.com>",
