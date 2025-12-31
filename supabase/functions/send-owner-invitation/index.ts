@@ -11,6 +11,7 @@ const corsHeaders = {
 
 interface OwnerInvitationRequest {
   email: string;
+  organizationName?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -73,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("User authorized as super admin");
 
-    const { email }: OwnerInvitationRequest = await req.json();
+    const { email, organizationName }: OwnerInvitationRequest = await req.json();
     
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(
@@ -82,50 +83,179 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Sending owner invitation to:", email);
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log("Sending owner invitation to:", normalizedEmail);
 
-    // Create invitation record
+    // Check if email already has a pending invitation
+    const { data: existingInvitation } = await supabaseClient
+      .from("organization_invitations")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .eq("invitation_type", "owner")
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (existingInvitation) {
+      return new Response(
+        JSON.stringify({ error: "Une invitation est déjà en attente pour cet email" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create a pending organization first
+    const pendingOrgName = organizationName || `Organisation de ${normalizedEmail}`;
+    const { data: newOrg, error: orgError } = await supabaseClient
+      .from("organizations")
+      .insert({
+        name: pendingOrgName,
+        type: "association",
+        is_verified: false,
+        visibility: "private",
+      })
+      .select("id")
+      .single();
+
+    if (orgError || !newOrg) {
+      console.error("Error creating pending organization:", orgError);
+      return new Response(
+        JSON.stringify({ error: "Failed to create pending organization" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Created pending organization:", newOrg.id);
+
+    // Create invitation record linked to the new organization
     const { error: inviteError } = await supabaseClient
       .from("organization_invitations")
       .insert({
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         invitation_type: "owner",
         status: "pending",
-        organization_id: "00000000-0000-0000-0000-000000000000", // Placeholder, will be created during onboarding
+        organization_id: newOrg.id,
         invited_by: authUser.id,
+        role: "admin",
       });
 
     if (inviteError) {
       console.error("Error creating invitation:", inviteError);
+      // Rollback: delete the organization
+      await supabaseClient.from("organizations").delete().eq("id", newOrg.id);
+      return new Response(
+        JSON.stringify({ error: "Failed to create invitation" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
+    console.log("Created invitation for organization:", newOrg.id);
+
     // Send invitation email
-    const onboardingUrl = `${req.headers.get("origin")}/organization-onboarding?email=${encodeURIComponent(email)}`;
+    const origin = req.headers.get("origin") || "https://citizenvitae.com";
+    const onboardingUrl = `${origin}/auth?redirect=/onboarding&invitation=owner&org=${newOrg.id}`;
 
     const emailResponse = await resend.emails.send({
-      from: "Citizen Vitae <onboarding@resend.dev>",
-      to: [email],
+      from: "Citizen Vitae <no-reply@citizenvitae.com>",
+      to: [normalizedEmail],
       subject: "Invitation à créer votre organisation sur Citizen Vitae",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #10b981;">Bienvenue sur Citizen Vitae</h1>
-          <p>Vous avez été invité(e) à créer et gérer une organisation sur Citizen Vitae, la plateforme de certification de l'engagement citoyen.</p>
-          <p>Cliquez sur le bouton ci-dessous pour créer votre compte et configurer votre organisation :</p>
-          <a href="${onboardingUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-            Créer mon organisation
-          </a>
-          <p style="color: #666; font-size: 14px;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
-          <p style="color: #666; font-size: 14px;">L'équipe Citizen Vitae</p>
-        </div>
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="padding: 40px 40px 20px 40px; text-align: center; border-bottom: 1px solid #e4e4e7;">
+                      <h1 style="margin: 0; color: #10b981; font-size: 28px; font-weight: 700;">Citizen Vitae</h1>
+                      <p style="margin: 8px 0 0 0; color: #71717a; font-size: 14px;">La plateforme de certification de l'engagement citoyen</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <h2 style="margin: 0 0 16px 0; color: #18181b; font-size: 24px; font-weight: 600;">
+                        🎉 Vous êtes invité(e) !
+                      </h2>
+                      <p style="margin: 0 0 24px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
+                        Vous avez été sélectionné(e) pour créer et gérer une organisation sur Citizen Vitae.
+                      </p>
+                      <p style="margin: 0 0 32px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
+                        En tant que propriétaire d'organisation, vous pourrez :
+                      </p>
+                      <ul style="margin: 0 0 32px 0; padding-left: 20px; color: #3f3f46; font-size: 15px; line-height: 1.8;">
+                        <li>Créer et gérer des événements citoyens</li>
+                        <li>Certifier l'engagement de vos participants</li>
+                        <li>Délivrer des certificats d'engagement</li>
+                        <li>Constituer votre équipe de collaborateurs</li>
+                      </ul>
+                      
+                      <!-- CTA Button -->
+                      <table role="presentation" style="width: 100%;">
+                        <tr>
+                          <td align="center">
+                            <a href="${onboardingUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                              Créer mon organisation
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <p style="margin: 32px 0 0 0; color: #71717a; font-size: 14px; text-align: center;">
+                        Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+                        <a href="${onboardingUrl}" style="color: #10b981; word-break: break-all;">${onboardingUrl}</a>
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding: 24px 40px; background-color: #fafafa; border-radius: 0 0 16px 16px; border-top: 1px solid #e4e4e7;">
+                      <p style="margin: 0; color: #a1a1aa; font-size: 13px; text-align: center; line-height: 1.5;">
+                        Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.<br>
+                        © ${new Date().getFullYear()} Citizen Vitae. Tous droits réservés.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
-    console.log("Email sent:", emailResponse);
+    console.log("Email response:", JSON.stringify(emailResponse));
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    if (emailResponse.error) {
+      console.error("Email sending failed:", emailResponse.error);
+      // Don't rollback - the invitation is still valid, just log the email error
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          warning: "Organisation créée mais erreur d'envoi email",
+          organizationId: newOrg.id,
+          emailError: emailResponse.error.message 
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        organizationId: newOrg.id,
+        message: "Invitation envoyée avec succès" 
+      }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
   } catch (error: any) {
     console.error("Error in send-owner-invitation:", error);
     return new Response(JSON.stringify({ error: error.message }), {
