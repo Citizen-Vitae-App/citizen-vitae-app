@@ -150,7 +150,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Created invitation for organization:", newOrg.id);
 
     // Send invitation email - redirect to organization onboarding after auth
-    const origin = req.headers.get("origin") || "https://citizenvitae.com";
+    // Always use the production URL for email links, never the preview URL
+    const origin = "https://dev.citizenvitae.com";
     const encodedEmail = encodeURIComponent(normalizedEmail);
     const encodedOrgName = encodeURIComponent(pendingOrgName);
     const redirectPath = `/organization/onboarding?org=${newOrg.id}&orgName=${encodedOrgName}`;
