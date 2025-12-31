@@ -81,12 +81,14 @@ const Auth = () => {
       {/* Centered Card */}
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-background rounded-2xl shadow-lg p-8">
-          {/* Icon - Left Aligned */}
-          <div className="mb-6">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <LogIn className="w-6 h-6 text-muted-foreground" />
+          {/* Icon - Left Aligned - Hidden for owner invitations */}
+          {!isOwnerInvitation && (
+            <div className="mb-6">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <LogIn className="w-6 h-6 text-muted-foreground" />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Auth required message */}
           {message === 'auth_required' && (
