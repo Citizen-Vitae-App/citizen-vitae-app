@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MoreHorizontal, Eye, Award, Building2, ClipboardList } from 'lucide-react';
+import { Search, MoreHorizontal, Eye, Award, Building2, ClipboardList, Trash2, Ban, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -21,6 +22,8 @@ import {
 } from '@/components/ui/table';
 import { useSuperAdminUsers, type User } from '@/hooks/useSuperAdminUsers';
 import { UserDetailsDialog } from './UserDetailsDialog';
+import { DeleteUserDialog } from './DeleteUserDialog';
+import { SuspendUserDialog } from './SuspendUserDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -30,6 +33,9 @@ export function UsersTab() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogMode, setDialogMode] = useState<'registrations' | 'certifications'>('registrations');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [userToManage, setUserToManage] = useState<User | null>(null);
   const { users, isLoading } = useSuperAdminUsers();
 
   const filteredUsers = users?.filter(user =>
@@ -43,8 +49,26 @@ export function UsersTab() {
     setDialogOpen(true);
   };
 
+  const openDeleteDialog = (user: User) => {
+    setUserToManage(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const openSuspendDialog = (user: User) => {
+    setUserToManage(user);
+    setSuspendDialogOpen(true);
+  };
+
   const getRoleBadges = (user: User) => {
     const badges = [];
+    
+    if (user.is_suspended) {
+      badges.push(
+        <Badge key="suspended" className="bg-red-600/20 text-red-400 hover:bg-red-600/30">
+          Suspendu
+        </Badge>
+      );
+    }
     
     if (user.is_super_admin) {
       badges.push(
@@ -78,7 +102,7 @@ export function UsersTab() {
       );
     }
     
-    if (badges.length === 0) {
+    if (badges.length === 0 || (badges.length === 1 && user.is_suspended)) {
       badges.push(
         <Badge key="user" className="bg-[hsl(217.2,32.6%,25%)] text-[hsl(215,20.2%,65.1%)]">
           Citoyen
@@ -148,7 +172,7 @@ export function UsersTab() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-[hsl(217.2,32.6%,25%)] hover:bg-[hsl(217.2,32.6%,20%)]">
+                    <TableRow key={user.id} className={`border-[hsl(217.2,32.6%,25%)] hover:bg-[hsl(217.2,32.6%,20%)] ${user.is_suspended ? 'opacity-60' : ''}`}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
@@ -226,6 +250,30 @@ export function UsersTab() {
                               <Eye className="w-4 h-4 mr-2" />
                               Voir profil
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-[hsl(217.2,32.6%,25%)]" />
+                            <DropdownMenuItem 
+                              onClick={() => openSuspendDialog(user)}
+                              className={`focus:bg-[hsl(217.2,32.6%,25%)] ${user.is_suspended ? 'text-green-400 focus:text-green-400' : 'text-amber-400 focus:text-amber-400'}`}
+                            >
+                              {user.is_suspended ? (
+                                <>
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Réactiver
+                                </>
+                              ) : (
+                                <>
+                                  <Ban className="w-4 h-4 mr-2" />
+                                  Suspendre
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => openDeleteDialog(user)}
+                              className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -243,6 +291,18 @@ export function UsersTab() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mode={dialogMode}
+      />
+
+      <DeleteUserDialog
+        user={userToManage}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
+
+      <SuspendUserDialog
+        user={userToManage}
+        open={suspendDialogOpen}
+        onOpenChange={setSuspendDialogOpen}
       />
     </div>
   );

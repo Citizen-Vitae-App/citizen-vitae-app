@@ -27,6 +27,7 @@ export interface User {
   is_org_admin: boolean;
   is_org_owner: boolean;
   is_team_leader: boolean;
+  is_suspended: boolean;
   organizations: Organization[];
   registrations: Registration[];
   registration_count: number;
@@ -40,7 +41,7 @@ export function useSuperAdminUsers() {
       // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, avatar_url, created_at')
+        .select('id, first_name, last_name, email, avatar_url, created_at, is_suspended')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -128,6 +129,7 @@ export function useSuperAdminUsers() {
           is_org_admin: orgData?.isAdmin || false,
           is_org_owner: orgData?.isOwner || false,
           is_team_leader: teamLeaderSet.has(profile.id),
+          is_suspended: (profile as any).is_suspended ?? false,
           organizations: orgData?.organizations || [],
           registrations: userRegs,
           registration_count: userRegs.length,

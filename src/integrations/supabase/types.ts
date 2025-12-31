@@ -560,9 +560,12 @@ export type Database = {
           first_name: string | null
           id: string
           id_verified: boolean
+          is_suspended: boolean
           last_name: string | null
           onboarding_completed: boolean | null
           reference_selfie_url: string | null
+          suspended_at: string | null
+          suspended_by: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -574,9 +577,12 @@ export type Database = {
           first_name?: string | null
           id: string
           id_verified?: boolean
+          is_suspended?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -588,9 +594,12 @@ export type Database = {
           first_name?: string | null
           id?: string
           id_verified?: boolean
+          is_suspended?: boolean
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
         }
         Relationships: []
       }
