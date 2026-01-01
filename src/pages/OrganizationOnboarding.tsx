@@ -58,23 +58,34 @@ export default function OrganizationOnboarding() {
   const [address, setAddress] = useState('');
   const [employeeCount, setEmployeeCount] = useState('');
   
-  const { user, profile } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est connecté et si l'org existe
+    // Ne rien faire tant que l'auth est en cours de chargement
+    if (authLoading) {
+      return;
+    }
+
+    // Vérifier si l'utilisateur est connecté
     if (!user) {
-      // Rediriger vers auth si pas connecté
+      // Préserver le redirect vers cette page pour après l'auth
+      const currentUrl = `/organization/onboarding${orgId ? `?org=${orgId}` : ''}${orgNameFromUrl ? `&orgName=${encodeURIComponent(orgNameFromUrl)}` : ''}`;
       toast.error("Veuillez vous connecter d'abord");
-      navigate('/auth');
+      navigate(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
+
+    // Valider que l'orgId est présent
+    if (!orgId) {
+      toast.error("Lien d'invitation invalide ou incomplet");
+      navigate('/');
       return;
     }
     
-    if (orgId) {
-      // Charger les données de l'organisation existante
-      loadOrganization();
-    }
-  }, [user, orgId]);
+    // Charger les données de l'organisation existante
+    loadOrganization();
+  }, [user, authLoading, orgId, orgNameFromUrl, navigate]);
 
   const loadOrganization = async () => {
     if (!orgId) return;
