@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePublicEvents } from '@/hooks/useEvents';
 import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 import { generateShortTitle } from '@/lib/utils';
+import { hasActiveOwnerInvitation, getOwnerInvitationRedirectUrl, captureOwnerInvitation } from '@/lib/invitationHandoff';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -45,10 +46,27 @@ const Index = () => {
 
   const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
 
-  // Only redirect for onboarding - Super admin accesses console via menu
+  // Capture any owner invitation from URL on mount
+  useEffect(() => {
+    captureOwnerInvitation();
+  }, []);
+
+  // Handle redirections - with owner invitation exception
   useEffect(() => {
     if (!isAuthLoading && user) {
+      // Check if there's an active owner invitation
+      if (hasActiveOwnerInvitation()) {
+        const redirectUrl = getOwnerInvitationRedirectUrl();
+        if (redirectUrl) {
+          console.log('[Index] Owner invitation active, redirecting to org onboarding:', redirectUrl);
+          navigate(redirectUrl);
+          return;
+        }
+      }
+      
+      // Standard onboarding redirect only if NO owner invitation
       if (needsOnboarding) {
+        console.log('[Index] No owner invitation, redirecting to user onboarding');
         navigate('/onboarding');
       }
     }

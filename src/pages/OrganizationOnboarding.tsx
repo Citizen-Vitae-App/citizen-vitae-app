@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus } from 'lucide-react';
+import { captureOwnerInvitation, clearOwnerInvitation } from '@/lib/invitationHandoff';
 
 const organizationTypes = [
   { value: 'company', label: 'Entreprise' },
@@ -60,6 +61,11 @@ export default function OrganizationOnboarding() {
   
   const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Capture owner invitation on mount
+  useEffect(() => {
+    captureOwnerInvitation();
+  }, []);
 
   useEffect(() => {
     // Ne rien faire tant que l'auth est en cours de chargement
@@ -233,6 +239,9 @@ export default function OrganizationOnboarding() {
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
     
+    // Clear the invitation handoff since we're done
+    clearOwnerInvitation();
+    
     // Toujours rediriger vers le dashboard org, l'onboarding user est optionnel
     navigate('/organization/dashboard');
   };
@@ -289,6 +298,10 @@ export default function OrganizationOnboarding() {
 
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
+    
+    // Clear the invitation handoff since we're done
+    clearOwnerInvitation();
+    
     navigate('/organization/dashboard');
   };
 
