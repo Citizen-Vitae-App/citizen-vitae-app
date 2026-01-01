@@ -233,12 +233,8 @@ export default function OrganizationOnboarding() {
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
     
-    // Rediriger vers l'onboarding utilisateur si pas complété
-    if (!profile?.onboarding_completed) {
-      navigate('/onboarding');
-    } else {
-      navigate('/organization/dashboard');
-    }
+    // Toujours rediriger vers le dashboard org, l'onboarding user est optionnel
+    navigate('/organization/dashboard');
   };
 
   const handleFinishWithoutProfile = async () => {
