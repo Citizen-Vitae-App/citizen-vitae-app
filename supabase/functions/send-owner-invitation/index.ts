@@ -149,13 +149,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Created invitation for organization:", newOrg.id);
 
-    // Send invitation email - redirect to organization onboarding after auth
-    // Always use the production URL for email links, never the preview URL
+    // Generate a Magic Link that authenticates the user and redirects directly to org onboarding
     const origin = "https://dev.citizenvitae.com";
-    const encodedEmail = encodeURIComponent(normalizedEmail);
     const encodedOrgName = encodeURIComponent(pendingOrgName);
-    const redirectPath = `/organization/onboarding?org=${newOrg.id}&orgName=${encodedOrgName}`;
-    const onboardingUrl = `${origin}/auth?redirect=${encodeURIComponent(redirectPath)}&invitation=owner&org=${newOrg.id}&email=${encodedEmail}&orgName=${encodedOrgName}`;
+    const redirectTo = `${origin}/organization/onboarding?org=${newOrg.id}&orgName=${encodedOrgName}&invitation=owner`;
+
+    console.log("Generating magic link with redirectTo:", redirectTo);
+
+    // Use Supabase Admin API to generate a magic link
+    const { data: linkData, error: linkError } = await supabaseClient.auth.admin.generateLink({
+      type: "magiclink",
+      email: normalizedEmail,
+      options: {
+        redirectTo,
+      },
+    });
+
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("Error generating magic link:", linkError);
+      // Fallback: delete org and invitation, return error
+      await supabaseClient.from("organization_invitations").delete().eq("organization_id", newOrg.id);
+      await supabaseClient.from("organizations").delete().eq("id", newOrg.id);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate invitation link" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const magicLinkUrl = linkData.properties.action_link;
+    console.log("Magic link generated successfully");
 
     const emailResponse = await resend.emails.send({
       from: "Citizen Vitae <no-reply@citizenvitae.com>",
@@ -204,7 +226,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <table role="presentation" style="width: 100%;">
                         <tr>
                           <td align="center">
-                            <a href="${onboardingUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                            <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
                               Créer mon organisation
                             </a>
                           </td>
@@ -213,7 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
                       
                       <p style="margin: 32px 0 0 0; color: #71717a; font-size: 14px; text-align: center;">
                         Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-                        <a href="${onboardingUrl}" style="color: #10b981; word-break: break-all;">${onboardingUrl}</a>
+                        <a href="${magicLinkUrl}" style="color: #10b981; word-break: break-all;">${magicLinkUrl}</a>
                       </p>
                     </td>
                   </tr>
