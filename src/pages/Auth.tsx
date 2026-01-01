@@ -48,7 +48,9 @@ const Auth = () => {
       setIsLoading(false);
     } else {
       toast.success('Code de vérification envoyé par email');
-      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+      // Passer le redirect à VerifyOtp pour le flow Owner
+      const redirectParam = redirectUrl ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}${redirectParam}`);
     }
   };
 
