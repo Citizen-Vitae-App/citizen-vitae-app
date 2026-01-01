@@ -15,6 +15,7 @@ const VerifyOtp = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
+  const redirect = searchParams.get('redirect');
 
   useEffect(() => {
     if (!email) {
@@ -25,14 +26,17 @@ const VerifyOtp = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      // Attendre que le profil soit chargé pour savoir si onboarding est nécessaire
-      if (needsOnboarding) {
+      // Priorité au redirect (cas invitation owner)
+      if (redirect) {
+        console.log('Redirecting to invitation URL:', redirect);
+        navigate(redirect);
+      } else if (needsOnboarding) {
         navigate('/onboarding');
       } else {
         navigate(getDefaultRoute());
       }
     }
-  }, [user, authLoading, needsOnboarding, navigate, getDefaultRoute]);
+  }, [user, authLoading, needsOnboarding, navigate, getDefaultRoute, redirect]);
 
   useEffect(() => {
     if (countdown > 0) {
