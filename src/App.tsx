@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import VerifyOtp from "./pages/VerifyOtp";
@@ -36,31 +37,33 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/events/:eventId" element={<EventDetail />} />
-            <Route path="/organization/:orgId" element={<OrganizationPublic />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/verify-otp" element={<VerifyOtp />} />
-            <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
-            <Route path="/organization/onboarding" element={<ProtectedRoute requireOnboarding={false}><OrganizationOnboarding /></ProtectedRoute>} />
-            <Route path="/organization/dashboard" element={<ProtectedRoute requiredRole="organization"><OrganizationDashboard /></ProtectedRoute>} />
-            <Route path="/organization/settings" element={<ProtectedRoute requiredRole="organization"><OrganizationSettings /></ProtectedRoute>} />
-            <Route path="/organization/create-event" element={<ProtectedRoute requiredRole="organization"><CreateEvent /></ProtectedRoute>} />
-            <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
-            <Route path="/organization/scan" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
-            <Route path="/organization/scan/:eventId" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
-            <Route path="/admin" element={<Navigate to="/super-admin" replace />} />
-            <Route path="/super-admin" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-            <Route path="/my-missions" element={<ProtectedRoute><MyMissions /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/verify/:registrationId" element={<VerifyParticipant />} />
-            <Route path="/certificate/:certificateId" element={<Certificate />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
+              <Route path="/organization/:orgId" element={<OrganizationPublic />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/verify-otp" element={<VerifyOtp />} />
+              <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
+              <Route path="/organization/onboarding" element={<ProtectedRoute requireOnboarding={false}><OrganizationOnboarding /></ProtectedRoute>} />
+              <Route path="/organization/dashboard" element={<ProtectedRoute requiredRole="organization"><OrganizationDashboard /></ProtectedRoute>} />
+              <Route path="/organization/settings" element={<ProtectedRoute requiredRole="organization"><OrganizationSettings /></ProtectedRoute>} />
+              <Route path="/organization/create-event" element={<ProtectedRoute requiredRole="organization"><CreateEvent /></ProtectedRoute>} />
+              <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
+              <Route path="/organization/scan" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
+              <Route path="/organization/scan/:eventId" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
+              <Route path="/admin" element={<Navigate to="/super-admin" replace />} />
+              <Route path="/super-admin" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+              <Route path="/my-missions" element={<ProtectedRoute><MyMissions /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/verify/:registrationId" element={<VerifyParticipant />} />
+              <Route path="/certificate/:certificateId" element={<Certificate />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
