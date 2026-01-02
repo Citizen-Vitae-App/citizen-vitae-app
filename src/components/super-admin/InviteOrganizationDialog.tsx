@@ -11,9 +11,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+
+const organizationTypes = [
+  { value: 'company', label: 'Entreprise' },
+  { value: 'association', label: 'Association' },
+  { value: 'foundation', label: 'Fondation' },
+  { value: 'institution', label: 'Institution publique' },
+];
 
 interface InviteOrganizationDialogProps {
   open: boolean;
@@ -23,6 +37,7 @@ interface InviteOrganizationDialogProps {
 export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizationDialogProps) {
   const [email, setEmail] = useState('');
   const [organizationName, setOrganizationName] = useState('');
+  const [organizationType, setOrganizationType] = useState('association');
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -46,6 +61,7 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
         body: { 
           email: email.trim(),
           organizationName: organizationName.trim(),
+          organizationType,
         },
       });
 
@@ -60,6 +76,7 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
       queryClient.invalidateQueries({ queryKey: ['super-admin-organizations'] });
       setEmail('');
       setOrganizationName('');
+      setOrganizationType('association');
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error sending invitation:', error);
@@ -98,6 +115,28 @@ export function InviteOrganizationDialog({ open, onOpenChange }: InviteOrganizat
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="organizationType" className="text-[hsl(210,40%,98%)]">
+                Type d'organisation
+              </Label>
+              <Select value={organizationType} onValueChange={setOrganizationType}>
+                <SelectTrigger className="bg-[hsl(222.2,84%,4.9%)] border-[hsl(217.2,32.6%,25%)] text-[hsl(210,40%,98%)]">
+                  <SelectValue placeholder="Sélectionnez un type" />
+                </SelectTrigger>
+                <SelectContent className="bg-[hsl(217.2,32.6%,17.5%)] border-[hsl(217.2,32.6%,25%)]">
+                  {organizationTypes.map((type) => (
+                    <SelectItem 
+                      key={type.value} 
+                      value={type.value}
+                      className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]"
+                    >
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

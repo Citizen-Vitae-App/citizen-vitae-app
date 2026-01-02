@@ -12,6 +12,7 @@ const corsHeaders = {
 interface OwnerInvitationRequest {
   email: string;
   organizationName?: string;
+  organizationType?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -74,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("User authorized as super admin");
 
-    const { email, organizationName }: OwnerInvitationRequest = await req.json();
+    const { email, organizationName, organizationType }: OwnerInvitationRequest = await req.json();
     
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(
@@ -84,7 +85,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    console.log("Sending owner invitation to:", normalizedEmail);
+    const orgType = organizationType || "association";
+    console.log("Sending owner invitation to:", normalizedEmail, "with type:", orgType);
 
     // Check if email already has a pending invitation
     const { data: existingInvitation } = await supabaseClient
@@ -108,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from("organizations")
       .insert({
         name: pendingOrgName,
-        type: "association",
+        type: orgType,
         is_verified: false,
         visibility: "private",
       })
