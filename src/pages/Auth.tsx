@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getSafeRedirect, isValidRedirect } from "@/lib/redirectValidation";
 
 const Auth = () => {
   const { signInWithOtp, signInWithGoogle, user } = useAuth();
@@ -26,8 +27,8 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect to the original URL if provided, otherwise home
-      navigate(redirectUrl || '/');
+      // Validate redirect URL to prevent open redirect attacks
+      navigate(getSafeRedirect(redirectUrl));
     }
   }, [user, navigate, redirectUrl]);
 
@@ -48,8 +49,8 @@ const Auth = () => {
       setIsLoading(false);
     } else {
       toast.success('Code de vérification envoyé par email');
-      // Passer le redirect à VerifyOtp pour le flow Owner
-      const redirectParam = redirectUrl ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';
+      // Pass validated redirect to VerifyOtp (only if valid internal URL)
+      const redirectParam = isValidRedirect(redirectUrl) ? `&redirect=${encodeURIComponent(redirectUrl)}` : '';
       navigate(`/verify-otp?email=${encodeURIComponent(email)}${redirectParam}`);
     }
   };

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { getSafeRedirect } from "@/lib/redirectValidation";
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState('');
@@ -26,10 +27,11 @@ const VerifyOtp = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      // Priorité au redirect (cas invitation owner)
-      if (redirect) {
-        console.log('Redirecting to invitation URL:', redirect);
-        navigate(redirect);
+      // Validate redirect to prevent open redirect attacks
+      const safeRedirect = getSafeRedirect(redirect);
+      if (safeRedirect !== '/') {
+        console.log('Redirecting to validated URL:', safeRedirect);
+        navigate(safeRedirect);
       } else if (needsOnboarding) {
         navigate('/onboarding');
       } else {
