@@ -150,7 +150,24 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Created invitation for organization:", newOrg.id);
 
     // Generate a Magic Link that authenticates the user and redirects directly to org onboarding
-    const origin = "https://dev.citizenvitae.com";
+    // Dynamically derive origin from request headers to support multiple environments
+    const requestOrigin = req.headers.get("origin");
+    const referer = req.headers.get("referer");
+    let origin = "https://dev.citizenvitae.com"; // fallback
+    
+    if (requestOrigin && requestOrigin.startsWith("http")) {
+      origin = requestOrigin;
+    } else if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        origin = refererUrl.origin;
+      } catch (e) {
+        console.log("Could not parse referer, using fallback origin");
+      }
+    }
+    
+    console.log("Using origin:", origin);
+    
     const encodedOrgName = encodeURIComponent(pendingOrgName);
     const redirectTo = `${origin}/organization/onboarding?org=${newOrg.id}&orgName=${encodedOrgName}&invitation=owner`;
 

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus } from 'lucide-react';
+import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2 } from 'lucide-react';
 import { captureOwnerInvitation, clearOwnerInvitation } from '@/lib/invitationHandoff';
 
 const organizationTypes = [
@@ -61,11 +61,42 @@ export default function OrganizationOnboarding() {
   
   const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [invitationAccepted, setInvitationAccepted] = useState(false);
+  const [invitationError, setInvitationError] = useState<string | null>(null);
 
   // Capture owner invitation on mount
   useEffect(() => {
     captureOwnerInvitation();
   }, []);
+
+  // Accept the owner invitation via RPC (bypasses RLS)
+  const acceptOwnerInvitation = async () => {
+    if (!orgId || !user) return false;
+    
+    console.log('[OrgOnboarding] Accepting owner invitation for org:', orgId);
+    
+    const { data, error } = await supabase.rpc('accept_owner_invitation', {
+      _org_id: orgId
+    });
+    
+    if (error) {
+      console.error('[OrgOnboarding] RPC error:', error);
+      setInvitationError("Erreur lors de l'acceptation de l'invitation");
+      return false;
+    }
+    
+    const result = data as { success: boolean; error?: string; message?: string };
+    
+    if (!result.success) {
+      console.error('[OrgOnboarding] Invitation not accepted:', result.error);
+      setInvitationError(result.error || "Invitation invalide ou expirée");
+      return false;
+    }
+    
+    console.log('[OrgOnboarding] Invitation accepted:', result.message);
+    setInvitationAccepted(true);
+    return true;
+  };
 
   useEffect(() => {
     // Ne rien faire tant que l'auth est en cours de chargement
@@ -89,12 +120,21 @@ export default function OrganizationOnboarding() {
       return;
     }
     
-    // Charger les données de l'organisation existante
-    loadOrganization();
+    // First accept the invitation, then load the organization
+    const initializeOnboarding = async () => {
+      const accepted = await acceptOwnerInvitation();
+      if (accepted) {
+        await loadOrganization();
+      }
+    };
+    
+    initializeOnboarding();
   }, [user, authLoading, orgId, orgNameFromUrl, navigate]);
 
   const loadOrganization = async () => {
     if (!orgId) return;
+    
+    console.log('[OrgOnboarding] Loading organization:', orgId);
     
     const { data, error } = await supabase
       .from('organizations')
@@ -103,11 +143,13 @@ export default function OrganizationOnboarding() {
       .single();
     
     if (error) {
-      console.error('Erreur chargement organisation:', error);
+      console.error('[OrgOnboarding] Error loading organization:', error);
+      toast.error("Impossible de charger l'organisation");
       return;
     }
     
     if (data) {
+      console.log('[OrgOnboarding] Organization loaded:', data.name);
       setOrgName(data.name || '');
       setOrgType(data.type || '');
       setSector(data.sector || '');
@@ -195,47 +237,9 @@ export default function OrganizationOnboarding() {
   const handleFinishWithProfile = async () => {
     setIsLoading(true);
     
-    // Créer le membership pour l'owner
-    const { error: memberError } = await supabase
-      .from('organization_members')
-      .upsert({
-        organization_id: orgId,
-        user_id: user?.id,
-        role: 'admin',
-        is_owner: true,
-      }, { onConflict: 'organization_id,user_id' });
-
-    if (memberError) {
-      console.error('Erreur membership:', memberError);
-      toast.error('Erreur lors de la configuration');
-      setIsLoading(false);
-      return;
-    }
-
-    // Ajouter le rôle organization si pas déjà présent
-    const { data: existingRole } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('user_id', user?.id)
-      .eq('role', 'organization')
-      .single();
-
-    if (!existingRole) {
-      await supabase
-        .from('user_roles')
-        .insert({ user_id: user?.id, role: 'organization' });
-    }
-
-    // Mettre à jour l'invitation comme acceptée
-    await supabase
-      .from('organization_invitations')
-      .update({ 
-        status: 'accepted', 
-        responded_at: new Date().toISOString() 
-      })
-      .eq('organization_id', orgId)
-      .eq('invitation_type', 'owner');
-
+    // Membership and invitation already handled by accept_owner_invitation RPC
+    // Just clear handoff and navigate
+    
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
     
@@ -249,52 +253,12 @@ export default function OrganizationOnboarding() {
   const handleFinishWithoutProfile = async () => {
     setIsLoading(true);
     
-    // Créer le membership pour l'owner
-    const { error: memberError } = await supabase
-      .from('organization_members')
-      .upsert({
-        organization_id: orgId,
-        user_id: user?.id,
-        role: 'admin',
-        is_owner: true,
-      }, { onConflict: 'organization_id,user_id' });
-
-    if (memberError) {
-      console.error('Erreur membership:', memberError);
-      toast.error('Erreur lors de la configuration');
-      setIsLoading(false);
-      return;
-    }
-
-    // Ajouter le rôle organization
-    const { data: existingRole } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('user_id', user?.id)
-      .eq('role', 'organization')
-      .single();
-
-    if (!existingRole) {
-      await supabase
-        .from('user_roles')
-        .insert({ user_id: user?.id, role: 'organization' });
-    }
-
-    // Marquer l'onboarding comme complété pour ne pas redemander
+    // Membership and invitation already handled by accept_owner_invitation RPC
+    // Just mark onboarding as completed
     await supabase
       .from('profiles')
       .update({ onboarding_completed: true })
       .eq('id', user?.id);
-
-    // Mettre à jour l'invitation comme acceptée
-    await supabase
-      .from('organization_invitations')
-      .update({ 
-        status: 'accepted', 
-        responded_at: new Date().toISOString() 
-      })
-      .eq('organization_id', orgId)
-      .eq('invitation_type', 'owner');
 
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
@@ -323,17 +287,47 @@ export default function OrganizationOnboarding() {
       </div>
 
       <div className="w-full max-w-2xl bg-background rounded-2xl shadow-lg p-8">
-        {/* Progress indicator - 4 steps */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3, 4].map((s) => (
-            <div 
-              key={s}
-              className={`h-2 w-12 rounded-full transition-colors ${
-                s <= step ? 'bg-emerald-500' : 'bg-muted'
-              }`}
-            />
-          ))}
-        </div>
+        {/* Error state */}
+        {invitationError && (
+          <div className="space-y-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-destructive">Invitation invalide</h1>
+              <p className="text-muted-foreground mt-2">{invitationError}</p>
+            </div>
+            <Button onClick={() => navigate('/')} variant="outline">
+              Retour à l'accueil
+            </Button>
+          </div>
+        )}
+
+        {/* Loading state while accepting invitation */}
+        {!invitationError && !invitationAccepted && (
+          <div className="space-y-6 text-center py-12">
+            <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" />
+            <div>
+              <h1 className="text-xl font-semibold">Préparation de votre espace...</h1>
+              <p className="text-muted-foreground">Veuillez patienter</p>
+            </div>
+          </div>
+        )}
+
+        {/* Main wizard - only show after invitation accepted */}
+        {!invitationError && invitationAccepted && (
+          <>
+            {/* Progress indicator - 4 steps */}
+            <div className="flex items-center justify-center gap-2 mb-8">
+              {[1, 2, 3, 4].map((s) => (
+                <div 
+                  key={s}
+                  className={`h-2 w-12 rounded-full transition-colors ${
+                    s <= step ? 'bg-emerald-500' : 'bg-muted'
+                  }`}
+                />
+              ))}
+            </div>
 
         {/* Step 1: Basic Info */}
         {step === 1 && (
@@ -586,6 +580,8 @@ export default function OrganizationOnboarding() {
               </Button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
