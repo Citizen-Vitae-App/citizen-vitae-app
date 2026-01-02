@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2 } from 'lucide-react';
+import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2, Upload, X } from 'lucide-react';
 import { captureOwnerInvitation, clearOwnerInvitation } from '@/lib/invitationHandoff';
 
 const organizationTypes = [
@@ -53,11 +53,18 @@ export default function OrganizationOnboarding() {
   // Form state
   const [orgName, setOrgName] = useState(orgNameFromUrl || '');
   const [orgType, setOrgType] = useState('');
+  const [typeIsLocked, setTypeIsLocked] = useState(false);
   const [sector, setSector] = useState('');
   const [description, setDescription] = useState('');
   const [website, setWebsite] = useState('');
   const [address, setAddress] = useState('');
   const [employeeCount, setEmployeeCount] = useState('');
+  
+  // Logo upload state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { user, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -152,11 +159,43 @@ export default function OrganizationOnboarding() {
       console.log('[OrgOnboarding] Organization loaded:', data.name);
       setOrgName(data.name || '');
       setOrgType(data.type || '');
+      // Lock the type field if it was pre-defined by super admin
+      if (data.type && data.type !== '') {
+        setTypeIsLocked(true);
+      }
       setSector(data.sector || '');
       setDescription(data.description || '');
       setWebsite(data.website || '');
       setAddress(data.address || '');
       setEmployeeCount(data.employee_count?.toString() || '');
+      if (data.logo_url) {
+        setExistingLogoUrl(data.logo_url);
+      }
+    }
+  };
+
+  // Handle logo file selection
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Le fichier est trop volumineux (max 5 Mo)');
+        return;
+      }
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -168,13 +207,39 @@ export default function OrganizationOnboarding() {
 
     setIsLoading(true);
     
+    let logoUrl = existingLogoUrl;
+    
+    // Upload logo if a new file was selected
+    if (logoFile && orgId) {
+      const fileExt = logoFile.name.split('.').pop();
+      const filePath = `logos/${orgId}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('organization-assets')
+        .upload(filePath, logoFile, { upsert: true });
+      
+      if (uploadError) {
+        console.error('Error uploading logo:', uploadError);
+        toast.error('Erreur lors de l\'upload du logo');
+        setIsLoading(false);
+        return;
+      }
+      
+      const { data: publicUrlData } = supabase.storage
+        .from('organization-assets')
+        .getPublicUrl(filePath);
+      
+      logoUrl = publicUrlData.publicUrl;
+    }
+    
     // Mettre à jour l'organisation existante
     const { error } = await supabase
       .from('organizations')
       .update({ 
         name: orgName, 
         type: orgType,
-        visibility: 'public'
+        visibility: 'public',
+        logo_url: logoUrl || null,
       })
       .eq('id', orgId);
 
@@ -237,8 +302,11 @@ export default function OrganizationOnboarding() {
   const handleFinishWithProfile = async () => {
     setIsLoading(true);
     
-    // Membership and invitation already handled by accept_owner_invitation RPC
-    // Just clear handoff and navigate
+    // Mark organization as verified/active since onboarding is complete
+    await supabase
+      .from('organizations')
+      .update({ is_verified: true })
+      .eq('id', orgId);
     
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
@@ -253,8 +321,13 @@ export default function OrganizationOnboarding() {
   const handleFinishWithoutProfile = async () => {
     setIsLoading(true);
     
-    // Membership and invitation already handled by accept_owner_invitation RPC
-    // Just mark onboarding as completed
+    // Mark organization as verified/active since onboarding is complete
+    await supabase
+      .from('organizations')
+      .update({ is_verified: true })
+      .eq('id', orgId);
+    
+    // Mark user onboarding as completed
     await supabase
       .from('profiles')
       .update({ onboarding_completed: true })
@@ -343,6 +416,56 @@ export default function OrganizationOnboarding() {
             </div>
 
             <div className="space-y-4">
+              {/* Logo upload */}
+              <div className="space-y-2">
+                <Label>Logo de l'organisation</Label>
+                <div className="flex items-center gap-4">
+                  {(logoPreview || existingLogoUrl) ? (
+                    <div className="relative">
+                      <img 
+                        src={logoPreview || existingLogoUrl} 
+                        alt="Logo preview" 
+                        className="w-20 h-20 rounded-lg object-cover border border-border"
+                      />
+                      {logoPreview && (
+                        <button
+                          type="button"
+                          onClick={removeLogo}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/90"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                    >
+                      <Upload className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {logoPreview || existingLogoUrl ? 'Changer le logo' : 'Ajouter un logo'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG jusqu'à 5 Mo</p>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="orgName">Nom de l'organisation *</Label>
                 <Input
@@ -355,8 +478,8 @@ export default function OrganizationOnboarding() {
 
               <div className="space-y-2">
                 <Label htmlFor="orgType">Type d'organisation *</Label>
-                <Select value={orgType} onValueChange={setOrgType}>
-                  <SelectTrigger>
+                <Select value={orgType} onValueChange={setOrgType} disabled={typeIsLocked}>
+                  <SelectTrigger className={typeIsLocked ? 'opacity-60 cursor-not-allowed' : ''}>
                     <SelectValue placeholder="Sélectionnez un type" />
                   </SelectTrigger>
                   <SelectContent>
