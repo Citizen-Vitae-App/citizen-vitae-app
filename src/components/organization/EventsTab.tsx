@@ -169,11 +169,11 @@ export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabPr
   const eventIds = useMemo(() => allEvents.map(e => e.id), [allEvents]);
   const { data: participantCounts } = useEventsParticipantCounts(eventIds);
 
-  // Fetch cause themes for events
+  // Fetch cause themes for events - only for THIS organization's events
   const { data: eventCauseThemes } = useQuery({
-    queryKey: ['event-cause-themes', organizationId],
+    queryKey: ['event-cause-themes', organizationId, eventIds],
     queryFn: async () => {
-      if (!organizationId) return [];
+      if (!organizationId || eventIds.length === 0) return [];
       
       const { data, error } = await supabase
         .from('event_cause_themes')
@@ -186,7 +186,9 @@ export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabPr
       if (error) throw error;
       return data || [];
     },
-    enabled: !!organizationId && eventIds.length > 0
+    enabled: !!organizationId && eventIds.length > 0,
+    // Return empty array when disabled to avoid stale data
+    placeholderData: [],
   });
 
   // Calculate KPIs
