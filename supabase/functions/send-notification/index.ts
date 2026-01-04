@@ -101,8 +101,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`[send-notification] Received request:`, JSON.stringify(body));
 
     // Authorization checks based on notification type
-    // For organization notifications: verify caller is admin of that organization
-    if (organization_id) {
+    // mission_signup: any authenticated user can trigger this (participant signing up notifies admins)
+    const participantInitiatedTypes = ['mission_signup'];
+    
+    if (organization_id && !participantInitiatedTypes.includes(type)) {
+      // For other org notifications: verify caller is admin of that organization
       const { data: membership, error: memberError } = await supabase
         .from("organization_members")
         .select("role")
@@ -118,6 +121,8 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
       console.log(`[send-notification] User is admin of organization ${organization_id}`);
+    } else if (participantInitiatedTypes.includes(type)) {
+      console.log(`[send-notification] Participant-initiated notification type: ${type}, allowing authenticated user`);
     }
 
     // For event-based notifications: verify caller is admin/supervisor of the event
