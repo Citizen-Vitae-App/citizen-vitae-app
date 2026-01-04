@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MoreHorizontal, Eye, Award, Building2, ClipboardList, Trash2, Ban, CheckCircle } from 'lucide-react';
+import { Search, MoreHorizontal, Eye, Award, Building2, ClipboardList, Trash2, Ban, CheckCircle, Mail, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -27,6 +27,9 @@ import { SuspendUserDialog } from './SuspendUserDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function UsersTab() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +40,7 @@ export function UsersTab() {
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [userToManage, setUserToManage] = useState<User | null>(null);
   const { users, isLoading } = useSuperAdminUsers();
+  const queryClient = useQueryClient();
 
   const filteredUsers = users?.filter(user =>
     user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,8 +63,43 @@ export function UsersTab() {
     setSuspendDialogOpen(true);
   };
 
+  const cancelPendingInvitation = async (invitationId: string) => {
+    const { error } = await supabase
+      .from('organization_invitations')
+      .delete()
+      .eq('id', invitationId);
+    
+    if (error) {
+      toast.error("Erreur lors de l'annulation");
+    } else {
+      toast.success('Invitation annulée');
+      queryClient.invalidateQueries({ queryKey: ['super-admin-users'] });
+    }
+  };
+
+  const resendPendingInvitation = async (invitationId: string, email: string) => {
+    const { error } = await supabase.functions.invoke('send-invitation', {
+      body: { invitationId, email }
+    });
+    
+    if (error) {
+      toast.error("Erreur lors de l'envoi");
+    } else {
+      toast.success('Invitation renvoyée');
+    }
+  };
+
   const getRoleBadges = (user: User) => {
     const badges = [];
+    
+    if (user.is_pending_invitation) {
+      badges.push(
+        <Badge key="pending" className="bg-amber-600/20 text-amber-400 hover:bg-amber-600/30">
+          Invitation pending
+        </Badge>
+      );
+      return badges;
+    }
     
     if (user.is_suspended) {
       badges.push(
@@ -172,18 +211,26 @@ export function UsersTab() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} className={`border-[hsl(217.2,32.6%,25%)] hover:bg-[hsl(217.2,32.6%,20%)] ${user.is_suspended ? 'opacity-60' : ''}`}>
+                    <TableRow key={user.id} className={`border-[hsl(217.2,32.6%,25%)] hover:bg-[hsl(217.2,32.6%,20%)] ${user.is_suspended ? 'opacity-60' : ''} ${user.is_pending_invitation ? 'bg-amber-900/10' : ''}`}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
-                            <AvatarImage src={user.avatar_url || ''} />
-                            <AvatarFallback className="bg-[hsl(217.2,32.6%,30%)] text-[hsl(210,40%,98%)]">
-                              {user.full_name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
+                            {user.is_pending_invitation ? (
+                              <AvatarFallback className="bg-amber-600/20 text-amber-400">
+                                <Mail className="h-4 w-4" />
+                              </AvatarFallback>
+                            ) : (
+                              <>
+                                <AvatarImage src={user.avatar_url || ''} />
+                                <AvatarFallback className="bg-[hsl(217.2,32.6%,30%)] text-[hsl(210,40%,98%)]">
+                                  {user.full_name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </>
+                            )}
                           </Avatar>
                           <div>
-                            <span className="font-medium text-[hsl(210,40%,98%)]">{user.full_name}</span>
-                            <p className="text-xs text-[hsl(215,20.2%,65.1%)]">{user.email}</p>
+                            <span className="font-medium text-[hsl(210,40%,98%)]">{user.is_pending_invitation ? user.email : user.full_name}</span>
+                            {!user.is_pending_invitation && <p className="text-xs text-[hsl(215,20.2%,65.1%)]">{user.email}</p>}
                           </div>
                         </div>
                       </TableCell>
@@ -212,28 +259,36 @@ export function UsersTab() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <button
-                          onClick={() => openDetails(user, 'registrations')}
-                          className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-blue-400 transition-colors"
-                          disabled={user.registration_count === 0}
-                        >
-                          <ClipboardList className="w-3 h-3 text-blue-400" />
-                          <span className={user.registration_count > 0 ? 'underline underline-offset-2' : ''}>
-                            {user.registration_count}
-                          </span>
-                        </button>
+                        {user.is_pending_invitation ? (
+                          <span className="text-[hsl(215,20.2%,65.1%)]">-</span>
+                        ) : (
+                          <button
+                            onClick={() => openDetails(user, 'registrations')}
+                            className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-blue-400 transition-colors"
+                            disabled={user.registration_count === 0}
+                          >
+                            <ClipboardList className="w-3 h-3 text-blue-400" />
+                            <span className={user.registration_count > 0 ? 'underline underline-offset-2' : ''}>
+                              {user.registration_count}
+                            </span>
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <button
-                          onClick={() => openDetails(user, 'certifications')}
-                          className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-amber-400 transition-colors"
-                          disabled={user.certification_count === 0}
-                        >
-                          <Award className="w-3 h-3 text-amber-400" />
-                          <span className={user.certification_count > 0 ? 'underline underline-offset-2' : ''}>
-                            {user.certification_count}
-                          </span>
-                        </button>
+                        {user.is_pending_invitation ? (
+                          <span className="text-[hsl(215,20.2%,65.1%)]">-</span>
+                        ) : (
+                          <button
+                            onClick={() => openDetails(user, 'certifications')}
+                            className="flex items-center gap-1 text-[hsl(210,40%,98%)] hover:text-amber-400 transition-colors"
+                            disabled={user.certification_count === 0}
+                          >
+                            <Award className="w-3 h-3 text-amber-400" />
+                            <span className={user.certification_count > 0 ? 'underline underline-offset-2' : ''}>
+                              {user.certification_count}
+                            </span>
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell className="text-[hsl(215,20.2%,65.1%)]">
                         {user.created_at ? format(new Date(user.created_at), 'dd MMM yyyy', { locale: fr }) : '-'}
@@ -246,34 +301,56 @@ export function UsersTab() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[hsl(217.2,32.6%,17.5%)] border-[hsl(217.2,32.6%,25%)]">
-                            <DropdownMenuItem className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]">
-                              <Eye className="w-4 h-4 mr-2" />
-                              Voir profil
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-[hsl(217.2,32.6%,25%)]" />
-                            <DropdownMenuItem 
-                              onClick={() => openSuspendDialog(user)}
-                              className={`focus:bg-[hsl(217.2,32.6%,25%)] ${user.is_suspended ? 'text-green-400 focus:text-green-400' : 'text-amber-400 focus:text-amber-400'}`}
-                            >
-                              {user.is_suspended ? (
-                                <>
-                                  <CheckCircle className="w-4 h-4 mr-2" />
-                                  Réactiver
-                                </>
-                              ) : (
-                                <>
-                                  <Ban className="w-4 h-4 mr-2" />
-                                  Suspendre
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => openDeleteDialog(user)}
-                              className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Supprimer
-                            </DropdownMenuItem>
+                            {user.is_pending_invitation ? (
+                              <>
+                                <DropdownMenuItem 
+                                  onClick={() => user.pending_invitation_id && resendPendingInvitation(user.pending_invitation_id, user.email!)}
+                                  className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]"
+                                >
+                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  Renvoyer l'invitation
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-[hsl(217.2,32.6%,25%)]" />
+                                <DropdownMenuItem 
+                                  onClick={() => user.pending_invitation_id && cancelPendingInvitation(user.pending_invitation_id)}
+                                  className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
+                                >
+                                  <X className="w-4 h-4 mr-2" />
+                                  Annuler l'invitation
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <>
+                                <DropdownMenuItem className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]">
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  Voir profil
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-[hsl(217.2,32.6%,25%)]" />
+                                <DropdownMenuItem 
+                                  onClick={() => openSuspendDialog(user)}
+                                  className={`focus:bg-[hsl(217.2,32.6%,25%)] ${user.is_suspended ? 'text-green-400 focus:text-green-400' : 'text-amber-400 focus:text-amber-400'}`}
+                                >
+                                  {user.is_suspended ? (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Réactiver
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ban className="w-4 h-4 mr-2" />
+                                      Suspendre
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => openDeleteDialog(user)}
+                                  className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
