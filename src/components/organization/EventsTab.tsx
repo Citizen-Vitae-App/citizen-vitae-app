@@ -128,11 +128,12 @@ const getCapacityProgressColor = (participantCount: number, capacity: number) =>
 interface EventsTabProps {
   userTeamId?: string;
   canManageAllEvents?: boolean;
+  isMember?: boolean;
 }
 
-export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabProps) {
+export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = false }: EventsTabProps) {
   // Debug log
-  console.log('EventsTab received:', { userTeamId, canManageAllEvents });
+  console.log('EventsTab received:', { userTeamId, canManageAllEvents, isMember });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<EventFilters>({
@@ -530,18 +531,23 @@ export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabPr
                 Effacer les filtres
               </Button>
             )}
-            <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
-              <Link to="/organization/scan">
-                <QrCode className="mr-1 md:mr-2 h-4 w-4" />
-                {isMobile ? "Scan" : "Scanner"}
-              </Link>
-            </Button>
-            <Button asChild size={isMobile ? "sm" : "default"}>
-              <Link to="/organization/create-event">
-                <Plus className="mr-1 md:mr-2 h-4 w-4" />
-                Créer
-              </Link>
-            </Button>
+            {/* Hide action buttons for regular members - they can only view */}
+            {!isMember && (
+              <>
+                <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
+                  <Link to="/organization/scan">
+                    <QrCode className="mr-1 md:mr-2 h-4 w-4" />
+                    {isMobile ? "Scan" : "Scanner"}
+                  </Link>
+                </Button>
+                <Button asChild size={isMobile ? "sm" : "default"}>
+                  <Link to="/organization/create-event">
+                    <Plus className="mr-1 md:mr-2 h-4 w-4" />
+                    Créer
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -571,7 +577,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true }: EventsTabPr
                   ? 'Aucun événement ne correspond à vos critères' 
                   : 'Créez votre premier événement pour commencer'}
               </p>
-              {!searchQuery && !hasActiveFilters && (
+              {!searchQuery && !hasActiveFilters && !isMember && (
                 <Button asChild>
                   <Link to="/organization/create-event">
                     <Plus className="mr-2 h-4 w-4" />

@@ -77,10 +77,9 @@ export function useUserOrganizations() {
   const organizations = data ?? [];
   const activeOrganization = organizations[0] || null;
   
-  // User can access dashboard if they are admin or leader in at least one organization
-  const canAccessDashboard = organizations.some(
-    org => org.role === 'admin' || org.isLeader
-  );
+  // User can access dashboard if they are a member of at least one organization
+  // Admins, leaders, and regular members all can access (with different permissions)
+  const canAccessDashboard = organizations.length > 0;
 
   return {
     organizations,

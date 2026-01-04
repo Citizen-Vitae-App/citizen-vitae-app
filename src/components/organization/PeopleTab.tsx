@@ -109,9 +109,10 @@ const getStatusBadge = (status: string, isPending?: boolean) => {
 interface PeopleTabProps {
   userTeamId?: string | null;
   isLeader?: boolean;
+  isMember?: boolean;
 }
 
-export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
+export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: PeopleTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
     statuses: [],
@@ -824,10 +825,13 @@ export function PeopleTab({ userTeamId, isLeader = false }: PeopleTabProps) {
                 Effacer les filtres
               </Button>
             )}
-            <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Inviter des bénévoles
-            </Button>
+            {/* Hide invite button for regular members - they can only view */}
+            {!isMember && (
+              <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Inviter des bénévoles
+              </Button>
+            )}
           </div>
         </div>
       </div>

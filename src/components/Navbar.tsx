@@ -25,6 +25,7 @@ interface UserRoleProps {
   isOwner: boolean;
   isAdmin: boolean;
   isLeader: boolean;
+  isMember: boolean;
   canViewOrganizationSettings: boolean;
 }
 
@@ -56,7 +57,7 @@ export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
       ];
     }
     
-    const { isOwner, isAdmin, isLeader, canViewOrganizationSettings } = userRole;
+    const { isOwner, isAdmin, isLeader, isMember, canViewOrganizationSettings } = userRole;
     
     // Owners and Admins see full tabs
     if (isOwner || isAdmin) {
@@ -76,11 +77,18 @@ export const Navbar = ({ activeTab, onTabChange, userRole }: NavbarProps) => {
       ];
     }
     
-    // Default tabs
+    // Regular members only see Events and People (filtered to their team)
+    if (isMember) {
+      return [
+        { value: 'events', label: 'Événements' },
+        { value: 'people', label: 'Contributeurs' }
+      ];
+    }
+    
+    // Default tabs (shouldn't reach here)
     return [
       { value: 'events', label: 'Événements' },
-      { value: 'people', label: 'Contributeurs' },
-      { value: 'organization', label: 'Organisation' }
+      { value: 'people', label: 'Contributeurs' }
     ];
   };
   

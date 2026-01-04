@@ -14,24 +14,33 @@ export default function OrganizationDashboard() {
   const { 
     isOwner, 
     isAdmin, 
-    isLeader, 
+    isLeader,
+    isMember,
     userTeamId,
     canViewOrganizationSettings,
     isLoading 
   } = useUserRole();
 
   // Debug log for role checking
-  console.log('useUserRole result:', { isOwner, isAdmin, isLeader, userTeamId, isLoading });
+  console.log('useUserRole result:', { isOwner, isAdmin, isLeader, isMember, userTeamId, isLoading });
 
-  // Redirect Leaders to appropriate default tab if they try to access organization settings
+  // Redirect non-admin users to appropriate default tab if they try to access restricted tabs
   useEffect(() => {
-    if (!isLoading && isLeader && !isAdmin && !isOwner) {
-      // Leaders should not see 'organization' tab, redirect to events if needed
-      if (activeTab === 'organization') {
-        setActiveTab('events');
+    if (!isLoading) {
+      // Leaders and members should not see 'organization' tab
+      if ((isLeader || isMember) && !isAdmin && !isOwner) {
+        if (activeTab === 'organization') {
+          setActiveTab('events');
+        }
+      }
+      // Members also shouldn't see 'members' or 'teams' tabs
+      if (isMember && !isLeader && !isAdmin && !isOwner) {
+        if (activeTab === 'members' || activeTab === 'teams') {
+          setActiveTab('events');
+        }
       }
     }
-  }, [isLoading, isLeader, isAdmin, isOwner, activeTab]);
+  }, [isLoading, isLeader, isMember, isAdmin, isOwner, activeTab]);
 
   if (isLoading) {
     return (
@@ -57,8 +66,11 @@ export default function OrganizationDashboard() {
     if (isLeader) {
       return ['events', 'people', 'members', 'teams'];
     }
-    // Regular members shouldn't access dashboard normally
-    return ['events'];
+    // Regular members see events and people (filtered to their team)
+    if (isMember) {
+      return ['events', 'people'];
+    }
+    return ['events', 'people'];
   };
 
   const availableTabs = getAvailableTabs();
@@ -68,21 +80,23 @@ export default function OrganizationDashboard() {
       <Navbar 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
-        userRole={{ isOwner, isAdmin, isLeader, canViewOrganizationSettings }}
+        userRole={{ isOwner, isAdmin, isLeader, isMember, canViewOrganizationSettings }}
       />
       
       <main className="container mx-auto px-4 pt-20 md:pt-32 pb-20 md:pb-8">
         <div className="max-w-5xl mx-auto">
           {activeTab === 'events' && (
             <EventsTab 
-              userTeamId={isLeader && !isAdmin && !isOwner ? userTeamId : undefined}
+              userTeamId={(isLeader || isMember) && !isAdmin && !isOwner ? userTeamId : undefined}
               canManageAllEvents={isOwner || isAdmin}
+              isMember={isMember && !isLeader && !isAdmin && !isOwner}
             />
           )}
           {activeTab === 'people' && (
             <PeopleTab 
-              userTeamId={isLeader && !isAdmin && !isOwner ? userTeamId : undefined}
+              userTeamId={(isLeader || isMember) && !isAdmin && !isOwner ? userTeamId : undefined}
               isLeader={isLeader && !isAdmin && !isOwner}
+              isMember={isMember && !isLeader && !isAdmin && !isOwner}
             />
           )}
           {activeTab === 'members' && (
