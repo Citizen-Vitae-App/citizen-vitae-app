@@ -11,6 +11,8 @@ interface Profile {
   date_of_birth: string | null;
   onboarding_completed: boolean;
   id_verified: boolean;
+  verification_status: string | null;
+  didit_session_id: string | null;
 }
 
 interface UserRole {
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const [profileData, rolesData] = await Promise.all([
         supabase.from('profiles')
-          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified')
+          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
           .eq('id', userId)
           .single(),
         supabase.from('user_roles').select('role').eq('user_id', userId)
@@ -103,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified')
+        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
         .eq('id', user.id)
         .single();
       if (data) setProfile(data);

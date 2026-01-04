@@ -97,6 +97,8 @@ export default function Settings() {
           <IdentityVerificationCard 
             userId={user?.id || ''} 
             isVerified={profile?.id_verified || false}
+            verificationStatus={(profile?.verification_status as 'none' | 'pending' | 'in_review' | 'approved' | 'declined' | 'expired') || 'none'}
+            sessionId={profile?.didit_session_id}
             onVerificationComplete={handleVerificationComplete}
           />
         </section>
