@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Building2, Globe, MapPin, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2, Upload, X } from 'lucide-react';
+import { Building2, Globe, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2, Upload, X } from 'lucide-react';
+import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { captureOwnerInvitation, clearOwnerInvitation } from '@/lib/invitationHandoff';
 
 const organizationTypes = [
@@ -308,13 +309,18 @@ export default function OrganizationOnboarding() {
       .update({ is_verified: true })
       .eq('id', orgId);
     
+    // Mark user onboarding as completed to prevent redirect loop
+    await supabase
+      .from('profiles')
+      .update({ onboarding_completed: true })
+      .eq('id', user?.id);
+    
     setIsLoading(false);
     toast.success('Organisation configurée avec succès !');
     
     // Clear the invitation handoff since we're done
     clearOwnerInvitation();
     
-    // Toujours rediriger vers le dashboard org, l'onboarding user est optionnel
     navigate('/organization/dashboard');
   };
 
@@ -607,16 +613,13 @@ export default function OrganizationOnboarding() {
 
               <div className="space-y-2">
                 <Label htmlFor="address">Adresse</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="123 rue de l'exemple, 75001 Paris"
-                    className="pl-10"
-                  />
-                </div>
+                <GooglePlacesAutocomplete
+                  value={address}
+                  onChange={setAddress}
+                  onPlaceSelect={(place) => setAddress(place.address)}
+                  placeholder="Rechercher une adresse..."
+                  inputClassName="border border-input rounded-md bg-background"
+                />
               </div>
             </div>
 

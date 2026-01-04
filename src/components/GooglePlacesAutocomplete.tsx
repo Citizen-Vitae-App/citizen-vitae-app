@@ -15,6 +15,7 @@ interface GooglePlacesAutocompleteProps {
   onPlaceSelect: (place: PlaceResult) => void;
   placeholder?: string;
   className?: string;
+  inputClassName?: string;
 }
 
 export function GooglePlacesAutocomplete({
@@ -23,6 +24,7 @@ export function GooglePlacesAutocomplete({
   onPlaceSelect,
   placeholder = "Ajouter un lieu",
   className,
+  inputClassName,
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,14 +83,14 @@ export function GooglePlacesAutocomplete({
 
   return (
     <div className={cn("relative", className)}>
-      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
       <Input
         ref={inputRef}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pl-10 bg-transparent border-0 outline-none text-lg placeholder:text-muted-foreground/50"
+        className={cn("pl-10", inputClassName)}
       />
     </div>
   );
