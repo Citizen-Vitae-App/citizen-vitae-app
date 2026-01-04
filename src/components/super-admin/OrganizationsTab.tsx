@@ -84,6 +84,7 @@ export function OrganizationsTab() {
                 <TableRow className="border-[hsl(217.2,32.6%,25%)] hover:bg-transparent">
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Organisation</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Type</TableHead>
+                  <TableHead className="text-[hsl(215,20.2%,65.1%)]">Owner</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Créée le</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Membres</TableHead>
                   <TableHead className="text-[hsl(215,20.2%,65.1%)]">Statut</TableHead>
@@ -96,6 +97,7 @@ export function OrganizationsTab() {
                     <TableRow key={i} className="border-[hsl(217.2,32.6%,25%)]">
                       <TableCell><Skeleton className="h-10 w-full bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-20 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-32 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-24 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-12 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-16 bg-[hsl(217.2,32.6%,25%)]" /></TableCell>
@@ -104,7 +106,7 @@ export function OrganizationsTab() {
                   ))
                 ) : filteredOrgs.length === 0 ? (
                   <TableRow className="border-[hsl(217.2,32.6%,25%)]">
-                    <TableCell colSpan={6} className="text-center py-8 text-[hsl(215,20.2%,65.1%)]">
+                    <TableCell colSpan={7} className="text-center py-8 text-[hsl(215,20.2%,65.1%)]">
                       Aucune organisation trouvée
                     </TableCell>
                   </TableRow>
@@ -124,6 +126,16 @@ export function OrganizationsTab() {
                       </TableCell>
                       <TableCell className="text-[hsl(215,20.2%,65.1%)]">
                         {getTypeLabel(org.type)}
+                      </TableCell>
+                      <TableCell className="text-[hsl(215,20.2%,65.1%)]">
+                        {org.owner_email ? (
+                          <div className="flex flex-col">
+                            <span className="text-[hsl(210,40%,98%)] text-sm">{org.owner_name || 'Non renseigné'}</span>
+                            <span className="text-xs text-[hsl(215,20.2%,50%)]">{org.owner_email}</span>
+                          </div>
+                        ) : (
+                          <span className="text-amber-400 text-sm">En attente</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-[hsl(215,20.2%,65.1%)]">
                         {org.created_at ? format(new Date(org.created_at), 'dd MMM yyyy', { locale: fr }) : '-'}
