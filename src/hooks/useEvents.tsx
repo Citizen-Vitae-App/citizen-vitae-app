@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Event {
@@ -146,16 +147,12 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 };
 
 export const useOrganizationEvents = (searchQuery?: string, teamId?: string) => {
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
-  const [isLoadingOrg, setIsLoadingOrg] = useState(true);
-
-  useEffect(() => {
-    const fetchUserOrganization = async () => {
+  // Fetch organization ID with TanStack Query for proper cache management
+  const { data: organizationData, isLoading: isLoadingOrg } = useQuery({
+    queryKey: ['user-organization-id'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoadingOrg(false);
-        return;
-      }
+      if (!user) return null;
 
       const { data: membership } = await supabase
         .from('organization_members')
@@ -163,25 +160,64 @@ export const useOrganizationEvents = (searchQuery?: string, teamId?: string) => 
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (membership) {
-        setOrganizationId(membership.organization_id);
+      return membership?.organization_id || null;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const organizationId = organizationData ?? null;
+
+  // Fetch events with TanStack Query - proper cache isolation by organizationId
+  const { data: events = [], isLoading: isLoadingEvents, error } = useQuery({
+    queryKey: ['organization-events', organizationId, teamId, searchQuery],
+    queryFn: async () => {
+      if (!organizationId) return [];
+
+      let query = supabase
+        .from('events')
+        .select(`
+          *,
+          organizations!inner (name)
+        `)
+        .eq('organization_id', organizationId)
+        .order('start_date', { ascending: true });
+
+      if (teamId) {
+        query = query.eq('team_id', teamId);
       }
-      setIsLoadingOrg(false);
-    };
 
-    fetchUserOrganization();
-  }, []);
+      if (searchQuery && searchQuery.trim()) {
+        const sanitized = searchQuery
+          .replace(/[%_,()]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 100);
+        
+        if (sanitized) {
+          query = query.or(`name.ilike.%${sanitized}%,location.ilike.%${sanitized}%`);
+        }
+      }
 
-  const { events, isLoading: isLoadingEvents, error } = useEvents({
-    organizationId: organizationId || undefined,
-    teamId: teamId || undefined,
-    searchQuery
+      const { data, error: queryError } = await query;
+
+      if (queryError) throw queryError;
+
+      return (data || []).map((event: any) => ({
+        ...event,
+        organization_name: event.organizations?.name
+      }));
+    },
+    enabled: !!organizationId,
+    // CRITICAL: Return empty array immediately when organizationId changes
+    // This prevents showing stale data from previous organization
+    placeholderData: [],
+    staleTime: 30 * 1000, // 30 seconds
   });
 
   return {
     events,
-    isLoading: isLoadingOrg || isLoadingEvents,
-    error,
+    isLoading: isLoadingOrg || (!!organizationId && isLoadingEvents),
+    error: error?.message || null,
     organizationId
   };
 };

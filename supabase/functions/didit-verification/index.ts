@@ -143,26 +143,18 @@ serve(async (req) => {
                 } else {
                   log('SELFIE', 'Upload successful');
                   
-                  // Get signed URL for private bucket (1 hour expiration for security)
-                  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                    .from('verification-selfies')
-                    .createSignedUrl(fileName, 60 * 60); // 1 hour (short-lived for security)
+                  // Store the file PATH (not signed URL) for permanent reference
+                  log('SELFIE', 'Updating profile with file path (not signed URL)...');
                   
-                  if (signedUrlError) {
-                    logError('SELFIE', 'Failed to create signed URL', signedUrlError);
+                  const { error: updateSelfieError } = await supabase
+                    .from('profiles')
+                    .update({ reference_selfie_url: fileName })
+                    .eq('id', vendorData);
+                  
+                  if (updateSelfieError) {
+                    logError('SELFIE', 'Failed to update profile with selfie path', updateSelfieError);
                   } else {
-                    log('SELFIE', 'Signed URL created, updating profile...');
-                    
-                    const { error: updateSelfieError } = await supabase
-                      .from('profiles')
-                      .update({ reference_selfie_url: signedUrlData?.signedUrl })
-                      .eq('id', vendorData);
-                    
-                    if (updateSelfieError) {
-                      logError('SELFIE', 'Failed to update profile with selfie URL', updateSelfieError);
-                    } else {
-                      log('SELFIE', `Reference selfie stored successfully for user: ${vendorData}`);
-                    }
+                    log('SELFIE', `Reference selfie path stored successfully for user: ${vendorData}`);
                   }
                 }
               } else {
@@ -410,14 +402,45 @@ serve(async (req) => {
         );
       }
       
-      // Download reference selfie from storage
-      log('FACE-MATCH', 'Downloading reference selfie...');
-      const refSelfieResponse = await fetch(profile.reference_selfie_url);
+      // Download reference selfie from storage using signed URL generated on demand
+      log('FACE-MATCH', 'Generating signed URL for reference selfie...');
+      
+      // The reference_selfie_url now stores the file path, not a signed URL
+      // Path format: "{user_id}/reference.jpg"
+      const filePath = profile.reference_selfie_url;
+      
+      // Check if it's already a path or an old signed URL
+      const isPath = !filePath.includes('/storage/v1/object/sign/') && !filePath.startsWith('http');
+      
+      let refSelfieResponse;
+      
+      if (isPath) {
+        // New format: generate signed URL on demand
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from('verification-selfies')
+          .createSignedUrl(filePath, 300); // 5 minutes validity
+        
+        if (signedUrlError || !signedUrlData?.signedUrl) {
+          logError('FACE-MATCH', 'Failed to create signed URL', signedUrlError);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Impossible de récupérer la photo de référence. Veuillez recommencer la vérification d\'identité.', needs_reverification: true }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        log('FACE-MATCH', 'Signed URL generated, downloading reference selfie...');
+        refSelfieResponse = await fetch(signedUrlData.signedUrl);
+      } else {
+        // Old format: try direct fetch (will likely fail if URL expired)
+        log('FACE-MATCH', 'Using legacy signed URL format...');
+        refSelfieResponse = await fetch(filePath);
+      }
+      
       if (!refSelfieResponse.ok) {
         logError('FACE-MATCH', `Failed to download reference selfie, status: ${refSelfieResponse.status}`);
         return new Response(
-          JSON.stringify({ success: false, error: 'Impossible de récupérer la photo de référence.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: false, error: 'Votre photo de référence a expiré. Veuillez recommencer la vérification d\'identité.', needs_reverification: true }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       const refSelfieBlob = await refSelfieResponse.blob();
@@ -468,9 +491,9 @@ serve(async (req) => {
         || faceMatchResult.similarity 
         || 0;
       
-      // Le score Didit est déjà en pourcentage (0-100), seuil à 55%
+      // Le score Didit est déjà en pourcentage (0-100), seuil abaissé à 50%
       const score = rawScore;
-      const passed = score >= 55;
+      const passed = score >= 50;
       
       log('FACE-MATCH', `Raw score: ${rawScore}, Passed: ${passed}`);
       

@@ -448,10 +448,37 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     );
   };
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>;
+  // SAFETY LAYER: Show skeleton while organization context is resolving
+  // This prevents flash of stale/other organization's data
+  if (isLoading || !organizationId) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        {/* KPI Skeletons */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 rounded-xl border border-border bg-transparent animate-pulse">
+              <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+              <div className="h-8 bg-muted rounded w-16"></div>
+            </div>
+          ))}
+        </div>
+        {/* Table Skeleton */}
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="p-4 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-4 animate-pulse">
+                <div className="h-12 w-16 bg-muted rounded"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-48"></div>
+                  <div className="h-3 bg-muted rounded w-32"></div>
+                </div>
+                <div className="h-6 bg-muted rounded w-20"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
