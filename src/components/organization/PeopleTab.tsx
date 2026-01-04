@@ -156,9 +156,9 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   const organization = organizationData?.organization;
   const currentUserId = organizationData?.userId;
 
-  // Fetch pending invitations (filtered by team for leaders)
+  // Fetch pending invitations (filtered by team for leaders/members)
   const { data: pendingInvitations } = useQuery({
-    queryKey: ['organization-invitations', organization?.id, userTeamId, isLeader],
+    queryKey: ['organization-invitations', organization?.id, userTeamId, isLeader, isMember],
     queryFn: async () => {
       if (!organization?.id) return [];
       
@@ -169,8 +169,8 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
         .eq('status', 'pending')
         .eq('invitation_type', 'contributor');
       
-      // Leaders only see invitations for their team
-      if (isLeader && userTeamId) {
+      // Leaders and members only see invitations for their team
+      if ((isLeader || isMember) && userTeamId) {
         query = query.eq('team_id', userTeamId);
       }
       
@@ -183,7 +183,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   });
 
   const { data: participants, isLoading } = useQuery({
-    queryKey: ['organization-participants-detailed', userTeamId, isLeader],
+    queryKey: ['organization-participants-detailed', userTeamId, isLeader, isMember],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -196,7 +196,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
       
       if (!membership) throw new Error('No organization found');
 
-      // Build query with team filter for leaders
+      // Build query with team filter for leaders/members
       let query = supabase
         .from('event_registrations')
         .select(`
@@ -219,8 +219,8 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
         .eq('events.organization_id', membership.organization_id)
         .order('registered_at', { ascending: false });
       
-      // Leaders only see participants from their team's events
-      if (isLeader && userTeamId) {
+      // Leaders and members only see participants from their team's events
+      if ((isLeader || isMember) && userTeamId) {
         query = query.eq('events.team_id', userTeamId);
       }
       
