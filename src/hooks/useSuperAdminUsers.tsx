@@ -28,6 +28,8 @@ export interface User {
   is_org_owner: boolean;
   is_team_leader: boolean;
   is_suspended: boolean;
+  is_pending_invitation: boolean;
+  pending_invitation_id?: string;
   organizations: Organization[];
   registrations: Registration[];
   registration_count: number;
@@ -74,6 +76,14 @@ export function useSuperAdminUsers() {
 
       if (regError) throw regError;
 
+      // Get pending invitations (users who haven't signed up yet)
+      const { data: pendingInvitations, error: invError } = await supabase
+        .from('organization_invitations')
+        .select('id, email, created_at, organization_id, organizations(id, name, type)')
+        .eq('status', 'pending');
+
+      if (invError) throw invError;
+
       // Build lookup maps
       const superAdminSet = new Set(
         userRoles?.filter(r => r.role === 'super_admin').map(r => r.user_id)
@@ -116,7 +126,38 @@ export function useSuperAdminUsers() {
         userRegistrationsMap.set(r.user_id, existing);
       });
 
-      return (profiles || []).map(profile => {
+      // Build set of existing user emails to exclude from pending invitations
+      const existingEmails = new Set(
+        (profiles || []).map(p => p.email?.toLowerCase()).filter(Boolean)
+      );
+
+      // Create pseudo-users from pending invitations (for users who haven't signed up yet)
+      const pendingUsers: User[] = (pendingInvitations || [])
+        .filter(inv => !existingEmails.has(inv.email.toLowerCase()))
+        .map(inv => {
+          const org = inv.organizations as unknown as { id: string; name: string; type: string | null } | null;
+          return {
+            id: `pending-${inv.id}`,
+            full_name: inv.email.split('@')[0],
+            email: inv.email,
+            avatar_url: null,
+            created_at: inv.created_at,
+            is_super_admin: false,
+            is_org_admin: false,
+            is_org_owner: false,
+            is_team_leader: false,
+            is_suspended: false,
+            is_pending_invitation: true,
+            pending_invitation_id: inv.id,
+            organizations: org ? [org] : [],
+            registrations: [],
+            registration_count: 0,
+            certification_count: 0,
+          };
+        });
+
+      // Build regular users from profiles
+      const regularUsers: User[] = (profiles || []).map(profile => {
         const orgData = orgMemberMap.get(profile.id);
         const userRegs = userRegistrationsMap.get(profile.id) || [];
         return {
@@ -130,6 +171,7 @@ export function useSuperAdminUsers() {
           is_org_owner: orgData?.isOwner || false,
           is_team_leader: teamLeaderSet.has(profile.id),
           is_suspended: (profile as any).is_suspended ?? false,
+          is_pending_invitation: false,
           organizations: orgData?.organizations || [],
           registrations: userRegs,
           registration_count: userRegs.length,
@@ -137,6 +179,9 @@ export function useSuperAdminUsers() {
           certification_count: userRegs.filter(r => r.has_certificate_data).length,
         };
       });
+
+      // Return pending users first, then regular users
+      return [...pendingUsers, ...regularUsers];
     },
   });
 

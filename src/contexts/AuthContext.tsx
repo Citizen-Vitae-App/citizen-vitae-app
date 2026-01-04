@@ -83,20 +83,157 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfileAndRoles = async (userId: string) => {
     try {
-      const [profileData, rolesData] = await Promise.all([
-        supabase.from('profiles')
-          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
-          .eq('id', userId)
-          .single(),
-        supabase.from('user_roles').select('role').eq('user_id', userId)
-      ]);
+      // First, try to get the profile
+      const profileResult = await supabase.from('profiles')
+        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+        .eq('id', userId)
+        .maybeSingle();
 
-      if (profileData.data) setProfile(profileData.data);
+      let profileData = profileResult.data;
+
+      // If no profile exists, create it (this handles the missing profile bug)
+      if (!profileData) {
+        console.log('[AuthProvider] No profile found for user, creating one...');
+        const { data: userData } = await supabase.auth.getUser();
+        const userEmail = userData?.user?.email;
+        
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: userEmail,
+            onboarding_completed: false,
+          })
+          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+          .single();
+
+        if (insertError) {
+          console.error('[AuthProvider] Error creating profile:', insertError);
+        } else {
+          profileData = newProfile;
+          console.log('[AuthProvider] Profile created successfully');
+        }
+      }
+
+      // Also create user_preferences if missing
+      if (profileData) {
+        const { data: prefsExist } = await supabase
+          .from('user_preferences')
+          .select('user_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!prefsExist) {
+          await supabase.from('user_preferences').insert({
+            user_id: userId,
+            language: 'fr',
+            email_opt_in: true,
+            sms_opt_in: false,
+            geolocation_enabled: false,
+          });
+        }
+      }
+
+      // Fetch roles
+      const rolesData = await supabase.from('user_roles').select('role').eq('user_id', userId);
+
+      if (profileData) setProfile(profileData);
       if (rolesData.data) setRoles(rolesData.data.map((r: UserRole) => r.role));
+
+      // After setting profile, handle pending invitations
+      if (profileData) {
+        await handlePendingInvitations(userId, profileData);
+      }
     } catch (error) {
       console.error('Error fetching profile/roles:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Auto-accept pending invitations for the user's email
+  const handlePendingInvitations = async (userId: string, profileData: Profile) => {
+    try {
+      // Get user email
+      const { data: userData } = await supabase.auth.getUser();
+      const userEmail = userData?.user?.email;
+      if (!userEmail) return;
+
+      // Find pending invitations for this email
+      const { data: invitations, error: invError } = await supabase
+        .from('organization_invitations')
+        .select('*')
+        .eq('email', userEmail.toLowerCase())
+        .eq('status', 'pending');
+
+      if (invError || !invitations || invitations.length === 0) return;
+
+      console.log('[AuthProvider] Found pending invitations:', invitations.length);
+
+      for (const inv of invitations) {
+        // Check if user is already a member of this organization
+        const { data: existingMember } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('organization_id', inv.organization_id)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (existingMember) {
+          console.log('[AuthProvider] User already member of org:', inv.organization_id);
+          // Just mark invitation as accepted
+          await supabase
+            .from('organization_invitations')
+            .update({ status: 'accepted', responded_at: new Date().toISOString() })
+            .eq('id', inv.id);
+          continue;
+        }
+
+        // Add user to organization
+        const { error: memberError } = await supabase
+          .from('organization_members')
+          .insert({
+            organization_id: inv.organization_id,
+            user_id: userId,
+            role: inv.role || 'member',
+            custom_role_title: inv.custom_role_title,
+            is_owner: inv.invitation_type === 'owner',
+          });
+
+        if (memberError) {
+          console.error('[AuthProvider] Error adding member:', memberError);
+          continue;
+        }
+
+        console.log('[AuthProvider] Added user to organization:', inv.organization_id);
+
+        // Add to team if specified
+        if (inv.team_id) {
+          const { error: teamError } = await supabase
+            .from('team_members')
+            .insert({
+              team_id: inv.team_id,
+              user_id: userId,
+              is_leader: false,
+            });
+
+          if (teamError) {
+            console.error('[AuthProvider] Error adding to team:', teamError);
+          } else {
+            console.log('[AuthProvider] Added user to team:', inv.team_id);
+          }
+        }
+
+        // Mark invitation as accepted
+        await supabase
+          .from('organization_invitations')
+          .update({ status: 'accepted', responded_at: new Date().toISOString() })
+          .eq('id', inv.id);
+
+        console.log('[AuthProvider] Invitation accepted:', inv.id);
+      }
+    } catch (error) {
+      console.error('[AuthProvider] Error handling pending invitations:', error);
     }
   };
 

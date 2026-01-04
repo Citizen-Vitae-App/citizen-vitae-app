@@ -470,7 +470,14 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
   });
 
   
+  // Filter invitations: Leaders only see their team's invitations
   const filteredInvitations = invitations.filter(inv => {
+    // Leaders only see invitations for their team
+    if (isLeader && !isAdmin && userTeamId) {
+      if (inv.team_id !== userTeamId) return false;
+    }
+    
+    // Then apply search filter
     if (!searchQuery) return true;
     return inv.email.toLowerCase().includes(searchQuery.toLowerCase());
   });
@@ -651,7 +658,7 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
                 <TableHead>Équipe</TableHead>
                 <TableHead>Titre</TableHead>
                 <TableHead>Membre depuis</TableHead>
-                {isAdmin && <TableHead className="w-[50px]"></TableHead>}
+                {(isAdmin || isLeader) && <TableHead className="w-[50px]"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -708,7 +715,7 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
                   <TableCell className="text-muted-foreground">
                     {format(new Date(invitation.created_at), 'dd MMM yyyy', { locale: fr })}
                   </TableCell>
-                  {isAdmin && (
+                  {(isAdmin || (isLeader && invitation.team_id === userTeamId)) && (
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -717,10 +724,13 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setAssignTeamInvitation(invitation)}>
-                            <Users2 className="h-4 w-4 mr-2" />
-                            Assigner à une équipe
-                          </DropdownMenuItem>
+                          {/* Only admins can reassign teams */}
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => setAssignTeamInvitation(invitation)}>
+                              <Users2 className="h-4 w-4 mr-2" />
+                              Assigner à une équipe
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem 
                             onClick={() => resendInvitation.mutate({
                               invitationId: invitation.id,
@@ -801,7 +811,7 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
                       ? format(new Date(member.created_at), 'dd MMM yyyy', { locale: fr })
                       : 'N/A'}
                   </TableCell>
-                  {isAdmin && (
+                  {(isAdmin || isLeader) && (
                     <TableCell>
                       {!isCurrentUser(member) && (
                         <DropdownMenu>
@@ -811,15 +821,20 @@ export function MembersTab({ userTeamId, canManageMembers = true, isLeader = fal
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditingMember(member)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Modifier
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setAssignTeamMember(member)}>
-                              <Users2 className="h-4 w-4 mr-2" />
-                              Assigner à une équipe
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            {/* Only admins can edit roles and assign teams */}
+                            {isAdmin && (
+                              <>
+                                <DropdownMenuItem onClick={() => setEditingMember(member)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setAssignTeamMember(member)}>
+                                  <Users2 className="h-4 w-4 mr-2" />
+                                  Assigner à une équipe
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             <DropdownMenuItem 
                               className="text-destructive"
                               onClick={() => setDeleteConfirmMember(member)}
