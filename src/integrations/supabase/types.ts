@@ -566,6 +566,7 @@ export type Database = {
           reference_selfie_url: string | null
           suspended_at: string | null
           suspended_by: string | null
+          verification_status: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -583,6 +584,7 @@ export type Database = {
           reference_selfie_url?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          verification_status?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -600,6 +602,7 @@ export type Database = {
           reference_selfie_url?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          verification_status?: string | null
         }
         Relationships: []
       }

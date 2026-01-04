@@ -185,7 +185,8 @@ serve(async (req) => {
           .from('profiles')
           .update({ 
             id_verified: true,
-            didit_session_id: sessionId, // Store session ID for later validation
+            didit_session_id: sessionId,
+            verification_status: 'approved',
           })
           .eq('id', vendorData);
         
@@ -200,6 +201,50 @@ serve(async (req) => {
         log('WEBHOOK', `User verified successfully in ${Date.now() - startTime}ms`);
         return new Response(
           JSON.stringify({ success: true, message: 'User verified successfully' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Handle "In Review" or "Pending" status
+      if ((status === 'In Review' || status === 'Pending') && vendorData) {
+        log('WEBHOOK', `Verification in review for user: ${vendorData}`);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            verification_status: 'in_review',
+            didit_session_id: sessionId,
+          })
+          .eq('id', vendorData);
+        
+        if (updateError) {
+          logError('WEBHOOK', 'Failed to update profile to in_review', updateError);
+        }
+        
+        return new Response(
+          JSON.stringify({ success: true, message: 'User verification in review' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Handle "Declined" status
+      if (status === 'Declined' && vendorData) {
+        log('WEBHOOK', `Verification declined for user: ${vendorData}`);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            verification_status: 'declined',
+            didit_session_id: sessionId,
+          })
+          .eq('id', vendorData);
+        
+        if (updateError) {
+          logError('WEBHOOK', 'Failed to update profile to declined', updateError);
+        }
+        
+        return new Response(
+          JSON.stringify({ success: true, message: 'User verification declined' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -840,12 +885,15 @@ serve(async (req) => {
             }
           }
           
-          // Update id_verified if not already set
+          // Update id_verified and verification_status if not already set
           if (!existingProfile?.id_verified) {
-            log('CHECK-STATUS', 'Updating id_verified to true...');
+            log('CHECK-STATUS', 'Updating id_verified to true and verification_status to approved...');
             const { error: updateError } = await supabase
               .from('profiles')
-              .update({ id_verified: true })
+              .update({ 
+                id_verified: true,
+                verification_status: 'approved',
+              })
               .eq('id', user_id);
             
             if (updateError) {
@@ -854,6 +902,40 @@ serve(async (req) => {
               log('CHECK-STATUS', `Profile updated via check-status for user: ${user_id}`);
             }
           }
+        }
+      }
+      
+      // Handle In Review or Pending status
+      if ((statusData.status === 'In Review' || statusData.status === 'Pending') && user_id) {
+        log('CHECK-STATUS', `Status is ${statusData.status}, updating verification_status...`);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            verification_status: 'in_review',
+            didit_session_id: session_id,
+          })
+          .eq('id', user_id);
+        
+        if (updateError) {
+          logError('CHECK-STATUS', 'Failed to update verification_status to in_review', updateError);
+        }
+      }
+      
+      // Handle Declined status
+      if (statusData.status === 'Declined' && user_id) {
+        log('CHECK-STATUS', 'Status is Declined, updating verification_status...');
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            verification_status: 'declined',
+            didit_session_id: session_id,
+          })
+          .eq('id', user_id);
+        
+        if (updateError) {
+          logError('CHECK-STATUS', 'Failed to update verification_status to declined', updateError);
         }
       }
       
@@ -868,6 +950,91 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Handle session deletion (to allow user to restart verification)
+    if (body.action === 'delete-session') {
+      const { session_id, user_id } = body;
+      
+      if (!session_id || !user_id) {
+        logError('DELETE-SESSION', 'Missing required parameters', { session_id: !!session_id, user_id: !!user_id });
+        return new Response(
+          JSON.stringify({ success: false, error: 'session_id and user_id are required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      log('DELETE-SESSION', `Deleting session: ${session_id} for user: ${user_id}`);
+      
+      // Call Didit API to delete the session
+      try {
+        const deleteResponse = await fetch(
+          `https://verification.didit.me/v2/session/${session_id}/`,
+          {
+            method: 'DELETE',
+            headers: { 'x-api-key': DIDIT_API_KEY! },
+          }
+        );
+        
+        log('DELETE-SESSION', `Didit API response status: ${deleteResponse.status}`);
+        
+        // 204 = success, 404 = already deleted, both are acceptable
+        if (deleteResponse.status === 204 || deleteResponse.status === 404) {
+          // Reset user profile verification status
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              id_verified: false,
+              reference_selfie_url: null,
+              didit_session_id: null,
+              verification_status: 'none',
+            })
+            .eq('id', user_id);
+          
+          if (updateError) {
+            logError('DELETE-SESSION', 'Failed to reset profile', updateError);
+            return new Response(
+              JSON.stringify({ success: false, error: 'Failed to reset profile' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          // Also delete the reference selfie from storage
+          try {
+            const { error: deleteStorageError } = await supabase.storage
+              .from('verification-selfies')
+              .remove([`${user_id}/reference.jpg`]);
+            
+            if (deleteStorageError) {
+              log('DELETE-SESSION', 'Could not delete storage file (may not exist)', deleteStorageError);
+            } else {
+              log('DELETE-SESSION', 'Reference selfie deleted from storage');
+            }
+          } catch (storageError) {
+            log('DELETE-SESSION', 'Storage deletion error (non-critical)', storageError);
+          }
+          
+          log('DELETE-SESSION', `Session deleted successfully in ${Date.now() - startTime}ms`);
+          
+          return new Response(
+            JSON.stringify({ success: true, message: 'Session supprimée avec succès' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          const errorText = await deleteResponse.text();
+          logError('DELETE-SESSION', `Didit API error: ${deleteResponse.status}`, errorText);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Impossible de supprimer la session Didit' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (deleteError) {
+        logError('DELETE-SESSION', 'Exception during session deletion', deleteError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Erreur lors de la suppression' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     logError('REQUEST', 'Invalid action received', body.action);
