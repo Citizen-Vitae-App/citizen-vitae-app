@@ -66,7 +66,7 @@ export default function Onboarding() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
   
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -257,6 +257,9 @@ export default function Onboarding() {
       setIsLoading(false);
       return;
     }
+
+    // Refresh the profile in AuthContext to update onboarding_completed state
+    await refreshProfile();
 
     // Récupérer les rôles de l'utilisateur pour la redirection
     const { data: rolesData } = await supabase
