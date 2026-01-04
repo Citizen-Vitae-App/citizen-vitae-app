@@ -225,6 +225,12 @@ export default function Onboarding() {
 
     setIsLoading(true);
     
+    // Delete existing themes first to avoid conflicts
+    await supabase
+      .from('user_cause_themes')
+      .delete()
+      .eq('user_id', user?.id);
+
     const themeInserts = selectedThemes.map(themeId => ({
       user_id: user?.id,
       cause_theme_id: themeId
@@ -235,6 +241,7 @@ export default function Onboarding() {
       .insert(themeInserts);
 
     if (themesError) {
+      console.error('Error saving themes:', themesError);
       toast.error('Erreur lors de la sauvegarde des thèmes');
       setIsLoading(false);
       return;
