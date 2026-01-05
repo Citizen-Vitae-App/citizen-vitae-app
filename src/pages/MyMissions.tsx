@@ -197,14 +197,13 @@ const MyMissions = () => {
       <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
         <Calendar className="h-10 w-10 text-muted-foreground" />
       </div>
-      <h2 className="text-lg font-semibold text-foreground mb-4">
+      <h2 className="text-foreground mb-4 text-base font-medium">
         {message}
       </h2>
-      <Link 
-        to="/" 
-        className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90"
-        style={{ backgroundColor: '#012573', borderRadius: '15px' }}
-      >
+      <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90" style={{
+      backgroundColor: '#012573',
+      borderRadius: '15px'
+    }}>
         Découvrir les missions
       </Link>
     </div>;
