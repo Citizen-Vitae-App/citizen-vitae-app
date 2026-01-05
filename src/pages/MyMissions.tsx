@@ -200,12 +200,7 @@ const MyMissions = () => {
       <h2 className="text-foreground mb-4 text-base font-medium">
         {message}
       </h2>
-      <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90" style={{
-      backgroundColor: '#012573',
-      borderRadius: '15px'
-    }}>
-        Découvrir les missions
-      </Link>
+      
     </div>;
   return <div className="min-h-screen bg-background">
       {/* Navigation */}
