@@ -246,7 +246,7 @@ const EventDetail = () => {
       </div>
 
       {/* Main Content - Title, Organizer, Description with Sidebar */}
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-8">
