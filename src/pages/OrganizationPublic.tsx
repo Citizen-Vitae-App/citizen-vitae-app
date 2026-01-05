@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink, icons } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +58,7 @@ interface Event {
 
 const OrganizationPublic = () => {
   const { orgId } = useParams<{ orgId: string }>();
+  const navigate = useNavigate();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
@@ -429,7 +430,12 @@ const OrganizationPublic = () => {
               <div className="space-y-4 mt-8">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-foreground">Événements passés</h2>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate(`/organization/${orgId}/past-events`)}
+                  >
                     Voir plus
                   </Button>
                 </div>

@@ -13,6 +13,7 @@ import OrganizationOnboarding from "./pages/OrganizationOnboarding";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import OrganizationPublic from "./pages/OrganizationPublic";
+import OrganizationPastEvents from "./pages/OrganizationPastEvents";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/events/:eventId" element={<EventDetail />} />
               <Route path="/organization/:orgId" element={<OrganizationPublic />} />
+              <Route path="/organization/:orgId/past-events" element={<OrganizationPastEvents />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/verify-otp" element={<VerifyOtp />} />
               <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
