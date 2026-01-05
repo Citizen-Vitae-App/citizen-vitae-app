@@ -194,11 +194,17 @@ const MyMissions = () => {
       </div>;
   };
   const renderEmptyState = (message: string) => <div className="flex flex-col items-center justify-center py-16 text-center">
-      <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
-      <h2 className="text-lg font-semibold text-foreground mb-2">
+      <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+        <Calendar className="h-10 w-10 text-muted-foreground" />
+      </div>
+      <h2 className="text-lg font-semibold text-foreground mb-4">
         {message}
       </h2>
-      <Link to="/" className="text-primary hover:underline font-medium">
+      <Link 
+        to="/" 
+        className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90"
+        style={{ backgroundColor: '#012573', borderRadius: '15px' }}
+      >
         Découvrir les missions
       </Link>
     </div>;
