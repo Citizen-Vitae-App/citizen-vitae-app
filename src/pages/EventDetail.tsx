@@ -229,10 +229,10 @@ const EventDetail = () => {
           
           {/* Action buttons on cover */}
           <div className="absolute bottom-6 right-6 flex items-center gap-3">
-            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
+            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
             </button>
-            <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
+            <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
           </div>
@@ -246,7 +246,7 @@ const EventDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Event Title */}
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              <h1 className="lg:text-4xl text-foreground mb-4 text-xl font-semibold">
                 {event.name}
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -271,7 +271,7 @@ const EventDetail = () => {
 
             {/* Description */}
             {event.description && <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">À propos de l'événement</h2>
+                <h2 className="text-foreground mb-4 text-lg font-medium">À propos de l'événement</h2>
                 <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0" dangerouslySetInnerHTML={{
               __html: sanitizeHtml(event.description)
             }} />
@@ -333,7 +333,7 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
 
       {/* Map Section - Full Width */}
       <div className="container mx-auto px-4 py-8">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
+        <h2 className="text-foreground mb-4 text-lg font-medium">Où se situe l'événement</h2>
         <p className="text-muted-foreground mb-4">{event.location}</p>
         {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
