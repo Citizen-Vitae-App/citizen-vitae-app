@@ -64,19 +64,6 @@ const Notifications = () => {
     return null;
   }
   return <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
-              
-            </Link>
-            {notifications && notifications.some(n => !n.is_read)}
-          </div>
-        </div>
-      </nav>
-
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Notifications</h1>
 
