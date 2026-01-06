@@ -190,24 +190,10 @@ const Certificate = () => {
           Certificat d'action citoyenne
         </h1>
 
-        {/* Certificate Preview - Responsive container */}
-        <div className="max-w-5xl mx-auto">
-          {/* Mobile: scrollable horizontally if needed, with zoom hint */}
-          <div className="relative">
-            <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:overflow-visible">
-              <div className="border border-border rounded-lg overflow-hidden shadow-xl min-w-[320px] sm:min-w-0" style={{
-              // On mobile, scale down but keep readable
-              transform: 'scale(1)',
-              transformOrigin: 'top left'
-            }}>
-                <CertificatePreview data={certificateData} />
-              </div>
-            </div>
-            
-            {/* Mobile scroll hint */}
-            <p className="text-xs text-muted-foreground text-center mt-2 sm:hidden">
-              ← Faites glisser pour voir l'intégralité →
-            </p>
+        {/* Certificate Preview - Fully visible on mobile */}
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="border border-border rounded-lg overflow-hidden shadow-xl">
+            <CertificatePreview data={certificateData} />
           </div>
           
           {/* Mobile action buttons */}

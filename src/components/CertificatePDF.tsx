@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     color: '#012573',
     textAlign: 'center',
     marginBottom: 12,
-    fontStyle: 'italic',
   },
   subtitle: {
     fontSize: 11,
@@ -137,7 +136,6 @@ const styles = StyleSheet.create({
   footerRole: {
     fontSize: 8,
     color: '#666666',
-    fontStyle: 'italic',
     marginTop: 2,
   },
   orgLogo: {
@@ -164,7 +162,6 @@ const styles = StyleSheet.create({
     color: '#999999',
     textAlign: 'center',
     marginTop: 20,
-    fontStyle: 'italic',
   },
   watermarkBrand: {
     color: '#012573',

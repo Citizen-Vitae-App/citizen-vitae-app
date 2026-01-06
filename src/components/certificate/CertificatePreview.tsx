@@ -10,7 +10,7 @@ interface CertificatePreviewProps {
 export const CertificatePreview = ({ data }: CertificatePreviewProps) => {
   return (
     <article 
-      className="relative bg-white overflow-hidden w-full min-w-[890px] border-[3px] border-solid border-[#3c2c00]"
+      className="relative bg-white overflow-hidden w-full border-[3px] border-solid border-[#3c2c00]"
       style={{ 
         aspectRatio: '890/501',
         fontFamily: 'Questrial, sans-serif'
@@ -142,7 +142,7 @@ export const CertificatePreview = ({ data }: CertificatePreviewProps) => {
         </span>
         {data.validatorRole && (
           <span 
-            className="text-[#012573] text-[11px] italic"
+            className="text-[#012573] text-[11px]"
             style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
           >
             {data.validatorRole}
