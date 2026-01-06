@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle2, Pencil, X, Check } from 'lucide-react';
+import { CheckCircle2, Pencil, X, Check, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import type { UserOrganization } from '@/hooks/useUserProfile';
 
@@ -24,6 +24,8 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     bio: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Don't render until profile is loaded to prevent flash
   if (!profile) return null;
@@ -37,7 +39,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
   // Get primary role/title from first company organization
   const primaryOrg = organizations.find((org) => org.type === 'company') || organizations[0];
   const primaryTitle = primaryOrg
-    ? `${primaryOrg.role === 'admin' ? 'Admin' : 'Membre'}, ${primaryOrg.name}`
+    ? `${primaryOrg.role === 'admin' ? 'Admin' : 'Membre'} @ ${primaryOrg.name}`
     : null;
 
   const handleVerificationComplete = () => {
@@ -85,14 +87,69 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     }
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 Mo');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: `${publicUrl}?t=${Date.now()}` })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success('Photo de profil mise à jour');
+      refreshProfile?.();
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Erreur lors du téléchargement de la photo');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   return (
-    <section className="bg-card border border-border rounded-2xl p-6 mb-6 relative">
+    <section className="mb-6 relative">
       {/* Edit button */}
       {!isEditing && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+          className="absolute top-0 right-0 h-8 w-8 text-muted-foreground hover:text-foreground"
           onClick={handleStartEdit}
         >
           <Pencil className="h-4 w-4" />
@@ -101,7 +158,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
 
       {/* Save/Cancel buttons when editing */}
       {isEditing && (
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-0 right-0 flex gap-2">
           <Button
             variant="ghost"
             size="icon"
@@ -123,31 +180,58 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        {/* Avatar */}
-        <Avatar className="h-24 w-24 ring-4 ring-background shadow-lg">
-          <AvatarImage src={profile?.avatar_url || undefined} alt="Photo de profil" />
-          <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
-            {getInitials()}
-          </AvatarFallback>
-        </Avatar>
+      <div className="flex flex-col items-center text-center">
+        {/* Avatar with edit overlay */}
+        <div className="relative group">
+          <div className="relative">
+            <Avatar className="h-24 w-24 ring-4 ring-border shadow-lg">
+              <AvatarImage src={profile?.avatar_url || undefined} alt="Photo de profil" />
+              <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Verified badge */}
+            {profile?.id_verified && (
+              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                <CheckCircle2 className="h-6 w-6 text-primary fill-primary/20" />
+              </div>
+            )}
+          </div>
+          
+          {/* Edit overlay */}
+          <button
+            onClick={handleAvatarClick}
+            disabled={isUploadingAvatar}
+            className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          >
+            <Camera className="h-6 w-6 text-white" />
+          </button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="hidden"
+          />
+        </div>
 
         {/* Info */}
-        <div className="flex-1 text-center sm:text-left w-full">
+        <div className="mt-4 w-full max-w-md">
           {isEditing ? (
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center">
                 <Input
                   value={editData.first_name}
                   onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
                   placeholder="Prénom"
-                  className="flex-1"
+                  className="flex-1 max-w-[150px]"
                 />
                 <Input
                   value={editData.last_name}
                   onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
                   placeholder="Nom"
-                  className="flex-1"
+                  className="flex-1 max-w-[150px]"
                 />
               </div>
               <Textarea
@@ -160,19 +244,13 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h1 className="text-2xl font-bold text-foreground">
-                  {profile?.first_name} {profile?.last_name}
-                </h1>
-                {/* Verified icon - small green checkmark */}
-                {profile?.id_verified && (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                )}
-              </div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {profile?.first_name} {profile?.last_name}
+              </h1>
               
               {/* Bio field */}
               {(profile as any).bio && (
-                <p className="text-muted-foreground mt-2 text-sm">{(profile as any).bio}</p>
+                <p className="text-muted-foreground mt-1 text-sm">{(profile as any).bio}</p>
               )}
               
               {primaryTitle && (
