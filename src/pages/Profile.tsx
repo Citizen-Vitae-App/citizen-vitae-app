@@ -9,6 +9,7 @@ import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSectio
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Helmet } from 'react-helmet-async';
+
 export default function Profile() {
   const {
     organizations,
@@ -17,10 +18,12 @@ export default function Profile() {
     radarData,
     isRadarEligible,
     totalCertifiedMissions,
-    isLoading
+    isLoading,
   } = useUserProfile();
+
   if (isLoading) {
-    return <div className="min-h-screen bg-background">
+    return (
+      <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
           <div className="space-y-6">
@@ -31,16 +34,19 @@ export default function Profile() {
           </div>
         </main>
         <MobileBottomNav />
-      </div>;
+      </div>
+    );
   }
-  return <>
+
+  return (
+    <>
       <Helmet>
         <title>Mon Profil | Citizen Vitae</title>
         <meta name="description" content="Consultez votre profil citoyen, vos organisations et vos missions certifiées sur Citizen Vitae." />
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        
+        <Navbar />
 
         <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
           {/* Header with identity */}
@@ -53,10 +59,17 @@ export default function Profile() {
           <FavoriteCausesSection causes={favoriteCauses} />
 
           {/* Citizen impact radar - conditional */}
-          <CitizenImpactSection radarData={radarData} totalMissions={totalCertifiedMissions} isEligible={isRadarEligible} />
+          <CitizenImpactSection
+            radarData={radarData}
+            totalMissions={totalCertifiedMissions}
+            isEligible={isRadarEligible}
+          />
 
           {/* Citizen experiences / missions */}
-          <CitizenExperiencesSection missions={certifiedMissions} totalCount={totalCertifiedMissions} />
+          <CitizenExperiencesSection
+            missions={certifiedMissions}
+            totalCount={totalCertifiedMissions}
+          />
 
           {/* Upcoming events */}
           <UpcomingEventsSection />
@@ -67,5 +80,6 @@ export default function Profile() {
         {/* Bottom padding for mobile nav */}
         <div className="h-16 md:hidden" />
       </div>
-    </>;
+    </>
+  );
 }

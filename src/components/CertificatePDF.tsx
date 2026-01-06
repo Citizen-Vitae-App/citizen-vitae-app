@@ -1,5 +1,4 @@
 import { Document, Page, Text, View, StyleSheet, Image, Font, pdf } from '@react-pdf/renderer';
-import { CertificateData } from '@/types/certificate';
 
 // Register fonts - using Google Fonts URLs for EB Garamond and a clean sans-serif
 Font.register({
@@ -69,6 +68,7 @@ const styles = StyleSheet.create({
     color: '#012573',
     textAlign: 'center',
     marginBottom: 12,
+    fontStyle: 'italic',
   },
   subtitle: {
     fontSize: 11,
@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
   footerRole: {
     fontSize: 8,
     color: '#666666',
+    fontStyle: 'italic',
     marginTop: 2,
   },
   orgLogo: {
@@ -163,6 +164,7 @@ const styles = StyleSheet.create({
     color: '#999999',
     textAlign: 'center',
     marginTop: 20,
+    fontStyle: 'italic',
   },
   watermarkBrand: {
     color: '#012573',
@@ -171,8 +173,21 @@ const styles = StyleSheet.create({
   },
 });
 
-// Re-export CertificateData for backward compatibility
-export type { CertificateData } from '@/types/certificate';
+export interface CertificateData {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  eventName: string;
+  organizationName: string;
+  organizationLogoUrl: string | null;
+  eventDate: string;
+  eventStartTime: string;
+  eventEndTime: string;
+  eventLocation: string;
+  validatorName: string;
+  validatorRole: string;
+  isSelfCertified: boolean;
+}
 
 interface CertificatePDFDocumentProps {
   data: CertificateData;

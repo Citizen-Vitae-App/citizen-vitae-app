@@ -242,7 +242,7 @@ const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
 
   return (
     <div className="p-2">
-      <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden [&_.gm-fullscreen-control]:!rounded-xl [&_.gm-fullscreen-control]:!m-3" />
+      <div ref={mapRef} className="h-[450px] w-full rounded-lg overflow-hidden" />
     </div>
   );
 };

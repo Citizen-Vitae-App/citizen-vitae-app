@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CertificateData } from '@/types/certificate';
-import { downloadCertificatePDF } from './CertificatePDF';
+import { CertificateData, downloadCertificatePDF } from './CertificatePDF';
 import { PDFViewer } from '@react-pdf/renderer';
 import { CertificatePDFDocument } from './CertificatePDF';
 import { toast } from 'sonner';

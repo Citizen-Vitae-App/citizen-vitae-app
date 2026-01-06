@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -193,30 +193,14 @@ const MyMissions = () => {
         </div>
       </div>;
   };
-  const renderEmptyState = (message: string, showCTA: boolean = true) => <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-        <Calendar className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <h2 className="text-foreground mb-4 text-base font-medium">
+  const renderEmptyState = (message: string) => <div className="flex flex-col items-center justify-center py-16 text-center">
+      <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
+      <h2 className="text-lg font-semibold text-foreground mb-2">
         {message}
       </h2>
-      {showCTA && (
-        <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90" style={{
-          backgroundColor: '#012573',
-          borderRadius: '15px'
-        }}>
-          Découvrir les missions
-        </Link>
-      )}
-    </div>;
-
-  const renderCancelledEmptyState = () => <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-        <CheckCircle className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <h2 className="text-foreground text-base font-medium">
-        Aucune annulation
-      </h2>
+      <Link to="/" className="text-primary hover:underline font-medium">
+        Découvrir les missions
+      </Link>
     </div>;
   return <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -261,7 +245,7 @@ const MyMissions = () => {
           <TabsContent value="cancelled" className="mt-0">
             {isLoading ? <div className="space-y-4">
                 {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
-              </div> : cancelledEvents.length === 0 ? renderCancelledEmptyState() : <div className="space-y-3">
+              </div> : cancelledEvents.length === 0 ? renderEmptyState("Aucune annulation") : <div className="space-y-3">
                 {cancelledEvents.map(renderCompactCard)}
               </div>}
           </TabsContent>
