@@ -4,7 +4,7 @@ import { ArrowLeft, Download, Share2, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { CertificateData } from '@/components/CertificatePDF';
+import { CertificateData } from '@/types/certificate';
 import { CertificatePreview } from '@/components/certificate/CertificatePreview';
 import { ShareCertificateDialog } from '@/components/ShareCertificateDialog';
 import { downloadCertificateAsImage } from '@/lib/certificateCapture';

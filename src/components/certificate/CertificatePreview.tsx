@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { CertificateData } from '@/components/CertificatePDF';
+import { CertificateData } from '@/types/certificate';
 import logo from '@/assets/logo.png';
 import laurelSvg from '@/assets/certificate-laurel.svg';
 import cocardeSvg from '@/assets/certificate-cocarde.svg';
