@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Download, Share2, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { CertificateData, downloadCertificatePDF } from '@/components/CertificatePDF';
+import { CertificateData } from '@/types/certificate';
 import { CertificatePreview } from '@/components/certificate/CertificatePreview';
 import { ShareCertificateDialog } from '@/components/ShareCertificateDialog';
+import { downloadCertificateAsImage } from '@/lib/certificateCapture';
 import logo from '@/assets/logo.png';
 
 interface CertificateDataFromDB {
@@ -44,6 +45,7 @@ const Certificate = () => {
   const [error, setError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -52,11 +54,8 @@ const Certificate = () => {
         setIsLoading(false);
         return;
       }
-
       try {
         // SECURITY: Use the secure public_certificates view that only exposes safe fields
-        // This view is specifically designed for public certificate viewing without exposing
-        // user_id, qr_token, timestamps, face_match data, or other sensitive fields
         const { data, error: fetchError } = await supabase
           .from('public_certificates')
           .select('certificate_data, event_id')
@@ -93,9 +92,8 @@ const Certificate = () => {
           eventLocation: dbData.event.location,
           validatorName: dbData.validator.name,
           validatorRole: dbData.validator.role,
-          isSelfCertified: dbData.isSelfCertified,
+          isSelfCertified: dbData.isSelfCertified
         };
-
         setCertificateData(transformedData);
       } catch (err) {
         console.error('Unexpected error:', err);
@@ -104,16 +102,15 @@ const Certificate = () => {
         setIsLoading(false);
       }
     };
-
     fetchCertificate();
   }, [certificateId]);
 
   const handleDownload = async () => {
-    if (!certificateData) return;
-    
+    if (!certificateData || !certificateRef.current) return;
     setIsDownloading(true);
     try {
-      await downloadCertificatePDF(certificateData);
+      const filename = `certificat-${certificateData.eventName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+      await downloadCertificateAsImage(certificateRef.current, filename);
     } catch (err) {
       console.error('Download error:', err);
     } finally {
@@ -178,28 +175,19 @@ const Certificate = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
+      {/* Navigation - hide desktop buttons on mobile */}
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <Link to="/" className="flex items-center gap-3">
               <ArrowLeft className="h-5 w-5 text-foreground" />
-              <img src={logo} alt="CitizenVitae" className="h-8" />
             </Link>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShareOpen(true)}
-              >
+            <div className="hidden md:flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
                 <Share2 className="h-4 w-4 mr-2" />
                 Partager
               </Button>
-              <Button 
-                size="sm"
-                onClick={handleDownload}
-                disabled={isDownloading}
-              >
+              <Button size="sm" onClick={handleDownload} disabled={isDownloading}>
                 {isDownloading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -212,56 +200,37 @@ const Certificate = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-6 text-center font-questrial">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-6 text-center font-questrial">
           Certificat d'action citoyenne
         </h1>
 
-        {/* Certificate Preview - Responsive container */}
-        <div className="max-w-5xl mx-auto">
-          {/* Mobile: scrollable horizontally if needed, with zoom hint */}
-          <div className="relative">
-            <div className="overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:overflow-visible">
-              <div 
-                className="border border-border rounded-lg overflow-hidden shadow-xl min-w-[320px] sm:min-w-0"
-                style={{ 
-                  // On mobile, scale down but keep readable
-                  transform: 'scale(1)',
-                  transformOrigin: 'top left',
-                }}
-              >
-                <CertificatePreview data={certificateData} />
-              </div>
-            </div>
-            
-            {/* Mobile scroll hint */}
-            <p className="text-xs text-muted-foreground text-center mt-2 sm:hidden">
-              ← Faites glisser pour voir l'intégralité →
-            </p>
+        {/* Certificate Preview - Fully visible on mobile */}
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="border border-border rounded-lg overflow-hidden shadow-xl">
+            <CertificatePreview ref={certificateRef} data={certificateData} />
           </div>
           
-          {/* Mobile action buttons */}
-          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 md:hidden">
+          {/* Mobile action buttons - taller for touch */}
+          <div className="mt-4 sm:mt-6 flex flex-col gap-3 md:hidden">
             <Button 
-              className="flex-1" 
-              size="lg"
-              onClick={handleDownload}
+              className="w-full h-14 text-base" 
+              onClick={handleDownload} 
               disabled={isDownloading}
             >
               {isDownloading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
               ) : (
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-5 w-5 mr-2" />
               )}
               Télécharger le PDF
             </Button>
             <Button 
-              variant="outline"
-              className="flex-1" 
-              size="lg"
+              variant="outline" 
+              className="w-full h-14 text-base" 
               onClick={() => setShareOpen(true)}
             >
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share2 className="h-5 w-5 mr-2" />
               Partager
             </Button>
           </div>
@@ -270,10 +239,7 @@ const Certificate = () => {
         {/* Link to event */}
         {eventId && (
           <div className="text-center mt-6">
-            <Link 
-              to={`/events/${eventId}`}
-              className="text-primary hover:underline text-sm"
-            >
+            <Link to={`/events/${eventId}`} className="text-primary hover:underline text-sm">
               Voir les détails de l'événement
             </Link>
           </div>

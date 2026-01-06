@@ -208,8 +208,8 @@ const EventDetail = () => {
       </Button>;
   };
   return <div className="min-h-screen bg-background pb-24 lg:pb-0">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+      {/* Navigation - Desktop only shows logo/notifications, Mobile shows back button only */}
+      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border lg:block hidden">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3">
@@ -221,18 +221,24 @@ const EventDetail = () => {
         </div>
       </nav>
 
-      {/* Cover Image - with container padding */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="relative w-full h-[400px] lg:h-[500px] rounded-xl overflow-hidden">
+      {/* Cover Image - Full width on mobile, with padding on desktop */}
+      <div className="lg:container lg:mx-auto lg:px-4 lg:py-6">
+        {/* Back button overlay on mobile */}
+        <div className="absolute top-4 left-4 z-10 lg:hidden">
+          <Link to="/" className="flex items-center justify-center w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full">
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </Link>
+        </div>
+        <div className="relative w-full h-[350px] lg:h-[500px] lg:rounded-xl overflow-hidden">
           <img src={event.cover_image_url || defaultCover} alt={event.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
           {/* Action buttons on cover */}
           <div className="absolute bottom-6 right-6 flex items-center gap-3">
-            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
+            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
             </button>
-            <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm rounded-lg hover:bg-background transition-colors">
+            <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
           </div>
@@ -240,13 +246,13 @@ const EventDetail = () => {
       </div>
 
       {/* Main Content - Title, Organizer, Description with Sidebar */}
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Event Title */}
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              <h1 className="lg:text-4xl text-foreground mb-4 text-xl font-semibold">
                 {event.name}
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -271,7 +277,7 @@ const EventDetail = () => {
 
             {/* Description */}
             {event.description && <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">À propos de l'événement</h2>
+                <h2 className="text-foreground mb-4 text-lg font-medium">À propos de l'événement</h2>
                 <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0" dangerouslySetInnerHTML={{
               __html: sanitizeHtml(event.description)
             }} />
@@ -333,15 +339,15 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
 
       {/* Map Section - Full Width */}
       <div className="container mx-auto px-4 py-8">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Où se situe l'événement</h2>
+        <h2 className="text-foreground mb-4 text-lg font-medium">Où se situe l'événement</h2>
         <p className="text-muted-foreground mb-4">{event.location}</p>
         {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>}
       </div>
 
-      {/* Mobile Fixed Bottom Bar */}
-      {isRegistered ? <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
+      {/* Mobile Fixed Bottom Bar - Enhanced UI */}
+      {isRegistered ? <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex flex-col gap-3">
             <CertificationButton eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} onClick={() => {
           if (event.allow_self_certification) {
@@ -357,19 +363,28 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
                 </>}
             </Button>
           </div>
-        </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-3 z-50">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2 text-foreground">
-                <Calendar className="h-4 w-4" />
-                <span className="font-medium">{formatMobileDateRange()}</span>
+        </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <Button onClick={handleRegister} disabled={isRegistering} className={cn("w-full h-14 text-lg font-semibold transition-all duration-300 rounded-2xl", isRegistering && "bg-muted text-muted-foreground cursor-wait", isAnimating && "bg-green-600 hover:bg-green-600")} style={{
+                backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
+              }}>
+                {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : isAnimating ? <>
+                    <Check className="h-5 w-5 mr-2 animate-bounce" />
+                    Inscrit !
+                  </> : "Je m'engage"}
+              </Button>
+            </div>
+            <div className="flex flex-col items-end gap-0.5 text-right shrink-0">
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium text-sm">{formatMobileDateRange()}</span>
               </div>
-              <div className="flex items-center gap-2 text-foreground">
-                <Clock className="h-4 w-4" />
-                <span className="font-medium">{formatTime(event.start_date)}</span>
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium text-sm">{formatTime(event.start_date)}</span>
               </div>
             </div>
-            {renderCTAButton(true)}
           </div>
         </div>}
 
