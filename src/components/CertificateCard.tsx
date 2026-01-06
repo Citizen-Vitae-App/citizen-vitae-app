@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ShareCertificateDialog } from './ShareCertificateDialog';
 import { CertificateViewerDialog } from './CertificateViewerDialog';
-import { CertificateData } from './CertificatePDF';
+import { CertificateData } from '@/types/certificate';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import defaultCover from '@/assets/default-event-cover.jpg';
