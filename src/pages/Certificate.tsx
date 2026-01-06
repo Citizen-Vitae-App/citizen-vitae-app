@@ -171,16 +171,7 @@ const Certificate = () => {
               <ArrowLeft className="h-5 w-5 text-foreground" />
               
             </Link>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Partager
-              </Button>
-              <Button size="sm" onClick={handleDownload} disabled={isDownloading}>
-                {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                Télécharger PDF
-              </Button>
-            </div>
+            
           </div>
         </div>
       </nav>
