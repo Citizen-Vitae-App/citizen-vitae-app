@@ -4,12 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logo from '@/assets/logo.png';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle, Home, Shield, Building2 } from 'lucide-react';
+import { LogOut, User, Settings, Menu, ClipboardList, Globe, HelpCircle, Home, Shield, Building2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useState } from 'react';
+
 interface UserRoleProps {
   isOwner: boolean;
   isAdmin: boolean;
@@ -35,7 +34,6 @@ export const Navbar = ({
   } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Check if we're in organization dashboard mode (has tabs)
   const isOrganizationMode = !!(activeTab && onTabChange);
@@ -120,10 +118,7 @@ export const Navbar = ({
     }
     return user?.email?.[0].toUpperCase() || 'U';
   };
-  const handleTabChange = (tab: string) => {
-    onTabChange?.(tab);
-    setDrawerOpen(false);
-  };
+
   return <header className="hidden md:block absolute top-0 left-0 right-0 px-4 md:px-8 py-4 md:py-6 z-10">
       <div className="flex items-center justify-between">
         <Link to="/" className="hover:opacity-80 transition-opacity">
@@ -132,7 +127,7 @@ export const Navbar = ({
         
         {/* Tabs au centre pour les organisations - Desktop only */}
         {tabs && <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-            {tabs.map(tab => <button key={tab.value} onClick={() => onTabChange(tab.value)} className={cn("px-8 py-2 text-sm font-medium transition-all rounded-full", activeTab === tab.value ? "bg-muted text-foreground border border-border" : "text-muted-foreground hover:text-foreground")}>
+            {tabs.map(tab => <button key={tab.value} onClick={() => onTabChange?.(tab.value)} className={cn("px-8 py-2 text-sm font-medium transition-all rounded-full", activeTab === tab.value ? "bg-muted text-foreground border border-border" : "text-muted-foreground hover:text-foreground")}>
                 {tab.label}
               </button>)}
           </div>}
@@ -142,12 +137,12 @@ export const Navbar = ({
           {/* Notifications */}
           <NotificationDropdown />
           
-          {/* User menu */}
-          <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-            <SheetTrigger asChild>
+          {/* User menu - DropdownMenu like MainNavbar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-2 cursor-pointer">
                 <Avatar className="h-10 w-10 ring-2 ring-border">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarImage src={profile?.avatar_url || undefined} className="object-cover" />
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                     {getInitials()}
                   </AvatarFallback>
@@ -156,73 +151,59 @@ export const Navbar = ({
                   <Menu className="h-5 w-5" />
                 </Button>
               </div>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <nav className="flex flex-col gap-2 mt-8">
-                <Button 
-                  variant="ghost" 
-                  className="justify-start gap-3 h-12" 
-                  onClick={() => { navigate('/'); setDrawerOpen(false); }}
-                >
-                  <Home className="h-5 w-5" />
-                  Accueil
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="justify-start gap-3 h-12" 
-                  onClick={() => { navigate('/profile'); setDrawerOpen(false); }}
-                >
-                  <User className="h-5 w-5" />
-                  Mon profil
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="justify-start gap-3 h-12" 
-                  onClick={() => { navigate('/missions'); setDrawerOpen(false); }}
-                >
-                  <ClipboardList className="h-5 w-5" />
-                  Mes missions
-                </Button>
-                {hasRole('organization') && (
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/organization'); setDrawerOpen(false); }}
-                  >
-                    <Building2 className="h-5 w-5" />
-                    Mon organisation
-                  </Button>
-                )}
-                {hasRole('super_admin') && (
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/super-admin'); setDrawerOpen(false); }}
-                  >
-                    <Shield className="h-5 w-5" />
-                    Super Admin
-                  </Button>
-                )}
-                <DropdownMenuSeparator className="my-2" />
-                <Button 
-                  variant="ghost" 
-                  className="justify-start gap-3 h-12" 
-                  onClick={() => { navigate('/settings'); setDrawerOpen(false); }}
-                >
-                  <Settings className="h-5 w-5" />
-                  Paramètres
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="justify-start gap-3 h-12 text-destructive hover:text-destructive" 
-                  onClick={() => { signOut(); setDrawerOpen(false); }}
-                >
-                  <LogOut className="h-5 w-5" />
-                  Se déconnecter
-                </Button>
-              </nav>
-            </SheetContent>
-          </Sheet>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 mt-2">
+              <DropdownMenuItem onClick={() => navigate('/missions')} className="cursor-pointer py-3">
+                <ClipboardList className="mr-3 h-5 w-5" />
+                Mes Missions
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer py-3">
+                <User className="mr-3 h-5 w-5" />
+                Profil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer py-3">
+                <Heart className="mr-3 h-5 w-5" />
+                Mes favoris
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer py-3">
+                <Settings className="mr-3 h-5 w-5" />
+                Paramètres
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer py-3">
+                <Globe className="mr-3 h-5 w-5" />
+                Langue
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer py-3">
+                <HelpCircle className="mr-3 h-5 w-5" />
+                Centre d'aide
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              {hasRole('organization') && (
+                <DropdownMenuItem onClick={() => navigate('/organization')} className="cursor-pointer py-3">
+                  <Building2 className="mr-3 h-5 w-5" />
+                  Console organisation
+                </DropdownMenuItem>
+              )}
+              {hasRole('super_admin') && (
+                <DropdownMenuItem onClick={() => navigate('/super-admin')} className="cursor-pointer py-3">
+                  <Shield className="mr-3 h-5 w-5" />
+                  Console Super Admin
+                </DropdownMenuItem>
+              )}
+              
+              {(hasRole('organization') || hasRole('super_admin')) && <DropdownMenuSeparator />}
+              
+              <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer py-3 text-destructive focus:text-destructive">
+                <LogOut className="mr-3 h-5 w-5" />
+                Déconnexion
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>;
