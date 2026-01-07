@@ -107,7 +107,14 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         </h2>
 
         {/* Horizontal line under name */}
-        <div className="absolute top-[46.5%] left-1/2 -translate-x-1/2 w-[52.8%] h-[2px] bg-[#D79806] z-20" />
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 bg-[#D79806] z-20"
+          style={{
+            top: isMobile ? '48%' : '46.5%',
+            width: isMobile ? '48%' : '52.8%',
+            height: isMobile ? '1.5px' : '2px'
+          }}
+        />
 
         {/* Body text */}
         <p 
@@ -152,8 +159,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
 
         {/* Organization logo - center */}
         <div 
-          className="absolute top-[67%] left-1/2 -translate-x-1/2 z-20"
+          className="absolute left-1/2 -translate-x-1/2 z-20"
           style={{ 
+            top: isMobile ? '70%' : '67%',
             width: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)', 
             height: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)' 
           }}
