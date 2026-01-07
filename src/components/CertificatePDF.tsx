@@ -93,13 +93,13 @@ const styles = StyleSheet.create({
     height: CERT_HEIGHT * FOOTER_HEIGHT_RATIO,
     backgroundColor: '#FAF7EF',
   },
-  // Laurel wreath in background - centered
+  // Laurel wreath in background - positioned under the body text
   laurelImage: {
     position: 'absolute',
-    top: '3%',
-    left: '24.5%',
-    width: '51%',
-    opacity: 0.3,
+    top: '48%',
+    left: '27%',
+    width: '46%',
+    opacity: 0.25,
   },
   // Cocarde - top right area
   cocardeImage: {
@@ -320,7 +320,7 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
         
         {/* Organization logo - center */}
         <View style={styles.orgLogoContainer}>
-          {data.organizationLogoUrl && /\.(png|jpe?g)(\?.*)?$/i.test(data.organizationLogoUrl) ? (
+          {data.organizationLogoUrl ? (
             <Image src={data.organizationLogoUrl} style={styles.orgLogo} />
           ) : (
             <View style={styles.orgLogoPlaceholder}>
