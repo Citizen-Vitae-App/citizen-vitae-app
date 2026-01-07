@@ -46,7 +46,7 @@ export default function Profile() {
       <div className="min-h-screen bg-background">
         
 
-        <main className="container mx-auto px-4 pt-20 pb-24 max-w-2xl">
+        <main className="container mx-auto px-4 pt-6 md:pt-24 pb-24 max-w-2xl">
           {/* Settings button */}
           <div className="flex justify-end mb-1">
             <Link to="/settings">
