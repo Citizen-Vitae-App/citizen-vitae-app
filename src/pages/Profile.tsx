@@ -46,13 +46,15 @@ export default function Profile() {
       <div className="min-h-screen bg-background">
         
 
-        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl relative">
-          {/* Settings button */}
-          <Link to="/settings" className="absolute top-24 right-4">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </Link>
+        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
+          {/* Settings button - fixed top right */}
+          <div className="flex justify-end mb-2">
+            <Link to="/settings">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
 
           {/* Header with identity */}
           <ProfileHeader organizations={organizations} />
