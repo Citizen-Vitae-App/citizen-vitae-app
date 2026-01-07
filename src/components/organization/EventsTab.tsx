@@ -691,12 +691,12 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           // Desktop: Table view
           <div className="border rounded-lg overflow-auto w-full max-h-[calc(100vh-280px)]">
             <Table className="table-fixed w-full">
-              <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold w-[35%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[35%]">
                     <SortableColumnHeader label="Titre" field="title" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[12%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[12%]">
                     <ColumnHeaderWithFilter 
                       label="Date et heure" 
                       field="date" 
@@ -711,7 +711,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                       setOpenFilterPanel={setOpenFilterPanel}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[10%]">
                     <ColumnHeaderWithFilter 
                       label="Statut" 
                       field="status" 
@@ -725,7 +725,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                       setOpenFilterPanel={setOpenFilterPanel}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[10%]">
                     <ColumnHeaderWithFilter 
                       label="Visibilité" 
                       field="visibility" 
@@ -739,10 +739,10 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                       setOpenFilterPanel={setOpenFilterPanel}
                     />
                   </TableHead>
-                  <TableHead className="font-semibold w-[18%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[18%]">
                     <SortableColumnHeader label="Lieu" field="location" />
                   </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[10%]">
                     <ColumnHeaderWithFilter 
                       label="Participants" 
                       field="participants" 
@@ -757,7 +757,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                       setOpenFilterPanel={setOpenFilterPanel}
                     />
                   </TableHead>
-                  <TableHead className="w-[5%]"></TableHead>
+                  <TableHead className="sticky top-0 z-10 bg-background w-[5%]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
