@@ -80,7 +80,7 @@ export const CertificationButton = ({
         onClick={onClick}
         disabled={disabled}
         className="w-full h-12 font-semibold"
-        style={{ backgroundColor: '#012573' }}
+        style={{ background: 'linear-gradient(to right, #012573, #083AD2)' }}
       >
         <Shield className="h-5 w-5 mr-2" />
         Certifier ma présence

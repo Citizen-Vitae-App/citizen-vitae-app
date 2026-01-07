@@ -199,7 +199,7 @@ const EventDetail = () => {
         </Button>;
     }
     return <Button onClick={handleRegister} disabled={isRegistering} className={cn(baseClasses, isRegistering && "bg-muted text-muted-foreground cursor-wait", isAnimating && "bg-green-600 hover:bg-green-600")} style={{
-      backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
+      background: isRegistering ? undefined : isAnimating ? undefined : 'linear-gradient(to right, #012573, #083AD2)'
     }}>
         {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : isAnimating ? <>
             <Check className="h-5 w-5 mr-2 animate-bounce" />
@@ -224,7 +224,7 @@ const EventDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
           {/* Action buttons on cover */}
-          <div className="absolute bottom-6 right-6 flex items-center gap-3">
+          <div className="absolute bottom-12 right-6 lg:bottom-6 flex items-center gap-3">
             <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
             </button>
@@ -235,8 +235,10 @@ const EventDetail = () => {
         </div>
       </div>
 
+      {/* Card overlay effect - Airbnb style rounded top on mobile */}
+      <div className="relative -mt-6 bg-background rounded-t-3xl lg:rounded-none lg:mt-0 pt-6 lg:pt-0">
       {/* Main Content - Title, Organizer, Description with Sidebar */}
-      <div className="container mx-auto px-4 pt-4">
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-8">
@@ -324,6 +326,7 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
               </div>
             </div>
           </div>
+          </div>
         </div>
       </div>
 
@@ -357,7 +360,7 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <Button onClick={handleRegister} disabled={isRegistering} className={cn("w-full h-14 text-lg font-semibold transition-all duration-300 rounded-2xl", isRegistering && "bg-muted text-muted-foreground cursor-wait", isAnimating && "bg-green-600 hover:bg-green-600")} style={{
-            backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
+            background: isRegistering ? undefined : isAnimating ? undefined : 'linear-gradient(to right, #012573, #083AD2)'
           }}>
                 {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : isAnimating ? <>
                     <Check className="h-5 w-5 mr-2 animate-bounce" />
@@ -365,14 +368,14 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
                   </> : "Je m'engage"}
               </Button>
             </div>
-            <div className="flex flex-col items-end gap-0.5 text-right shrink-0">
-              <div className="flex items-center gap-1.5 text-foreground">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-sm">{formatMobileDateRange()}</span>
+            <div className="flex flex-col items-end gap-1 text-right shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-semibold text-sm underline text-foreground">{formatMobileDateRange()}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-foreground">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-sm">{formatTime(event.start_date)}</span>
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3 w-3 text-muted-foreground/70" />
+                <span className="text-xs text-muted-foreground">{formatTime(event.start_date)}</span>
               </div>
             </div>
           </div>
