@@ -32,19 +32,14 @@ export const downloadCertificateAsImage = async (
   let offsetX: number;
   let offsetY: number;
 
-  if (aspectRatio > pdfAspectRatio) {
-    // Image is wider than the page ratio -> fit to full page width
-    finalWidth = pdfWidth;
-    finalHeight = finalWidth / aspectRatio;
-    offsetX = 0;
-    offsetY = (pdfHeight - finalHeight) / 2;
-  } else {
-    // Image is taller than the page ratio -> fit to full page height
-    finalHeight = pdfHeight;
-    finalWidth = finalHeight * aspectRatio;
-    offsetX = (pdfWidth - finalWidth) / 2;
-    offsetY = 0;
-  }
+  // Fill the page as much as possible, minimizing top/bottom margins
+  // The certificate aspect ratio (890/501 ≈ 1.776) is wider than A4 landscape (297/210 ≈ 1.414)
+  // So we should fit to full width and let height adjust
+  finalWidth = pdfWidth;
+  finalHeight = finalWidth / aspectRatio;
+  offsetX = 0;
+  // Center vertically with minimal offset - push up slightly to reduce top margin
+  offsetY = (pdfHeight - finalHeight) / 2;
 
   // Create PDF in landscape A4
   const pdf = new jsPDF({
