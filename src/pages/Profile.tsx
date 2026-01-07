@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -8,7 +9,10 @@ import { CitizenExperiencesSection } from '@/components/profile/CitizenExperienc
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
+import { Settings } from 'lucide-react';
+
 export default function Profile() {
   const {
     organizations,
@@ -42,7 +46,14 @@ export default function Profile() {
       <div className="min-h-screen bg-background">
         
 
-        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
+        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl relative">
+          {/* Settings button */}
+          <Link to="/settings" className="absolute top-24 right-4">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
+
           {/* Header with identity */}
           <ProfileHeader organizations={organizations} />
 
