@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
 import { CertificationCard } from '@/components/CertificationCard';
@@ -23,6 +25,13 @@ import { cn } from '@/lib/utils';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
+interface CauseTheme {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+}
+
 interface EventWithOrganization {
   id: string;
   name: string;
@@ -42,6 +51,9 @@ interface EventWithOrganization {
     logo_url: string | null;
     description: string | null;
   };
+  event_cause_themes?: {
+    cause_themes: CauseTheme;
+  }[];
 }
 const EventDetail = () => {
   const {
@@ -101,6 +113,14 @@ const EventDetail = () => {
             name,
             logo_url,
             description
+          ),
+          event_cause_themes (
+            cause_themes (
+              id,
+              name,
+              color,
+              icon
+            )
           )
         `).eq('id', eventId).eq('is_public', true).maybeSingle();
       if (error) {
@@ -244,14 +264,27 @@ const EventDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Event Title */}
             <div>
-              <h1 className="lg:text-4xl text-foreground mb-4 font-semibold text-center text-2xl">
+              <h1 className="text-2xl text-center font-semibold lg:text-3xl lg:text-left lg:font-medium text-foreground mb-4">
                 {event.name}
               </h1>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>{event.location}</span>
-              </div>
+              
+              {/* Cause badges */}
+              {event.event_cause_themes && event.event_cause_themes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {event.event_cause_themes.map((ect) => (
+                    <Badge
+                      key={ect.cause_themes.id}
+                      style={{ backgroundColor: ect.cause_themes.color }}
+                      className="text-white text-xs font-medium"
+                    >
+                      {ect.cause_themes.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <Separator />
 
             {/* Organizer - Simple aligned style */}
             <Link to={`/organization/${event.organizations.id}`} className="flex items-center gap-4 group">
@@ -266,6 +299,8 @@ const EventDetail = () => {
                 <p className="font-semibold text-foreground group-hover:underline">{event.organizations.name}</p>
               </div>
             </Link>
+
+            <Separator />
 
             {/* Description */}
             {event.description && <div>
@@ -333,7 +368,10 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
       {/* Map Section - Full Width */}
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-foreground mb-4 text-lg font-medium">Où se situe l'événement</h2>
-        <p className="text-muted-foreground mb-4">{event.location}</p>
+        <div className="flex items-center gap-2 text-muted-foreground mb-4">
+          <MapPin className="h-4 w-4" />
+          <span>{event.location}</span>
+        </div>
         {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>}

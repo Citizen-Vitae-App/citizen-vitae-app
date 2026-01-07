@@ -137,23 +137,25 @@ export const Navbar = ({
           {/* Notifications */}
           <NotificationDropdown />
           
-          {/* User menu - DropdownMenu like MainNavbar */}
+          {/* Avatar - links to profile */}
+          <Link to="/profile" className="hover:opacity-80 transition-opacity">
+            <Avatar className="h-10 w-10 ring-2 ring-border">
+              <AvatarImage src={profile?.avatar_url || undefined} className="object-cover" />
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          
+          {/* User menu - DropdownMenu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer">
-                <Avatar className="h-10 w-10 ring-2 ring-border">
-                  <AvatarImage src={profile?.avatar_url || undefined} className="object-cover" />
-                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </div>
+              <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
+                <Menu className="h-5 w-5" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 mt-2">
-              <DropdownMenuItem onClick={() => navigate('/missions')} className="cursor-pointer py-3">
+          <DropdownMenuItem onClick={() => navigate('/my-missions')} className="cursor-pointer py-3">
                 <ClipboardList className="mr-3 h-5 w-5" />
                 Mes Missions
               </DropdownMenuItem>
