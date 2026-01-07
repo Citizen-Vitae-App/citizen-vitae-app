@@ -15,16 +15,17 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
     
     // Mobile-specific adjustments
     const outerBorderWidth = isMobile ? '2px' : '3px';
-    const innerBorderInset = isMobile ? '4px' : '7px';
+    const innerBorderInset = isMobile ? '3px' : '7px';
     const innerBorderWidth = isMobile ? '1px' : '2px';
     
     // Mobile text and element sizing
     const logoHeight = isMobile ? 'clamp(14px, 3.5vw, 30px)' : 'clamp(18px, 4.4vw, 39px)';
     const titleFontSize = isMobile ? 'clamp(11px, 2.8vw, 24px)' : 'clamp(14px, 3.4vw, 30px)';
     const titleTop = isMobile ? '17%' : '19.6%';
-    const nameFontSize = isMobile ? 'clamp(14px, 3.8vw, 32px)' : 'clamp(18px, 4.5vw, 40px)';
-    const nameTop = isMobile ? '32%' : '35%';
-    const lineTop = isMobile ? '44%' : '46.5%';
+    const attribueTop = isMobile ? '28%' : '30.3%';
+    const nameFontSize = isMobile ? 'clamp(12px, 3.4vw, 28px)' : 'clamp(18px, 4.5vw, 40px)';
+    const nameTop = isMobile ? '31%' : '35%';
+    const lineTop = isMobile ? '45%' : '46.5%';
     const lineHeight = isMobile ? '1px' : '2px';
     
     return (
@@ -94,8 +95,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
 
         {/* "Attribué à" */}
         <p 
-          className="absolute top-[30.3%] left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
+          className="absolute left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
           style={{ 
+            top: attribueTop,
             fontFamily: 'Questrial, sans-serif', 
             fontWeight: 500,
             fontSize: 'clamp(7px, 1.7vw, 15px)'
