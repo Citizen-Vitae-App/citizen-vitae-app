@@ -4,7 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  // NOTE: on laisse la plateforme (Lovable) gérer host/port (WebSocket stable)
+  server: {
+    port: 8080,
+  },
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
@@ -16,6 +18,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    'global': {},
+    global: {},
   },
 }));
