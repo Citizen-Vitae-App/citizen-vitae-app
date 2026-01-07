@@ -201,9 +201,8 @@ const MyMissions = () => {
         {message}
       </h2>
       {showCTA && (
-        <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90" style={{
-          backgroundColor: '#012573',
-          borderRadius: '15px'
+        <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90 rounded-2xl" style={{
+          background: 'linear-gradient(to right, #012573, #083AD2)'
         }}>
           Découvrir les missions
         </Link>
