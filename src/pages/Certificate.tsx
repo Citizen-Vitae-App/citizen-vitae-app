@@ -102,11 +102,45 @@ const Certificate = () => {
     fetchCertificate();
   }, [certificateId]);
   const handleDownload = async () => {
-    if (!certificateData || !certificateRef.current) return;
+    if (!certificateData) return;
     setIsDownloading(true);
     try {
       const filename = `certificat-${certificateData.eventName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
-      await downloadCertificateAsImage(certificateRef.current, filename);
+      
+      // Create offscreen container with fixed desktop width for consistent PDF output
+      const offscreenContainer = document.createElement('div');
+      offscreenContainer.style.cssText = 'position: fixed; left: -10000px; top: 0; width: 890px; background: white;';
+      document.body.appendChild(offscreenContainer);
+      
+      // Import ReactDOM for rendering
+      const { createRoot } = await import('react-dom/client');
+      
+      // Create a wrapper div for the certificate
+      const certWrapper = document.createElement('div');
+      offscreenContainer.appendChild(certWrapper);
+      
+      // Render CertificatePreview in the offscreen container
+      const root = createRoot(certWrapper);
+      
+      await new Promise<void>((resolve) => {
+        root.render(<CertificatePreview data={certificateData} />);
+        // Wait for render and images to load
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTimeout(resolve, 100);
+          });
+        });
+      });
+      
+      // Capture the offscreen element
+      const captureElement = certWrapper.firstElementChild as HTMLElement;
+      if (captureElement) {
+        await downloadCertificateAsImage(captureElement, filename);
+      }
+      
+      // Cleanup
+      root.unmount();
+      document.body.removeChild(offscreenContainer);
     } catch (err) {
       console.error('Download error:', err);
     } finally {
