@@ -4,12 +4,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logo from '@/assets/logo.png';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserOrganizations } from '@/hooks/useUserOrganizations';
-import { LogOut, User, Settings, Menu, ClipboardList, Home, Shield, Building2, Heart } from 'lucide-react';
+import { LogOut, User, Settings, Menu, ClipboardList, Home, Shield, Building2, Heart, Globe, HelpCircle } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useState } from 'react';
 
 /**
  * MainNavbar - Desktop-only navigation bar for all user pages
@@ -20,7 +24,6 @@ export const MainNavbar = () => {
   const { user, profile, signOut, hasRole } = useAuth();
   const { activeOrganization, canAccessDashboard } = useUserOrganizations();
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const getInitials = () => {
     if (profile?.first_name && profile?.last_name) {
@@ -102,95 +105,76 @@ export const MainNavbar = () => {
               </Avatar>
             </Button>
 
-            {/* Menu burger with Sheet */}
-            <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-              <SheetTrigger asChild>
+            {/* Menu burger - DropdownMenu style like Index page */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
                   className="h-10 px-3 rounded-full border-border hover:shadow-md transition-shadow"
                 >
                   <Menu className="h-4 w-4" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80">
-                <nav className="flex flex-col gap-2 mt-8">
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/'); setDrawerOpen(false); }}
-                  >
-                    <Home className="h-5 w-5" />
-                    Accueil
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/profile'); setDrawerOpen(false); }}
-                  >
-                    <User className="h-5 w-5" />
-                    Mon profil
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/my-missions'); setDrawerOpen(false); }}
-                  >
-                    <ClipboardList className="h-5 w-5" />
-                    Mes missions
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/favorites'); setDrawerOpen(false); }}
-                  >
-                    <Heart className="h-5 w-5" />
-                    Mes favoris
-                  </Button>
-
-                  {canAccessDashboard && (
-                    <Button 
-                      variant="ghost" 
-                      className="justify-start gap-3 h-12" 
-                      onClick={() => { navigate('/organization/dashboard'); setDrawerOpen(false); }}
-                    >
-                      <Building2 className="h-5 w-5" />
-                      Console organisation
-                    </Button>
-                  )}
-
-                  {hasRole('super_admin') && (
-                    <Button 
-                      variant="ghost" 
-                      className="justify-start gap-3 h-12" 
-                      onClick={() => { navigate('/super-admin'); setDrawerOpen(false); }}
-                    >
-                      <Shield className="h-5 w-5" />
-                      Super Admin
-                    </Button>
-                  )}
-
-                  <Separator className="my-2" />
-
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12" 
-                    onClick={() => { navigate('/settings'); setDrawerOpen(false); }}
-                  >
-                    <Settings className="h-5 w-5" />
-                    Paramètres
-                  </Button>
-
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start gap-3 h-12 text-destructive hover:text-destructive" 
-                    onClick={() => { signOut(); setDrawerOpen(false); }}
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Se déconnecter
-                  </Button>
-                </nav>
-              </SheetContent>
-            </Sheet>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Section principale */}
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/')}>
+                  <Home className="mr-3 h-4 w-4" />
+                  <span>Accueil</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/my-missions')}>
+                  <ClipboardList className="mr-3 h-4 w-4" />
+                  <span>Mes Missions</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/profile')}>
+                  <User className="mr-3 h-4 w-4" />
+                  <span>Profil</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/favorites')}>
+                  <Heart className="mr-3 h-4 w-4" />
+                  <span>Mes favoris</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                {/* Section paramètres */}
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/settings')}>
+                  <Settings className="mr-3 h-4 w-4" />
+                  <span>Paramètres</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate('/settings')}>
+                  <Globe className="mr-3 h-4 w-4" />
+                  <span>Langue</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer py-3">
+                  <HelpCircle className="mr-3 h-4 w-4" />
+                  <span>Centre d'aide</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                {/* Accès console organisation */}
+                {canAccessDashboard && (
+                  <DropdownMenuItem onClick={() => navigate('/organization/dashboard')} className="cursor-pointer py-3">
+                    <Building2 className="mr-3 h-4 w-4" />
+                    <span>Console organisation</span>
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Console Super Admin */}
+                {hasRole('super_admin') && (
+                  <DropdownMenuItem onClick={() => navigate('/super-admin')} className="cursor-pointer py-3">
+                    <Shield className="mr-3 h-4 w-4" />
+                    <span>Console Super Admin</span>
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Déconnexion */}
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer py-3">
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span>Déconnexion</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
