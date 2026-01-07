@@ -213,7 +213,7 @@ const EventDetail = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
+              
               <img src={logo} alt="CitizenVitae" className="h-8" />
             </Link>
             {user && <NotificationDropdown />}
@@ -367,8 +367,8 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <Button onClick={handleRegister} disabled={isRegistering} className={cn("w-full h-14 text-lg font-semibold transition-all duration-300 rounded-2xl", isRegistering && "bg-muted text-muted-foreground cursor-wait", isAnimating && "bg-green-600 hover:bg-green-600")} style={{
-                backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
-              }}>
+            backgroundColor: isRegistering ? undefined : isAnimating ? undefined : '#012573'
+          }}>
                 {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : isAnimating ? <>
                     <Check className="h-5 w-5 mr-2 animate-bounce" />
                     Inscrit !
