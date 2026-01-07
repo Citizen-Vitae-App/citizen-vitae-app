@@ -93,13 +93,13 @@ const styles = StyleSheet.create({
     height: CERT_HEIGHT * FOOTER_HEIGHT_RATIO,
     backgroundColor: '#FAF7EF',
   },
-  // Laurel wreath in background - positioned under the body text
+  // Laurel wreath in background - centered under body text
   laurelImage: {
     position: 'absolute',
-    top: '48%',
-    left: '27%',
-    width: '46%',
-    opacity: 0.25,
+    top: '30%',
+    left: '25%',
+    width: '50%',
+    opacity: 0.45,
   },
   // Cocarde - top right area
   cocardeImage: {
@@ -261,12 +261,12 @@ const styles = StyleSheet.create({
   // Watermark at bottom
   watermark: {
     position: 'absolute',
-    bottom: '2%',
+    bottom: '4%',
     width: '100%',
     textAlign: 'center',
     color: '#1c56d3',
     fontFamily: 'Questrial',
-    fontSize: 7,
+    fontSize: 9,
   },
   watermarkBold: {
     fontWeight: 600,
@@ -275,6 +275,12 @@ const styles = StyleSheet.create({
 
 // Re-export CertificateData for backward compatibility
 export type { CertificateData } from '@/types/certificate';
+
+// Helper: @react-pdf/renderer only supports PNG and JPEG, not WebP
+const isValidPdfImageFormat = (url: string | null | undefined): boolean => {
+  if (!url) return false;
+  return /\.(png|jpe?g)(\?.*)?$/i.test(url);
+};
 
 interface CertificatePDFDocumentProps {
   data: CertificateData;
@@ -318,10 +324,10 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
           {data.eventStartTime} à {data.eventEndTime} au {data.eventLocation}.
         </Text>
         
-        {/* Organization logo - center */}
+        {/* Organization logo - center (only PNG/JPEG supported by react-pdf) */}
         <View style={styles.orgLogoContainer}>
-          {data.organizationLogoUrl ? (
-            <Image src={data.organizationLogoUrl} style={styles.orgLogo} />
+          {isValidPdfImageFormat(data.organizationLogoUrl) ? (
+            <Image src={data.organizationLogoUrl!} style={styles.orgLogo} />
           ) : (
             <View style={styles.orgLogoPlaceholder}>
               <Text style={styles.orgLogoText}>
