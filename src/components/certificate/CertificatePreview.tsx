@@ -13,54 +13,10 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
   ({ data }, ref) => {
     const isMobile = useIsMobile();
     
-    // Centralized sizing - percentages relative to container width (890px base)
-    // These are fixed values that won't change based on viewport, ensuring
-    // consistent rendering between screen display and PDF capture
-    const sizing = isMobile ? {
-      // Borders
-      outerBorder: 2,
-      innerInset: 4,
-      innerBorder: 1,
-      // Logo & fonts (in px, calculated from container)
-      logoHeight: 22,
-      titleFontSize: 16,
-      attributeFontSize: 8,
-      nameFontSize: 20,
-      bodyFontSize: 7,
-      footerFontSize: 7,
-      watermarkFontSize: 5,
-      validatorRoleFontSize: 6,
-      // Organization logo
-      orgLogoSize: 45,
-      orgLogoTop: '70%',
-      orgLogoFontSize: 12,
-      // Decorative line
-      lineTop: '48%',
-      lineWidth: '48%',
-      lineHeight: 1.5,
-    } : {
-      // Borders
-      outerBorder: 3,
-      innerInset: 7,
-      innerBorder: 2,
-      // Logo & fonts
-      logoHeight: 39,
-      titleFontSize: 30,
-      attributeFontSize: 15,
-      nameFontSize: 40,
-      bodyFontSize: 12,
-      footerFontSize: 12,
-      watermarkFontSize: 8,
-      validatorRoleFontSize: 11,
-      // Organization logo
-      orgLogoSize: 118,
-      orgLogoTop: '67%',
-      orgLogoFontSize: 24,
-      // Decorative line
-      lineTop: '46.5%',
-      lineWidth: '52.8%',
-      lineHeight: 2,
-    };
+    // Mobile-specific adjustments
+    const outerBorderWidth = isMobile ? '2px' : '3px';
+    const innerBorderInset = isMobile ? '4px' : '7px';
+    const innerBorderWidth = isMobile ? '1px' : '2px';
     
     return (
       <article 
@@ -69,18 +25,18 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         style={{ 
           aspectRatio: '890/501',
           fontFamily: 'Questrial, sans-serif',
-          borderWidth: sizing.outerBorder
+          borderWidth: outerBorderWidth
         }}
       >
         {/* Inner golden border */}
         <div 
           className="absolute rounded-[3px] border-solid border-[#D79806] pointer-events-none z-10"
           style={{
-            top: sizing.innerInset,
-            left: sizing.innerInset,
-            right: sizing.innerInset,
-            bottom: sizing.innerInset,
-            borderWidth: sizing.innerBorder
+            top: innerBorderInset,
+            left: innerBorderInset,
+            right: innerBorderInset,
+            bottom: innerBorderInset,
+            borderWidth: innerBorderWidth
           }}
         />
 
@@ -109,7 +65,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             src={logo} 
             alt="Citizen Vitae" 
             className="h-auto w-auto object-contain"
-            style={{ height: sizing.logoHeight }}
+            style={{ height: 'clamp(18px, 4.4vw, 39px)' }}
           />
         </div>
 
@@ -120,7 +76,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             fontFamily: 'Questrial, sans-serif',
             WebkitTextStroke: '0.5px #000000',
             fontWeight: 500,
-            fontSize: sizing.titleFontSize
+            fontSize: 'clamp(14px, 3.4vw, 30px)'
           }}
         >
           Certificat d'action citoyenne
@@ -132,7 +88,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
           style={{ 
             fontFamily: 'Questrial, sans-serif', 
             fontWeight: 500,
-            fontSize: sizing.attributeFontSize
+            fontSize: 'clamp(7px, 1.7vw, 15px)'
           }}
         >
           Attribué à
@@ -144,7 +100,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
           style={{ 
             fontFamily: '"EB Garamond", "Times New Roman", serif', 
             fontWeight: 700,
-            fontSize: sizing.nameFontSize
+            fontSize: 'clamp(18px, 4.5vw, 40px)'
           }}
         >
           {data.firstName} {data.lastName}
@@ -154,9 +110,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         <div 
           className="absolute left-1/2 -translate-x-1/2 bg-[#D79806] z-20"
           style={{
-            top: sizing.lineTop,
-            width: sizing.lineWidth,
-            height: sizing.lineHeight
+            top: isMobile ? '48%' : '46.5%',
+            width: isMobile ? '48%' : '52.8%',
+            height: isMobile ? '1.5px' : '2px'
           }}
         />
 
@@ -166,7 +122,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
           style={{ 
             fontFamily: 'Questrial, sans-serif', 
             fontWeight: 500,
-            fontSize: sizing.bodyFontSize
+            fontSize: 'clamp(6px, 1.35vw, 12px)'
           }}
         >
           Né(e) le {data.dateOfBirth}, en reconnaissance de sa participation à l'évènement
@@ -184,7 +140,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             style={{ 
               fontFamily: 'Questrial, sans-serif', 
               fontWeight: 500,
-              fontSize: sizing.footerFontSize
+              fontSize: 'clamp(6px, 1.35vw, 12px)'
             }}
           >
             Date
@@ -194,7 +150,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             style={{ 
               fontFamily: 'Questrial, sans-serif', 
               fontWeight: 500,
-              fontSize: sizing.footerFontSize
+              fontSize: 'clamp(6px, 1.35vw, 12px)'
             }}
           >
             {data.eventDate}
@@ -205,9 +161,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         <div 
           className="absolute left-1/2 -translate-x-1/2 z-20"
           style={{ 
-            top: sizing.orgLogoTop,
-            width: sizing.orgLogoSize, 
-            height: sizing.orgLogoSize 
+            top: isMobile ? '70%' : '67%',
+            width: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)', 
+            height: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)' 
           }}
         >
           {data.organizationLogoUrl ? (
@@ -221,7 +177,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               className="w-full h-full rounded-full bg-[#012573] flex items-center justify-center text-white font-bold"
               style={{ 
                 fontFamily: 'Questrial, sans-serif',
-                fontSize: sizing.orgLogoFontSize
+                fontSize: isMobile ? 'clamp(10px, 2vw, 18px)' : 'clamp(12px, 2.7vw, 24px)'
               }}
             >
               {data.organizationName.charAt(0)}
@@ -236,7 +192,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             style={{ 
               fontFamily: 'Questrial, sans-serif', 
               fontWeight: 500,
-              fontSize: sizing.footerFontSize
+              fontSize: 'clamp(6px, 1.35vw, 12px)'
             }}
           >
             Signataire
@@ -245,7 +201,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             className="text-[#012573] font-semibold mt-1"
             style={{ 
               fontFamily: 'Inter, sans-serif',
-              fontSize: sizing.footerFontSize
+              fontSize: 'clamp(6px, 1.35vw, 12px)'
             }}
           >
             {data.validatorName}
@@ -256,7 +212,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               style={{ 
                 fontFamily: 'Inter, sans-serif', 
                 fontWeight: 600,
-                fontSize: sizing.validatorRoleFontSize
+                fontSize: 'clamp(5px, 1.2vw, 11px)'
               }}
             >
               {data.validatorRole}
@@ -269,7 +225,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
           className="absolute top-[92.6%] left-1/2 -translate-x-1/2 text-[#1c56d3] whitespace-nowrap z-20"
           style={{ 
             fontFamily: 'Inter, sans-serif',
-            fontSize: sizing.watermarkFontSize
+            fontSize: 'clamp(4px, 0.9vw, 8px)'
           }}
         >
           <span className="font-semibold">Sécurisé par Citizen Vitae</span>
