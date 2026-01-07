@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
+import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2, Pencil, X, Check, Camera } from 'lucide-react';
@@ -25,6 +26,8 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Don't render until profile is loaded to prevent flash
@@ -107,15 +110,31 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
       return;
     }
 
+    // Create object URL and open crop dialog
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageSrc(imageUrl);
+    setCropDialogOpen(true);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!user?.id) return;
+
     setIsUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      const fileName = `${user.id}/avatar.jpg`;
 
-      // Upload to storage
+      // Upload cropped image to storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, croppedBlob, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
       if (uploadError) throw uploadError;
 
@@ -139,6 +158,11 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
       toast.error('Erreur lors du téléchargement de la photo');
     } finally {
       setIsUploadingAvatar(false);
+      // Clean up object URL
+      if (selectedImageSrc) {
+        URL.revokeObjectURL(selectedImageSrc);
+        setSelectedImageSrc(null);
+      }
     }
   };
 
@@ -215,6 +239,23 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
             className="hidden"
           />
         </div>
+
+        {/* Crop Dialog */}
+        {selectedImageSrc && (
+          <ImageCropDialog
+            open={cropDialogOpen}
+            onOpenChange={(open) => {
+              setCropDialogOpen(open);
+              if (!open && selectedImageSrc) {
+                URL.revokeObjectURL(selectedImageSrc);
+                setSelectedImageSrc(null);
+              }
+            }}
+            imageSrc={selectedImageSrc}
+            onCropComplete={handleCropComplete}
+            aspectRatio={1}
+          />
+        )}
 
         {/* Info */}
         <div className="mt-4 w-full max-w-md">
