@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { CertificateData } from '@/types/certificate';
+import { useIsMobile } from '@/hooks/use-mobile';
 import logo from '@/assets/logo.png';
 import laurelSvg from '@/assets/certificate-laurel.svg';
 import cocardeSvg from '@/assets/certificate-cocarde.svg';
@@ -10,17 +11,34 @@ interface CertificatePreviewProps {
 
 export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewProps>(
   ({ data }, ref) => {
+    const isMobile = useIsMobile();
+    
+    // Mobile-specific adjustments
+    const outerBorderWidth = isMobile ? '2px' : '3px';
+    const innerBorderInset = isMobile ? '4px' : '7px';
+    const innerBorderWidth = isMobile ? '1px' : '2px';
+    
     return (
       <article 
         ref={ref}
-        className="relative bg-white overflow-hidden w-full border-[3px] border-solid border-[#3c2c00]"
+        className="relative bg-white overflow-hidden w-full border-solid border-[#3c2c00]"
         style={{ 
           aspectRatio: '890/501',
-          fontFamily: 'Questrial, sans-serif'
+          fontFamily: 'Questrial, sans-serif',
+          borderWidth: outerBorderWidth
         }}
       >
         {/* Inner golden border */}
-        <div className="absolute top-[7px] left-[7px] right-[7px] bottom-[7px] rounded-[3px] border-2 border-solid border-[#D79806] pointer-events-none z-10" />
+        <div 
+          className="absolute rounded-[3px] border-solid border-[#D79806] pointer-events-none z-10"
+          style={{
+            top: innerBorderInset,
+            left: innerBorderInset,
+            right: innerBorderInset,
+            bottom: innerBorderInset,
+            borderWidth: innerBorderWidth
+          }}
+        />
 
         {/* Footer background */}
         <div className="absolute bottom-0 left-0 right-0 h-[24.5%] bg-[#FAF7EF]" />
@@ -136,8 +154,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         <div 
           className="absolute top-[67%] left-1/2 -translate-x-1/2 z-20"
           style={{ 
-            width: 'clamp(50px, 13.3vw, 118px)', 
-            height: 'clamp(50px, 13.3vw, 118px)' 
+            width: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)', 
+            height: isMobile ? 'clamp(35px, 10vw, 70px)' : 'clamp(50px, 13.3vw, 118px)' 
           }}
         >
           {data.organizationLogoUrl ? (
@@ -151,7 +169,7 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
               className="w-full h-full rounded-full bg-[#012573] flex items-center justify-center text-white font-bold"
               style={{ 
                 fontFamily: 'Questrial, sans-serif',
-                fontSize: 'clamp(12px, 2.7vw, 24px)'
+                fontSize: isMobile ? 'clamp(10px, 2vw, 18px)' : 'clamp(12px, 2.7vw, 24px)'
               }}
             >
               {data.organizationName.charAt(0)}
