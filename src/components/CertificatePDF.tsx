@@ -10,30 +10,22 @@ if (typeof globalThis !== 'undefined') {
 import { Document, Page, Text, View, StyleSheet, Image, Font, pdf } from '@react-pdf/renderer';
 import { CertificateData } from '@/types/certificate';
 
-// Register fonts
+// Register fonts (servies localement depuis /public/fonts pour éviter les soucis CORS/format)
 Font.register({
   family: 'Questrial',
-  src: 'https://fonts.gstatic.com/s/questrial/v18/QdVUSTchPBm7nuUeVf7EuStkm20oJA.ttf',
+  src: '/fonts/questrial-regular.ttf',
 });
 
 Font.register({
   family: 'EBGaramond',
   fonts: [
-    { 
-      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RUA4V-e6yHgQ.ttf', 
-      fontWeight: 400 
+    {
+      src: '/fonts/eb-garamond-400.ttf',
+      fontWeight: 400,
     },
-    { 
-      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-2fRUA4V-e6yHgQ.ttf', 
-      fontWeight: 500 
-    },
-    { 
-      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-NfNUA4V-e6yHgQ.ttf', 
-      fontWeight: 600 
-    },
-    { 
-      src: 'https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-AfNUA4V-e6yHgQ.ttf', 
-      fontWeight: 700 
+    {
+      src: '/fonts/eb-garamond-600.ttf',
+      fontWeight: 600,
     },
   ],
 });
@@ -149,7 +141,7 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     fontSize: 14,
   },
-  // Recipient name (EB Garamond Bold)
+  // Recipient name (EB Garamond)
   recipientName: {
     position: 'absolute',
     top: '35%',
@@ -157,7 +149,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#012573',
     fontFamily: 'EBGaramond',
-    fontWeight: 700,
+    fontWeight: 600,
     fontSize: 36,
   },
   // Horizontal golden line
@@ -328,7 +320,7 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
         
         {/* Organization logo - center */}
         <View style={styles.orgLogoContainer}>
-          {data.organizationLogoUrl ? (
+          {data.organizationLogoUrl && /\.(png|jpe?g)(\?.*)?$/i.test(data.organizationLogoUrl) ? (
             <Image src={data.organizationLogoUrl} style={styles.orgLogo} />
           ) : (
             <View style={styles.orgLogoPlaceholder}>
@@ -351,9 +343,9 @@ export const CertificatePDFDocument = ({ data }: CertificatePDFDocumentProps) =>
           <View style={styles.validatorColumn}>
             <Text style={styles.validatorLabel}>Signataire</Text>
             <Text style={styles.validatorName}>{data.validatorName}</Text>
-            {data.validatorRole && (
+            {!!data.validatorRole ? (
               <Text style={styles.validatorRole}>{data.validatorRole}</Text>
-            )}
+            ) : null}
           </View>
         </View>
         
