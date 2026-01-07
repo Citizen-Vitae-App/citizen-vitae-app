@@ -22,7 +22,7 @@ export const downloadCertificateAsImage = async (
   const pdfWidth = 297;
   const pdfHeight = 210;
 
-  // Calculate scaling to fit the certificate in the PDF - NO margins for edge-to-edge
+  // Calculate scaling to fit the certificate in the PDF
   const aspectRatio = imgWidth / imgHeight;
   const pdfAspectRatio = pdfWidth / pdfHeight;
 
@@ -32,17 +32,17 @@ export const downloadCertificateAsImage = async (
   let offsetY: number;
 
   if (aspectRatio > pdfAspectRatio) {
-    // Image is wider, fit to width - full width, no margins
-    finalWidth = pdfWidth;
+    // Image is wider, fit to width
+    finalWidth = pdfWidth - 20; // 10mm margin on each side
     finalHeight = finalWidth / aspectRatio;
-    offsetX = 0;
+    offsetX = 10;
     offsetY = (pdfHeight - finalHeight) / 2;
   } else {
-    // Image is taller, fit to height - full height, no margins
-    finalHeight = pdfHeight;
+    // Image is taller, fit to height
+    finalHeight = pdfHeight - 20; // 10mm margin on top and bottom
     finalWidth = finalHeight * aspectRatio;
     offsetX = (pdfWidth - finalWidth) / 2;
-    offsetY = 0;
+    offsetY = 10;
   }
 
   // Create PDF in landscape A4
