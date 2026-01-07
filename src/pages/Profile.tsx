@@ -46,9 +46,9 @@ export default function Profile() {
       <div className="min-h-screen bg-background">
         
 
-        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
-          {/* Settings button - fixed top right */}
-          <div className="flex justify-end mb-2">
+        <main className="container mx-auto px-4 pt-20 pb-24 max-w-2xl">
+          {/* Settings button */}
+          <div className="flex justify-end mb-1">
             <Link to="/settings">
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                 <Settings className="h-4 w-4" />
