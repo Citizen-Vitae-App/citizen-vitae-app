@@ -18,6 +18,15 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
     const innerBorderInset = isMobile ? '4px' : '7px';
     const innerBorderWidth = isMobile ? '1px' : '2px';
     
+    // Mobile text and element sizing
+    const logoHeight = isMobile ? 'clamp(14px, 3.5vw, 30px)' : 'clamp(18px, 4.4vw, 39px)';
+    const titleFontSize = isMobile ? 'clamp(11px, 2.8vw, 24px)' : 'clamp(14px, 3.4vw, 30px)';
+    const titleTop = isMobile ? '17%' : '19.6%';
+    const nameFontSize = isMobile ? 'clamp(14px, 3.8vw, 32px)' : 'clamp(18px, 4.5vw, 40px)';
+    const nameTop = isMobile ? '32%' : '35%';
+    const lineTop = isMobile ? '44%' : '46.5%';
+    const lineHeight = isMobile ? '1px' : '2px';
+    
     return (
       <article 
         ref={ref}
@@ -65,18 +74,19 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
             src={logo} 
             alt="Citizen Vitae" 
             className="h-auto w-auto object-contain"
-            style={{ height: 'clamp(18px, 4.4vw, 39px)' }}
+            style={{ height: logoHeight }}
           />
         </div>
 
         {/* Title */}
         <h1 
-          className="absolute top-[19.6%] left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
+          className="absolute left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
           style={{ 
+            top: titleTop,
             fontFamily: 'Questrial, sans-serif',
             WebkitTextStroke: '0.5px #000000',
             fontWeight: 500,
-            fontSize: 'clamp(14px, 3.4vw, 30px)'
+            fontSize: titleFontSize
           }}
         >
           Certificat d'action citoyenne
@@ -96,11 +106,12 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
 
         {/* Recipient name */}
         <h2 
-          className="absolute top-[35%] left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
+          className="absolute left-1/2 -translate-x-1/2 text-[#012573] text-center whitespace-nowrap z-20"
           style={{ 
+            top: nameTop,
             fontFamily: '"EB Garamond", "Times New Roman", serif', 
             fontWeight: 700,
-            fontSize: 'clamp(18px, 4.5vw, 40px)'
+            fontSize: nameFontSize
           }}
         >
           {data.firstName} {data.lastName}
@@ -110,9 +121,9 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
         <div 
           className="absolute left-1/2 -translate-x-1/2 bg-[#D79806] z-20"
           style={{
-            top: isMobile ? '48%' : '46.5%',
+            top: lineTop,
             width: isMobile ? '48%' : '52.8%',
-            height: isMobile ? '1.5px' : '2px'
+            height: lineHeight
           }}
         />
 
