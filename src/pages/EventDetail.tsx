@@ -244,7 +244,7 @@ const EventDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Event Title */}
             <div>
-              <h1 className="lg:text-4xl text-foreground mb-4 text-xl font-semibold">
+              <h1 className="lg:text-4xl text-foreground mb-4 font-semibold text-center text-2xl">
                 {event.name}
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -271,8 +271,8 @@ const EventDetail = () => {
             {event.description && <div>
                 <h2 className="text-foreground mb-4 text-lg font-medium">À propos de l'événement</h2>
                 <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0" dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(event.description)
-            }} />
+                __html: sanitizeHtml(event.description)
+              }} />
               </div>}
           </div>
 
