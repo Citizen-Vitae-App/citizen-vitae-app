@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, CheckCircle } from 'lucide-react';
+import { Calendar, CheckCircle } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
 import { MissionCertificationButton } from '@/components/MissionCertificationButton';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
@@ -219,14 +219,10 @@ const MyMissions = () => {
       </h2>
     </div>;
   return <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4">
-          
-        </div>
-      </nav>
+      {/* Navigation - Desktop only */}
+      <MainNavbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-6 md:pt-8 pb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
 
         <Tabs defaultValue={defaultTab} className="w-full">

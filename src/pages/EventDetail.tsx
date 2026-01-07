@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import EventMap from '@/components/EventMap';
 import mapMarkerIcon from '@/assets/map-marker.svg';
-import logo from '@/assets/logo.png';
+import { MainNavbar } from '@/components/MainNavbar';
 import defaultCover from '@/assets/default-event-cover.jpg';
 import { useEventRegistration } from '@/hooks/useEventRegistration';
 import { useAuth } from '@/hooks/useAuth';
@@ -208,18 +208,8 @@ const EventDetail = () => {
       </Button>;
   };
   return <div className="min-h-screen bg-background pb-24 lg:pb-0">
-      {/* Navigation - Desktop only shows logo/notifications, Mobile shows back button only */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border lg:block hidden">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3">
-              
-              <img src={logo} alt="CitizenVitae" className="h-8" />
-            </Link>
-            {user && <NotificationDropdown />}
-          </div>
-        </div>
-      </nav>
+      {/* Navigation - Desktop only */}
+      <MainNavbar />
 
       {/* Cover Image - Full width on mobile, with padding on desktop */}
       <div className="lg:container lg:mx-auto lg:px-4 lg:py-6">
