@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
@@ -72,8 +72,8 @@ export default function Settings() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto px-4 pt-24 pb-16 max-w-2xl">
+        <MainNavbar />
+        <main className="container mx-auto px-4 pt-6 md:pt-8 pb-16 max-w-2xl">
           <Skeleton className="h-8 w-48 mb-8" />
           <div className="space-y-6">
             <Skeleton className="h-24 w-full" />
@@ -87,9 +87,9 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <MainNavbar />
       
-      <main className="container mx-auto px-4 pt-24 pb-16 max-w-2xl">
+      <main className="container mx-auto px-4 pt-6 md:pt-8 pb-16 max-w-2xl">
         <h1 className="text-2xl font-bold mb-8">Paramètres</h1>
 
         {/* Identity Verification Section */}

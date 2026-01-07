@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ArrowLeft } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
+import { Heart } from 'lucide-react';
+import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import EventCard from '@/components/EventCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +9,6 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import logo from '@/assets/logo.png';
 import defaultCover from '@/assets/default-event-cover.jpg';
 import { generateShortTitle } from '@/lib/utils';
 
@@ -72,19 +71,10 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
-              <img src={logo} alt="CitizenVitae" className="h-8" />
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Navigation - Desktop only */}
+      <MainNavbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-6 md:pt-8 pb-8">
         <div className="flex items-center gap-3 mb-8">
           <Heart className="h-6 w-6 text-destructive fill-destructive" />
           <h1 className="text-2xl font-bold text-foreground">Mes favoris</h1>

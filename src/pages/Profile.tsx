@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
+import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { OrganizationsSection } from '@/components/profile/OrganizationsSection';
@@ -25,8 +25,8 @@ export default function Profile() {
   } = useUserProfile();
   if (isLoading) {
     return <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto px-4 pt-24 pb-24 max-w-2xl">
+        <MainNavbar />
+        <main className="container mx-auto px-4 pt-6 md:pt-8 pb-24 max-w-2xl">
           <div className="space-y-6">
             <Skeleton className="h-40 w-full rounded-2xl" />
             <Skeleton className="h-32 w-full rounded-xl" />
@@ -44,9 +44,9 @@ export default function Profile() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        
+        <MainNavbar />
 
-        <main className="container mx-auto px-4 pt-6 md:pt-24 pb-24 max-w-2xl">
+        <main className="container mx-auto px-4 pt-6 md:pt-8 pb-24 max-w-2xl">
           {/* Settings button */}
           <div className="flex justify-end mb-1">
             <Link to="/settings">
