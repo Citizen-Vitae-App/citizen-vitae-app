@@ -1,3 +1,10 @@
+// 1. IMPORT ET POLYFILL DU BUFFER (CRUCIAL POUR LES FONTS)
+import { Buffer } from 'buffer';
+if (typeof window !== 'undefined') {
+  window.Buffer = window.Buffer || Buffer;
+}
+
+// 2. Imports normaux
 import { Document, Page, Text, View, StyleSheet, Image, Font, pdf } from '@react-pdf/renderer';
 import { CertificateData } from '@/types/certificate';
 
