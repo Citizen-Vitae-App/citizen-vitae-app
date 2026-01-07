@@ -47,8 +47,8 @@ export default function Profile() {
         <MainNavbar />
 
         <main className="container mx-auto px-4 pt-6 md:pt-8 pb-24 max-w-2xl">
-          {/* Settings button */}
-          <div className="flex justify-end mb-1">
+          {/* Settings button - mobile only */}
+          <div className="flex justify-end mb-1 md:hidden">
             <Link to="/settings">
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                 <Settings className="h-4 w-4" />
