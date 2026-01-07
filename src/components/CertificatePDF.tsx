@@ -1,7 +1,9 @@
 // 1. IMPORT ET POLYFILL DU BUFFER (CRUCIAL POUR LES FONTS)
 import { Buffer } from 'buffer';
-if (typeof window !== 'undefined') {
-  window.Buffer = window.Buffer || Buffer;
+
+// react-pdf s'attend à Buffer (Node). Sous Vite navigateur, on le polyfill via globalThis.
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any).Buffer = (globalThis as any).Buffer || Buffer;
 }
 
 // 2. Imports normaux
@@ -36,19 +38,9 @@ Font.register({
   ],
 });
 
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { 
-      src: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff', 
-      fontWeight: 400 
-    },
-    { 
-      src: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZ9hjp-Ek-_EeA.woff', 
-      fontWeight: 600 
-    },
-  ],
-});
+// NOTE: @react-pdf/renderer ne supporte pas les polices web (woff/woff2).
+// On évite donc d'enregistrer Inter en .woff (cause typique de "Unknown font format").
+// Les styles qui utilisaient Inter basculent sur Questrial plus bas.
 
 // Page dimensions for A4 landscape in points (1pt = 1/72 inch)
 const PAGE_WIDTH = 842;
@@ -261,7 +253,7 @@ const styles = StyleSheet.create({
   },
   validatorName: {
     color: '#012573',
-    fontFamily: 'Inter',
+    fontFamily: 'Questrial',
     fontWeight: 600,
     fontSize: 11,
     marginTop: 4,
@@ -269,7 +261,7 @@ const styles = StyleSheet.create({
   },
   validatorRole: {
     color: '#012573',
-    fontFamily: 'Inter',
+    fontFamily: 'Questrial',
     fontWeight: 600,
     fontSize: 10,
     textAlign: 'right',
@@ -281,7 +273,7 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'center',
     color: '#1c56d3',
-    fontFamily: 'Inter',
+    fontFamily: 'Questrial',
     fontSize: 7,
   },
   watermarkBold: {

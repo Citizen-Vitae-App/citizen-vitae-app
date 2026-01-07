@@ -4,9 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  server: {
-    port: 8080,
-  },
+  // NOTE: on laisse la plateforme (Lovable) gérer host/port (WebSocket stable)
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
