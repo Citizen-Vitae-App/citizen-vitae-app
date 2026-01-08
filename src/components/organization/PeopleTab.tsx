@@ -6,57 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { 
-  Users, 
-  Award, 
-  Search, 
-  UserPlus, 
-  MoreVertical, 
-  Eye, 
-  Mail,
-  ArrowUp,
-  ArrowDown,
-  Filter,
-  Info,
-  TrendingUp,
-  CalendarIcon,
-  RefreshCw,
-  Clock,
-  ChevronUp,
-  ChevronDown,
-  Trash2
-} from 'lucide-react';
+import { Users, Award, Search, UserPlus, MoreVertical, Eye, Mail, ArrowUp, ArrowDown, Filter, Info, TrendingUp, CalendarIcon, RefreshCw, Clock, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContributorProfilePanel } from './ContributorProfilePanel';
 import { InviteContributorsDialog } from './InviteContributorsDialog';
 import { ContributorContactDialog } from './ContributorContactDialog';
 import { toast } from 'sonner';
-
 interface Participant {
   user_id: string;
   first_name: string | null;
@@ -72,7 +35,6 @@ interface Participant {
   is_pending_invitation?: boolean;
   invitation_id?: string;
 }
-
 interface Filters {
   statuses: string[];
   missionsOperator: 'gte' | 'lte' | 'eq' | null;
@@ -82,10 +44,8 @@ interface Filters {
   dateOperator: 'before' | 'after' | null;
   dateValue: Date | null;
 }
-
 type SortField = 'name' | 'email' | 'status' | 'missions' | 'certificates' | 'lastParticipation' | null;
 type SortDirection = 'asc' | 'desc';
-
 const getStatusBadge = (status: string, isPending?: boolean) => {
   if (isPending) {
     return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 whitespace-nowrap">En attente</Badge>;
@@ -105,14 +65,16 @@ const getStatusBadge = (status: string, isPending?: boolean) => {
       return <Badge variant="outline">{status}</Badge>;
   }
 };
-
 interface PeopleTabProps {
   userTeamId?: string | null;
   isLeader?: boolean;
   isMember?: boolean;
 }
-
-export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: PeopleTabProps) {
+export function PeopleTab({
+  userTeamId,
+  isLeader = false,
+  isMember = false
+}: PeopleTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({
     statuses: [],
@@ -121,7 +83,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
     certificatesOperator: null,
     certificatesValue: null,
     dateOperator: null,
-    dateValue: null,
+    dateValue: null
   });
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -130,76 +92,72 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [contactContributor, setContactContributor] = useState<Participant | null>(null);
-  
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-
-  const { data: organizationData } = useQuery({
+  const {
+    data: organizationData
+  } = useQuery({
     queryKey: ['user-organization'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      
-      const { data: membership } = await supabase
-        .from('organization_members')
-        .select('organization_id, organizations(id, name)')
-        .eq('user_id', user.id)
-        .single();
-      
+      const {
+        data: membership
+      } = await supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', user.id).single();
       return {
         organization: membership?.organizations || null,
-        userId: user.id,
+        userId: user.id
       };
     }
   });
-
   const organization = organizationData?.organization;
   const currentUserId = organizationData?.userId;
 
   // Fetch pending invitations (filtered by team for leaders/members)
-  const { data: pendingInvitations } = useQuery({
+  const {
+    data: pendingInvitations
+  } = useQuery({
     queryKey: ['organization-invitations', organization?.id, userTeamId, isLeader, isMember],
     queryFn: async () => {
       if (!organization?.id) return [];
-      
-      let query = supabase
-        .from('organization_invitations')
-        .select('*')
-        .eq('organization_id', organization.id)
-        .eq('status', 'pending')
-        .eq('invitation_type', 'contributor');
-      
+      let query = supabase.from('organization_invitations').select('*').eq('organization_id', organization.id).eq('status', 'pending').eq('invitation_type', 'contributor');
+
       // Leaders and members only see invitations for their team
       if ((isLeader || isMember) && userTeamId) {
         query = query.eq('team_id', userTeamId);
       }
-      
-      const { data, error } = await query;
-      
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
       return data || [];
     },
     enabled: !!organization?.id
   });
-
-  const { data: participants, isLoading } = useQuery({
+  const {
+    data: participants,
+    isLoading
+  } = useQuery({
     queryKey: ['organization-participants-detailed', userTeamId, isLeader, isMember],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      
-      const { data: membership } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
-      
+      const {
+        data: membership
+      } = await supabase.from('organization_members').select('organization_id').eq('user_id', user.id).single();
       if (!membership) throw new Error('No organization found');
 
       // Build query with team filter for leaders/members
-      let query = supabase
-        .from('event_registrations')
-        .select(`
+      let query = supabase.from('event_registrations').select(`
           user_id,
           status,
           registered_at,
@@ -215,28 +173,26 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
             team_id,
             teams(name)
           )
-        `)
-        .eq('events.organization_id', membership.organization_id)
-        .order('registered_at', { ascending: false });
-      
+        `).eq('events.organization_id', membership.organization_id).order('registered_at', {
+        ascending: false
+      });
+
       // Leaders and members only see participants from their team's events
       if ((isLeader || isMember) && userTeamId) {
         query = query.eq('events.team_id', userTeamId);
       }
-      
-      const { data, error } = await query;
-      
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
-
       const userMap = new Map<string, Participant>();
-      
       data?.forEach((registration: any) => {
         const userId = registration.user_id;
         const profile = registration.profiles;
         const hasAttended = registration.attended_at !== null;
         const event = registration.events;
         const teamName = event?.teams?.name || null;
-        
         if (userMap.has(userId)) {
           const existing = userMap.get(userId)!;
           existing.event_count += 1;
@@ -263,11 +219,10 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
             last_participation: registration.registered_at,
             last_status: registration.status,
             first_registered_at: registration.registered_at,
-            team_name: teamName,
+            team_name: teamName
           });
         }
       });
-      
       return Array.from(userMap.values());
     }
   });
@@ -275,7 +230,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   // Combine participants and pending invitations
   const allContributors = useMemo(() => {
     const contributors: Participant[] = [...(participants || [])];
-    
+
     // Add pending invitations as contributors
     pendingInvitations?.forEach(invitation => {
       // Check if email is not already in participants
@@ -294,34 +249,35 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
           first_registered_at: invitation.created_at,
           team_name: null,
           is_pending_invitation: true,
-          invitation_id: invitation.id,
+          invitation_id: invitation.id
         });
       }
     });
-    
     return contributors;
   }, [participants, pendingInvitations]);
 
   // Resend invitation mutation
   const resendInvitation = useMutation({
     mutationFn: async (email: string) => {
-      const { data, error } = await supabase.functions.invoke('send-invitation', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('send-invitation', {
         body: {
           emails: [email],
           organizationName: organization?.name || 'Votre organisation',
           organizationId: organization?.id,
           invitedBy: currentUserId,
-          baseUrl: window.location.origin,
+          baseUrl: window.location.origin
         }
       });
-      
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       toast.success('Invitation renvoyée avec succès');
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error resending invitation:', error);
       toast.error('Erreur lors du renvoi de l\'invitation');
     }
@@ -330,58 +286,61 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   // Cancel invitation mutation
   const cancelInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
-      const { error } = await supabase
-        .from('organization_invitations')
-        .delete()
-        .eq('id', invitationId);
-      
+      const {
+        error
+      } = await supabase.from('organization_invitations').delete().eq('id', invitationId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      queryClient.invalidateQueries({
+        queryKey: ['organization-invitations']
+      });
       toast.success('Invitation retirée');
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error canceling invitation:', error);
       toast.error('Erreur lors de la suppression de l\'invitation');
     }
   });
-
   const handleCancelInvitation = (invitationId: string) => {
     cancelInvitation.mutate(invitationId);
   };
 
   // Calculate KPIs
   const kpis = useMemo(() => {
-    if (!participants) return { total: 0, engagementRate: 0, newThisMonth: 0, growthPercent: null, pendingCount: 0 };
-    
+    if (!participants) return {
+      total: 0,
+      engagementRate: 0,
+      newThisMonth: 0,
+      growthPercent: null,
+      pendingCount: 0
+    };
     const total = participants.length;
     const pendingCount = pendingInvitations?.length || 0;
     const totalMissions = participants.reduce((sum, p) => sum + p.event_count, 0);
     const totalScanned = participants.reduce((sum, p) => sum + p.tickets_scanned, 0);
-    const engagementRate = totalMissions > 0 ? Math.round((totalScanned / totalMissions) * 100) : 0;
-    
+    const engagementRate = totalMissions > 0 ? Math.round(totalScanned / totalMissions * 100) : 0;
     const now = new Date();
     const thisMonthStart = startOfMonth(now);
     const thisMonthEnd = endOfMonth(now);
     const lastMonthStart = startOfMonth(subMonths(now, 1));
     const lastMonthEnd = endOfMonth(subMonths(now, 1));
-    
     const newThisMonth = participants.filter(p => {
       const date = new Date(p.first_registered_at);
       return date >= thisMonthStart && date <= thisMonthEnd;
     }).length;
-    
     const newLastMonth = participants.filter(p => {
       const date = new Date(p.first_registered_at);
       return date >= lastMonthStart && date <= lastMonthEnd;
     }).length;
-    
-    const growthPercent = newLastMonth > 0 
-      ? Math.round(((newThisMonth - newLastMonth) / newLastMonth) * 100)
-      : newThisMonth > 0 ? 100 : null;
-    
-    return { total, engagementRate, newThisMonth, growthPercent, pendingCount };
+    const growthPercent = newLastMonth > 0 ? Math.round((newThisMonth - newLastMonth) / newLastMonth * 100) : newThisMonth > 0 ? 100 : null;
+    return {
+      total,
+      engagementRate,
+      newThisMonth,
+      growthPercent,
+      pendingCount
+    };
   }, [participants, pendingInvitations]);
 
   // Get unique statuses
@@ -397,7 +356,6 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
   // Filter and sort contributors
   const filteredParticipants = useMemo(() => {
     if (!allContributors) return [];
-    
     let result = allContributors.filter(p => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -405,34 +363,27 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
         const email = (p.email || '').toLowerCase();
         if (!fullName.includes(query) && !email.includes(query)) return false;
       }
-      
       if (filters.statuses.length > 0 && !filters.statuses.includes(p.last_status)) return false;
-      
       if (filters.missionsOperator && filters.missionsValue !== null) {
         if (filters.missionsOperator === 'gte' && p.event_count < filters.missionsValue) return false;
         if (filters.missionsOperator === 'lte' && p.event_count > filters.missionsValue) return false;
         if (filters.missionsOperator === 'eq' && p.event_count !== filters.missionsValue) return false;
       }
-      
       if (filters.certificatesOperator && filters.certificatesValue !== null) {
         if (filters.certificatesOperator === 'gte' && p.tickets_scanned < filters.certificatesValue) return false;
         if (filters.certificatesOperator === 'lte' && p.tickets_scanned > filters.certificatesValue) return false;
         if (filters.certificatesOperator === 'eq' && p.tickets_scanned !== filters.certificatesValue) return false;
       }
-      
       if (filters.dateOperator && filters.dateValue) {
         const participationDate = new Date(p.last_participation);
         if (filters.dateOperator === 'before' && participationDate >= filters.dateValue) return false;
         if (filters.dateOperator === 'after' && participationDate <= filters.dateValue) return false;
       }
-      
       return true;
     });
-    
     if (sortField) {
       result = [...result].sort((a, b) => {
         let comparison = 0;
-        
         switch (sortField) {
           case 'name':
             const aName = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
@@ -455,14 +406,11 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
             comparison = new Date(a.last_participation).getTime() - new Date(b.last_participation).getTime();
             break;
         }
-        
         return sortDirection === 'asc' ? comparison : -comparison;
       });
     }
-    
     return result;
   }, [allContributors, searchQuery, filters, sortField, sortDirection]);
-
   const toggleSort = (field: SortField, direction?: SortDirection) => {
     if (direction) {
       setSortField(field);
@@ -474,7 +422,6 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
       setSortDirection('asc');
     }
   };
-
   const clearFilters = () => {
     setFilters({
       statuses: [],
@@ -483,92 +430,68 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
       certificatesOperator: null,
       certificatesValue: null,
       dateOperator: null,
-      dateValue: null,
+      dateValue: null
     });
   };
-
   const hasActiveFilters = filters.statuses.length > 0 || filters.missionsOperator !== null || filters.certificatesOperator !== null || filters.dateOperator !== null;
-
   const getInitials = (firstName: string | null, lastName: string | null) => {
     const first = firstName?.[0] || '';
     const last = lastName?.[0] || '';
     return `${first}${last}`.toUpperCase() || '?';
   };
-
   const handleViewProfile = (participant: Participant) => {
     if (participant.is_pending_invitation) return;
     setSelectedContributor(participant);
     setProfilePanelOpen(true);
   };
-
   const handleContact = (participant: Participant) => {
     if (participant.is_pending_invitation) return;
     setContactContributor(participant);
     setContactDialogOpen(true);
   };
-
   const handleResendInvitation = (email: string) => {
     resendInvitation.mutate(email);
   };
 
   // Simple sortable column header (name & email - no filter dropdown)
-  const SortableColumnHeader = ({ 
-    label, 
-    field, 
+  const SortableColumnHeader = ({
+    label,
+    field,
     className = ""
-  }: { 
-    label: string; 
+  }: {
+    label: string;
     field: SortField;
     className?: string;
   }) => {
     const isActive = sortField === field;
-
-    return (
-      <button 
-        onClick={() => toggleSort(field)}
-        className={`flex items-center gap-1 hover:text-foreground transition-colors ${className}`}
-      >
+    return <button onClick={() => toggleSort(field)} className={`flex items-center gap-1 hover:text-foreground transition-colors ${className}`}>
         <span className="whitespace-nowrap">{label}</span>
-        {isActive && (
-          sortDirection === 'asc' 
-            ? <ChevronUp className="h-4 w-4" />
-            : <ChevronDown className="h-4 w-4" />
-        )}
-      </button>
-    );
+        {isActive && (sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+      </button>;
   };
 
   // Column header with filter dropdown (shown on hover)
-  const ColumnHeaderWithFilter = ({ 
-    label, 
-    field, 
+  const ColumnHeaderWithFilter = ({
+    label,
+    field,
     filterType,
     icon,
     className = ""
-  }: { 
-    label: string; 
+  }: {
+    label: string;
     field: SortField;
     filterType?: 'status' | 'number' | 'date';
     icon?: React.ReactNode;
     className?: string;
   }) => {
     const isActive = sortField === field;
-    const hasFilter = filterType === 'status' ? filters.statuses.length > 0 :
-                     filterType === 'number' && field === 'missions' ? filters.missionsOperator !== null :
-                     filterType === 'number' && field === 'certificates' ? filters.certificatesOperator !== null :
-                     filterType === 'date' ? filters.dateOperator !== null : false;
-
-    return (
-      <div className={`flex items-center gap-1 group ${className}`}>
+    const hasFilter = filterType === 'status' ? filters.statuses.length > 0 : filterType === 'number' && field === 'missions' ? filters.missionsOperator !== null : filterType === 'number' && field === 'certificates' ? filters.certificatesOperator !== null : filterType === 'date' ? filters.dateOperator !== null : false;
+    return <div className={`flex items-center gap-1 group ${className}`}>
         {icon}
         <span className="whitespace-nowrap">{label}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={`h-5 w-5 ml-0.5 ${isActive || hasFilter ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
-            >
+            <Button variant="ghost" size="icon" className={`h-5 w-5 ml-0.5 ${isActive || hasFilter ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
               <MoreVertical className={`h-3.5 w-3.5 ${isActive || hasFilter ? 'text-primary' : 'text-muted-foreground'}`} />
             </Button>
           </DropdownMenuTrigger>
@@ -585,61 +508,40 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
               {sortField === field && sortDirection === 'desc' && <span className="ml-auto text-primary">✓</span>}
             </DropdownMenuItem>
             
-            {filterType && (
-              <>
+            {filterType && <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer</DropdownMenuLabel>
                 
-                {filterType === 'status' && (
-                  <div className="p-2 space-y-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start text-xs h-7"
-                      onClick={() => setFilters(prev => ({ ...prev, statuses: [] }))}
-                    >
+                {filterType === 'status' && <div className="p-2 space-y-1">
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setFilters(prev => ({
+                ...prev,
+                statuses: []
+              }))}>
                       Réinitialiser
                     </Button>
                     {availableStatuses.map(status => {
-                      const isSelected = filters.statuses.includes(status);
-                      const statusLabel = status === 'registered' ? 'Inscrit' :
-                         status === 'approved' ? 'Approuvé' :
-                         status === 'attended' ? 'Présent' :
-                         status === 'waitlist' ? 'Liste d\'attente' :
-                         status === 'pending' ? 'En attente' : status;
-                      return (
-                        <div 
-                          key={status} 
-                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer"
-                          onClick={() => {
-                            setFilters(prev => ({
-                              ...prev,
-                              statuses: isSelected 
-                                ? prev.statuses.filter(s => s !== status)
-                                : [...prev.statuses, status]
-                            }));
-                          }}
-                        >
+                const isSelected = filters.statuses.includes(status);
+                const statusLabel = status === 'registered' ? 'Inscrit' : status === 'approved' ? 'Approuvé' : status === 'attended' ? 'Présent' : status === 'waitlist' ? 'Liste d\'attente' : status === 'pending' ? 'En attente' : status;
+                return <div key={status} className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded cursor-pointer" onClick={() => {
+                  setFilters(prev => ({
+                    ...prev,
+                    statuses: isSelected ? prev.statuses.filter(s => s !== status) : [...prev.statuses, status]
+                  }));
+                }}>
                           <div className={`w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
                             {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
                           </div>
                           <span className="text-sm">{statusLabel}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        </div>;
+              })}
+                  </div>}
                 
-                {filterType === 'number' && field === 'missions' && (
-                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <Select 
-                      value={filters.missionsOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ 
-                        ...prev, 
-                        missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
-                        missionsValue: v === '_none' ? null : prev.missionsValue
-                      }))}
-                    >
+                {filterType === 'number' && field === 'missions' && <div className="p-2 space-y-2" onClick={e => e.stopPropagation()}>
+                    <Select value={filters.missionsOperator || '_none'} onValueChange={v => setFilters(prev => ({
+                ...prev,
+                missionsOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
+                missionsValue: v === '_none' ? null : prev.missionsValue
+              }))}>
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Opérateur" />
                       </SelectTrigger>
@@ -650,30 +552,18 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                         <SelectItem value="lte">≤ Plus petit que</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input 
-                      type="number" 
-                      placeholder="Valeur"
-                      value={filters.missionsValue ?? ''}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        missionsValue: e.target.value ? parseInt(e.target.value) : null 
-                      }))}
-                      className="h-8"
-                      disabled={filters.missionsOperator === null}
-                    />
-                  </div>
-                )}
+                    <Input type="number" placeholder="Valeur" value={filters.missionsValue ?? ''} onChange={e => setFilters(prev => ({
+                ...prev,
+                missionsValue: e.target.value ? parseInt(e.target.value) : null
+              }))} className="h-8" disabled={filters.missionsOperator === null} />
+                  </div>}
                 
-                {filterType === 'number' && field === 'certificates' && (
-                  <div className="p-2 space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <Select 
-                      value={filters.certificatesOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ 
-                        ...prev, 
-                        certificatesOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
-                        certificatesValue: v === '_none' ? null : prev.certificatesValue
-                      }))}
-                    >
+                {filterType === 'number' && field === 'certificates' && <div className="p-2 space-y-2" onClick={e => e.stopPropagation()}>
+                    <Select value={filters.certificatesOperator || '_none'} onValueChange={v => setFilters(prev => ({
+                ...prev,
+                certificatesOperator: v === '_none' ? null : v as 'gte' | 'lte' | 'eq',
+                certificatesValue: v === '_none' ? null : prev.certificatesValue
+              }))}>
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Opérateur" />
                       </SelectTrigger>
@@ -684,26 +574,17 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                         <SelectItem value="lte">≤ Plus petit que</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input 
-                      type="number" 
-                      placeholder="Valeur"
-                      value={filters.certificatesValue ?? ''}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        certificatesValue: e.target.value ? parseInt(e.target.value) : null 
-                      }))}
-                      className="h-8"
-                      disabled={filters.certificatesOperator === null}
-                    />
-                  </div>
-                )}
+                    <Input type="number" placeholder="Valeur" value={filters.certificatesValue ?? ''} onChange={e => setFilters(prev => ({
+                ...prev,
+                certificatesValue: e.target.value ? parseInt(e.target.value) : null
+              }))} className="h-8" disabled={filters.certificatesOperator === null} />
+                  </div>}
                 
-                {filterType === 'date' && (
-                  <div className="p-2 space-y-2">
-                    <Select 
-                      value={filters.dateOperator || '_none'} 
-                      onValueChange={(v) => setFilters(prev => ({ ...prev, dateOperator: v === '_none' ? null : v as 'before' | 'after' }))}
-                    >
+                {filterType === 'date' && <div className="p-2 space-y-2">
+                    <Select value={filters.dateOperator || '_none'} onValueChange={v => setFilters(prev => ({
+                ...prev,
+                dateOperator: v === '_none' ? null : v as 'before' | 'after'
+              }))}>
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Opérateur" />
                       </SelectTrigger>
@@ -721,48 +602,38 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={filters.dateValue || undefined}
-                          onSelect={(date) => setFilters(prev => ({ ...prev, dateValue: date || null }))}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
+                        <Calendar mode="single" selected={filters.dateValue || undefined} onSelect={date => setFilters(prev => ({
+                    ...prev,
+                    dateValue: date || null
+                  }))} initialFocus className="pointer-events-auto" />
                       </PopoverContent>
                     </Popover>
-                  </div>
-                )}
-              </>
-            )}
+                  </div>}
+              </>}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <div className="space-y-4 md:space-y-6">
+  return <div className="space-y-4 md:space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-transparent">
+        <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total contributeurs</p>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-2xl font-bold">{kpis.total}</p>
-                {kpis.pendingCount > 0 && (
-                  <span className="text-sm text-amber-600 flex items-center gap-1">
+                {kpis.pendingCount > 0 && <span className="text-sm text-amber-600 flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
                     +{kpis.pendingCount} en attente
-                  </span>
-                )}
+                  </span>}
               </div>
             </div>
             <Users className="h-8 w-8 text-muted-foreground/50" />
           </div>
         </div>
         
-        <div className="p-4 rounded-xl border border-border bg-transparent">
+        <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1">
@@ -786,18 +657,16 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
           </div>
         </div>
         
-        <div className="p-4 rounded-xl border border-border bg-transparent">
+        <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Nouveaux ce mois</p>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-2xl font-bold">{kpis.newThisMonth}</p>
-                {kpis.growthPercent !== null && (
-                  <span className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {kpis.growthPercent !== null && <span className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     <TrendingUp className={`h-3.5 w-3.5 ${kpis.growthPercent < 0 ? 'rotate-180' : ''}`} />
                     {kpis.growthPercent >= 0 ? '+' : ''}{kpis.growthPercent}%
-                  </span>
-                )}
+                  </span>}
               </div>
             </div>
             <UserPlus className="h-8 w-8 text-muted-foreground/50" />
@@ -810,39 +679,27 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher par nom ou email..." 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-10 bg-muted border-0" 
-            />
+            <Input placeholder="Rechercher par nom ou email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted border-0" />
           </div>
           
           <div className="flex items-center gap-2">
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
+            {hasActiveFilters && <Button variant="outline" size="sm" onClick={clearFilters}>
                 <Filter className="h-4 w-4 mr-2" />
                 Effacer les filtres
-              </Button>
-            )}
+              </Button>}
             {/* Hide invite button for regular members - they can only view */}
-            {!isMember && (
-              <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
+            {!isMember && <Button onClick={() => setInviteDialogOpen(true)} className="shrink-0">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Inviter des bénévoles
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
       </div>
 
       {/* Table */}
-      {isLoading ? (
-        <div className="space-y-3">
+      {isLoading ? <div className="space-y-3">
           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
-        </div>
-      ) : !filteredParticipants || filteredParticipants.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        </div> : !filteredParticipants || filteredParticipants.length === 0 ? <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="max-w-md w-full text-center">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-muted mb-6">
               <Users className="w-12 h-12 text-muted-foreground" />
@@ -851,17 +708,13 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
               {searchQuery || hasActiveFilters ? 'Aucun résultat' : 'Votre audience vous attend'}
             </h3>
             <p className="text-muted-foreground">
-              {searchQuery || hasActiveFilters 
-                ? 'Aucun contributeur ne correspond à vos critères' 
-                : 'Les participants à vos événements apparaîtront ici'}
+              {searchQuery || hasActiveFilters ? 'Aucun contributeur ne correspond à vos critères' : 'Les participants à vos événements apparaîtront ici'}
             </p>
           </div>
-        </div>
-      ) : isMobile ? (
-        // Mobile: Card list view
-        <div className="space-y-3">
-          {filteredParticipants.map(participant => (
-            <div key={participant.user_id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+        </div> : isMobile ?
+    // Mobile: Card list view
+    <div className="space-y-3">
+          {filteredParticipants.map(participant => <div key={participant.user_id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
               <Avatar className={`h-12 w-12 flex-shrink-0 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
                 <AvatarImage src={participant.avatar_url || undefined} />
                 <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
@@ -872,11 +725,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className={`font-medium text-sm truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                      {participant.is_pending_invitation
-                        ? 'Invitation en attente'
-                        : participant.first_name && participant.last_name 
-                          ? `${participant.first_name} ${participant.last_name}` 
-                          : 'Nom non renseigné'}
+                      {participant.is_pending_invitation ? 'Invitation en attente' : participant.first_name && participant.last_name ? `${participant.first_name} ${participant.last_name}` : 'Nom non renseigné'}
                     </h3>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {participant.email || 'Email non renseigné'}
@@ -891,27 +740,17 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {participant.is_pending_invitation ? (
-                          <>
-                            <DropdownMenuItem 
-                              onClick={() => handleResendInvitation(participant.email!)}
-                              disabled={resendInvitation.isPending}
-                            >
+                        {participant.is_pending_invitation ? <>
+                            <DropdownMenuItem onClick={() => handleResendInvitation(participant.email!)} disabled={resendInvitation.isPending}>
                               <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
                               Renvoyer l'invitation
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleCancelInvitation(participant.invitation_id!)}
-                              disabled={cancelInvitation.isPending}
-                              className="text-destructive focus:text-destructive"
-                            >
+                            <DropdownMenuItem onClick={() => handleCancelInvitation(participant.invitation_id!)} disabled={cancelInvitation.isPending} className="text-destructive focus:text-destructive">
                               <Trash2 className="h-4 w-4 mr-2" />
                               Retirer l'invitation
                             </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
                               <Eye className="h-4 w-4 mr-2" />
                               Voir le profil
@@ -920,8 +759,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                               <Mail className="h-4 w-4 mr-2" />
                               Contacter
                             </DropdownMenuItem>
-                          </>
-                        )}
+                          </>}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -935,19 +773,17 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                     <Award className="h-3 w-3" />
                     {participant.tickets_scanned} certificat{participant.tickets_scanned > 1 ? 's' : ''}
                   </span>
-                  {!participant.is_pending_invitation && (
-                    <span>
-                      {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
-                    </span>
-                  )}
+                  {!participant.is_pending_invitation && <span>
+                      {format(new Date(participant.last_participation), 'dd MMM yyyy', {
+                locale: fr
+              })}
+                    </span>}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        // Desktop: Table view
-        <div className="border rounded-lg overflow-auto w-full max-w-[1400px] max-h-[calc(100vh-280px)]">
+            </div>)}
+        </div> :
+    // Desktop: Table view
+    <div className="border rounded-lg overflow-auto w-full max-w-[1400px] max-h-[calc(100vh-280px)]">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
@@ -961,29 +797,19 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
                 <TableHead className="w-[80px] text-center">
-                  <ColumnHeaderWithFilter 
-                    label="Certif." 
-                    field="certificates" 
-                    filterType="number" 
-                    icon={<Award className="h-3.5 w-3.5" />}
-                  />
+                  <ColumnHeaderWithFilter label="Certif." field="certificates" filterType="number" icon={<Award className="h-3.5 w-3.5" />} />
                 </TableHead>
                 <TableHead className="w-[120px]">
                   <SortableColumnHeader label="Équipe" field="name" className="text-muted-foreground" />
                 </TableHead>
                 <TableHead className="w-[130px]">
-                  <ColumnHeaderWithFilter 
-                    label="Dernière participation" 
-                    field="lastParticipation" 
-                    filterType="date"
-                  />
+                  <ColumnHeaderWithFilter label="Dernière participation" field="lastParticipation" filterType="date" />
                 </TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredParticipants.map(participant => (
-                <TableRow key={participant.user_id}>
+              {filteredParticipants.map(participant => <TableRow key={participant.user_id}>
                   <TableCell className="py-2">
                     <div className="flex items-center gap-3">
                       <Avatar className={`h-9 w-9 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
@@ -994,11 +820,7 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                       </Avatar>
                       <div className="min-w-0">
                         <span className={`block font-medium truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                          {participant.is_pending_invitation
-                            ? '—'
-                            : participant.first_name && participant.last_name 
-                              ? `${participant.first_name} ${participant.last_name}` 
-                              : 'Non renseigné'}
+                          {participant.is_pending_invitation ? '—' : participant.first_name && participant.last_name ? `${participant.first_name} ${participant.last_name}` : 'Non renseigné'}
                         </span>
                         <span className="block text-sm text-muted-foreground truncate">
                           {participant.email || 'Non renseigné'}
@@ -1017,13 +839,13 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                   </TableCell>
                   <TableCell className="py-2 text-muted-foreground text-sm">
                     <span className="block truncate">
-                      {participant.is_pending_invitation ? '—' : (participant.team_name || '—')}
+                      {participant.is_pending_invitation ? '—' : participant.team_name || '—'}
                     </span>
                   </TableCell>
                   <TableCell className="py-2 text-muted-foreground text-sm text-left">
-                    {participant.is_pending_invitation 
-                      ? '—'
-                      : format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}
+                    {participant.is_pending_invitation ? '—' : format(new Date(participant.last_participation), 'dd/MM/yy', {
+                locale: fr
+              })}
                   </TableCell>
                   <TableCell className="py-2">
                     <DropdownMenu>
@@ -1033,27 +855,17 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {participant.is_pending_invitation ? (
-                          <>
-                            <DropdownMenuItem 
-                              onClick={() => handleResendInvitation(participant.email!)}
-                              disabled={resendInvitation.isPending}
-                            >
+                        {participant.is_pending_invitation ? <>
+                            <DropdownMenuItem onClick={() => handleResendInvitation(participant.email!)} disabled={resendInvitation.isPending}>
                               <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
                               Renvoyer l'invitation
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleCancelInvitation(participant.invitation_id!)}
-                              disabled={cancelInvitation.isPending}
-                              className="text-destructive focus:text-destructive"
-                            >
+                            <DropdownMenuItem onClick={() => handleCancelInvitation(participant.invitation_id!)} disabled={cancelInvitation.isPending} className="text-destructive focus:text-destructive">
                               <Trash2 className="h-4 w-4 mr-2" />
                               Retirer l'invitation
                             </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
                               <Eye className="h-4 w-4 mr-2" />
                               Voir le profil
@@ -1062,42 +874,20 @@ export function PeopleTab({ userTeamId, isLeader = false, isMember = false }: Pe
                               <Mail className="h-4 w-4 mr-2" />
                               Contacter
                             </DropdownMenuItem>
-                          </>
-                        )}
+                          </>}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
             </TableBody>
           </Table>
-        </div>
-      )}
+        </div>}
 
       {/* Dialogs and Panels */}
-      <ContributorProfilePanel
-        userId={selectedContributor?.user_id || null}
-        organizationId={organization?.id || ''}
-        open={profilePanelOpen}
-        onOpenChange={setProfilePanelOpen}
-      />
+      <ContributorProfilePanel userId={selectedContributor?.user_id || null} organizationId={organization?.id || ''} open={profilePanelOpen} onOpenChange={setProfilePanelOpen} />
 
-      <InviteContributorsDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        organizationId={organization?.id || ''}
-        organizationName={organization?.name || 'Votre organisation'}
-        userId={currentUserId}
-        userTeamId={userTeamId}
-        isLeader={isLeader}
-      />
+      <InviteContributorsDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} organizationId={organization?.id || ''} organizationName={organization?.name || 'Votre organisation'} userId={currentUserId} userTeamId={userTeamId} isLeader={isLeader} />
 
-      <ContributorContactDialog
-        open={contactDialogOpen}
-        onOpenChange={setContactDialogOpen}
-        contributor={contactContributor}
-        organizationName={organization?.name || 'Votre organisation'}
-      />
-    </div>
-  );
+      <ContributorContactDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} contributor={contactContributor} organizationName={organization?.name || 'Votre organisation'} />
+    </div>;
 }
