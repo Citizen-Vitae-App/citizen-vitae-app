@@ -586,12 +586,70 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold w-[35%]">Titre</TableHead>
-                  <TableHead className="font-semibold w-[12%]">Date et heure</TableHead>
-                  <TableHead className="font-semibold w-[10%]">Statut</TableHead>
-                  <TableHead className="font-semibold w-[10%]">Visibilité</TableHead>
-                  <TableHead className="font-semibold w-[18%]">Lieu</TableHead>
-                  <TableHead className="font-semibold w-[10%]">Part.</TableHead>
+                  <TableHead className="font-semibold w-[35%]">
+                    <SortableColumnHeader label="Titre" field="title" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[14%]">
+                    <ColumnHeaderWithFilter 
+                      label="Date" 
+                      field="date" 
+                      filterType="date"
+                      icon={<CalendarIcon className="h-4 w-4" />}
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Statut" 
+                      field="status" 
+                      filterType="status"
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Visibilité" 
+                      field="visibility" 
+                      filterType="visibility"
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[18%]">
+                    <SortableColumnHeader label="Lieu" field="location" />
+                  </TableHead>
+                  <TableHead className="font-semibold w-[10%]">
+                    <ColumnHeaderWithFilter 
+                      label="Part." 
+                      field="participants" 
+                      filterType="participants"
+                      icon={<Users className="h-4 w-4" />}
+                      filters={filters}
+                      setFilters={setFilters}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      toggleSort={toggleSort}
+                      openFilterPanel={openFilterPanel}
+                      setOpenFilterPanel={setOpenFilterPanel}
+                    />
+                  </TableHead>
                   <TableHead className="w-[5%]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -696,9 +754,9 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                   <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[35%]">
                     <SortableColumnHeader label="Titre" field="title" />
                   </TableHead>
-                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[12%]">
+                  <TableHead className="sticky top-0 z-10 bg-background font-semibold w-[14%]">
                     <ColumnHeaderWithFilter 
-                      label="Date et heure" 
+                      label="Date" 
                       field="date" 
                       filterType="date"
                       icon={<CalendarIcon className="h-4 w-4" />}
