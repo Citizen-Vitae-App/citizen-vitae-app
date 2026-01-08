@@ -1,62 +1,56 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Bell, User } from 'lucide-react';
+import { Calendar, Bell, User, Building2, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
-
-// Custom Mes Missions icon matching the reference
-const MissionsIcon = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <rect x="3" y="3" width="7" height="9" rx="1" />
-    <rect x="14" y="3" width="7" height="5" rx="1" />
-    <rect x="14" y="12" width="7" height="9" rx="1" />
-    <rect x="3" y="16" width="7" height="5" rx="1" />
-  </svg>
-);
+import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 
 export const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { notifications } = useNotifications();
+  const { canAccessDashboard } = useUserOrganizations();
 
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 
   if (!user) return null;
 
+  // Build nav items dynamically based on permissions
   const navItems = [
     {
-      label: 'Accueil',
+      label: 'Événements',
       href: '/',
-      icon: Home,
+      icon: Calendar,
       isActive: location.pathname === '/',
+      isCentral: false,
     },
     {
-      label: 'Mes Missions',
+      label: 'Contributeur',
       href: '/my-missions',
-      icon: MissionsIcon,
+      icon: Bell,
       isActive: location.pathname === '/my-missions',
-      badge: 0, // Could show upcoming missions count
+      isCentral: false,
     },
     {
-      label: 'Notifications',
-      href: '/notifications',
-      icon: Bell,
-      isActive: location.pathname === '/notifications',
-      badge: unreadCount,
+      label: 'Scan',
+      href: '/scan-participant',
+      icon: ScanLine,
+      isActive: location.pathname === '/scan-participant',
+      isCentral: true,
     },
+    ...(canAccessDashboard ? [{
+      label: 'Organisation',
+      href: '/organization',
+      icon: Building2,
+      isActive: location.pathname.startsWith('/organization'),
+      isCentral: false,
+    }] : []),
     {
       label: 'Profil',
       href: '/profile',
       icon: User,
       isActive: location.pathname === '/profile',
+      isCentral: false,
     },
   ];
 
@@ -71,20 +65,29 @@ export const MobileBottomNav = () => {
               to={item.href}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 py-2 relative",
+                item.isCentral ? "-mt-4" : "",
                 item.isActive 
                   ? "text-foreground" 
                   : "text-muted-foreground"
               )}
             >
-              <div className="relative">
-                <Icon className="h-6 w-6" />
-                {item.badge !== undefined && item.badge > 0 && (
+              <div className={cn(
+                "relative flex items-center justify-center",
+                item.isCentral && "bg-primary rounded-full p-3 shadow-lg"
+              )}>
+                <Icon className={cn(
+                  item.isCentral ? "h-6 w-6 text-primary-foreground" : "h-6 w-6"
+                )} />
+                {item.label === 'Notifications' && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-destructive text-destructive-foreground text-xs font-medium rounded-full px-1">
-                    {item.badge > 99 ? '99+' : item.badge}
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className={cn(
+                "text-xs font-medium",
+                item.isCentral && "mt-1"
+              )}>{item.label}</span>
             </Link>
           );
         })}

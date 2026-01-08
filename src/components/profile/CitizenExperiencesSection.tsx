@@ -1,9 +1,9 @@
-import { Briefcase, ChevronRight, Calendar, Building2 } from 'lucide-react';
+import { BookOpen, ChevronRight, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import * as Icons from 'lucide-react';
 import type { CertifiedMission } from '@/hooks/useUserProfile';
@@ -21,8 +21,8 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
     return (
       <section className="mb-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-muted-foreground" />
-          Citizen Experiences
+          <BookOpen className="h-5 w-5 text-muted-foreground" />
+          Expériences citoyennes
         </h2>
         <div className="bg-muted/50 rounded-xl p-6 text-center text-muted-foreground">
           <p>Vous n'avez pas encore de missions certifiées.</p>
@@ -36,8 +36,8 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
     <section className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-muted-foreground" />
-          Citizen Experiences
+          <BookOpen className="h-5 w-5 text-muted-foreground" />
+          Expériences citoyennes
           <Badge variant="secondary" className="ml-2">
             {totalCount}
           </Badge>
@@ -77,8 +77,17 @@ interface MissionCardProps {
 }
 
 function MissionCard({ mission, isFirst }: MissionCardProps) {
-  const formatDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'MMM yyyy', { locale: fr });
+  const formatDateRange = (startDateStr: string, endDateStr: string) => {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    
+    // If same day, show only one date
+    if (isSameDay(startDate, endDate)) {
+      return format(startDate, 'd MMMM yyyy', { locale: fr });
+    }
+    
+    // Otherwise show only start date (date of participation)
+    return format(startDate, 'd MMMM yyyy', { locale: fr });
   };
 
   const getOrgInitials = () => {
@@ -121,10 +130,10 @@ function MissionCard({ mission, isFirst }: MissionCardProps) {
               {mission.organization_name}
             </p>
 
-            {/* Dates */}
+            {/* Date */}
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
               <Calendar className="h-3 w-3" />
-              {formatDate(mission.start_date)} - {formatDate(mission.end_date)}
+              {formatDateRange(mission.start_date, mission.end_date)}
             </p>
 
             {/* Causes */}
