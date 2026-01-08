@@ -1,7 +1,9 @@
-import { Building2, Users, Heart } from 'lucide-react';
+import { Building2, Users, Home, Crown, Shield, User as UserIcon, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import type { UserOrganization } from '@/hooks/useUserProfile';
 
 interface OrganizationsSectionProps {
@@ -40,7 +42,7 @@ export function OrganizationsSection({ organizations }: OrganizationsSectionProp
       {associations.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Heart className="h-5 w-5 text-muted-foreground" />
+            <Home className="h-5 w-5 text-muted-foreground" />
             {associations.length > 1 ? 'Mes associations' : 'Mon association'}
           </h2>
           <div className="grid gap-3">
@@ -69,7 +71,30 @@ function OrganizationCard({ organization, variant = 'company' }: OrganizationCar
       .toUpperCase();
   };
 
-  const roleLabel = organization.role === 'admin' ? 'Administrateur' : 'Membre';
+  const getRoleBadge = () => {
+    if (organization.is_owner) {
+      return (
+        <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+          <Crown className="h-3 w-3 mr-1" />
+          Owner
+        </Badge>
+      );
+    }
+    if (organization.role === 'admin') {
+      return (
+        <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
+          <Shield className="h-3 w-3 mr-1" />
+          Admin
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="text-xs">
+        <UserIcon className="h-3 w-3 mr-1" />
+        Membre
+      </Badge>
+    );
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -91,15 +116,20 @@ function OrganizationCard({ organization, variant = 'company' }: OrganizationCar
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate">{organization.name}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">
-                {roleLabel}
-              </Badge>
+              {getRoleBadge()}
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Users className="h-3 w-3" />
                 {organization.member_count} membre{organization.member_count > 1 ? 's' : ''}
               </span>
             </div>
           </div>
+
+          {/* Navigate to organization dashboard */}
+          <Link to={`/organization?org=${organization.id}`}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

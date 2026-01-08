@@ -8,6 +8,7 @@ export interface UserOrganization {
   logo_url: string | null;
   type: string;
   role: string;
+  is_owner: boolean;
   member_count: number;
 }
 
@@ -49,6 +50,7 @@ export function useUserProfile() {
         .from('organization_members')
         .select(`
           role,
+          is_owner,
           organization_id,
           organizations (
             id,
@@ -80,6 +82,7 @@ export function useUserProfile() {
             logo_url: org.logo_url,
             type: org.type || 'association',
             role: m.role,
+            is_owner: m.is_owner || false,
             member_count: count || 0,
           };
         })

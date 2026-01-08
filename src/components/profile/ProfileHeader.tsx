@@ -39,11 +39,9 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     return (first + last).toUpperCase() || 'U';
   };
 
-  // Get primary role/title from first company organization
+  // Get primary organization name (without role - role is shown in OrganizationsSection)
   const primaryOrg = organizations.find((org) => org.type === 'company') || organizations[0];
-  const primaryTitle = primaryOrg
-    ? `${primaryOrg.role === 'admin' ? 'Admin' : 'Membre'} @ ${primaryOrg.name}`
-    : null;
+  const primaryTitle = primaryOrg ? primaryOrg.name : null;
 
   const handleVerificationComplete = () => {
     refreshProfile?.();
