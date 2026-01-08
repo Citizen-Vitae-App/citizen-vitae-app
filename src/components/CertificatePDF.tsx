@@ -93,10 +93,10 @@ const styles = StyleSheet.create({
     height: CERT_HEIGHT * FOOTER_HEIGHT_RATIO,
     backgroundColor: '#FAF7EF',
   },
-  // Laurel wreath in background - centered under body text
+  // Laurel wreath in background - starts at logo level
   laurelImage: {
     position: 'absolute',
-    top: '22%',
+    top: '6%',
     left: '25%',
     width: '50%',
     opacity: 1,
@@ -109,14 +109,14 @@ const styles = StyleSheet.create({
     width: 65,
     height: 102,
   },
-  // Logo CitizenVitae - top center
+  // Logo CitizenVitae - top center (larger)
   logoImage: {
     position: 'absolute',
-    top: '6.8%',
+    top: '6%',
     left: '50%',
-    marginLeft: -70,
-    width: 140,
-    height: 35,
+    marginLeft: -90,
+    width: 180,
+    height: 45,
     objectFit: 'contain',
   },
   // Title "Certificat d'action citoyenne"
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   dateLabel: {
     color: '#012573',
     fontFamily: 'Questrial',
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: 11,
   },
   dateValue: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   validatorLabel: {
     color: '#012573',
     fontFamily: 'Questrial',
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: 11,
     textAlign: 'right',
   },
