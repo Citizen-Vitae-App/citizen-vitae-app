@@ -96,10 +96,10 @@ const styles = StyleSheet.create({
   // Laurel wreath in background - centered under body text
   laurelImage: {
     position: 'absolute',
-    top: '30%',
+    top: '22%',
     left: '25%',
     width: '50%',
-    opacity: 0.45,
+    opacity: 1,
   },
   // Cocarde - top right area
   cocardeImage: {

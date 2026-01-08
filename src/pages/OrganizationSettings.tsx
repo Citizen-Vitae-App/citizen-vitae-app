@@ -134,6 +134,15 @@ export default function OrganizationSettings() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Restrict to PNG and JPEG formats (required for PDF certificate generation)
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Veuillez utiliser un fichier PNG ou JPEG.');
+      e.target.value = '';
+      return;
+    }
+    
     const url = await uploadImage(file, 'logo');
     if (url) {
       handleInputChange('logo_url', url);
