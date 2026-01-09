@@ -273,13 +273,16 @@ export default function ScanParticipant() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex-1 flex flex-col bg-black md:bg-transparent">
+          <div className="flex-1 flex flex-col bg-foreground md:bg-transparent">
             <QRScanner onScan={handleScan} isProcessing={isProcessing} autoStart />
           </div>
         )}
       </main>
       
-      <OrganizationBottomNav activeTab="events" onTabChange={() => {}} />
+      <OrganizationBottomNav
+        activeTab="scan"
+        onTabChange={(tab) => navigate(`/organization/dashboard?tab=${tab}`)}
+      />
     </div>
   );
 }

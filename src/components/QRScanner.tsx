@@ -155,39 +155,54 @@ export function QRScanner({ onScan, isProcessing, autoStart = false }: QRScanner
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 w-full h-full px-2 sm:px-0">
-      {/* Use a wrapper div that React controls, with a child div for html5-qrcode */}
-      <div className="w-full h-full md:max-w-[320px] md:aspect-square md:h-auto bg-black md:bg-muted md:rounded-lg overflow-hidden relative">
+      <div className="w-full h-full md:max-w-[320px] md:aspect-square md:h-auto bg-foreground md:bg-muted md:rounded-lg overflow-hidden relative">
         <div 
           id={scannerContainerId.current}
           className="w-full h-full [&_video]:!object-cover [&_video]:!w-full [&_video]:!h-full"
         />
-        {!isStarted && !error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 bg-black md:bg-muted">
-            <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-white md:text-muted-foreground" />
+
+        {/* Visual scan frame */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="w-[70%] max-w-[320px] aspect-square border-2 border-background/70 rounded-xl" />
+        </div>
+
+        {/* Auto-start: show loading state instead of a start CTA */}
+        {!isStarted && !error && autoStart && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 bg-foreground/70">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-background" />
+          </div>
+        )}
+
+        {/* Manual start (desktop or when autoStart=false) */}
+        {!isStarted && !error && !autoStart && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 bg-muted">
+            <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
             <Button onClick={startScanner} size="sm" className="text-sm">
               <Camera className="mr-2 h-4 w-4" />
               Démarrer le scanner
             </Button>
           </div>
         )}
+
         {error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center bg-black md:bg-muted">
-            <p className="text-xs sm:text-sm text-red-400 md:text-destructive">{error}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center bg-foreground/80 md:bg-muted">
+            <p className="text-xs sm:text-sm text-destructive">{error}</p>
             <Button variant="outline" onClick={startScanner} size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
               Réessayer
             </Button>
           </div>
         )}
+
         {isProcessing && isStarted && (
-          <div className="absolute inset-0 bg-black/80 md:bg-background/80 flex items-center justify-center">
+          <div className="absolute inset-0 bg-foreground/70 md:bg-background/80 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
       </div>
-      
+
       {isStarted && (
-        <p className="text-xs sm:text-sm text-white md:text-muted-foreground text-center px-4 absolute bottom-24 md:relative md:bottom-auto">
+        <p className="text-xs sm:text-sm text-background md:text-muted-foreground text-center px-4 absolute bottom-24 md:relative md:bottom-auto">
           Placez le QR code du participant dans le cadre
         </p>
       )}
