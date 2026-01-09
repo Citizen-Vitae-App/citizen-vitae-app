@@ -8,7 +8,7 @@ import { QRScanner } from '@/components/QRScanner';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navbar } from '@/components/Navbar';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -132,11 +132,13 @@ export default function ScanParticipant() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-20 md:pb-0 flex flex-col">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-6 max-w-lg">
-        <div className="flex items-center gap-4 mb-6">
+      {/* Mobile: Full screen scanner */}
+      <main className="flex-1 flex flex-col md:container md:mx-auto md:px-4 md:py-6 md:max-w-lg">
+        {/* Header - Hidden on mobile when scanner is active */}
+        <div className={`flex items-center gap-4 mb-6 px-4 pt-4 md:px-0 md:pt-0 ${!lastResult ? 'hidden md:flex' : ''}`}>
           <Button 
             variant="ghost" 
             size="icon"
@@ -271,11 +273,13 @@ export default function ScanParticipant() {
             </CardContent>
           </Card>
         ) : (
-          <QRScanner onScan={handleScan} isProcessing={isProcessing} />
+          <div className="flex-1 flex flex-col bg-black md:bg-transparent">
+            <QRScanner onScan={handleScan} isProcessing={isProcessing} autoStart />
+          </div>
         )}
       </main>
       
-      <MobileBottomNav />
+      <OrganizationBottomNav activeTab="events" onTabChange={() => {}} />
     </div>
   );
 }
