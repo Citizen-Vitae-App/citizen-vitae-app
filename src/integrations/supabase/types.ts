@@ -224,6 +224,7 @@ export type Database = {
           recurrence_end_date: string | null
           recurrence_end_type: string | null
           recurrence_frequency: string | null
+          recurrence_group_id: string | null
           recurrence_interval: number | null
           recurrence_occurrences: number | null
           require_approval: boolean | null
@@ -252,6 +253,7 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_end_type?: string | null
           recurrence_frequency?: string | null
+          recurrence_group_id?: string | null
           recurrence_interval?: number | null
           recurrence_occurrences?: number | null
           require_approval?: boolean | null
@@ -280,6 +282,7 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_end_type?: string | null
           recurrence_frequency?: string | null
+          recurrence_group_id?: string | null
           recurrence_interval?: number | null
           recurrence_occurrences?: number | null
           require_approval?: boolean | null
