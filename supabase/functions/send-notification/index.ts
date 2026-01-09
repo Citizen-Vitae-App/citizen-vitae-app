@@ -142,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // Check if user is org admin
+      // Check if user is org member (admin or member)
       const { data: orgMembership } = await supabase
         .from("organization_members")
         .select("role")
@@ -158,17 +158,27 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("user_id", authUser.id)
         .single();
 
-      const isOrgAdmin = orgMembership?.role === 'admin';
-      const isSupervisor = !!supervisor;
+      // Check if user is a team leader in the organization
+      const { data: teamLeadership } = await supabase
+        .from("team_members")
+        .select("id, team_id, teams!inner(organization_id)")
+        .eq("user_id", authUser.id)
+        .eq("is_leader", true)
+        .eq("teams.organization_id", event.organization_id);
 
-      if (!isOrgAdmin && !isSupervisor) {
+      const isOrgAdmin = orgMembership?.role === 'admin';
+      const isOrgMember = !!orgMembership;
+      const isSupervisor = !!supervisor;
+      const isTeamLeader = teamLeadership && teamLeadership.length > 0;
+
+      if (!isOrgAdmin && !isSupervisor && !isTeamLeader) {
         console.error(`[send-notification] User ${authUser.id} not authorized for event ${event_id}`);
         return new Response(
           JSON.stringify({ error: 'Not authorized to send notifications for this event' }),
           { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
-      console.log(`[send-notification] User authorized for event (admin: ${isOrgAdmin}, supervisor: ${isSupervisor})`);
+      console.log(`[send-notification] User authorized for event (admin: ${isOrgAdmin}, supervisor: ${isSupervisor}, teamLeader: ${isTeamLeader})`);
     }
 
     // For direct user notifications: only allow sending to self unless caller is an org admin
