@@ -5,7 +5,7 @@ import { PeopleTab } from '@/components/organization/PeopleTab';
 import { MembersTab } from '@/components/organization/MembersTab';
 import { TeamsTab } from '@/components/organization/TeamsTab';
 import { OrganizationTab } from '@/components/organization/OrganizationTab';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -122,7 +122,11 @@ export default function OrganizationDashboard() {
         </div>
       </main>
       
-      <MobileBottomNav />
+      <OrganizationBottomNav 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        availableTabs={availableTabs}
+      />
     </div>
   );
 }
