@@ -316,12 +316,23 @@ export default function EditEvent() {
     setIsCapacityDialogOpen(false);
   };
 
-  const handleDelete = async () => {
+  // Handle delete - check if part of recurring series
+  const handleDeleteClick = () => {
+    if (originalEvent?.recurrenceGroupId) {
+      setScopeDialogAction('delete');
+      setScopeDialogOpen(true);
+    } else {
+      // Single event - delete directly
+      handleDeleteSingle();
+    }
+  };
+
+  // Delete a single event (non-recurring or scope = this_only)
+  const handleDeleteSingle = async () => {
     if (!eventId) return;
     
     setIsDeleting(true);
     try {
-      // Notify participants about cancellation BEFORE deleting
       const eventName = form.getValues('name');
       console.log('[EditEvent] Sending cancellation notification to participants');
       await supabase.functions.invoke('send-notification', {
@@ -333,24 +344,10 @@ export default function EditEvent() {
         },
       });
 
-      // Delete event cause themes first
-      await supabase
-        .from('event_cause_themes')
-        .delete()
-        .eq('event_id', eventId);
+      await supabase.from('event_cause_themes').delete().eq('event_id', eventId);
+      await supabase.from('event_registrations').delete().eq('event_id', eventId);
 
-      // Delete event registrations
-      await supabase
-        .from('event_registrations')
-        .delete()
-        .eq('event_id', eventId);
-
-      // Delete the event
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
+      const { error } = await supabase.from('events').delete().eq('id', eventId);
       if (error) throw error;
 
       toast.success('Événement supprimé');
@@ -363,95 +360,170 @@ export default function EditEvent() {
     }
   };
 
+  // Delete with scope (for recurring events)
+  const handleDeleteWithScope = async (scope: RecurrenceScope) => {
+    if (!eventId || !originalEvent?.recurrenceGroupId) return;
+
+    setIsScopeActionLoading(true);
+    const groupId = originalEvent.recurrenceGroupId;
+    const eventStartDate = originalEvent.startDate;
+
+    try {
+      if (scope === 'this_only') {
+        // Delete only this occurrence
+        await supabase.from('event_cause_themes').delete().eq('event_id', eventId);
+        await supabase.from('event_registrations').delete().eq('event_id', eventId);
+        await supabase.from('events').delete().eq('id', eventId);
+        toast.success('Occurrence supprimée');
+      } else if (scope === 'this_and_following') {
+        // Get all events in the series >= this date
+        const { data: eventsToDelete } = await supabase
+          .from('events')
+          .select('id')
+          .eq('recurrence_group_id', groupId)
+          .gte('start_date', eventStartDate);
+
+        if (eventsToDelete) {
+          const eventIds = eventsToDelete.map(e => e.id);
+          await supabase.from('event_cause_themes').delete().in('event_id', eventIds);
+          await supabase.from('event_registrations').delete().in('event_id', eventIds);
+          await supabase.from('events').delete().in('id', eventIds);
+        }
+        toast.success(`${eventsToDelete?.length || 0} événements supprimés`);
+      } else if (scope === 'all') {
+        // Get all events in the series
+        const { data: eventsToDelete } = await supabase
+          .from('events')
+          .select('id')
+          .eq('recurrence_group_id', groupId);
+
+        if (eventsToDelete) {
+          const eventIds = eventsToDelete.map(e => e.id);
+          await supabase.from('event_cause_themes').delete().in('event_id', eventIds);
+          await supabase.from('event_registrations').delete().in('event_id', eventIds);
+          await supabase.from('events').delete().in('id', eventIds);
+        }
+        toast.success(`Série supprimée (${eventsToDelete?.length || 0} événements)`);
+      }
+
+      setScopeDialogOpen(false);
+      navigate('/organization/dashboard');
+    } catch (error) {
+      console.error('Error deleting events:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsScopeActionLoading(false);
+    }
+  };
+
+  // Check if form submission should show scope dialog
   const onSubmit = async (data: EventFormData) => {
     if (!eventId || !organizationId) return;
 
-    try {
-      // Determine final image URL
-      let finalImageUrl = existingImageUrl;
+    // If this event is part of a recurring series, show scope dialog
+    if (originalEvent?.recurrenceGroupId) {
+      setPendingFormData(data);
+      setScopeDialogAction('edit');
+      setScopeDialogOpen(true);
+      return;
+    }
 
-      // If a new image was selected
-      if (newImagePreview) {
-        if (isImageUploading && uploadPromiseRef.current) {
-          toast.info('Finalisation de l\'upload de l\'image...');
-          finalImageUrl = await uploadPromiseRef.current;
-        } else if (uploadedNewImageUrl) {
-          finalImageUrl = uploadedNewImageUrl;
-        }
+    // Single event - update directly
+    await performUpdate(data, [eventId]);
+  };
+
+  // Build update payload from form data
+  const buildUpdatePayload = async (data: EventFormData) => {
+    let finalImageUrl = existingImageUrl;
+
+    if (newImagePreview) {
+      if (isImageUploading && uploadPromiseRef.current) {
+        toast.info('Finalisation de l\'upload de l\'image...');
+        finalImageUrl = await uploadPromiseRef.current;
+      } else if (uploadedNewImageUrl) {
+        finalImageUrl = uploadedNewImageUrl;
       }
+    }
 
-      // Combine date and time
-      const startDateTime = new Date(data.startDate);
-      const [startHours, startMinutes] = data.startTime.split(':');
-      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+    const startDateTime = new Date(data.startDate);
+    const [startHours, startMinutes] = data.startTime.split(':');
+    startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
 
-      const endDateTime = new Date(data.endDate);
-      const [endHours, endMinutes] = data.endTime.split(':');
-      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+    const endDateTime = new Date(data.endDate);
+    const [endHours, endMinutes] = data.endTime.split(':');
+    endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
 
-      // Update event
+    return {
+      name: data.name,
+      start_date: startDateTime.toISOString(),
+      end_date: endDateTime.toISOString(),
+      location: data.location,
+      description: data.description || null,
+      capacity: data.capacity ? parseInt(data.capacity) : null,
+      has_waitlist: hasWaitlist,
+      require_approval: data.requireApproval,
+      allow_self_certification: data.allowSelfCertification,
+      is_public: isPublic,
+      cover_image_url: finalImageUrl,
+      latitude: coordinates?.latitude || null,
+      longitude: coordinates?.longitude || null,
+      team_id: selectedTeamId,
+      is_recurring: recurrenceData.isRecurring,
+      recurrence_frequency: recurrenceData.isRecurring ? recurrenceData.frequency : null,
+      recurrence_interval: recurrenceData.isRecurring ? recurrenceData.interval : null,
+      recurrence_days: recurrenceData.isRecurring && recurrenceData.frequency === 'weekly' 
+        ? recurrenceData.weekDays 
+        : null,
+      recurrence_end_type: recurrenceData.isRecurring ? recurrenceData.endType : null,
+      recurrence_end_date: recurrenceData.isRecurring && recurrenceData.endType === 'on_date' && recurrenceData.endDate
+        ? recurrenceData.endDate.toISOString().split('T')[0]
+        : null,
+      recurrence_occurrences: recurrenceData.isRecurring && recurrenceData.endType === 'after_occurrences' 
+        ? recurrenceData.occurrences 
+        : null,
+    };
+  };
+
+  // Perform update on specified event IDs
+  const performUpdate = async (data: EventFormData, eventIds: string[]) => {
+    try {
+      const updatePayload = await buildUpdatePayload(data);
+
+      // Update all specified events
       const { error: updateError } = await supabase
         .from('events')
-        .update({
-          name: data.name,
-          start_date: startDateTime.toISOString(),
-          end_date: endDateTime.toISOString(),
-          location: data.location,
-          description: data.description || null,
-          capacity: data.capacity ? parseInt(data.capacity) : null,
-          has_waitlist: hasWaitlist,
-          require_approval: data.requireApproval,
-          allow_self_certification: data.allowSelfCertification,
-          is_public: isPublic,
-          cover_image_url: finalImageUrl,
-          latitude: coordinates?.latitude || null,
-          longitude: coordinates?.longitude || null,
-          team_id: selectedTeamId,
-          // Recurrence fields
-          is_recurring: recurrenceData.isRecurring,
-          recurrence_frequency: recurrenceData.isRecurring ? recurrenceData.frequency : null,
-          recurrence_interval: recurrenceData.isRecurring ? recurrenceData.interval : null,
-          recurrence_days: recurrenceData.isRecurring && recurrenceData.frequency === 'weekly' 
-            ? recurrenceData.weekDays 
-            : null,
-          recurrence_end_type: recurrenceData.isRecurring ? recurrenceData.endType : null,
-          recurrence_end_date: recurrenceData.isRecurring && recurrenceData.endType === 'on_date' && recurrenceData.endDate
-            ? recurrenceData.endDate.toISOString().split('T')[0]
-            : null,
-          recurrence_occurrences: recurrenceData.isRecurring && recurrenceData.endType === 'after_occurrences' 
-            ? recurrenceData.occurrences 
-            : null,
-        })
-        .eq('id', eventId);
+        .update(updatePayload)
+        .in('id', eventIds);
 
       if (updateError) {
-        console.error('Error updating event:', updateError);
+        console.error('Error updating events:', updateError);
         toast.error("Erreur lors de la mise à jour");
         return;
       }
 
-      // Update event cause themes
-      // First delete existing
-      await supabase
-        .from('event_cause_themes')
-        .delete()
-        .eq('event_id', eventId);
+      // Update cause themes for all events
+      await supabase.from('event_cause_themes').delete().in('event_id', eventIds);
 
-      // Then insert new ones
       if (selectedCauseThemes.length > 0) {
-        const causeThemeInserts = selectedCauseThemes.map(causeThemeId => ({
-          event_id: eventId,
-          cause_theme_id: causeThemeId,
-        }));
-
-        await supabase
-          .from('event_cause_themes')
-          .insert(causeThemeInserts);
+        const causeThemeInserts = eventIds.flatMap(evtId => 
+          selectedCauseThemes.map(causeThemeId => ({
+            event_id: evtId,
+            cause_theme_id: causeThemeId,
+          }))
+        );
+        await supabase.from('event_cause_themes').insert(causeThemeInserts);
       }
 
-      // Detect changes and notify participants
-      if (originalEvent) {
-        // Compare timestamps to avoid ISO string format differences
+      // Notify participants for this event only
+      if (originalEvent && eventId) {
+        const startDateTime = new Date(data.startDate);
+        const [startHours, startMinutes] = data.startTime.split(':');
+        startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+
+        const endDateTime = new Date(data.endDate);
+        const [endHours, endMinutes] = data.endTime.split(':');
+        endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+
         const originalStartTime = new Date(originalEvent.startDate).getTime();
         const originalEndTime = new Date(originalEvent.endDate).getTime();
         const newStartTime = startDateTime.getTime();
@@ -461,13 +533,8 @@ export default function EditEvent() {
         const startDateChanged = newStartTime !== originalStartTime;
         const endDateChanged = newEndTime !== originalEndTime;
         
-        // Send separate notifications for each type of change
         const notifications: string[] = [];
-        
-        if (locationChanged) {
-          notifications.push('mission_location_changed');
-        }
-        
+        if (locationChanged) notifications.push('mission_location_changed');
         if (startDateChanged && endDateChanged) {
           notifications.push('mission_date_changed');
         } else if (startDateChanged) {
@@ -476,9 +543,8 @@ export default function EditEvent() {
           notifications.push('mission_end_date_changed');
         }
         
-        // Send all relevant notifications
         for (const notificationType of notifications) {
-          console.log(`[EditEvent] Sending ${notificationType} notification to participants`);
+          console.log(`[EditEvent] Sending ${notificationType} notification`);
           await supabase.functions.invoke('send-notification', {
             body: {
               type: notificationType,
@@ -491,11 +557,60 @@ export default function EditEvent() {
         }
       }
 
-      toast.success('Événement mis à jour !');
+      const count = eventIds.length;
+      toast.success(count > 1 ? `${count} événements mis à jour !` : 'Événement mis à jour !');
       navigate('/organization/dashboard');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Une erreur est survenue');
+    }
+  };
+
+  // Update with scope (for recurring events)
+  const handleUpdateWithScope = async (scope: RecurrenceScope) => {
+    if (!eventId || !pendingFormData || !originalEvent?.recurrenceGroupId) return;
+
+    setIsScopeActionLoading(true);
+    const groupId = originalEvent.recurrenceGroupId;
+    const eventStartDate = originalEvent.startDate;
+
+    try {
+      let eventIdsToUpdate: string[] = [];
+
+      if (scope === 'this_only') {
+        eventIdsToUpdate = [eventId];
+      } else if (scope === 'this_and_following') {
+        const { data: events } = await supabase
+          .from('events')
+          .select('id')
+          .eq('recurrence_group_id', groupId)
+          .gte('start_date', eventStartDate);
+        eventIdsToUpdate = events?.map(e => e.id) || [];
+      } else if (scope === 'all') {
+        const { data: events } = await supabase
+          .from('events')
+          .select('id')
+          .eq('recurrence_group_id', groupId);
+        eventIdsToUpdate = events?.map(e => e.id) || [];
+      }
+
+      await performUpdate(pendingFormData, eventIdsToUpdate);
+      setScopeDialogOpen(false);
+      setPendingFormData(null);
+    } catch (error) {
+      console.error('Error updating events:', error);
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setIsScopeActionLoading(false);
+    }
+  };
+
+  // Handle scope dialog confirmation
+  const handleScopeConfirm = (scope: RecurrenceScope) => {
+    if (scopeDialogAction === 'delete') {
+      handleDeleteWithScope(scope);
+    } else {
+      handleUpdateWithScope(scope);
     }
   };
 
@@ -888,7 +1003,7 @@ export default function EditEvent() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={handleDelete}
+                          onClick={handleDeleteClick}
                           disabled={isDeleting}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
@@ -966,6 +1081,19 @@ export default function EditEvent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Recurrence Scope Dialog */}
+      <RecurrenceScopeDialog
+        isOpen={scopeDialogOpen}
+        onClose={() => {
+          setScopeDialogOpen(false);
+          setPendingFormData(null);
+        }}
+        onConfirm={handleScopeConfirm}
+        actionType={scopeDialogAction}
+        eventDate={originalEvent?.startDate ? new Date(originalEvent.startDate) : undefined}
+        isLoading={isScopeActionLoading}
+      />
     </div>
   );
 }
