@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 interface OrganizationBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  availableTabs: string[];
+  availableTabs?: string[];
 }
 export const OrganizationBottomNav = ({
   activeTab,
@@ -41,7 +41,10 @@ export const OrganizationBottomNav = ({
   }];
 
   // Filter nav items based on available tabs, but always include scan
-  const navItems = allNavItems.filter(item => item.id === 'scan' || availableTabs.includes(item.id));
+  // If no availableTabs provided, show all items
+  const navItems = availableTabs 
+    ? allNavItems.filter(item => item.id === 'scan' || availableTabs.includes(item.id))
+    : allNavItems;
   return <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border md:hidden safe-area-bottom">
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map(item => {
