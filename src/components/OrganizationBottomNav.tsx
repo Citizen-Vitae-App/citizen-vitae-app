@@ -33,7 +33,7 @@ export const OrganizationBottomNav = ({
       label: 'Scan',
       icon: ScanLine,
       isCentral: true,
-      action: () => navigate('/scan-participant'),
+      action: () => navigate('/organization/scan'),
     },
     {
       id: 'teams',
