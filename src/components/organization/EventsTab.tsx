@@ -471,33 +471,43 @@ export function EventsTab({
       </div>
 
       {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-16 md:top-28 z-20 bg-background pb-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative w-full md:w-72">
+      <div className="sticky top-0 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0 md:top-28">
+        <div className="flex items-center gap-2">
+          {/* Search bar - flexible width */}
+          <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher un événement..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted border-0" />
+            <Input 
+              placeholder="Rechercher un événement..." 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-10 bg-muted border-0 h-10" 
+            />
           </div>
           
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && <Button variant="outline" size="sm" onClick={clearFilters}>
-                Effacer les filtres
-              </Button>}
-            {/* Hide action buttons for regular members - they can only view */}
-            {!isMember && <>
-                <Button asChild variant="outline" size={isMobile ? "sm" : "default"}>
-                  <Link to="/organization/scan">
-                    <QrCode className="mr-1 md:mr-2 h-4 w-4" />
-                    {isMobile ? "Scan" : "Scanner"}
-                  </Link>
-                </Button>
-                <Button asChild size={isMobile ? "sm" : "default"}>
-                  <Link to="/organization/create-event">
-                    <Plus className="mr-1 md:mr-2 h-4 w-4" />
-                    Créer
-                  </Link>
-                </Button>
-              </>}
-          </div>
+          {/* Clear filters button - desktop only */}
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters} className="hidden md:flex">
+              Effacer les filtres
+            </Button>
+          )}
+          
+          {/* Hide action buttons for regular members - they can only view */}
+          {!isMember && (
+            <>
+              <Button asChild variant="outline" size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+                <Link to="/organization/scan">
+                  <QrCode className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Scanner</span>
+                </Link>
+              </Button>
+              <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+                <Link to="/organization/create-event">
+                  <Plus className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Créer</span>
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
