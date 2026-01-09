@@ -28,6 +28,7 @@ import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
 import { EventRecurrenceSection, RecurrenceData } from '@/components/EventRecurrenceSection';
+import { RecurrenceScopeDialog, RecurrenceScope } from '@/components/RecurrenceScopeDialog';
 const eventSchema = z.object({
   name: z.string()
     .min(3, 'Le nom doit contenir au moins 3 caractères')
@@ -57,6 +58,7 @@ interface OriginalEventData {
   location: string;
   startDate: string;
   endDate: string;
+  recurrenceGroupId: string | null;
 }
 
 export default function EditEvent() {
@@ -86,8 +88,15 @@ export default function EditEvent() {
     frequency: 'weekly',
     interval: 1,
     weekDays: [],
-    endType: 'never',
+    endType: 'after_occurrences',
+    occurrences: 10,
   });
+
+  // Recurrence scope dialog state
+  const [scopeDialogOpen, setScopeDialogOpen] = useState(false);
+  const [scopeDialogAction, setScopeDialogAction] = useState<'edit' | 'delete'>('edit');
+  const [pendingFormData, setPendingFormData] = useState<EventFormData | null>(null);
+  const [isScopeActionLoading, setIsScopeActionLoading] = useState(false);
 
   // Get user's team info for leaders
   const { userTeam, isLeader } = useUserTeam(currentUserId, organizationId);
@@ -135,6 +144,7 @@ export default function EditEvent() {
           location: event.location,
           startDate: event.start_date,
           endDate: event.end_date,
+          recurrenceGroupId: event.recurrence_group_id || null,
         });
 
         // Set form values
@@ -163,14 +173,20 @@ export default function EditEvent() {
         }
 
         // Load recurrence data
+        const loadedEndType = event.recurrence_end_type as string;
+        const validEndType: 'on_date' | 'after_occurrences' = 
+          loadedEndType === 'on_date' || loadedEndType === 'after_occurrences' 
+            ? loadedEndType 
+            : 'after_occurrences';
+        
         setRecurrenceData({
           isRecurring: event.is_recurring ?? false,
           frequency: (event.recurrence_frequency as RecurrenceData['frequency']) ?? 'weekly',
           interval: event.recurrence_interval ?? 1,
           weekDays: event.recurrence_days ?? [],
-          endType: (event.recurrence_end_type as RecurrenceData['endType']) ?? 'never',
+          endType: validEndType,
           endDate: event.recurrence_end_date ? new Date(event.recurrence_end_date) : undefined,
-          occurrences: event.recurrence_occurrences ?? undefined,
+          occurrences: event.recurrence_occurrences ?? 10,
         });
 
         // Get event cause themes

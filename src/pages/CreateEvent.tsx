@@ -22,6 +22,7 @@ import { EventRecurrenceSection, RecurrenceData } from '@/components/EventRecurr
 import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
+import { generateOccurrenceDates, generateRecurrenceGroupId } from '@/lib/recurrenceUtils';
 
 const eventSchema = z.object({
   name: z.string()
@@ -78,7 +79,7 @@ export default function CreateEvent() {
     frequency: 'weekly',
     interval: 1,
     weekDays: [],
-    endType: 'never',
+    endType: 'after_occurrences',
     occurrences: 10,
   });
 
@@ -193,20 +194,15 @@ export default function CreateEvent() {
       // Combine date and time
       const startDateTime = new Date(data.startDate);
       const [startHours, startMinutes] = data.startTime.split(':');
-      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes));
+      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
       const endDateTime = new Date(data.endDate);
       const [endHours, endMinutes] = data.endTime.split(':');
-      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes));
+      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
-      // Insert event with recurrence data
-      const {
-        data: eventData,
-        error: insertError
-      } = await supabase.from('events').insert({
+      // Base event data
+      const baseEventData = {
         organization_id: organizationId,
         name: data.name,
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
         location: data.location,
         description: data.description || null,
         capacity: data.capacity ? parseInt(data.capacity) : null,
@@ -218,42 +214,110 @@ export default function CreateEvent() {
         latitude: coordinates?.latitude || null,
         longitude: coordinates?.longitude || null,
         team_id: selectedTeamId,
-        // Recurrence fields
-        is_recurring: recurrenceData.isRecurring,
-        recurrence_frequency: recurrenceData.isRecurring ? recurrenceData.frequency : null,
-        recurrence_interval: recurrenceData.isRecurring ? recurrenceData.interval : null,
-        recurrence_days: recurrenceData.isRecurring && recurrenceData.frequency === 'weekly' 
-          ? recurrenceData.weekDays 
-          : null,
-        recurrence_end_type: recurrenceData.isRecurring ? recurrenceData.endType : null,
-        recurrence_end_date: recurrenceData.isRecurring && recurrenceData.endType === 'on_date' && recurrenceData.endDate
-          ? recurrenceData.endDate.toISOString().split('T')[0]
-          : null,
-        recurrence_occurrences: recurrenceData.isRecurring && recurrenceData.endType === 'after_occurrences'
-          ? recurrenceData.occurrences 
-          : null,
-      }).select().single();
-      if (insertError || !eventData) {
-        console.error('Error creating event:', insertError);
-        toast.error('Erreur lors de la création de l\'événement');
-        return;
+      };
+
+      let createdEventIds: string[] = [];
+
+      if (recurrenceData.isRecurring) {
+        // Generate recurrence group ID
+        const recurrenceGroupId = generateRecurrenceGroupId();
+
+        // Generate all occurrence dates
+        const occurrences = generateOccurrenceDates(startDateTime, endDateTime, {
+          frequency: recurrenceData.frequency,
+          interval: recurrenceData.interval,
+          weekDays: recurrenceData.weekDays,
+          endType: recurrenceData.endType,
+          endDate: recurrenceData.endDate,
+          occurrences: recurrenceData.occurrences,
+        });
+
+        if (occurrences.length === 0) {
+          toast.error('Aucune occurrence générée. Vérifiez les paramètres de récurrence.');
+          return;
+        }
+
+        // Create all occurrences as individual events
+        const eventsToInsert = occurrences.map((occ) => ({
+          ...baseEventData,
+          start_date: occ.start.toISOString(),
+          end_date: occ.end.toISOString(),
+          is_recurring: true,
+          recurrence_group_id: recurrenceGroupId,
+          recurrence_frequency: recurrenceData.frequency,
+          recurrence_interval: recurrenceData.interval,
+          recurrence_days: recurrenceData.frequency === 'weekly' ? recurrenceData.weekDays : null,
+          recurrence_end_type: recurrenceData.endType,
+          recurrence_end_date: recurrenceData.endType === 'on_date' && recurrenceData.endDate
+            ? recurrenceData.endDate.toISOString().split('T')[0]
+            : null,
+          recurrence_occurrences: recurrenceData.endType === 'after_occurrences'
+            ? recurrenceData.occurrences
+            : null,
+        }));
+
+        const { data: insertedEvents, error: insertError } = await supabase
+          .from('events')
+          .insert(eventsToInsert)
+          .select('id');
+
+        if (insertError || !insertedEvents) {
+          console.error('Error creating recurring events:', insertError);
+          toast.error('Erreur lors de la création des événements récurrents');
+          return;
+        }
+
+        createdEventIds = insertedEvents.map(e => e.id);
+        toast.success(`${occurrences.length} événements créés avec succès !`);
+      } else {
+        // Single event creation
+        const { data: eventData, error: insertError } = await supabase
+          .from('events')
+          .insert({
+            ...baseEventData,
+            start_date: startDateTime.toISOString(),
+            end_date: endDateTime.toISOString(),
+            is_recurring: false,
+            recurrence_group_id: null,
+            recurrence_frequency: null,
+            recurrence_interval: null,
+            recurrence_days: null,
+            recurrence_end_type: null,
+            recurrence_end_date: null,
+            recurrence_occurrences: null,
+          })
+          .select('id')
+          .single();
+
+        if (insertError || !eventData) {
+          console.error('Error creating event:', insertError);
+          toast.error('Erreur lors de la création de l\'événement');
+          return;
+        }
+
+        createdEventIds = [eventData.id];
+        toast.success('Événement créé avec succès !');
       }
 
-      // Insert event cause themes
-      if (selectedCauseThemes.length > 0) {
-        const causeThemeInserts = selectedCauseThemes.map(causeThemeId => ({
-          event_id: eventData.id,
-          cause_theme_id: causeThemeId
-        }));
-        const {
-          error: causeThemeError
-        } = await supabase.from('event_cause_themes').insert(causeThemeInserts);
+      // Insert event cause themes for all created events
+      if (selectedCauseThemes.length > 0 && createdEventIds.length > 0) {
+        const causeThemeInserts = createdEventIds.flatMap(eventId =>
+          selectedCauseThemes.map(causeThemeId => ({
+            event_id: eventId,
+            cause_theme_id: causeThemeId,
+          }))
+        );
+
+        const { error: causeThemeError } = await supabase
+          .from('event_cause_themes')
+          .insert(causeThemeInserts);
+
         if (causeThemeError) {
           console.error('Error adding cause themes:', causeThemeError);
-          // Ne pas bloquer la création si les causes échouent
+          // Don't block creation if cause themes fail
         }
       }
-      toast.success('Événement créé avec succès !');
+
       navigate('/organization/dashboard');
     } catch (error) {
       console.error('Error:', error);
