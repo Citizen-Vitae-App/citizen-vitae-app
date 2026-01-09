@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { EventsTab } from '@/components/organization/EventsTab';
 import { PeopleTab } from '@/components/organization/PeopleTab';
@@ -10,6 +11,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function OrganizationDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('events');
   const { 
     isOwner, 
@@ -21,8 +23,17 @@ export default function OrganizationDashboard() {
     isLoading 
   } = useUserRole();
 
-  // Debug log for role checking
-  console.log('useUserRole result:', { isOwner, isAdmin, isLeader, isMember, userTeamId, isLoading });
+  // Apply ?tab=... deep-linking (used by /organization/scan bottom nav)
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+      // Clean the URL (optional but keeps it tidy)
+      searchParams.delete('tab');
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Redirect non-admin users to appropriate default tab if they try to access restricted tabs
   useEffect(() => {
