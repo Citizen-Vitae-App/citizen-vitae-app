@@ -89,8 +89,8 @@ function OrganizationCard({
             </div>
           </div>
 
-          {/* Navigate to organization dashboard */}
-          <Link to={`/organization?org=${organization.id}`}>
+          {/* Navigate to organization dashboard - Mobile only */}
+          <Link to="/organization" className="md:hidden">
             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
               <ChevronRight className="h-5 w-5" />
             </Button>
