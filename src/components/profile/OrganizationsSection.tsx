@@ -5,110 +5,78 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import type { UserOrganization } from '@/hooks/useUserProfile';
-
 interface OrganizationsSectionProps {
   organizations: UserOrganization[];
 }
-
-export function OrganizationsSection({ organizations }: OrganizationsSectionProps) {
-  const companies = organizations.filter((org) => org.type === 'company');
-  const associations = organizations.filter(
-    (org) => org.type === 'association' || org.type === 'foundation'
-  );
+export function OrganizationsSection({
+  organizations
+}: OrganizationsSectionProps) {
+  const companies = organizations.filter(org => org.type === 'company');
+  const associations = organizations.filter(org => org.type === 'association' || org.type === 'foundation');
 
   // Don't render anything if user has no organizations
   if (organizations.length === 0) {
     return null;
   }
-
-  return (
-    <section className="mb-6">
+  return <section className="mb-6">
       {/* Companies */}
-      {companies.length > 0 && (
-        <div className="mb-6">
+      {companies.length > 0 && <div className="mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Building2 className="h-5 w-5 text-muted-foreground" />
             {companies.length > 1 ? 'Mes entreprises' : 'Mon entreprise'}
           </h2>
           <div className="grid gap-3">
-            {companies.map((org) => (
-              <OrganizationCard key={org.id} organization={org} />
-            ))}
+            {companies.map(org => <OrganizationCard key={org.id} organization={org} />)}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Associations / Foundations */}
-      {associations.length > 0 && (
-        <div>
+      {associations.length > 0 && <div>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Home className="h-5 w-5 text-muted-foreground" />
             {associations.length > 1 ? 'Mes associations' : 'Mon association'}
           </h2>
           <div className="grid gap-3">
-            {associations.map((org) => (
-              <OrganizationCard key={org.id} organization={org} variant="association" />
-            ))}
+            {associations.map(org => <OrganizationCard key={org.id} organization={org} variant="association" />)}
           </div>
-        </div>
-      )}
-    </section>
-  );
+        </div>}
+    </section>;
 }
-
 interface OrganizationCardProps {
   organization: UserOrganization;
   variant?: 'company' | 'association';
 }
-
-function OrganizationCard({ organization, variant = 'company' }: OrganizationCardProps) {
+function OrganizationCard({
+  organization,
+  variant = 'company'
+}: OrganizationCardProps) {
   const getInitials = () => {
-    return organization.name
-      .split(' ')
-      .map((w) => w[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
+    return organization.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   };
-
   const getRoleBadge = () => {
     if (organization.is_owner) {
-      return (
-        <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
           <Crown className="h-3 w-3 mr-1" />
           Owner
-        </Badge>
-      );
+        </Badge>;
     }
     if (organization.role === 'admin') {
-      return (
-        <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
+      return <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
           <Shield className="h-3 w-3 mr-1" />
           Admin
-        </Badge>
-      );
+        </Badge>;
     }
-    return (
-      <Badge variant="secondary" className="text-xs">
+    return <Badge variant="secondary" className="text-xs">
         <UserIcon className="h-3 w-3 mr-1" />
         Membre
-      </Badge>
-    );
+      </Badge>;
   };
-
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+  return <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">
             <AvatarImage src={organization.logo_url || undefined} alt={organization.name} />
-            <AvatarFallback
-              className={
-                variant === 'association'
-                  ? 'bg-rose-100 text-rose-700'
-                  : 'bg-blue-100 text-blue-700'
-              }
-            >
+            <AvatarFallback className={variant === 'association' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'}>
               {getInitials()}
             </AvatarFallback>
           </Avatar>
@@ -117,10 +85,7 @@ function OrganizationCard({ organization, variant = 'company' }: OrganizationCar
             <h3 className="font-semibold text-foreground truncate">{organization.name}</h3>
             <div className="flex items-center gap-2 mt-1">
               {getRoleBadge()}
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {organization.member_count} membre{organization.member_count > 1 ? 's' : ''}
-              </span>
+              
             </div>
           </div>
 
@@ -132,6 +97,5 @@ function OrganizationCard({ organization, variant = 'company' }: OrganizationCar
           </Link>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
