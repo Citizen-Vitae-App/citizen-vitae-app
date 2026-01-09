@@ -213,11 +213,19 @@ export type Database = {
           has_waitlist: boolean | null
           id: string
           is_public: boolean | null
+          is_recurring: boolean | null
           latitude: number | null
           location: string
           longitude: number | null
           name: string
           organization_id: string
+          parent_event_id: string | null
+          recurrence_days: string[] | null
+          recurrence_end_date: string | null
+          recurrence_end_type: string | null
+          recurrence_frequency: string | null
+          recurrence_interval: number | null
+          recurrence_occurrences: number | null
           require_approval: boolean | null
           start_date: string
           team_id: string | null
@@ -233,11 +241,19 @@ export type Database = {
           has_waitlist?: boolean | null
           id?: string
           is_public?: boolean | null
+          is_recurring?: boolean | null
           latitude?: number | null
           location: string
           longitude?: number | null
           name: string
           organization_id: string
+          parent_event_id?: string | null
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_end_type?: string | null
+          recurrence_frequency?: string | null
+          recurrence_interval?: number | null
+          recurrence_occurrences?: number | null
           require_approval?: boolean | null
           start_date: string
           team_id?: string | null
@@ -253,11 +269,19 @@ export type Database = {
           has_waitlist?: boolean | null
           id?: string
           is_public?: boolean | null
+          is_recurring?: boolean | null
           latitude?: number | null
           location?: string
           longitude?: number | null
           name?: string
           organization_id?: string
+          parent_event_id?: string | null
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_end_type?: string | null
+          recurrence_frequency?: string | null
+          recurrence_interval?: number | null
+          recurrence_occurrences?: number | null
           require_approval?: boolean | null
           start_date?: string
           team_id?: string | null
@@ -269,6 +293,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {
