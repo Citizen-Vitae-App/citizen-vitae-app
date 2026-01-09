@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Trash2, Pencil, Loader2, Check, ShieldCheck } from 'lucide-react';
+import { Globe, Lock, ChevronDown, Users, UserCheck, ImageIcon, Tag, Trash2, Pencil, Loader2, Check, ShieldCheck, ArrowLeft } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import { EventParticipantsSection } from '@/components/organization/EventPartici
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
+import { EventRecurrenceSection, RecurrenceData } from '@/components/EventRecurrenceSection';
 const eventSchema = z.object({
   name: z.string()
     .min(3, 'Le nom doit contenir au moins 3 caractères')
@@ -80,6 +81,13 @@ export default function EditEvent() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'leader' | 'member'>('member');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [recurrenceData, setRecurrenceData] = useState<RecurrenceData>({
+    isRecurring: false,
+    frequency: 'weekly',
+    interval: 1,
+    weekDays: [],
+    endType: 'never',
+  });
 
   // Get user's team info for leaders
   const { userTeam, isLeader } = useUserTeam(currentUserId, organizationId);
@@ -153,6 +161,17 @@ export default function EditEvent() {
         if (event.latitude && event.longitude) {
           setCoordinates({ latitude: Number(event.latitude), longitude: Number(event.longitude) });
         }
+
+        // Load recurrence data
+        setRecurrenceData({
+          isRecurring: event.is_recurring ?? false,
+          frequency: (event.recurrence_frequency as RecurrenceData['frequency']) ?? 'weekly',
+          interval: event.recurrence_interval ?? 1,
+          weekDays: event.recurrence_days ?? [],
+          endType: (event.recurrence_end_type as RecurrenceData['endType']) ?? 'never',
+          endDate: event.recurrence_end_date ? new Date(event.recurrence_end_date) : undefined,
+          occurrences: event.recurrence_occurrences ?? undefined,
+        });
 
         // Get event cause themes
         const { data: eventThemes } = await supabase
@@ -372,6 +391,20 @@ export default function EditEvent() {
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
           team_id: selectedTeamId,
+          // Recurrence fields
+          is_recurring: recurrenceData.isRecurring,
+          recurrence_frequency: recurrenceData.isRecurring ? recurrenceData.frequency : null,
+          recurrence_interval: recurrenceData.isRecurring ? recurrenceData.interval : null,
+          recurrence_days: recurrenceData.isRecurring && recurrenceData.frequency === 'weekly' 
+            ? recurrenceData.weekDays 
+            : null,
+          recurrence_end_type: recurrenceData.isRecurring ? recurrenceData.endType : null,
+          recurrence_end_date: recurrenceData.isRecurring && recurrenceData.endType === 'on_date' && recurrenceData.endDate
+            ? recurrenceData.endDate.toISOString().split('T')[0]
+            : null,
+          recurrence_occurrences: recurrenceData.isRecurring && recurrenceData.endType === 'after_occurrences' 
+            ? recurrenceData.occurrences 
+            : null,
         })
         .eq('id', eventId);
 
@@ -497,6 +530,16 @@ export default function EditEvent() {
       
       <main className="container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto space-y-12">
+          {/* Back button */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/organization/dashboard?tab=events')}
+            className="gap-2"
+            type="button"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
@@ -592,6 +635,12 @@ export default function EditEvent() {
 
                 {/* Date & Time Block */}
                 <EventDateTimeSection form={form} />
+
+                {/* Recurrence Section */}
+                <EventRecurrenceSection 
+                  value={recurrenceData}
+                  onChange={setRecurrenceData}
+                />
 
                 {/* Location */}
                 <div className="space-y-2">
