@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { CalendarDays, CalendarRange, Repeat } from 'lucide-react';
+import { CalendarDays, CalendarX, Repeat } from 'lucide-react';
+
 export type RecurrenceScope = 'this_only' | 'this_and_following' | 'all';
+
 interface RecurrenceScopeDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,6 +15,7 @@ interface RecurrenceScopeDialogProps {
   eventDate?: Date;
   isLoading?: boolean;
 }
+
 export function RecurrenceScopeDialog({
   isOpen,
   onClose,
@@ -24,14 +25,22 @@ export function RecurrenceScopeDialog({
   isLoading = false
 }: RecurrenceScopeDialogProps) {
   const [selectedScope, setSelectedScope] = useState<RecurrenceScope>('this_only');
+
   const handleConfirm = () => {
     onConfirm(selectedScope);
   };
-  const title = actionType === 'edit' ? 'Modifier cet événement' : 'Supprimer cet événement';
+
+  const title = actionType === 'edit' ? 'Modifier l\'événement récurrent' : 'Supprimer l\'événement récurrent';
   const confirmLabel = actionType === 'edit' ? 'Modifier' : 'Supprimer';
   const confirmVariant = actionType === 'delete' ? 'destructive' : 'default';
-  return <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+
+  const handleOptionClick = (value: RecurrenceScope) => {
+    setSelectedScope(value);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Repeat className="h-5 w-5 text-primary" />
@@ -39,54 +48,42 @@ export function RecurrenceScopeDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-4 my-0">
-          {eventDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Occurrence du {format(eventDate, 'EEEE d MMMM yyyy', { locale: fr })}
-            </p>
-          )}
-
-          <RadioGroup value={selectedScope} onValueChange={value => setSelectedScope(value as RecurrenceScope)} className="space-y-3">
+        <div className="py-2">
+          <RadioGroup value={selectedScope} onValueChange={value => setSelectedScope(value as RecurrenceScope)} className="space-y-2">
             {/* This event only */}
-            <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
-              <RadioGroupItem value="this_only" id="scope-this" className="mt-1" />
-              <div className="flex-1">
-                <Label htmlFor="scope-this" className="flex items-center gap-2 font-medium cursor-pointer">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  Cet événement uniquement
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit' ? 'Modifier uniquement cette occurrence' : 'Supprimer uniquement cette occurrence'}
-                </p>
-              </div>
+            <div 
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => handleOptionClick('this_only')}
+            >
+              <RadioGroupItem value="this_only" id="scope-this" />
+              <CalendarDays className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Label htmlFor="scope-this" className="flex-1 cursor-pointer font-medium">
+                Cet événement uniquement
+              </Label>
             </div>
 
             {/* This and following */}
-            <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
-              <RadioGroupItem value="this_and_following" id="scope-following" className="mt-1" />
-              <div className="flex-1">
-                <Label htmlFor="scope-following" className="flex items-center gap-2 font-medium cursor-pointer">
-                  <CalendarRange className="h-4 w-4 text-muted-foreground" />
-                  Cet événement et tous les suivants
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit' ? 'Modifier toutes les occurrences à partir de cette date' : 'Supprimer toutes les occurrences à partir de cette date'}
-                </p>
-              </div>
+            <div 
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => handleOptionClick('this_and_following')}
+            >
+              <RadioGroupItem value="this_and_following" id="scope-following" />
+              <CalendarX className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Label htmlFor="scope-following" className="flex-1 cursor-pointer font-medium">
+                Cet événement et tous les suivants
+              </Label>
             </div>
 
             {/* All events */}
-            <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
-              <RadioGroupItem value="all" id="scope-all" className="mt-1" />
-              <div className="flex-1">
-                <Label htmlFor="scope-all" className="flex items-center gap-2 font-medium cursor-pointer">
-                  <Repeat className="h-4 w-4 text-muted-foreground" />
-                  Tous les événements de la série
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit' ? 'Modifier toutes les occurrences de cette série' : 'Supprimer toutes les occurrences de cette série'}
-                </p>
-              </div>
+            <div 
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => handleOptionClick('all')}
+            >
+              <RadioGroupItem value="all" id="scope-all" />
+              <Repeat className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Label htmlFor="scope-all" className="flex-1 cursor-pointer font-medium">
+                Tous les événements de la série
+              </Label>
             </div>
           </RadioGroup>
         </div>
@@ -100,5 +97,6 @@ export function RecurrenceScopeDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }

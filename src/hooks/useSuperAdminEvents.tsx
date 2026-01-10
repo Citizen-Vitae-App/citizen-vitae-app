@@ -10,6 +10,7 @@ interface Event {
   is_public: boolean | null;
   organization_name: string;
   participant_count: number;
+  recurrence_group_id: string | null;
 }
 
 export function useSuperAdminEvents() {
@@ -28,6 +29,7 @@ export function useSuperAdminEvents() {
           location,
           is_public,
           organization_id,
+          recurrence_group_id,
           organizations(name)
         `)
         .order('start_date', { ascending: false });
@@ -56,6 +58,7 @@ export function useSuperAdminEvents() {
         is_public: event.is_public,
         organization_name: (event.organizations as any)?.name || 'N/A',
         participant_count: countMap.get(event.id) || 0,
+        recurrence_group_id: event.recurrence_group_id,
       }));
     },
   });

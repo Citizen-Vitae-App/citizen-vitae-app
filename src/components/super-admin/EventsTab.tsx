@@ -27,12 +27,19 @@ import {
 } from '@/components/ui/select';
 import { useSuperAdminEvents } from '@/hooks/useSuperAdminEvents';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { RecurrenceScopeDialog, RecurrenceScope } from '@/components/RecurrenceScopeDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export function EventsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const [recurrenceDialogEvent, setRecurrenceDialogEvent] = useState<{ id: string; recurrence_group_id: string | null; start_date: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { events, isLoading, deleteEvent } = useSuperAdminEvents();
 
   const filteredEvents = events?.filter(event => {
@@ -43,6 +50,61 @@ export function EventsTab() {
       (statusFilter === 'private' && !event.is_public);
     return matchesSearch && matchesStatus;
   }) || [];
+
+  const handleDeleteClick = (event: typeof filteredEvents[0]) => {
+    if (event.recurrence_group_id) {
+      setRecurrenceDialogEvent({
+        id: event.id,
+        recurrence_group_id: event.recurrence_group_id,
+        start_date: event.start_date
+      });
+    } else {
+      setDeleteEventId(event.id);
+    }
+  };
+
+  const handleDeleteSingle = async () => {
+    if (!deleteEventId) return;
+    deleteEvent(deleteEventId);
+    setDeleteEventId(null);
+  };
+
+  const handleRecurrenceDeleteConfirm = async (scope: RecurrenceScope) => {
+    if (!recurrenceDialogEvent) return;
+    
+    setIsDeleting(true);
+    try {
+      if (scope === 'this_only') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('id', recurrenceDialogEvent.id);
+        if (error) throw error;
+        toast.success('Événement supprimé');
+      } else if (scope === 'this_and_following') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id)
+          .gte('start_date', recurrenceDialogEvent.start_date);
+        if (error) throw error;
+        toast.success('Événements supprimés');
+      } else if (scope === 'all') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id);
+        if (error) throw error;
+        toast.success('Série d\'événements supprimée');
+      }
+    } catch (error) {
+      console.error('Error deleting events:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
+      setRecurrenceDialogEvent(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -162,7 +224,7 @@ export function EventsTab() {
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
-                              onClick={() => deleteEvent(event.id)}
+                              onClick={() => handleDeleteClick(event)}
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Supprimer
@@ -178,6 +240,34 @@ export function EventsTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete confirmation dialog for non-recurring events */}
+      <AlertDialog open={!!deleteEventId} onOpenChange={open => !open && setDeleteEventId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet événement ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Toutes les inscriptions associées seront également supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSingle} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Recurrence scope dialog for recurring events */}
+      <RecurrenceScopeDialog
+        isOpen={!!recurrenceDialogEvent}
+        onClose={() => setRecurrenceDialogEvent(null)}
+        onConfirm={handleRecurrenceDeleteConfirm}
+        actionType="delete"
+        eventDate={recurrenceDialogEvent ? parseISO(recurrenceDialogEvent.start_date) : undefined}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
