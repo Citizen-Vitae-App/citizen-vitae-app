@@ -40,11 +40,7 @@ export function RecurrenceScopeDialog({
         </DialogHeader>
 
         <div className="py-4 my-0">
-          {eventDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Date sélectionnée : {format(eventDate, 'EEEE d MMMM yyyy', { locale: fr })}
-            </p>
-          )}
+          {eventDate}
 
           <RadioGroup value={selectedScope} onValueChange={value => setSelectedScope(value as RecurrenceScope)} className="space-y-3">
             {/* This event only */}
