@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ColumnHeaderWithFilter, EventFilters, SortField, SortDirection, FilterPanelType } from './ColumnHeaderWithFilter';
+import { RecurrenceScopeDialog, RecurrenceScope } from '@/components/RecurrenceScopeDialog';
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
   const start = parseISO(startDate);
@@ -114,6 +115,8 @@ export function EventsTab({
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const [recurrenceDialogEvent, setRecurrenceDialogEvent] = useState<{ id: string; recurrence_group_id: string | null; start_date: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [openFilterPanel, setOpenFilterPanel] = useState<FilterPanelType>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -337,6 +340,18 @@ export function EventsTab({
   const hasActiveFilters = filters.statuses.length > 0 || filters.visibilities.length > 0 || filters.participantsOperator !== null || filters.dateOperator !== null;
 
   // Event actions
+  const handleDeleteClick = (event: any) => {
+    if (event.recurrence_group_id) {
+      setRecurrenceDialogEvent({
+        id: event.id,
+        recurrence_group_id: event.recurrence_group_id,
+        start_date: event.start_date
+      });
+    } else {
+      setDeleteEventId(event.id);
+    }
+  };
+
   const handleDeleteEvent = async () => {
     if (!deleteEventId) return;
     const {
@@ -349,6 +364,43 @@ export function EventsTab({
       toast.success('Événement supprimé');
     }
     setDeleteEventId(null);
+  };
+
+  const handleRecurrenceDeleteConfirm = async (scope: RecurrenceScope) => {
+    if (!recurrenceDialogEvent) return;
+    
+    setIsDeleting(true);
+    try {
+      if (scope === 'this_only') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('id', recurrenceDialogEvent.id);
+        if (error) throw error;
+        toast.success('Événement supprimé');
+      } else if (scope === 'this_and_following') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id)
+          .gte('start_date', recurrenceDialogEvent.start_date);
+        if (error) throw error;
+        toast.success('Événements supprimés');
+      } else if (scope === 'all') {
+        const { error } = await supabase
+          .from('events')
+          .delete()
+          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id);
+        if (error) throw error;
+        toast.success('Série d\'événements supprimée');
+      }
+    } catch (error) {
+      console.error('Error deleting events:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
+      setRecurrenceDialogEvent(null);
+    }
   };
   const handleDuplicateEvent = async (event: any) => {
     const {
@@ -601,7 +653,7 @@ export function EventsTab({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive" onClick={e => {
                   e.stopPropagation();
-                  setDeleteEventId(event.id);
+                  handleDeleteClick(event);
                 }}>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Supprimer
@@ -726,7 +778,7 @@ export function EventsTab({
                               Dupliquer l'événement
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteEventId(event.id)}>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(event)}>
                               <Trash2 className="h-4 w-4 mr-2" />
                               Supprimer l'événement
                             </DropdownMenuItem>
@@ -740,7 +792,7 @@ export function EventsTab({
           </div>}
       </div>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete confirmation dialog for non-recurring events */}
       <AlertDialog open={!!deleteEventId} onOpenChange={open => !open && setDeleteEventId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -757,5 +809,15 @@ export function EventsTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Recurrence scope dialog for recurring events */}
+      <RecurrenceScopeDialog
+        isOpen={!!recurrenceDialogEvent}
+        onClose={() => setRecurrenceDialogEvent(null)}
+        onConfirm={handleRecurrenceDeleteConfirm}
+        actionType="delete"
+        eventDate={recurrenceDialogEvent ? parseISO(recurrenceDialogEvent.start_date) : undefined}
+        isLoading={isDeleting}
+      />
     </div>;
 }
