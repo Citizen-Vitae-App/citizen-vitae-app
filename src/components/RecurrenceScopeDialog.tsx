@@ -1,20 +1,12 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CalendarDays, CalendarRange, Repeat } from 'lucide-react';
-
 export type RecurrenceScope = 'this_only' | 'this_and_following' | 'all';
-
 interface RecurrenceScopeDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,30 +15,22 @@ interface RecurrenceScopeDialogProps {
   eventDate?: Date;
   isLoading?: boolean;
 }
-
 export function RecurrenceScopeDialog({
   isOpen,
   onClose,
   onConfirm,
   actionType,
   eventDate,
-  isLoading = false,
+  isLoading = false
 }: RecurrenceScopeDialogProps) {
   const [selectedScope, setSelectedScope] = useState<RecurrenceScope>('this_only');
-
   const handleConfirm = () => {
     onConfirm(selectedScope);
   };
-
-  const title = actionType === 'edit' 
-    ? 'Modifier cet événement' 
-    : 'Supprimer cet événement';
-
+  const title = actionType === 'edit' ? 'Modifier cet événement' : 'Supprimer cet événement';
   const confirmLabel = actionType === 'edit' ? 'Modifier' : 'Supprimer';
   const confirmVariant = actionType === 'delete' ? 'destructive' : 'default';
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+  return <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -55,18 +39,10 @@ export function RecurrenceScopeDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-4">
-          {eventDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Événement du {format(eventDate, 'd MMMM yyyy', { locale: fr })}
-            </p>
-          )}
+        <div className="py-4 my-0">
+          {eventDate}
 
-          <RadioGroup
-            value={selectedScope}
-            onValueChange={(value) => setSelectedScope(value as RecurrenceScope)}
-            className="space-y-3"
-          >
+          <RadioGroup value={selectedScope} onValueChange={value => setSelectedScope(value as RecurrenceScope)} className="space-y-3">
             {/* This event only */}
             <div className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
               <RadioGroupItem value="this_only" id="scope-this" className="mt-1" />
@@ -76,9 +52,7 @@ export function RecurrenceScopeDialog({
                   Cet événement uniquement
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit' 
-                    ? 'Modifier uniquement cette occurrence'
-                    : 'Supprimer uniquement cette occurrence'}
+                  {actionType === 'edit' ? 'Modifier uniquement cette occurrence' : 'Supprimer uniquement cette occurrence'}
                 </p>
               </div>
             </div>
@@ -92,9 +66,7 @@ export function RecurrenceScopeDialog({
                   Cet événement et tous les suivants
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit'
-                    ? 'Modifier toutes les occurrences à partir de cette date'
-                    : 'Supprimer toutes les occurrences à partir de cette date'}
+                  {actionType === 'edit' ? 'Modifier toutes les occurrences à partir de cette date' : 'Supprimer toutes les occurrences à partir de cette date'}
                 </p>
               </div>
             </div>
@@ -108,9 +80,7 @@ export function RecurrenceScopeDialog({
                   Tous les événements de la série
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {actionType === 'edit'
-                    ? 'Modifier toutes les occurrences de cette série'
-                    : 'Supprimer toutes les occurrences de cette série'}
+                  {actionType === 'edit' ? 'Modifier toutes les occurrences de cette série' : 'Supprimer toutes les occurrences de cette série'}
                 </p>
               </div>
             </div>
@@ -121,15 +91,10 @@ export function RecurrenceScopeDialog({
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Annuler
           </Button>
-          <Button 
-            variant={confirmVariant} 
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
+          <Button variant={confirmVariant} onClick={handleConfirm} disabled={isLoading}>
             {isLoading ? 'Traitement...' : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
