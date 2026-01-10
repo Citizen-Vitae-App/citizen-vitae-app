@@ -987,31 +987,45 @@ export default function EditEvent() {
                   <Button type="submit" className="flex-1" size="lg">
                     Mettre à jour
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" size="lg">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Supprimer l'événement ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. L'événement et toutes les inscriptions associées seront définitivement supprimés.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteClick}
-                          disabled={isDeleting}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          {isDeleting ? 'Suppression...' : 'Supprimer'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {originalEvent?.recurrenceGroupId ? (
+                    // For recurring events - show RecurrenceScopeDialog directly
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="lg"
+                      onClick={handleDeleteClick}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    // For single events - show confirmation AlertDialog
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button type="button" variant="destructive" size="lg">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer l'événement ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Cette action est irréversible. L'événement et toutes les inscriptions associées seront définitivement supprimés.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteSingle}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? 'Suppression...' : 'Supprimer'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
             </form>
