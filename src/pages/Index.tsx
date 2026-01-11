@@ -150,26 +150,22 @@ const Index = () => {
               </button>
             </div>
 
-            {/* Search Bar - Mobile (disabled when not logged in) */}
-            <div className="flex md:hidden flex-1 items-center gap-2">
-              <div className={`flex-1 border border-border rounded-md px-3 py-2 flex items-center gap-2 bg-background/50 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:shadow-md hover:border-primary/30'}`}>
-                <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  disabled={showMobileLoginPrompt}
-                  className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-base"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
+            {/* Search Bar - Mobile (icon only) */}
+            <div className="flex md:hidden flex-1 items-center justify-end gap-2">
+              {/* Search Icon Button - Mobile */}
+              <button
+                onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
+                disabled={showMobileLoginPrompt}
+                className={`border border-border rounded-full p-2.5 flex items-center justify-center bg-background/50 flex-shrink-0 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:bg-background/70 hover:shadow-md hover:border-primary/30'}`}
+              >
+                <Search className="w-4 h-4 text-foreground" />
+              </button>
               
               {/* Filters Button - Mobile (icon only, disabled when not logged in) */}
               <button
                 onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
                 disabled={showMobileLoginPrompt}
-                className={`border border-border rounded-md p-2.5 flex items-center justify-center bg-background/50 relative flex-shrink-0 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:bg-background/70 hover:shadow-md hover:border-primary/30'}`}
+                className={`border border-border rounded-full p-2.5 flex items-center justify-center bg-background/50 relative flex-shrink-0 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:bg-background/70 hover:shadow-md hover:border-primary/30'}`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 {activeFiltersCount > 0 && (
