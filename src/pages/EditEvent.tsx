@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -559,7 +560,11 @@ export default function EditEvent() {
 
       const count = eventIds.length;
       toast.success(count > 1 ? `${count} événements mis à jour !` : 'Événement mis à jour !');
-      navigate('/organization/dashboard');
+      
+      // Mark events as recently modified for visual feedback
+      useRecentlyModifiedEvents.getState().markEventsAsRecent(eventIds, originalEvent?.recurrenceGroupId);
+
+      navigate('/organization/dashboard?tab=events');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Une erreur est survenue');

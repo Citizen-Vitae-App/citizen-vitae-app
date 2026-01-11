@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -217,10 +218,11 @@ export default function CreateEvent() {
       };
 
       let createdEventIds: string[] = [];
+      let usedRecurrenceGroupId: string | null = null;
 
       if (recurrenceData.isRecurring) {
         // Generate recurrence group ID
-        const recurrenceGroupId = generateRecurrenceGroupId();
+        usedRecurrenceGroupId = generateRecurrenceGroupId();
 
         // Generate all occurrence dates
         const occurrences = generateOccurrenceDates(startDateTime, endDateTime, {
@@ -243,7 +245,7 @@ export default function CreateEvent() {
           start_date: occ.start.toISOString(),
           end_date: occ.end.toISOString(),
           is_recurring: true,
-          recurrence_group_id: recurrenceGroupId,
+          recurrence_group_id: usedRecurrenceGroupId,
           recurrence_frequency: recurrenceData.frequency,
           recurrence_interval: recurrenceData.interval,
           recurrence_days: recurrenceData.frequency === 'weekly' ? recurrenceData.weekDays : null,
@@ -318,7 +320,10 @@ export default function CreateEvent() {
         }
       }
 
-      navigate('/organization/dashboard');
+      // Mark events as recently created for visual feedback
+      useRecentlyModifiedEvents.getState().markEventsAsRecent(createdEventIds, usedRecurrenceGroupId);
+
+      navigate('/organization/dashboard?tab=events');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Une erreur est survenue');
