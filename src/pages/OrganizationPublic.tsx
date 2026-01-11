@@ -204,7 +204,7 @@ const OrganizationPublic = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/" className="flex items-center gap-3">
                 <ArrowLeft className="h-5 w-5 text-foreground" />
-                <img src={logo} alt="CitizenVitae" className="h-8" />
+                <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
               </Link>
             </div>
           </div>
@@ -245,7 +245,7 @@ const OrganizationPublic = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3">
               <ArrowLeft className="h-5 w-5 text-foreground" />
-              <img src={logo} alt="CitizenVitae" className="h-8" />
+              <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
             </Link>
           </div>
         </div>

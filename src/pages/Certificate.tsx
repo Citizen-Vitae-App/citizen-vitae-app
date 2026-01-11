@@ -132,7 +132,7 @@ const Certificate = () => {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               <Link to="/" className="flex items-center gap-3">
-                <img src={logo} alt="CitizenVitae" className="h-8" />
+                <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
               </Link>
             </div>
           </div>
@@ -152,7 +152,7 @@ const Certificate = () => {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               <Link to="/" className="flex items-center gap-3">
-                <img src={logo} alt="CitizenVitae" className="h-8" />
+                <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
               </Link>
             </div>
           </div>
