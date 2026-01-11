@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X } from 'lucide-react';
+import { Heart, Share2, MapPin, Calendar, Clock, ArrowLeft, Building2, Check, Loader2, X, ExternalLink } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 interface CauseTheme {
   id: string;
   name: string;
@@ -76,6 +77,7 @@ const EventDetail = () => {
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
   const [showSelfCertification, setShowSelfCertification] = useState(false);
+  const [showUnregisterTooltip, setShowUnregisterTooltip] = useState(false);
   const isLiked = eventId ? isFavorite(eventId) : false;
   const handleLikeClick = async () => {
     if (!eventId) return;
@@ -368,10 +370,15 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
       {/* Map Section - Full Width */}
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-foreground mb-4 text-lg font-medium">Où se situe l'événement</h2>
-        <div className="flex items-center gap-2 text-muted-foreground mb-4">
-          <MapPin className="h-4 w-4" />
-          <span>{event.location}</span>
-        </div>
+        <a 
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-muted-foreground mb-4 group hover:text-primary transition-colors duration-200"
+        >
+          <MapPin className="h-4 w-4 flex-shrink-0" />
+          <span className="underline underline-offset-2 group-hover:text-primary transition-colors duration-200">{event.location}</span>
+        </a>
         {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>}
@@ -387,17 +394,33 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
             setShowFaceMatch(true);
           }
         }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} />
-            <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
-              {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
-                  <X className="h-5 w-5 mr-2" />
-                  Me désinscrire
-                </>}
-            </Button>
-            {!canUserUnregister && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Désinscription impossible moins de 24h avant la fin de l'événement
-              </p>
-            )}
+            <TooltipProvider>
+              <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={() => {
+                      if (!canUserUnregister) {
+                        setShowUnregisterTooltip(true);
+                        setTimeout(() => setShowUnregisterTooltip(false), 3000);
+                      } else {
+                        handleUnregister();
+                      }
+                    }} 
+                    disabled={isUnregistering} 
+                    variant="outline" 
+                    className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}
+                  >
+                    {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
+                        <X className="h-5 w-5 mr-2" />
+                        Me désinscrire
+                      </>}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
+                  <p>Désinscription impossible moins de 24h avant la fin de l'événement</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-3">
