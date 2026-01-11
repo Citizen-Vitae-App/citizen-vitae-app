@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -15,11 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ColumnHeaderWithFilter, EventFilters, SortField, SortDirection, FilterPanelType } from './ColumnHeaderWithFilter';
 import { RecurrenceScopeDialog, RecurrenceScope } from '@/components/RecurrenceScopeDialog';
+import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 const getEventStatus = (startDate: string, endDate: string) => {
   const now = new Date();
   const start = parseISO(startDate);
@@ -120,6 +121,18 @@ export function EventsTab({
   const [openFilterPanel, setOpenFilterPanel] = useState<FilterPanelType>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // Recent events feedback
+  const { isEventRecent, clearAll: clearRecentEvents } = useRecentlyModifiedEvents();
+  
+  // Clear recent highlights after component mounts (so they show once, then disappear on next visit)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      clearRecentEvents();
+    }, 5000); // Clear after 5 seconds
+    return () => clearTimeout(timer);
+  }, [clearRecentEvents]);
 
   // Debug log for hook call
   console.log('Calling useOrganizationEvents with teamId:', userTeamId);
@@ -354,20 +367,53 @@ export function EventsTab({
 
   const handleDeleteEvent = async () => {
     if (!deleteEventId) return;
-    const {
-      error
-    } = await supabase.from('events').delete().eq('id', deleteEventId);
+    
+    // Optimistic update: immediately remove from cache
+    queryClient.setQueryData(['organization-events', organizationId, userTeamId, undefined], (oldData: any[] | undefined) => {
+      if (!oldData) return oldData;
+      return oldData.filter(event => event.id !== deleteEventId);
+    });
+    
+    setDeleteEventId(null);
+    toast.success('Événement supprimé');
+    
+    // Perform actual deletion in background
+    const { error } = await supabase.from('events').delete().eq('id', deleteEventId);
     if (error) {
+      // Revert on error - refetch to get correct state
+      queryClient.invalidateQueries({ queryKey: ['organization-events', organizationId] });
       toast.error('Erreur lors de la suppression');
       console.error(error);
-    } else {
-      toast.success('Événement supprimé');
     }
-    setDeleteEventId(null);
   };
 
   const handleRecurrenceDeleteConfirm = async (scope: RecurrenceScope) => {
     if (!recurrenceDialogEvent) return;
+    
+    // Calculate which events will be deleted for optimistic update
+    const eventId = recurrenceDialogEvent.id;
+    const groupId = recurrenceDialogEvent.recurrence_group_id;
+    const startDate = recurrenceDialogEvent.start_date;
+    
+    // Optimistic update
+    queryClient.setQueryData(['organization-events', organizationId, userTeamId, undefined], (oldData: any[] | undefined) => {
+      if (!oldData) return oldData;
+      
+      if (scope === 'this_only') {
+        return oldData.filter(event => event.id !== eventId);
+      } else if (scope === 'this_and_following') {
+        return oldData.filter(event => {
+          if (event.recurrence_group_id !== groupId) return true;
+          return event.start_date < startDate;
+        });
+      } else if (scope === 'all') {
+        return oldData.filter(event => event.recurrence_group_id !== groupId);
+      }
+      return oldData;
+    });
+    
+    setRecurrenceDialogEvent(null);
+    toast.success(scope === 'this_only' ? 'Événement supprimé' : scope === 'this_and_following' ? 'Événements supprimés' : 'Série d\'événements supprimée');
     
     setIsDeleting(true);
     try {
@@ -375,31 +421,29 @@ export function EventsTab({
         const { error } = await supabase
           .from('events')
           .delete()
-          .eq('id', recurrenceDialogEvent.id);
+          .eq('id', eventId);
         if (error) throw error;
-        toast.success('Événement supprimé');
       } else if (scope === 'this_and_following') {
         const { error } = await supabase
           .from('events')
           .delete()
-          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id)
-          .gte('start_date', recurrenceDialogEvent.start_date);
+          .eq('recurrence_group_id', groupId)
+          .gte('start_date', startDate);
         if (error) throw error;
-        toast.success('Événements supprimés');
       } else if (scope === 'all') {
         const { error } = await supabase
           .from('events')
           .delete()
-          .eq('recurrence_group_id', recurrenceDialogEvent.recurrence_group_id);
+          .eq('recurrence_group_id', groupId);
         if (error) throw error;
-        toast.success('Série d\'événements supprimée');
       }
     } catch (error) {
       console.error('Error deleting events:', error);
+      // Revert on error
+      queryClient.invalidateQueries({ queryKey: ['organization-events', organizationId] });
       toast.error('Erreur lors de la suppression');
     } finally {
       setIsDeleting(false);
-      setRecurrenceDialogEvent(null);
     }
   };
   const handleDuplicateEvent = async (event: any) => {
@@ -612,7 +656,14 @@ export function EventsTab({
           const eventParticipants = participantCounts?.get(event.id);
           const participantCount = eventParticipants?.count || 0;
           const capacity = event.capacity;
-          return <div key={event.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
+          const isRecent = isEventRecent(event.id, event.recurrence_group_id);
+          return <div 
+            key={event.id} 
+            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-out ${
+              isRecent ? 'bg-blue-50 hover:bg-blue-100/80' : 'bg-muted/30 hover:bg-muted/50'
+            }`}
+            onClick={() => navigate(`/organization/events/${event.id}/edit`)}
+          >
                   <img src={event.cover_image_url || defaultEventCover} alt={event.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{event.name}</h3>
@@ -697,7 +748,14 @@ export function EventsTab({
               const participants = eventParticipants?.participants || [];
               const capacity = event.capacity;
               const fillRatio = capacity ? participantCount / capacity * 100 : null;
-              return <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/organization/events/${event.id}/edit`)}>
+              const isRecent = isEventRecent(event.id, event.recurrence_group_id);
+              return <TableRow 
+                key={event.id} 
+                className={`cursor-pointer transition-all duration-300 ease-out ${
+                  isRecent ? 'bg-blue-50 hover:bg-blue-100/80' : 'hover:bg-muted/50'
+                }`}
+                onClick={() => navigate(`/organization/events/${event.id}/edit`)}
+              >
                       <TableCell className="py-2">
                         <div className="flex items-center gap-3 min-w-0">
                           <img src={event.cover_image_url || defaultEventCover} alt={event.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
