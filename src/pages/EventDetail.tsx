@@ -393,6 +393,11 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
                   Me désinscrire
                 </>}
             </Button>
+            {!canUserUnregister && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Désinscription impossible moins de 24h avant la fin de l'événement
+              </p>
+            )}
           </div>
         </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-3">
