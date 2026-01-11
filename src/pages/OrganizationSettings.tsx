@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award, Eye, Heart } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award, Eye, Heart, ArrowLeftRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -575,6 +576,26 @@ export default function OrganizationSettings() {
         </main>
         
         <MobileBottomNav />
+        
+        {/* FAB Mobile - Revenir au mode citoyen */}
+        <CitizenModeFAB />
       </div>
     </>;
+}
+
+function CitizenModeFAB() {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
+  if (!isMobile) return null;
+  
+  return (
+    <button
+      onClick={() => navigate('/')}
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black text-white px-5 py-3 rounded-full shadow-lg transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+    >
+      <ArrowLeftRight className="h-4 w-4" />
+      <span className="text-sm font-medium whitespace-nowrap">Revenir au mode citoyen</span>
+    </button>
+  );
 }
