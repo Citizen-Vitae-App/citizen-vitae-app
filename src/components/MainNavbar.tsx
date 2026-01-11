@@ -43,7 +43,7 @@ export const MainNavbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="hover:opacity-80 transition-opacity">
-              <img src={logo} alt="CitizenVitae" className="h-8" />
+              <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
             </Link>
             <Link to="/auth">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -62,7 +62,7 @@ export const MainNavbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="hover:opacity-80 transition-opacity">
-            <img src={logo} alt="CitizenVitae" className="h-8" />
+            <img src={logo} alt="CitizenVitae" className="h-8" width="203" height="32" />
           </Link>
 
           {/* Right side */}
