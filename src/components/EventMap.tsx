@@ -8,7 +8,7 @@ interface EventMapProps {
   iconUrl?: string;
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDxIu4kXGdomUkhgAdalCzHB_b41IXzGkA';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const EventMap = ({ lat, lng, zoom = 14, iconUrl }: EventMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
