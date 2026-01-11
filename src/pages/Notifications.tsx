@@ -88,7 +88,7 @@ const Notifications = () => {
                       <p className={`text-sm flex-1 ${notification.is_read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
                         {language === 'fr' ? notification.message_fr : notification.message_en}
                       </p>
-                      {!notification.is_read && <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-[#012674]" />}
+                      {!notification.is_read && <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-[#e23428]" />}
                     </div>
                     
                     {/* Action buttons */}
