@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Users, UsersRound, ChevronRight, Building2 } from 'lucide-react';
+import { Settings, Users, FolderKanban, ChevronRight, Building2 } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ const sections = [{
 }, {
   id: 'teams' as Section,
   label: 'Équipes',
-  icon: UsersRound,
+  icon: FolderKanban,
   description: 'Organisez vos équipes'
 }];
 export function OrganizationTab({
@@ -80,7 +80,7 @@ export function OrganizationTab({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <UsersRound className="h-5 w-5 text-primary" />
+                  <FolderKanban className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <CardTitle className="text-lg">Équipes</CardTitle>
@@ -97,15 +97,7 @@ export function OrganizationTab({
   }
 
   // Desktop view - unified layout with side navigation
-  return <div className="space-y-6">
-      {/* Header */}
-      <div>
-        
-        
-      </div>
-
-      {/* Main content with side navigation */}
-      <div className="flex gap-8">
+  return <div className="flex gap-8">
         {/* Left side navigation */}
         <nav className="w-56 flex-shrink-0">
           <div className="sticky top-32 space-y-1">
@@ -122,10 +114,9 @@ export function OrganizationTab({
 
         {/* Right content area */}
         <div className="flex-1 min-w-0">
-          {activeSection === 'profile' && <OrganizationSettingsContent embedded />}
+        {activeSection === 'profile' && <OrganizationSettingsContent embedded />}
           {activeSection === 'members' && <MembersTab canManageMembers />}
           {activeSection === 'teams' && <TeamsTab canCreateTeams />}
         </div>
-      </div>
-    </div>;
+      </div>;
 }
