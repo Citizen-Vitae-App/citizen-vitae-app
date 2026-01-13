@@ -24,8 +24,8 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
     const titleTop = isMobile ? '17%' : '19.6%';
     const attribueTop = isMobile ? '28%' : '30.3%';
     const nameFontSize = isMobile ? 'clamp(12px, 3.4vw, 28px)' : 'clamp(18px, 4.5vw, 40px)';
-    const nameTop = isMobile ? '31%' : '35%';
-    const lineTop = isMobile ? '45%' : '46.5%';
+    const nameTop = isMobile ? '34%' : '35%';
+    const lineTop = isMobile ? '46%' : '46.5%';
     const lineHeight = isMobile ? '1px' : '2px';
     
     return (
@@ -63,10 +63,14 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
 
         {/* Cocarde - top right area */}
         <img
-          className="absolute top-[34%] right-[10%] w-[8.4%] h-auto z-20"
+          className="absolute top-[34%] right-[10%] h-auto z-20"
           alt="Cocarde française"
           src={cocardeSvg}
-          style={{ aspectRatio: '75/118' }}
+          style={{ 
+            aspectRatio: '75/118',
+            width: isMobile ? '10%' : '8.4%',
+            imageRendering: 'auto'
+          }}
         />
 
         {/* Logo Citizen Vitae - centered top */}
@@ -131,11 +135,13 @@ export const CertificatePreview = forwardRef<HTMLDivElement, CertificatePreviewP
 
         {/* Body text */}
         <p 
-          className="absolute top-[51.3%] left-1/2 -translate-x-1/2 w-[51%] text-[#012573] text-center leading-relaxed z-20"
+          className="absolute left-1/2 -translate-x-1/2 text-[#012573] text-center leading-relaxed z-20"
           style={{ 
+            top: isMobile ? '50%' : '51.3%',
+            width: isMobile ? '78%' : '51%',
             fontFamily: 'Questrial, sans-serif', 
             fontWeight: 500,
-            fontSize: 'clamp(6px, 1.35vw, 12px)'
+            fontSize: isMobile ? 'clamp(5px, 1.15vw, 10px)' : 'clamp(6px, 1.35vw, 12px)'
           }}
         >
           Né(e) le {data.dateOfBirth}, en reconnaissance de sa participation à l'évènement
