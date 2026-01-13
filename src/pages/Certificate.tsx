@@ -206,7 +206,7 @@ const Certificate = () => {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Certificate Preview - Fully visible on mobile */}
         <div className="w-full max-w-5xl mx-auto">
-          <div className="border border-border rounded-lg overflow-hidden shadow-xl">
+          <div className="border border-border overflow-hidden shadow-xl">
             <CertificatePreview ref={certificateRef} data={certificateData} />
           </div>
           
@@ -230,7 +230,7 @@ const Certificate = () => {
         {/* Link to event */}
         {eventId && (
           <div className="text-center mt-6">
-            <Link to={`/events/${eventId}`} className="text-primary hover:underline text-sm">
+            <Link to={`/events/${eventId}`} className="text-primary underline text-sm hover:text-primary/80">
               Voir les détails de l'événement
             </Link>
           </div>
