@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award, Eye, Heart } from 'lucide-react';
+import { Upload, Camera, Globe, Building2, Users, MapPin, Mail, Phone, Link2, Linkedin, Instagram, Twitter, Save, Loader2, Award, Eye, Heart, Pencil } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -266,94 +266,84 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
 
   return (
     <div className="space-y-6">
-      {/* Cover Image */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Image de couverture</CardTitle>
-          <CardDescription>
-            Cette image apparaîtra en haut de votre page publique
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative w-full h-40 md:h-56 rounded-lg overflow-hidden bg-muted border border-border">
+      {/* LinkedIn-style Header: Cover + Logo */}
+      <Card className="overflow-hidden">
+        <div className="relative">
+          {/* Cover Image */}
+          <div className="relative w-full h-32 md:h-44 bg-muted">
             {formData.cover_image_url ? (
               <img src={formData.cover_image_url} alt="Couverture" className="w-full h-full object-cover" />
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <Camera className="h-8 w-8" />
+              <div className="flex items-center justify-center h-full text-muted-foreground bg-gradient-to-br from-muted to-muted/50">
+                <Camera className="h-8 w-8 opacity-50" />
               </div>
             )}
-            <label className="absolute bottom-4 right-4 cursor-pointer">
+            {/* Cover edit button */}
+            <label className="absolute top-3 right-3 cursor-pointer">
               <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
-              <Button variant="secondary" size="sm" asChild>
+              <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md" asChild>
                 <span>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Modifier
+                  <Pencil className="h-4 w-4" />
                 </span>
               </Button>
             </label>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Logo & Name */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Identité</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex flex-col items-center gap-3">
-              <Avatar className="h-24 w-24 border-2 border-border">
+          {/* Logo overlapping cover */}
+          <div className="absolute left-6 -bottom-12 md:-bottom-14">
+            <div className="relative">
+              <Avatar className="h-24 w-24 md:h-28 md:w-28 border-4 border-background shadow-lg">
                 <AvatarImage src={formData.logo_url || undefined} />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl md:text-3xl bg-muted">
                   {formData.name?.charAt(0) || 'O'}
                 </AvatarFallback>
               </Avatar>
-              <label className="cursor-pointer">
+              <label className="absolute -bottom-1 -right-1 cursor-pointer">
                 <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full bg-background shadow-md hover:bg-muted" asChild>
                   <span>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Logo
+                    <Pencil className="h-3.5 w-3.5" />
                   </span>
                 </Button>
               </label>
             </div>
+          </div>
+        </div>
 
-            <div className="flex-1 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom de l'organisation</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name || ''} 
-                  onChange={e => handleInputChange('name', e.target.value)} 
-                  placeholder="Nom de votre organisation" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">
-                  Description courte
-                  <span className="text-muted-foreground text-xs ml-2">
-                    ({(formData.description || '').length}/400)
-                  </span>
-                </Label>
-                <Textarea 
-                  id="description" 
-                  value={formData.description || ''} 
-                  onChange={e => handleInputChange('description', e.target.value.slice(0, 400))} 
-                  placeholder="Décrivez brièvement votre organisation..." 
-                  className="resize-none" 
-                  rows={3} 
-                />
-              </div>
+        {/* Content below header */}
+        <CardContent className="pt-16 md:pt-18 space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom de l'organisation</Label>
+              <Input 
+                id="name" 
+                value={formData.name || ''} 
+                onChange={e => handleInputChange('name', e.target.value)} 
+                placeholder="Nom de votre organisation" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">
+                Description courte
+                <span className="text-muted-foreground text-xs ml-2">
+                  ({(formData.description || '').length}/400)
+                </span>
+              </Label>
+              <Textarea 
+                id="description" 
+                value={formData.description || ''} 
+                onChange={e => handleInputChange('description', e.target.value.slice(0, 400))} 
+                placeholder="Décrivez brièvement votre organisation..." 
+                className="resize-none" 
+                rows={3} 
+              />
             </div>
           </div>
 
           <Separator />
 
           <div className="space-y-2">
-            <Label>Mission & Vision (optionnel)</Label>
+            <Label>Mission & Vision</Label>
             <RichTextEditor 
               value={formData.bio || ''} 
               onChange={html => handleInputChange('bio', html)} 
