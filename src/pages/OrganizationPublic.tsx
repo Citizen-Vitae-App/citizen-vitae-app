@@ -314,14 +314,20 @@ const OrganizationPublic = () => {
                     <Badge
                       key={theme.id}
                       style={{ backgroundColor: theme.color }}
-                      className="text-white"
+                      className="text-white flex items-center gap-1.5"
                     >
-                      {theme.icon} {theme.name}
+                      <DynamicIcon name={theme.icon} color="white" size={14} />
+                      {theme.name}
                     </Badge>
                   ))}
                 </div>
               </div>
             )}
+
+            {/* Mobile Info Card - Below Causes */}
+            <div className="lg:hidden">
+              <InfoCard organization={organization} />
+            </div>
 
             {/* Events by Category */}
             {upcomingEvents.length > 0 && (
@@ -461,117 +467,135 @@ const OrganizationPublic = () => {
             )}
           </div>
 
-          {/* Right Column - Info Card */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-card border border-border rounded-lg p-6 space-y-4">
-              {/* Location */}
-              {organization.address && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <p className="text-foreground">{organization.address}</p>
-                </div>
-              )}
-
-              {/* Website */}
-              {organization.website && (
-                <div className="flex items-start gap-3">
-                  <Globe className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <a
-                    href={organization.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
-                  >
-                    {organization.website.replace(/^https?:\/\//, '')}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              )}
-
-              {/* Email */}
-              {organization.email && (
-                <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <a
-                    href={`mailto:${organization.email}`}
-                    className="text-primary hover:underline"
-                  >
-                    {organization.email}
-                  </a>
-                </div>
-              )}
-
-              {/* Phone */}
-              {organization.phone && (
-                <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <a
-                    href={`tel:${organization.phone}`}
-                    className="text-primary hover:underline"
-                  >
-                    {organization.phone}
-                  </a>
-                </div>
-              )}
-
-              {/* Employee Count */}
-              {organization.employee_count && (
-                <div className="flex items-start gap-3">
-                  <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <p className="text-foreground">{organization.employee_count} employés</p>
-                </div>
-              )}
-
-              {/* Sector */}
-              {organization.sector && (
-                <div className="pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">Secteur</p>
-                  <p className="font-medium text-foreground">{organization.sector}</p>
-                </div>
-              )}
-
-              {/* Social Links */}
-              {(organization.linkedin_url || organization.instagram_url || organization.twitter_url) && (
-                <div className="pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-2">Réseaux sociaux</p>
-                  <div className="flex gap-3">
-                    {organization.linkedin_url && (
-                      <a
-                        href={organization.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        LinkedIn
-                      </a>
-                    )}
-                    {organization.instagram_url && (
-                      <a
-                        href={organization.instagram_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Instagram
-                      </a>
-                    )}
-                    {organization.twitter_url && (
-                      <a
-                        href={organization.twitter_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Twitter
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+          {/* Right Column - Info Card (Desktop only) */}
+          <div className="hidden lg:block lg:col-span-1">
+            <InfoCard organization={organization} />
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Separate InfoCard component for reuse
+const InfoCard = ({ organization }: { organization: Organization }) => {
+  const getGoogleMapsUrl = (address: string) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
+
+  return (
+    <div className="sticky top-24 bg-card border border-border rounded-lg p-6 space-y-4">
+      {/* Location */}
+      {organization.address && (
+        <div className="flex items-start gap-3">
+          <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <a
+            href={getGoogleMapsUrl(organization.address)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:text-primary hover:underline transition-colors"
+          >
+            {organization.address}
+          </a>
+        </div>
+      )}
+
+      {/* Website */}
+      {organization.website && (
+        <div className="flex items-start gap-3">
+          <Globe className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <a
+            href={organization.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline flex items-center gap-1"
+          >
+            {organization.website.replace(/^https?:\/\//, '')}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+
+      {/* Email */}
+      {organization.email && (
+        <div className="flex items-start gap-3">
+          <Mail className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <a
+            href={`mailto:${organization.email}`}
+            className="text-primary hover:underline"
+          >
+            {organization.email}
+          </a>
+        </div>
+      )}
+
+      {/* Phone */}
+      {organization.phone && (
+        <div className="flex items-start gap-3">
+          <Phone className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <a
+            href={`tel:${organization.phone}`}
+            className="text-primary hover:underline"
+          >
+            {organization.phone}
+          </a>
+        </div>
+      )}
+
+      {/* Employee Count */}
+      {organization.employee_count && (
+        <div className="flex items-start gap-3">
+          <Users className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <p className="text-foreground">{organization.employee_count} employés</p>
+        </div>
+      )}
+
+      {/* Sector */}
+      {organization.sector && (
+        <div className="pt-4 border-t border-border">
+          <p className="text-sm text-muted-foreground">Secteur</p>
+          <p className="font-medium text-foreground">{organization.sector}</p>
+        </div>
+      )}
+
+      {/* Social Links */}
+      {(organization.linkedin_url || organization.instagram_url || organization.twitter_url) && (
+        <div className="pt-4 border-t border-border">
+          <p className="text-sm text-muted-foreground mb-2">Réseaux sociaux</p>
+          <div className="flex gap-3">
+            {organization.linkedin_url && (
+              <a
+                href={organization.linkedin_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                LinkedIn
+              </a>
+            )}
+            {organization.instagram_url && (
+              <a
+                href={organization.instagram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Instagram
+              </a>
+            )}
+            {organization.twitter_url && (
+              <a
+                href={organization.twitter_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Twitter
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
