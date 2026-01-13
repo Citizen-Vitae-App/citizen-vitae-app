@@ -105,7 +105,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-14 md:h-16 gap-3">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <img src={logo} alt="CitizenVitae" className="h-6 md:h-8" width="203" height="32" />
+              <img src={logo} alt="CitizenVitae" className="h-6 md:h-8 w-auto" />
             </div>
 
             {/* Search Bar - Desktop */}
