@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import EventCard from '@/components/EventCard';
+import { MainNavbar } from '@/components/MainNavbar';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { sanitizeHtml } from '@/lib/sanitize';
@@ -195,25 +196,48 @@ const OrganizationPublic = () => {
     }
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black/90">
-        {/* Floating Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="fixed top-4 left-4 z-[60] bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg"
-        >
-          <ChevronLeft className="h-6 w-6 text-foreground" />
-        </button>
-        
-        {/* Floating Sheet */}
-        <div className="min-h-screen pt-16">
-          <div className="bg-background rounded-t-3xl min-h-[calc(100vh-64px)] overflow-hidden">
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+      <>
+        {/* Desktop/Tablet: Normal layout */}
+        <div className="hidden md:block min-h-screen bg-background">
+          <MainNavbar />
+          <div className="container mx-auto px-4 py-8">
+            <Skeleton className="w-full h-[200px] rounded-xl mb-8" />
+            <div className="flex items-center gap-4 mb-8">
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
             </div>
-            
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+
+        {/* Mobile: Floating sheet */}
+        <div className="md:hidden min-h-screen" style={{ backgroundColor: '#5D5D5D' }}>
+          {/* Sticky Header with back button */}
+          <div className="sticky top-0 z-50 pt-3 pb-1 px-4" style={{ backgroundColor: '#5D5D5D' }}>
+            <div className="bg-background rounded-t-[20px] relative">
+              {/* Back button integrated in the border */}
+              <button
+                onClick={() => navigate(-1)}
+                className="absolute -top-1 left-3 z-10 bg-background rounded-full p-1.5 shadow-sm border border-border"
+                aria-label="Retour"
+              >
+                <ChevronLeft className="h-4 w-4 text-foreground" />
+              </button>
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="bg-background min-h-[calc(100vh-52px)] -mt-1">
             <div className="container mx-auto px-4 py-8">
               <Skeleton className="w-full h-[200px] rounded-xl mb-8" />
               <div className="flex items-center gap-4 mb-8">
@@ -227,267 +251,300 @@ const OrganizationPublic = () => {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
+  // Not found state
   if (!organization) {
     return (
-      <div className="min-h-screen bg-black/90 flex items-center justify-center">
-        <div className="text-center bg-background p-8 rounded-2xl">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Organisation introuvable</h1>
-          <Link to="/">
-            <Button>Retour à l'accueil</Button>
-          </Link>
+      <>
+        {/* Desktop/Tablet */}
+        <div className="hidden md:flex min-h-screen bg-background items-center justify-center">
+          <MainNavbar />
+          <div className="text-center p-8">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Organisation introuvable</h1>
+            <Link to="/">
+              <Button>Retour à l'accueil</Button>
+            </Link>
+          </div>
         </div>
-      </div>
+
+        {/* Mobile */}
+        <div className="md:hidden min-h-screen flex items-center justify-center" style={{ backgroundColor: '#5D5D5D' }}>
+          <div className="text-center bg-background p-8 rounded-2xl mx-4">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Organisation introuvable</h1>
+            <Link to="/">
+              <Button>Retour à l'accueil</Button>
+            </Link>
+          </div>
+        </div>
+      </>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black/90">
-      {/* Floating Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed top-4 left-4 z-[60] bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors"
-        aria-label="Retour"
-      >
-        <ChevronLeft className="h-6 w-6 text-foreground" />
-      </button>
+  // Main content component (shared between layouts)
+  const OrganizationContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      {/* Cover Image */}
+      <div className={isMobile ? "px-4 py-4" : "container mx-auto px-4 py-4"}>
+        <div className="relative w-full h-[200px] lg:h-[280px] rounded-xl overflow-hidden bg-muted">
+          {organization.cover_image_url ? (
+            <img
+              src={organization.cover_image_url}
+              alt={organization.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+          )}
+        </div>
+      </div>
 
-      {/* Floating Sheet Container */}
-      <div className="min-h-screen pt-16">
-        <div className="bg-background rounded-t-3xl min-h-[calc(100vh-64px)] overflow-hidden">
-          {/* Handle */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-          </div>
-
-          {/* Cover Image */}
-          <div className="container mx-auto px-4 py-4">
-            <div className="relative w-full h-[200px] lg:h-[280px] rounded-xl overflow-hidden bg-muted">
-              {organization.cover_image_url ? (
-                <img
-                  src={organization.cover_image_url}
-                  alt={organization.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
-              )}
+      {/* Organization Header */}
+      <div className={isMobile ? "px-4" : "container mx-auto px-4"}>
+        <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12 md:-mt-16 relative z-10">
+          <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-lg">
+            <AvatarImage src={organization.logo_url || undefined} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+              <Building2 className="h-10 w-10" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 pb-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                {organization.name}
+              </h1>
+              <Badge variant="secondary">{getTypeLabel(organization.type)}</Badge>
             </div>
-          </div>
-
-          {/* Organization Header */}
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12 md:-mt-16 relative z-10">
-              <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-lg">
-                <AvatarImage src={organization.logo_url || undefined} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  <Building2 className="h-10 w-10" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 pb-2">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {organization.name}
-                  </h1>
-                  <Badge variant="secondary">{getTypeLabel(organization.type)}</Badge>
-                </div>
-                {organization.bio && (
-                  <p className="text-muted-foreground mt-1">{organization.bio}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Details */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Description */}
-                {organization.description && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">À propos</h2>
-                    <div 
-                      className="text-muted-foreground leading-relaxed prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(organization.description) }}
-                    />
-                  </div>
-                )}
-
-                {/* Cause Themes */}
-                {causeThemes.length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">Causes soutenues</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {causeThemes.map((theme) => (
-                        <Badge
-                          key={theme.id}
-                          style={{ backgroundColor: theme.color }}
-                          className="text-white flex items-center gap-1.5"
-                        >
-                          <DynamicIcon name={theme.icon} color="white" size={14} />
-                          {theme.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Mobile Info Card - Below Causes */}
-                <div className="lg:hidden">
-                  <InfoCard organization={organization} />
-                </div>
-
-                {/* Events by Category */}
-                {upcomingEvents.length > 0 && (
-                  <div className="space-y-8">
-                    <h2 className="text-xl font-semibold text-foreground">Événements à venir</h2>
-                    
-                    {/* Group events by cause theme */}
-                    {(() => {
-                      // Get all unique cause themes from events
-                      const themesMap = new Map<string, { theme: CauseTheme; events: Event[] }>();
-                      const eventsWithoutTheme: Event[] = [];
-                      
-                      upcomingEvents.forEach((event) => {
-                        if (event.cause_themes.length === 0) {
-                          eventsWithoutTheme.push(event);
-                        } else {
-                          event.cause_themes.forEach((theme) => {
-                            if (!themesMap.has(theme.id)) {
-                              themesMap.set(theme.id, { theme, events: [] });
-                            }
-                            themesMap.get(theme.id)!.events.push(event);
-                          });
-                        }
-                      });
-
-                      const groupedThemes = Array.from(themesMap.values());
-
-                      return (
-                        <>
-                          {groupedThemes.map(({ theme, events }) => (
-                            <div key={theme.id} className="space-y-3">
-                              <div className="flex items-center gap-3">
-                                <span 
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-medium"
-                                  style={{ 
-                                    borderColor: theme.color, 
-                                    color: theme.color 
-                                  }}
-                                >
-                                  <DynamicIcon name={theme.icon} color={theme.color} size={14} />
-                                  {theme.name}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {events.length} événement{events.length > 1 ? 's' : ''}
-                                </span>
-                              </div>
-                              <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex gap-4 pb-4">
-                                  {events.map((event) => (
-                                    <div key={`${theme.id}-${event.id}`} className="w-[280px] flex-shrink-0">
-                                      <EventCard
-                                        id={event.id}
-                                        title={event.name}
-                                        shortTitle={getShortTitle(event.name)}
-                                        organization={organization.name}
-                                        date={formatEventDate(event.start_date)}
-                                        location={event.location}
-                                        image={event.cover_image_url || '/placeholder.svg'}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                                <ScrollBar orientation="horizontal" />
-                              </ScrollArea>
-                            </div>
-                          ))}
-
-                          {/* Events without theme */}
-                          {eventsWithoutTheme.length > 0 && (
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-muted-foreground" />
-                                <h3 className="font-semibold text-foreground">Autres événements</h3>
-                                <Badge variant="secondary" className="ml-2">
-                                  {eventsWithoutTheme.length} événement{eventsWithoutTheme.length > 1 ? 's' : ''}
-                                </Badge>
-                              </div>
-                              <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex gap-4 pb-4">
-                                  {eventsWithoutTheme.map((event) => (
-                                    <div key={event.id} className="w-[280px] flex-shrink-0">
-                                      <EventCard
-                                        id={event.id}
-                                        title={event.name}
-                                        shortTitle={getShortTitle(event.name)}
-                                        organization={organization.name}
-                                        date={formatEventDate(event.start_date)}
-                                        location={event.location}
-                                        image={event.cover_image_url || '/placeholder.svg'}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                                <ScrollBar orientation="horizontal" />
-                              </ScrollArea>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-
-                {/* Past Events Section */}
-                {pastEvents.length > 0 && (
-                  <div className="space-y-4 mt-8">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold text-foreground">Événements passés</h2>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => navigate(`/organization/${orgId}/past-events`)}
-                      >
-                        Voir plus
-                      </Button>
-                    </div>
-                    <ScrollArea className="w-full whitespace-nowrap">
-                      <div className="flex gap-4 pb-4">
-                        {pastEvents.map((event) => (
-                          <div key={event.id} className="w-[280px] flex-shrink-0 opacity-70">
-                            <EventCard
-                              id={event.id}
-                              title={event.name}
-                              shortTitle={getShortTitle(event.name)}
-                              organization={organization.name}
-                              date={formatEventDate(event.start_date)}
-                              location={event.location}
-                              image={event.cover_image_url || '/placeholder.svg'}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column - Info Card (Desktop only) */}
-              <div className="hidden lg:block lg:col-span-1">
-                <InfoCard organization={organization} />
-              </div>
-            </div>
+            {organization.bio && (
+              <p className="text-muted-foreground mt-1">{organization.bio}</p>
+            )}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Main Content */}
+      <div className={isMobile ? "px-4 py-8" : "container mx-auto px-4 py-8"}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Details */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description */}
+            {organization.description && (
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4">À propos</h2>
+                <div 
+                  className="text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(organization.description) }}
+                />
+              </div>
+            )}
+
+            {/* Cause Themes */}
+            {causeThemes.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4">Causes soutenues</h2>
+                <div className="flex flex-wrap gap-2">
+                  {causeThemes.map((theme) => (
+                    <Badge
+                      key={theme.id}
+                      style={{ backgroundColor: theme.color }}
+                      className="text-white flex items-center gap-1.5"
+                    >
+                      <DynamicIcon name={theme.icon} color="white" size={14} />
+                      {theme.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Info Card - Below Causes */}
+            <div className="lg:hidden">
+              <InfoCard organization={organization} />
+            </div>
+
+            {/* Events by Category */}
+            {upcomingEvents.length > 0 && (
+              <div className="space-y-8">
+                <h2 className="text-xl font-semibold text-foreground">Événements à venir</h2>
+                
+                {/* Group events by cause theme */}
+                {(() => {
+                  // Get all unique cause themes from events
+                  const themesMap = new Map<string, { theme: CauseTheme; events: Event[] }>();
+                  const eventsWithoutTheme: Event[] = [];
+                  
+                  upcomingEvents.forEach((event) => {
+                    if (event.cause_themes.length === 0) {
+                      eventsWithoutTheme.push(event);
+                    } else {
+                      event.cause_themes.forEach((theme) => {
+                        if (!themesMap.has(theme.id)) {
+                          themesMap.set(theme.id, { theme, events: [] });
+                        }
+                        themesMap.get(theme.id)!.events.push(event);
+                      });
+                    }
+                  });
+
+                  const groupedThemes = Array.from(themesMap.values());
+
+                  return (
+                    <>
+                      {groupedThemes.map(({ theme, events }) => (
+                        <div key={theme.id} className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <span 
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-medium"
+                              style={{ 
+                                borderColor: theme.color, 
+                                color: theme.color 
+                              }}
+                            >
+                              <DynamicIcon name={theme.icon} color={theme.color} size={14} />
+                              {theme.name}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {events.length} événement{events.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <ScrollArea className="w-full whitespace-nowrap">
+                            <div className="flex gap-4 pb-4">
+                              {events.map((event) => (
+                                <div key={`${theme.id}-${event.id}`} className="w-[280px] flex-shrink-0">
+                                  <EventCard
+                                    id={event.id}
+                                    title={event.name}
+                                    shortTitle={getShortTitle(event.name)}
+                                    organization={organization.name}
+                                    date={formatEventDate(event.start_date)}
+                                    location={event.location}
+                                    image={event.cover_image_url || '/placeholder.svg'}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                        </div>
+                      ))}
+
+                      {/* Events without theme */}
+                      {eventsWithoutTheme.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+                            <h3 className="font-semibold text-foreground">Autres événements</h3>
+                            <Badge variant="secondary" className="ml-2">
+                              {eventsWithoutTheme.length} événement{eventsWithoutTheme.length > 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                          <ScrollArea className="w-full whitespace-nowrap">
+                            <div className="flex gap-4 pb-4">
+                              {eventsWithoutTheme.map((event) => (
+                                <div key={event.id} className="w-[280px] flex-shrink-0">
+                                  <EventCard
+                                    id={event.id}
+                                    title={event.name}
+                                    shortTitle={getShortTitle(event.name)}
+                                    organization={organization.name}
+                                    date={formatEventDate(event.start_date)}
+                                    location={event.location}
+                                    image={event.cover_image_url || '/placeholder.svg'}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Past Events Section */}
+            {pastEvents.length > 0 && (
+              <div className="space-y-4 mt-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Événements passés</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate(`/organization/${orgId}/past-events`)}
+                  >
+                    Voir plus
+                  </Button>
+                </div>
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <div className="flex gap-4 pb-4">
+                    {pastEvents.map((event) => (
+                      <div key={event.id} className="w-[280px] flex-shrink-0 opacity-70">
+                        <EventCard
+                          id={event.id}
+                          title={event.name}
+                          shortTitle={getShortTitle(event.name)}
+                          organization={organization.name}
+                          date={formatEventDate(event.start_date)}
+                          location={event.location}
+                          image={event.cover_image_url || '/placeholder.svg'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Info Card (Desktop only) */}
+          <div className="hidden lg:block lg:col-span-1">
+            <InfoCard organization={organization} />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop/Tablet: Normal layout with navbar */}
+      <div className="hidden md:block min-h-screen bg-background">
+        <MainNavbar />
+        <OrganizationContent isMobile={false} />
+      </div>
+
+      {/* Mobile: Floating sheet effect */}
+      <div className="md:hidden min-h-screen" style={{ backgroundColor: '#5D5D5D' }}>
+        {/* Sticky Header with back button and rounded top */}
+        <div className="sticky top-0 z-50 pt-3 px-0" style={{ backgroundColor: '#5D5D5D' }}>
+          <div className="bg-background rounded-t-[20px] relative">
+            {/* Back button integrated in the white border */}
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-2 left-3 z-10 bg-background rounded-full p-1.5 shadow-sm border border-border"
+              aria-label="Retour"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Scrollable Content - connects seamlessly with sticky header */}
+        <div className="bg-background min-h-[calc(100vh-52px)] -mt-px">
+          <OrganizationContent isMobile={true} />
+        </div>
+      </div>
+    </>
   );
 };
 
