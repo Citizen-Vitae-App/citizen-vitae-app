@@ -598,7 +598,7 @@ const InfoCard = ({ organization }: { organization: Organization }) => {
   };
 
   return (
-    <div className="sticky top-24 bg-card border border-border rounded-lg p-6 space-y-4">
+    <div className="sticky top-24 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-lg">
       {/* Location */}
       {organization.address && (
         <div className="flex items-start gap-3">
