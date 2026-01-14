@@ -24,12 +24,8 @@ import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
 import { generateOccurrenceDates, generateRecurrenceGroupId } from '@/lib/recurrenceUtils';
-
 const eventSchema = z.object({
-  name: z.string()
-    .min(3, 'Le nom doit contenir au moins 3 caractères')
-    .max(200, 'Le nom ne peut pas dépasser 200 caractères')
-    .regex(/^[\w\s\-àéèêëïîôùûüÿçÀÉÈÊËÏÎÔÙÛÜŸÇ',.!?&()]+$/i, 'Le nom contient des caractères non autorisés'),
+  name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères').max(200, 'Le nom ne peut pas dépasser 200 caractères').regex(/^[\w\s\-àéèêëïîôùûüÿçÀÉÈÊËÏÎÔÙÛÜŸÇ',.!?&()]+$/i, 'Le nom contient des caractères non autorisés'),
   startDate: z.date({
     required_error: 'Date de début requise'
   }),
@@ -38,19 +34,12 @@ const eventSchema = z.object({
     required_error: 'Date de fin requise'
   }),
   endTime: z.string().min(1, 'Heure de fin requise'),
-  location: z.string()
-    .min(3, 'Lieu requis')
-    .max(500, 'L\'adresse ne peut pas dépasser 500 caractères'),
+  location: z.string().min(3, 'Lieu requis').max(500, 'L\'adresse ne peut pas dépasser 500 caractères'),
   description: z.string().max(10000, 'La description est trop longue').optional(),
-  capacity: z.string()
-    .optional()
-    .refine((val) => !val || /^\d+$/.test(val), 'La capacité doit être un nombre')
-    .refine((val) => !val || parseInt(val) > 0, 'La capacité doit être supérieure à 0')
-    .refine((val) => !val || parseInt(val) <= 100000, 'La capacité ne peut pas dépasser 100 000'),
+  capacity: z.string().optional().refine(val => !val || /^\d+$/.test(val), 'La capacité doit être un nombre').refine(val => !val || parseInt(val) > 0, 'La capacité doit être supérieure à 0').refine(val => !val || parseInt(val) <= 100000, 'La capacité ne peut pas dépasser 100 000'),
   requireApproval: z.boolean().default(false),
   allowSelfCertification: z.boolean().default(false)
 });
-
 type EventFormData = z.infer<typeof eventSchema>;
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -73,7 +62,7 @@ export default function CreateEvent() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'leader' | 'member'>('member');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  
+
   // Recurrence state
   const [recurrenceData, setRecurrenceData] = useState<RecurrenceData>({
     isRecurring: false,
@@ -81,7 +70,7 @@ export default function CreateEvent() {
     interval: 1,
     weekDays: [],
     endType: 'after_occurrences',
-    occurrences: 10,
+    occurrences: 10
   });
 
   // Background image upload hook
@@ -214,12 +203,10 @@ export default function CreateEvent() {
         cover_image_url: imageUrl,
         latitude: coordinates?.latitude || null,
         longitude: coordinates?.longitude || null,
-        team_id: selectedTeamId,
+        team_id: selectedTeamId
       };
-
       let createdEventIds: string[] = [];
       let usedRecurrenceGroupId: string | null = null;
-
       if (recurrenceData.isRecurring) {
         // Generate recurrence group ID
         usedRecurrenceGroupId = generateRecurrenceGroupId();
@@ -231,16 +218,15 @@ export default function CreateEvent() {
           weekDays: recurrenceData.weekDays,
           endType: recurrenceData.endType,
           endDate: recurrenceData.endDate,
-          occurrences: recurrenceData.occurrences,
+          occurrences: recurrenceData.occurrences
         });
-
         if (occurrences.length === 0) {
           toast.error('Aucune occurrence générée. Vérifiez les paramètres de récurrence.');
           return;
         }
 
         // Create all occurrences as individual events
-        const eventsToInsert = occurrences.map((occ) => ({
+        const eventsToInsert = occurrences.map(occ => ({
           ...baseEventData,
           start_date: occ.start.toISOString(),
           end_date: occ.end.toISOString(),
@@ -250,70 +236,56 @@ export default function CreateEvent() {
           recurrence_interval: recurrenceData.interval,
           recurrence_days: recurrenceData.frequency === 'weekly' ? recurrenceData.weekDays : null,
           recurrence_end_type: recurrenceData.endType,
-          recurrence_end_date: recurrenceData.endType === 'on_date' && recurrenceData.endDate
-            ? recurrenceData.endDate.toISOString().split('T')[0]
-            : null,
-          recurrence_occurrences: recurrenceData.endType === 'after_occurrences'
-            ? recurrenceData.occurrences
-            : null,
+          recurrence_end_date: recurrenceData.endType === 'on_date' && recurrenceData.endDate ? recurrenceData.endDate.toISOString().split('T')[0] : null,
+          recurrence_occurrences: recurrenceData.endType === 'after_occurrences' ? recurrenceData.occurrences : null
         }));
-
-        const { data: insertedEvents, error: insertError } = await supabase
-          .from('events')
-          .insert(eventsToInsert)
-          .select('id');
-
+        const {
+          data: insertedEvents,
+          error: insertError
+        } = await supabase.from('events').insert(eventsToInsert).select('id');
         if (insertError || !insertedEvents) {
           console.error('Error creating recurring events:', insertError);
           toast.error('Erreur lors de la création des événements récurrents');
           return;
         }
-
         createdEventIds = insertedEvents.map(e => e.id);
         toast.success(`${occurrences.length} événements créés avec succès !`);
       } else {
         // Single event creation
-        const { data: eventData, error: insertError } = await supabase
-          .from('events')
-          .insert({
-            ...baseEventData,
-            start_date: startDateTime.toISOString(),
-            end_date: endDateTime.toISOString(),
-            is_recurring: false,
-            recurrence_group_id: null,
-            recurrence_frequency: null,
-            recurrence_interval: null,
-            recurrence_days: null,
-            recurrence_end_type: null,
-            recurrence_end_date: null,
-            recurrence_occurrences: null,
-          })
-          .select('id')
-          .single();
-
+        const {
+          data: eventData,
+          error: insertError
+        } = await supabase.from('events').insert({
+          ...baseEventData,
+          start_date: startDateTime.toISOString(),
+          end_date: endDateTime.toISOString(),
+          is_recurring: false,
+          recurrence_group_id: null,
+          recurrence_frequency: null,
+          recurrence_interval: null,
+          recurrence_days: null,
+          recurrence_end_type: null,
+          recurrence_end_date: null,
+          recurrence_occurrences: null
+        }).select('id').single();
         if (insertError || !eventData) {
           console.error('Error creating event:', insertError);
           toast.error('Erreur lors de la création de l\'événement');
           return;
         }
-
         createdEventIds = [eventData.id];
         toast.success('Événement créé avec succès !');
       }
 
       // Insert event cause themes for all created events
       if (selectedCauseThemes.length > 0 && createdEventIds.length > 0) {
-        const causeThemeInserts = createdEventIds.flatMap(eventId =>
-          selectedCauseThemes.map(causeThemeId => ({
-            event_id: eventId,
-            cause_theme_id: causeThemeId,
-          }))
-        );
-
-        const { error: causeThemeError } = await supabase
-          .from('event_cause_themes')
-          .insert(causeThemeInserts);
-
+        const causeThemeInserts = createdEventIds.flatMap(eventId => selectedCauseThemes.map(causeThemeId => ({
+          event_id: eventId,
+          cause_theme_id: causeThemeId
+        })));
+        const {
+          error: causeThemeError
+        } = await supabase.from('event_cause_themes').insert(causeThemeInserts);
         if (causeThemeError) {
           console.error('Error adding cause themes:', causeThemeError);
           // Don't block creation if cause themes fail
@@ -322,7 +294,6 @@ export default function CreateEvent() {
 
       // Mark events as recently created for visual feedback
       useRecentlyModifiedEvents.getState().markEventsAsRecent(createdEventIds, usedRecurrenceGroupId);
-
       navigate('/organization/dashboard?tab=events');
     } catch (error) {
       console.error('Error:', error);
@@ -347,12 +318,7 @@ export default function CreateEvent() {
       <main className="container mx-auto px-4 pt-32 pb-12">
         <div className="max-w-6xl mx-auto">
           {/* Back button */}
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/organization/dashboard?tab=events')}
-            className="mb-6 gap-2"
-            type="button"
-          >
+          <Button variant="ghost" onClick={() => navigate('/organization/dashboard?tab=events')} className="mb-6 gap-2" type="button">
             <ArrowLeft className="h-4 w-4" />
             Retour
           </Button>
@@ -391,7 +357,7 @@ export default function CreateEvent() {
                         <div className="flex-1">
                           <div className="font-semibold mb-1">Public</div>
                           <div className="text-sm text-muted-foreground">
-                            Affiché sur votre calendrier et éligible pour être mis en avant
+                            Événement ouvert à l'ensemble de la communauté Citizen Vitae.          
                           </div>
                         </div>
                         {isPublic && <div className="text-primary">✓</div>}
@@ -424,10 +390,7 @@ export default function CreateEvent() {
                 <EventDateTimeSection form={form} />
 
                 {/* Recurrence Section */}
-                <EventRecurrenceSection 
-                  value={recurrenceData}
-                  onChange={setRecurrenceData}
-                />
+                <EventRecurrenceSection value={recurrenceData} onChange={setRecurrenceData} />
 
                 {/* Location */}
                 <div className="space-y-2">
