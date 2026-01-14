@@ -1,3 +1,4 @@
+// Organization Public Page - Mobile floating sheet with Framer Motion
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink, icons, X } from 'lucide-react';
