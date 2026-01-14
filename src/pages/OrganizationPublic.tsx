@@ -15,6 +15,8 @@ import { fr } from 'date-fns/locale';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Backward-compat alias (prevents runtime crash if a stale bundle still references ChevronLeft)
+const ChevronLeft = X;
 // Dynamic icon component
 const DynamicIcon = ({ name, color, size = 18 }: { name: string; color?: string; size?: number }) => {
   const IconComponent = icons[name as keyof typeof icons];
