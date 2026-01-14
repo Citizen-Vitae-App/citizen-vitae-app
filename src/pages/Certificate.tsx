@@ -8,7 +8,7 @@ import { CertificateData } from '@/types/certificate';
 import { CertificatePreview } from '@/components/certificate/CertificatePreview';
 import { ShareCertificateDialog } from '@/components/ShareCertificateDialog';
 import { downloadCertificatePDF } from '@/components/CertificatePDF';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.svg';
 
 interface CertificateDataFromDB {
   user: {

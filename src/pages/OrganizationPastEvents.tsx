@@ -4,7 +4,7 @@ import { ArrowLeft, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.svg';
 import EventCard from '@/components/EventCard';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
