@@ -32,7 +32,6 @@ interface CauseTheme {
   color: string;
   icon: string;
 }
-
 interface EventWithOrganization {
   id: string;
   name: string;
@@ -271,19 +270,13 @@ const EventDetail = () => {
               </h1>
               
               {/* Cause badges */}
-              {event.event_cause_themes && event.event_cause_themes.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {event.event_cause_themes.map((ect) => (
-                    <Badge
-                      key={ect.cause_themes.id}
-                      style={{ backgroundColor: ect.cause_themes.color }}
-                      className="text-white text-xs font-medium"
-                    >
+              {event.event_cause_themes && event.event_cause_themes.length > 0 && <div className="flex flex-wrap gap-2">
+                  {event.event_cause_themes.map(ect => <Badge key={ect.cause_themes.id} style={{
+                  backgroundColor: ect.cause_themes.color
+                }} className="text-white text-xs font-medium">
                       {ect.cause_themes.name}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+                    </Badge>)}
+                </div>}
             </div>
 
             <Separator />
@@ -357,8 +350,7 @@ const EventDetail = () => {
               <div className="border-t border-border pt-4">
                 <h3 className="font-semibold text-foreground mb-3">Conditions de participation</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  En vous inscrivant, vous vous engagez à participer.
-En cas d’empêchement, merci de vous désinscrire au plus tôt.
+                  Toute inscription implique un engagement de participation. En cas d'empêchement, merci de libérer votre place au plus tôt.
                 </p>
               </div>
             </div>
@@ -370,12 +362,7 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
       {/* Map Section - Full Width */}
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-foreground mb-4 text-lg font-medium">Où se situe l'événement</h2>
-        <a 
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-muted-foreground mb-4 group hover:text-primary transition-colors duration-200"
-        >
+        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground mb-4 group hover:text-primary transition-colors duration-200">
           <MapPin className="h-4 w-4 flex-shrink-0" />
           <span className="underline underline-offset-2 group-hover:text-primary transition-colors duration-200">{event.location}</span>
         </a>
@@ -397,19 +384,14 @@ En cas d’empêchement, merci de vous désinscrire au plus tôt.
             <TooltipProvider>
               <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
                 <TooltipTrigger asChild>
-                  <Button 
-                    onClick={() => {
-                      if (!canUserUnregister) {
-                        setShowUnregisterTooltip(true);
-                        setTimeout(() => setShowUnregisterTooltip(false), 3000);
-                      } else {
-                        handleUnregister();
-                      }
-                    }} 
-                    disabled={isUnregistering} 
-                    variant="outline" 
-                    className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}
-                  >
+                  <Button onClick={() => {
+                if (!canUserUnregister) {
+                  setShowUnregisterTooltip(true);
+                  setTimeout(() => setShowUnregisterTooltip(false), 3000);
+                } else {
+                  handleUnregister();
+                }
+              }} disabled={isUnregistering} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}>
                     {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                         <X className="h-5 w-5 mr-2" />
                         Me désinscrire
