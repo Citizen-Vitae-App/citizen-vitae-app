@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import sigleLogo from '@/assets/icon-sigle-czv.svg';
-import fullLogo from '@/assets/logo-citizen-vitae.png';
+import fullLogo from '@/assets/logo.svg';
 
 interface SuperAdminSidebarProps {
   activeTab: SuperAdminTab;

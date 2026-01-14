@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { CertificateData } from '@/types/certificate';
 import { useIsMobile } from '@/hooks/use-mobile';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.svg';
 import laurelSvg from '@/assets/certificate-laurel.svg';
 import cocardeSvg from '@/assets/certificate-cocarde.svg';
 

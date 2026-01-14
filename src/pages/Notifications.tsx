@@ -5,7 +5,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/hooks/useAuth';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.svg';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { format, parseISO, isAfter, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';

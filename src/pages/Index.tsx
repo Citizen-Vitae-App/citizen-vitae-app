@@ -3,7 +3,7 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.svg';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventCard from "@/components/EventCard";
@@ -105,7 +105,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-14 md:h-16 gap-3">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <img src={logo} alt="CitizenVitae" className="h-6 md:h-8 w-auto" />
+              <img src={logo} alt="CitizenVitae" className="h-6 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
             </div>
 
             {/* Search Bar - Desktop */}
