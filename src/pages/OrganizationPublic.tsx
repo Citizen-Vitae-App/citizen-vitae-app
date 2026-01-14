@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink, icons, ChevronLeft } from 'lucide-react';
+import { Building2, MapPin, Globe, Mail, Phone, Users, ExternalLink, icons, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { MainNavbar } from '@/components/MainNavbar';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Dynamic icon component
 const DynamicIcon = ({ name, color, size = 18 }: { name: string; color?: string; size?: number }) => {
@@ -196,6 +197,21 @@ const OrganizationPublic = () => {
     }
   };
 
+  // Loading state - Skeleton content for the sheet
+  const MobileSkeletonContent = () => (
+    <div className="px-4 py-4">
+      <Skeleton className="w-full h-[200px] rounded-xl mb-8" />
+      <div className="flex items-center gap-4 mb-8">
+        <Skeleton className="h-20 w-20 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      <Skeleton className="h-24 w-full" />
+    </div>
+  );
+
   // Loading state
   if (isLoading) {
     return (
@@ -216,40 +232,47 @@ const OrganizationPublic = () => {
           </div>
         </div>
 
-        {/* Mobile: Floating sheet */}
-        <div className="md:hidden min-h-screen" style={{ backgroundColor: '#5D5D5D' }}>
-          {/* Sticky Header with back button */}
-          <div className="sticky top-0 z-50 pt-3 pb-1 px-4" style={{ backgroundColor: '#5D5D5D' }}>
-            <div className="bg-background rounded-t-[20px] relative">
-              {/* Back button integrated in the border */}
+        {/* Mobile: Animated floating sheet with skeleton */}
+        <div className="md:hidden fixed inset-0 z-50">
+          {/* Dark overlay with fade in */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0"
+            style={{ backgroundColor: '#5D5D5D' }}
+          />
+          
+          {/* Sliding sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            transition={{ 
+              type: 'spring',
+              damping: 30,
+              stiffness: 300,
+              delay: 0.1
+            }}
+            className="absolute inset-x-0 bottom-0 top-3 flex flex-col"
+          >
+            {/* Header bar with close button */}
+            <div className="bg-background rounded-t-[24px] flex items-center justify-between px-4 py-4 flex-shrink-0">
+              <div className="w-8" /> {/* Spacer for centering */}
+              <div className="flex-1" />
               <button
                 onClick={() => navigate(-1)}
-                className="absolute -top-1 left-3 z-10 bg-background rounded-full p-1.5 shadow-sm border border-border"
-                aria-label="Retour"
+                className="p-1"
+                aria-label="Fermer"
               >
-                <ChevronLeft className="h-4 w-4 text-foreground" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-              </div>
             </div>
-          </div>
-          
-          {/* Content */}
-          <div className="bg-background min-h-[calc(100vh-52px)] -mt-1">
-            <div className="container mx-auto px-4 py-8">
-              <Skeleton className="w-full h-[200px] rounded-xl mb-8" />
-              <div className="flex items-center gap-4 mb-8">
-                <Skeleton className="h-20 w-20 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-4 w-32" />
-                </div>
-              </div>
-              <Skeleton className="h-24 w-full" />
+            
+            {/* Content */}
+            <div className="bg-background flex-1 overflow-y-auto -mt-px">
+              <MobileSkeletonContent />
             </div>
-          </div>
+          </motion.div>
         </div>
       </>
     );
@@ -519,30 +542,47 @@ const OrganizationPublic = () => {
         <OrganizationContent isMobile={false} />
       </div>
 
-      {/* Mobile: Floating sheet effect */}
-      <div className="md:hidden min-h-screen" style={{ backgroundColor: '#5D5D5D' }}>
-        {/* Sticky Header with back button and rounded top */}
-        <div className="sticky top-0 z-50 pt-3 px-0" style={{ backgroundColor: '#5D5D5D' }}>
-          <div className="bg-background rounded-t-[20px] relative">
-            {/* Back button integrated in the white border */}
+      {/* Mobile: Animated floating sheet effect */}
+      <div className="md:hidden fixed inset-0 z-50">
+        {/* Dark overlay with fade in */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0"
+          style={{ backgroundColor: '#5D5D5D' }}
+        />
+        
+        {/* Sliding sheet */}
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          transition={{ 
+            type: 'spring',
+            damping: 30,
+            stiffness: 300,
+            delay: 0.1
+          }}
+          className="absolute inset-x-0 bottom-0 top-3 flex flex-col"
+        >
+          {/* Sticky header bar with close button */}
+          <div className="sticky top-0 z-10 bg-background rounded-t-[24px] flex items-center justify-between px-4 py-4 flex-shrink-0">
+            <div className="w-8" /> {/* Spacer for centering */}
+            <div className="flex-1" />
             <button
               onClick={() => navigate(-1)}
-              className="absolute top-2 left-3 z-10 bg-background rounded-full p-1.5 shadow-sm border border-border"
-              aria-label="Retour"
+              className="p-1"
+              aria-label="Fermer"
             >
-              <ChevronLeft className="h-4 w-4 text-foreground" />
+              <X className="h-5 w-5 text-muted-foreground" />
             </button>
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-            </div>
           </div>
-        </div>
-        
-        {/* Scrollable Content - connects seamlessly with sticky header */}
-        <div className="bg-background min-h-[calc(100vh-52px)] -mt-px">
-          <OrganizationContent isMobile={true} />
-        </div>
+          
+          {/* Scrollable Content */}
+          <div className="bg-background flex-1 overflow-y-auto -mt-px">
+            <OrganizationContent isMobile={true} />
+          </div>
+        </motion.div>
       </div>
     </>
   );
