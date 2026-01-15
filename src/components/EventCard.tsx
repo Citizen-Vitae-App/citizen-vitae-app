@@ -78,24 +78,42 @@ const EventCard = ({ id, title, shortTitle, organization, organizationId, date, 
       </div>
       <h4 className="text-lg font-bold text-foreground truncate">{title}</h4>
       <p className="text-sm text-muted-foreground">{date}</p>
-      <p className="text-sm text-muted-foreground">
-        Organisé par{" "}
-        {organizationId ? (
-          <Link
-            to={`/organization/${organizationId}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-foreground font-semibold underline hover:opacity-80 transition-opacity"
-          >
-            {organization}
-          </Link>
-        ) : (
-          <span className="text-foreground font-semibold">
-            {organization}
-          </span>
-        )}
-      </p>
+      {!id && (
+        <p className="text-sm text-muted-foreground">
+          Organisé par{" "}
+          {organizationId ? (
+            <Link
+              to={`/organization/${organizationId}`}
+              className="text-foreground font-semibold underline hover:opacity-80 transition-opacity"
+            >
+              {organization}
+            </Link>
+          ) : (
+            <span className="text-foreground font-semibold">
+              {organization}
+            </span>
+          )}
+        </p>
+      )}
     </div>
   );
+
+  const OrganizationLink = id && organizationId ? (
+    <div className="pt-2">
+      <p className="text-sm text-muted-foreground">
+        Organisé par{" "}
+        <Link
+          to={`/organization/${organizationId}`}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="text-foreground font-semibold underline hover:opacity-80 transition-opacity"
+        >
+          {organization}
+        </Link>
+      </p>
+    </div>
+  ) : null;
 
   return (
     <div className="group overflow-hidden cursor-pointer relative">
@@ -114,10 +132,13 @@ const EventCard = ({ id, title, shortTitle, organization, organizationId, date, 
       </button>
 
       {id ? (
-        <Link to={`/events/${id}`} className="block">
-          {CardImage}
-          {CardInfo}
-        </Link>
+        <>
+          <Link to={`/events/${id}`} className="block">
+            {CardImage}
+            {CardInfo}
+          </Link>
+          {OrganizationLink}
+        </>
       ) : (
         <>
           {CardImage}
