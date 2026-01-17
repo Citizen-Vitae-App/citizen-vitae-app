@@ -2141,7 +2141,36 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+-- ==========================================
+-- STORAGE CONFIGURATION (Added Manually)
+-- ==========================================
 
+-- Création des buckets
+INSERT INTO storage.buckets (id, name, public)
+VALUES 
+  ('avatars', 'avatars', true),
+  ('certificates', 'certificates', true),
+  ('organization-assets', 'organization-assets', true),
+  ('event-covers', 'event-covers', true),
+  ('verification-selfies', 'verification-selfies', false)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+
+-- Policies pour Verification-Selfies (SÉCURISÉ)
+CREATE POLICY "Users can view their own verification selfie" 
+ON storage.objects FOR SELECT TO authenticated 
+USING (bucket_id = 'verification-selfies' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "Only service role can upload selfies" 
+ON storage.objects FOR INSERT TO service_role 
+WITH CHECK (bucket_id = 'verification-selfies');
+
+CREATE POLICY "Only service role can delete selfies" 
+ON storage.objects FOR DELETE TO service_role 
+USING (bucket_id = 'verification-selfies');
+
+-- Policies Publiques (Avatars & Covers)
+CREATE POLICY "Avatars are publicly accessible" ON storage.objects FOR SELECT TO public USING (bucket_id = 'avatars');
+CREATE POLICY "Anyone can view event covers" ON storage.objects FOR SELECT TO public USING (bucket_id = 'event-covers');
 
 
 
