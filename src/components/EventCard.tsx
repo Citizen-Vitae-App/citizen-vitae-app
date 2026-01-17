@@ -1,3 +1,4 @@
+import React from "react";
 import { Star, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -16,7 +17,7 @@ interface EventCardProps {
   isNew?: boolean;
 }
 
-const EventCard = ({ id, title, shortTitle, organization, organizationId, date, location, image, isNew = false }: EventCardProps) => {
+const EventCardComponent = ({ id, title, shortTitle, organization, organizationId, date, location, image, isNew = false }: EventCardProps) => {
   const words = shortTitle.split(" ");
   // Split into max 2 lines
   const lines: string[] = [];
@@ -148,5 +149,23 @@ const EventCard = ({ id, title, shortTitle, organization, organizationId, date, 
     </div>
   );
 };
+
+// Mémoriser le composant pour éviter les re-renders inutiles
+// Comparaison personnalisée basée sur les props qui affectent l'affichage
+const EventCard = React.memo(EventCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.shortTitle === nextProps.shortTitle &&
+    prevProps.organization === nextProps.organization &&
+    prevProps.organizationId === nextProps.organizationId &&
+    prevProps.date === nextProps.date &&
+    prevProps.location === nextProps.location &&
+    prevProps.image === nextProps.image &&
+    prevProps.isNew === nextProps.isNew
+  );
+});
+
+EventCard.displayName = 'EventCard';
 
 export default EventCard;

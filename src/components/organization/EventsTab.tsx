@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -155,8 +156,8 @@ interface EventsTabProps {
   isMember?: boolean;
 }
 export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = false }: EventsTabProps) {
-  // Debug log
-  console.log("EventsTab received:", {
+  // Debug log (dev only)
+  logger.debug("EventsTab received:", {
     userTeamId,
     canManageAllEvents,
     isMember,
@@ -196,12 +197,12 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return () => clearTimeout(timer);
   }, [clearRecentEvents]);
 
-  // Debug log for hook call
-  console.log("Calling useOrganizationEvents with teamId:", userTeamId);
+  // Debug log for hook call (dev only)
+  logger.debug("Calling useOrganizationEvents with teamId:", userTeamId);
   const { events: allEvents, isLoading, error, organizationId } = useOrganizationEvents(undefined, userTeamId);
 
-  // Debug log for events result
-  console.log("Events received:", allEvents?.length, "events");
+  // Debug log for events result (dev only)
+  logger.debug("Events received:", allEvents?.length, "events");
 
   // Get all event IDs for participant counts
   const eventIds = useMemo(() => allEvents.map((e) => e.id), [allEvents]);
@@ -456,7 +457,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       // Revert on error - refetch to get correct state
       queryClient.invalidateQueries({ queryKey: ["organization-events", organizationId] });
       toast.error("Erreur lors de la suppression");
-      console.error(error);
+      logger.error("Error in EventsTab:", error);
     }
   };
 
@@ -514,7 +515,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         if (error) throw error;
       }
     } catch (error) {
-      console.error("Error deleting events:", error);
+      logger.error("Error deleting events:", error);
       // Revert on error
       queryClient.invalidateQueries({ queryKey: ["organization-events", organizationId] });
       toast.error("Erreur lors de la suppression");
@@ -545,7 +546,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       .single();
     if (error) {
       toast.error("Erreur lors de la duplication");
-      console.error(error);
+      logger.error("Error in EventsTab:", error);
     } else if (newEvent) {
       toast.success("Événement dupliqué");
       navigate(`/organization/events/${newEvent.id}/edit`);

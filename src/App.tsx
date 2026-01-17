@@ -2,16 +2,17 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { queryClient } from "@/lib/queryClient";
 
-// Lazy-loaded pages for code splitting
+// Lazy-loaded pages for code splitting (including Index, Auth, NotFound for better initial load)
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 const VerifyOtp = lazy(() => import("./pages/VerifyOtp"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const OrganizationOnboarding = lazy(() => import("./pages/OrganizationOnboarding"));
@@ -31,8 +32,6 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const ScanParticipant = lazy(() => import("./pages/ScanParticipant"));
 const VerifyParticipant = lazy(() => import("./pages/VerifyParticipant"));
 const Certificate = lazy(() => import("./pages/Certificate"));
-
-const queryClient = new QueryClient();
 
 // Minimal loading fallback
 const PageLoader = () => (

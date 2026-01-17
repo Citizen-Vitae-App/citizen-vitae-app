@@ -11,6 +11,7 @@ import { Navbar } from '@/components/Navbar';
 import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface ScanResult {
   success: boolean;
@@ -38,7 +39,7 @@ export default function ScanParticipant() {
   const handleScan = useCallback(async (qrContent: string) => {
     if (isProcessing) return;
     
-    console.log('[QR-SCAN] Raw content:', qrContent);
+    logger.debug('[QR-SCAN] Raw content:', qrContent);
     
     let qrToken: string;
     
@@ -47,7 +48,7 @@ export default function ScanParticipant() {
       try {
         const url = new URL(qrContent);
         qrToken = url.searchParams.get('token') || '';
-        console.log('[QR-SCAN] Extracted token from URL:', qrToken.substring(0, 20) + '...');
+        logger.debug('[QR-SCAN] Extracted token from URL:', qrToken.substring(0, 20) + '...');
       } catch {
         qrToken = qrContent;
       }
@@ -55,10 +56,10 @@ export default function ScanParticipant() {
       try {
         const parsed = JSON.parse(qrContent);
         qrToken = parsed.qr_token || parsed.token || qrContent;
-        console.log('[QR-SCAN] Parsed from JSON:', qrToken.substring(0, 20) + '...');
+        logger.debug('[QR-SCAN] Parsed from JSON:', qrToken.substring(0, 20) + '...');
       } catch {
         qrToken = qrContent;
-        console.log('[QR-SCAN] Using raw content as token');
+        logger.debug('[QR-SCAN] Using raw content as token');
       }
     }
     
@@ -72,7 +73,7 @@ export default function ScanParticipant() {
 
     // Check for duplicate token processing
     if (qrToken === lastProcessedTokenRef.current) {
-      console.log('[QR-SCAN] Ignoring duplicate token - already processed');
+      logger.debug('[QR-SCAN] Ignoring duplicate token - already processed');
       return;
     }
     
@@ -112,7 +113,7 @@ export default function ScanParticipant() {
         toast.error(data.error || 'Erreur lors du scan');
       }
     } catch (err: any) {
-      console.error('Scan error:', err);
+      logger.error('Scan error:', err);
       setLastResult({
         success: false,
         error: err.message || 'Erreur lors de la vérification du QR code',

@@ -1,4 +1,5 @@
 import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart } from "lucide-react";
+import { logger } from "@/lib/logger";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Link, useNavigate } from "react-router-dom";
@@ -58,7 +59,7 @@ const Index = () => {
       if (hasActiveOwnerInvitation()) {
         const redirectUrl = getOwnerInvitationRedirectUrl();
         if (redirectUrl) {
-          console.log('[Index] Owner invitation active, redirecting to org onboarding:', redirectUrl);
+          logger.info('Index', 'Owner invitation active, redirecting to org onboarding:', redirectUrl);
           navigate(redirectUrl);
           return;
         }
@@ -66,7 +67,7 @@ const Index = () => {
       
       // Standard onboarding redirect only if NO owner invitation
       if (needsOnboarding) {
-        console.log('[Index] No owner invitation, redirecting to user onboarding');
+        logger.info('Index', 'No owner invitation, redirecting to user onboarding');
         navigate('/onboarding');
       }
     }

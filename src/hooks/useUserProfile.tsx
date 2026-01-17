@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { logger } from '@/lib/logger';
 
 export interface UserOrganization {
   id: string;
@@ -62,20 +63,26 @@ export function useUserProfile() {
         .eq('user_id', user.id);
 
       if (membershipError) {
-        console.error('Error fetching memberships:', membershipError);
+        logger.error('Error fetching memberships:', membershipError);
         return [];
       }
 
-      // For each organization, get member count
-      const orgsWithCounts: UserOrganization[] = await Promise.all(
-        (memberships || []).map(async (m) => {
-          const org = m.organizations as any;
-          
-          const { count } = await supabase
-            .from('organization_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('organization_id', org.id);
+      if (!memberships || memberships.length === 0) return [];
 
+      // Optimisation: Récupérer tous les comptes en une seule requête groupée
+      const orgIds = memberships.map(m => (m.organizations as any).id);
+      
+      // Récupérer les comptes de membres pour toutes les organisations en une seule requête
+      const { data: memberCountsData, error: countError } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .in('organization_id', orgIds);
+
+      if (countError) {
+        logger.error('Error fetching member counts:', countError);
+        // Fallback: retourner avec count 0 si erreur
+        return (memberships || []).map((m) => {
+          const org = m.organizations as any;
           return {
             id: org.id,
             name: org.name,
@@ -83,10 +90,31 @@ export function useUserProfile() {
             type: org.type || 'association',
             role: m.role,
             is_owner: m.is_owner || false,
-            member_count: count || 0,
+            member_count: 0,
           };
-        })
-      );
+        });
+      }
+
+      // Créer un Map pour lookup rapide des comptes
+      const countMap = new Map<string, number>();
+      (memberCountsData || []).forEach(member => {
+        const currentCount = countMap.get(member.organization_id) || 0;
+        countMap.set(member.organization_id, currentCount + 1);
+      });
+
+      // Construire le résultat avec les comptes
+      const orgsWithCounts: UserOrganization[] = (memberships || []).map((m) => {
+        const org = m.organizations as any;
+        return {
+          id: org.id,
+          name: org.name,
+          logo_url: org.logo_url,
+          type: org.type || 'association',
+          role: m.role,
+          is_owner: m.is_owner || false,
+          member_count: countMap.get(org.id) || 0,
+        };
+      });
 
       return orgsWithCounts;
     },
@@ -113,7 +141,7 @@ export function useUserProfile() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching causes:', error);
+        logger.error('Error fetching causes:', error);
         return [];
       }
 
@@ -160,7 +188,7 @@ export function useUserProfile() {
         .order('attended_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching missions:', error);
+        logger.error('Error fetching missions:', error);
         return [];
       }
 

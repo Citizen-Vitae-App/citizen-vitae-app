@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface VerificationResult {
   success: boolean;
@@ -132,12 +133,12 @@ const VerifyParticipant = () => {
               },
             });
             if (certError) {
-              console.error('Error generating certificate:', certError);
+              logger.error('Error generating certificate:', certError);
             } else {
-              console.log('Certificate generated:', certData?.certificate_url);
+              logger.debug('Certificate generated:', certData?.certificate_url);
             }
           } catch (certErr) {
-            console.error('Error generating certificate:', certErr);
+            logger.error('Error generating certificate:', certErr);
             // Don't fail the verification if certificate generation fails
           }
           
@@ -162,7 +163,7 @@ const VerifyParticipant = () => {
           });
         }
       } catch (err) {
-        console.error('Verification error:', err);
+        logger.error('Verification error:', err);
         setResult({
           success: false,
           message: 'Une erreur inattendue s\'est produite.',

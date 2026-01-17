@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 
 interface Profile {
   id: string;
@@ -49,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('[AuthProvider] Auth state changed:', event, 'user:', session?.user?.email);
+        logger.info('AuthProvider', 'Auth state changed:', event, 'user:', session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -67,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[AuthProvider] Initial session check:', session?.user?.email || 'no session');
+      logger.info('AuthProvider', 'Initial session check:', session?.user?.email || 'no session');
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -93,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // If no profile exists, create it (this handles the missing profile bug)
       if (!profileData) {
-        console.log('[AuthProvider] No profile found for user, creating one...');
+        logger.info('AuthProvider', 'No profile found for user, creating one...');
         const { data: userData } = await supabase.auth.getUser();
         const userEmail = userData?.user?.email;
         
@@ -108,10 +109,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single();
 
         if (insertError) {
-          console.error('[AuthProvider] Error creating profile:', insertError);
+          logger.error('[AuthProvider] Error creating profile:', insertError);
         } else {
           profileData = newProfile;
-          console.log('[AuthProvider] Profile created successfully');
+          logger.info('AuthProvider', 'Profile created successfully');
         }
       }
 
@@ -145,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await handlePendingInvitations(userId, profileData);
       }
     } catch (error) {
-      console.error('Error fetching profile/roles:', error);
+      logger.error('Error fetching profile/roles:', error);
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (invError || !invitations || invitations.length === 0) return;
 
-      console.log('[AuthProvider] Found pending invitations:', invitations.length);
+      logger.info('AuthProvider', 'Found pending invitations:', invitations.length);
 
       for (const inv of invitations) {
         // Check if user is already a member of this organization
@@ -180,7 +181,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
 
         if (existingMember) {
-          console.log('[AuthProvider] User already member of org:', inv.organization_id);
+          logger.info('AuthProvider', 'User already member of org:', inv.organization_id);
           // Just mark invitation as accepted
           await supabase
             .from('organization_invitations')
@@ -201,11 +202,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (memberError) {
-          console.error('[AuthProvider] Error adding member:', memberError);
+          logger.error('[AuthProvider] Error adding member:', memberError);
           continue;
         }
 
-        console.log('[AuthProvider] Added user to organization:', inv.organization_id);
+        logger.info('AuthProvider', 'Added user to organization:', inv.organization_id);
 
         // Add to team if specified
         if (inv.team_id) {
@@ -218,9 +219,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
 
           if (teamError) {
-            console.error('[AuthProvider] Error adding to team:', teamError);
+            logger.error('[AuthProvider] Error adding to team:', teamError);
           } else {
-            console.log('[AuthProvider] Added user to team:', inv.team_id);
+            logger.info('AuthProvider', 'Added user to team:', inv.team_id);
           }
         }
 
@@ -230,10 +231,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .update({ status: 'accepted', responded_at: new Date().toISOString() })
           .eq('id', inv.id);
 
-        console.log('[AuthProvider] Invitation accepted:', inv.id);
+        logger.info('AuthProvider', 'Invitation accepted:', inv.id);
       }
     } catch (error) {
-      console.error('[AuthProvider] Error handling pending invitations:', error);
+      logger.error('[AuthProvider] Error handling pending invitations:', error);
     }
   };
 
@@ -247,30 +248,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
       if (data) setProfile(data);
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      logger.error('Error refreshing profile:', error);
     }
   };
 
   const signInWithOtp = async (email: string) => {
-    console.log('Requesting OTP for email:', email);
+    logger.debug('Requesting OTP for email:', email);
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
       }
     });
-    console.log('OTP request response:', { data, error });
+    logger.debug('OTP request response:', { hasData: !!data, hasError: !!error });
     return { error };
   };
 
   const verifyOtp = async (email: string, token: string) => {
-    console.log('Verifying OTP:', { email, tokenLength: token.length });
+    logger.debug('Verifying OTP:', { email, tokenLength: token.length });
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'email'
     });
-    console.log('OTP verification response:', { data, error });
+    logger.debug('OTP verification response:', { hasData: !!data, hasError: !!error });
     return { error };
   };
 

@@ -34,3 +34,4 @@ supabase/.temp/
 # Environnement
 .env
 .env.production
+.vercel
