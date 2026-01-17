@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Supabase
+supabase/.temp/
+.supabase/
+*.local
+*.dev.vars
+
+# Vercel
+.vercel/
+
+# Environnement
+.env
+.env.production

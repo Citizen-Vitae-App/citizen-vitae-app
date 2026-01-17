@@ -1,1 +1,0 @@
-INSERT INTO user_roles (user_id, role) VALUES ('8a748537-dc4c-431a-b9f4-7da2cb04077c', 'organization');
