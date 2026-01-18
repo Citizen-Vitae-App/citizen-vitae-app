@@ -32,6 +32,8 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const ScanParticipant = lazy(() => import("./pages/ScanParticipant"));
 const VerifyParticipant = lazy(() => import("./pages/VerifyParticipant"));
 const Certificate = lazy(() => import("./pages/Certificate"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 
 // Minimal loading fallback
 const PageLoader = () => (
@@ -73,6 +75,8 @@ const App = () => (
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/verify/:registrationId" element={<VerifyParticipant />} />
                 <Route path="/certificate/:certificateId" element={<Certificate />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
