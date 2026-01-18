@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [invitationsHandled, setInvitationsHandled] = useState<Set<string>>(new Set()); // ✅ Flag pour éviter les appels multiples
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             fetchProfileAndRoles(session.user.id);
           }, 0);
         } else {
+          // ✅ Bug fix: Vider le Set invitationsHandled lors de la déconnexion
+          setInvitationsHandled(new Set());
           setProfile(null);
           setRoles([]);
           setIsLoading(false);
@@ -141,9 +144,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (profileData) setProfile(profileData);
       if (rolesData.data) setRoles(rolesData.data.map((r: UserRole) => r.role));
 
-      // After setting profile, handle pending invitations
-      if (profileData) {
+      // After setting profile, handle pending invitations (une seule fois par user)
+      if (profileData && !invitationsHandled.has(userId)) {
         await handlePendingInvitations(userId, profileData);
+        setInvitationsHandled(prev => new Set(prev).add(userId));
       }
     } catch (error) {
       logger.error('Error fetching profile/roles:', error);

@@ -51,6 +51,8 @@ export const useOrganizationMembers = () => {
   // Fetch all members of the organization
   const { data: members, isLoading, error } = useQuery({
     queryKey: ['organization-members', organizationId],
+    staleTime: 2 * 60 * 1000, // ✅ 2 minutes - les membres peuvent changer mais pas souvent
+    gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
       if (!organizationId) return [];
 

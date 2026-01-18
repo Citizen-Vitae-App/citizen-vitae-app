@@ -69,6 +69,8 @@ export const usePendingInvitations = (organizationId: string | undefined) => {
       })) as PendingInvitation[];
     },
     enabled: !!organizationId && !!user,
+    staleTime: 2 * 60 * 1000, // ✅ 2 minutes - les invitations ne changent pas souvent
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const cancelInvitation = useMutation({

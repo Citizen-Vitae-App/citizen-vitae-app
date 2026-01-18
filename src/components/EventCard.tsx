@@ -150,21 +150,10 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
   );
 };
 
-// Mémoriser le composant pour éviter les re-renders inutiles
-// Comparaison personnalisée basée sur les props qui affectent l'affichage
-const EventCard = React.memo(EventCardComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.id === nextProps.id &&
-    prevProps.title === nextProps.title &&
-    prevProps.shortTitle === nextProps.shortTitle &&
-    prevProps.organization === nextProps.organization &&
-    prevProps.organizationId === nextProps.organizationId &&
-    prevProps.date === nextProps.date &&
-    prevProps.location === nextProps.location &&
-    prevProps.image === nextProps.image &&
-    prevProps.isNew === nextProps.isNew
-  );
-});
+// Note: React.memo retiré car le composant utilise useFavorites() qui change l'état interne
+// sans changer les props. Le composant doit se re-rendre quand l'état des favoris change.
+// Le hook useFavorites gère déjà son propre état et optimise les re-renders.
+const EventCard = EventCardComponent;
 
 EventCard.displayName = 'EventCard';
 

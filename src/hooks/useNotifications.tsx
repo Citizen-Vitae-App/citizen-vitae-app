@@ -51,6 +51,8 @@ export const useNotifications = () => {
       return data as Notification[];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes - explicite pour éviter les refetch
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Calculate unread count
@@ -59,7 +61,7 @@ export const useNotifications = () => {
     setUnreadCount(count);
   }, [notifications]);
 
-  // Real-time subscription
+  // Real-time subscription - OPTIMISÉ : Mise à jour directe au lieu d'invalidation
   useEffect(() => {
     if (!user?.id) return;
 
@@ -73,9 +75,25 @@ export const useNotifications = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          // Refetch notifications on any change
-          queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+        (payload) => {
+          // ✅ Mettre à jour directement les données au lieu d'invalider (évite les refetch)
+          queryClient.setQueryData(['notifications', user.id], (old: Notification[] = []) => {
+            if (payload.eventType === 'INSERT') {
+              // Ajouter la nouvelle notification en haut
+              return [payload.new as Notification, ...old].slice(0, 50);
+            } else if (payload.eventType === 'UPDATE') {
+              // Mettre à jour seulement la notification modifiée
+              return old.map(n => 
+                n.id === (payload.new as any).id 
+                  ? { ...n, ...(payload.new as Notification) }
+                  : n
+              );
+            } else if (payload.eventType === 'DELETE') {
+              // Supprimer la notification
+              return old.filter(n => n.id !== (payload.old as any).id);
+            }
+            return old;
+          });
         }
       )
       .subscribe();
@@ -95,8 +113,11 @@ export const useNotifications = () => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+    onSuccess: (_, notificationId) => {
+      // ✅ Mise à jour optimiste au lieu d'invalidation
+      queryClient.setQueryData(['notifications', user?.id], (old: Notification[] = []) =>
+        old.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+      );
     },
   });
 
@@ -114,7 +135,10 @@ export const useNotifications = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      // ✅ Mise à jour optimiste au lieu d'invalidation
+      queryClient.setQueryData(['notifications', user?.id], (old: Notification[] = []) =>
+        old.map(n => ({ ...n, is_read: true }))
+      );
     },
   });
 

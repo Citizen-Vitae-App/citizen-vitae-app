@@ -43,6 +43,8 @@ export function useUserProfile() {
   // Fetch user's organizations with member count
   const { data: organizations = [], isLoading: isLoadingOrgs } = useQuery({
     queryKey: ['user-organizations', user?.id],
+    staleTime: 5 * 60 * 1000, // ✅ 5 minutes - les organisations ne changent pas souvent
+    gcTime: 10 * 60 * 1000, // 10 minutes
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -124,6 +126,8 @@ export function useUserProfile() {
   // Fetch user's favorite causes
   const { data: favoriteCauses = [], isLoading: isLoadingCauses } = useQuery({
     queryKey: ['user-favorite-causes', user?.id],
+    staleTime: 5 * 60 * 1000, // ✅ 5 minutes
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -161,6 +165,8 @@ export function useUserProfile() {
   // Fetch certified missions (attended events with face_match_passed)
   const { data: certifiedMissions = [], isLoading: isLoadingMissions } = useQuery({
     queryKey: ['user-certified-missions', user?.id],
+    staleTime: 5 * 60 * 1000, // ✅ 5 minutes
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       if (!user?.id) return [];
 

@@ -137,7 +137,9 @@ export function PeopleTab({
       if (error) throw error;
       return data || [];
     },
-    enabled: !!organization?.id
+    enabled: !!organization?.id,
+    staleTime: 2 * 60 * 1000, // ✅ 2 minutes - les invitations ne changent pas souvent
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
   const {
     data: participants,
