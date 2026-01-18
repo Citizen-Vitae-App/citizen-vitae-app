@@ -2,6 +2,7 @@ import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu
 import { logger } from "@/lib/logger";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { Footer } from '@/components/Footer';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from '@/assets/logo.svg';
@@ -99,7 +100,7 @@ const Index = () => {
   const showMobileLoginPrompt = !isAuthLoading && !user;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background">
         <div className="container mx-auto px-4">
@@ -330,7 +331,7 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12 flex-1">
         {isEventsLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -379,6 +380,9 @@ const Index = () => {
       
       {/* Bottom padding for mobile nav */}
       {user && <div className="h-16 md:hidden" />}
+
+      {/* Footer - Only show when NOT logged in */}
+      {!user && <Footer />}
     </div>
   );
 };
