@@ -1,5 +1,5 @@
 import { KeyRound, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
@@ -17,13 +17,14 @@ const VerifyOtp = () => {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
   const redirect = searchParams.get('redirect');
+  const hasAutoSubmittedRef = useRef(false); // Pour éviter les soumissions multiples
 
-  useEffect(() => {
+ useEffect(() => {
     if (!email) {
       navigate('/auth');
       return;
     }
-  }, [email, navigate]);
+  }, [email, navigate]); 
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -49,14 +50,7 @@ const VerifyOtp = () => {
     }
   }, [countdown]);
 
-  // Auto-submit when 6 digits are entered
-  useEffect(() => {
-    if (otp.length === 6 && !isSubmitting) {
-      handleVerify();
-    }
-  }, [otp]);
-
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (otp.length !== 6) {
       toast.error('Veuillez entrer le code à 6 chiffres');
       return;
@@ -74,8 +68,27 @@ const VerifyOtp = () => {
     } else {
       console.log('OTP verification succeeded');
       // La redirection sera gérée par le useEffect ci-dessus
+      hasAutoSubmittedRef.current = false; // Reset pour permettre une nouvelle tentative si nécessaire
     }
-  };
+  }, [otp, email, verifyOtp]);
+
+  // Auto-submit when 6 digits are entered
+  // TEMPORAIREMENT DÉSACTIVÉ pour déboguer le problème de token invalide
+  // Le problème pourrait venir d'un déclenchement trop rapide ou multiple
+  // VERSION AMÉLIORÉE (à activer après test) :
+  // useEffect(() => {
+  //   if (otp.length === 6 && !isSubmitting && !hasAutoSubmittedRef.current) {
+  //     hasAutoSubmittedRef.current = true; // Marquer comme soumis pour éviter les doublons
+  //     // Petit délai pour s'assurer que le state est stable
+  //     const timeoutId = setTimeout(() => {
+  //       handleVerify();
+  //     }, 100);
+  //     return () => clearTimeout(timeoutId);
+  //   } else if (otp.length < 6) {
+  //     // Reset si l'utilisateur efface des caractères
+  //     hasAutoSubmittedRef.current = false;
+  //   }
+  // }, [otp, isSubmitting, handleVerify]);
 
   const handleResend = async () => {
     if (!canResend) return;
