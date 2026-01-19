@@ -269,14 +269,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verifyOtp = async (email: string, token: string) => {
-    logger.debug('Verifying OTP:', { email, tokenLength: token.length });
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
+    // 1. Nettoyage préventif (Espaces, majuscules)
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanToken = token.trim();
+
+    logger.debug('Verifying OTP (Attempt 1 - type: email):', { email: cleanEmail });
+
+    // 2. Première tentative : Mode "Connexion Standard"
+    let result = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: cleanToken,
       type: 'email'
     });
-    logger.debug('OTP verification response:', { hasData: !!data, hasError: !!error });
-    return { error };
+
+    // 3. Si ça échoue, c'est peut-être une "Première Inscription" ?
+    if (result.error) {
+      logger.debug('First attempt failed, retrying with type: signup...');
+      
+      const signupResult = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: 'signup' // <--- On tente le mode inscription
+      });
+
+      // Si le mode signup fonctionne, on garde ce résultat
+      if (!signupResult.error) {
+        result = signupResult;
+      } else {
+        // 4. Si ça échoue encore, tentative désespérée mode "Recovery" 
+        // (Parfois utile si l'utilisateur a cliqué sur "Mot de passe oublié" par erreur avant)
+        logger.debug('Second attempt failed, retrying with type: recovery...');
+        const recoveryResult = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanToken,
+          type: 'recovery'
+        });
+
+        if (!recoveryResult.error) {
+          result = recoveryResult;
+        }
+      }
+    }
+
+    logger.debug('Final OTP verification result:', { success: !result.error, error: result.error });
+    return { error: result.error };
   };
 
   const signInWithGoogle = async () => {
