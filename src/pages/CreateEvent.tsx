@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +28,7 @@ import { generateOccurrenceDates, generateRecurrenceGroupId } from '@/lib/recurr
 import { eventSchema, type EventFormData } from '@/lib/validation/eventSchemas';
 export default function CreateEvent() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isPublic, setIsPublic] = useState(true);
   const [isCapacityDialogOpen, setIsCapacityDialogOpen] = useState(false);
   const [tempCapacity, setTempCapacity] = useState('');
@@ -278,6 +280,14 @@ export default function CreateEvent() {
 
       // Mark events as recently created for visual feedback
       useRecentlyModifiedEvents.getState().markEventsAsRecent(createdEventIds, usedRecurrenceGroupId);
+      
+      // Invalidate organization events queries to refresh the list immediately
+      // This ensures new events appear without requiring a page refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ['organization-events'],
+        exact: false // Invalidate all variants (with different teamId/searchQuery)
+      });
+      
       navigate('/organization/dashboard?tab=events');
     } catch (error) {
       console.error('Error:', error);
@@ -313,13 +323,21 @@ export default function CreateEvent() {
               <div>
                 <div className="relative aspect-square bg-muted rounded-lg overflow-hidden max-w-sm group">
                   <img src={coverImage || defaultEventCover} alt="Cover" className="w-full h-full object-cover" />
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   {/* Upload status indicator */}
                   <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full border-2 border-white flex items-center justify-center transition-colors pointer-events-none" style={{
                   backgroundColor: isImageUploading ? 'hsl(var(--muted))' : uploadedUrl ? 'hsl(142, 76%, 36%)' : 'hsl(var(--primary))'
                 }}>
                     {isImageUploading ? <Loader2 className="w-6 h-6 text-foreground animate-spin" /> : uploadedUrl ? <Check className="w-6 h-6 text-white" /> : <ImageIcon className="w-6 h-6 text-primary-foreground" />}
                   </div>
+                  {/* Max size indicator - only show on hover when no image uploaded */}
+                  {!coverImage && (
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <p className="text-xs text-foreground bg-background/95 backdrop-blur-sm px-2 py-1 rounded shadow-lg border border-border whitespace-nowrap">
+                        Max 2 Mo
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

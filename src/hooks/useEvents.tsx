@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,15 +34,28 @@ interface UseEventsOptions {
 }
 
 export const useEvents = (options: UseEventsOptions = {}) => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Memoize les filtres pour éviter les re-renders inutiles
+  const causeFiltersKey = useMemo(
+    () => options.causeFilters?.sort().join(',') || '',
+    [options.causeFilters]
+  );
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      setError(null);
+  const dateRangeKey = useMemo(
+    () => `${options.dateRange?.start?.getTime() || ''}-${options.dateRange?.end?.getTime() || ''}`,
+    [options.dateRange?.start, options.dateRange?.end]
+  );
 
+  const { data: events = [], isLoading, error } = useQuery({
+    queryKey: [
+      'events',
+      options.organizationId,
+      options.teamId,
+      options.publicOnly,
+      options.searchQuery,
+      dateRangeKey,
+      causeFiltersKey,
+    ],
+    queryFn: async () => {
       try {
         // If cause filters are applied, first get event IDs that match the causes
         let eventIdsWithCauses: string[] | null = null;
@@ -59,9 +72,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
           
           // If no events match the causes, return empty
           if (!eventIdsWithCauses || eventIdsWithCauses.length === 0) {
-            setEvents([]);
-            setIsLoading(false);
-            return;
+            return [];
           }
         }
 
@@ -131,19 +142,21 @@ export const useEvents = (options: UseEventsOptions = {}) => {
           organization_name: event.organizations?.name
         }));
 
-        setEvents(formattedEvents);
+        return formattedEvents;
       } catch (err: any) {
         console.error('Error fetching events:', err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+        throw err;
       }
-    };
+    },
+    staleTime: 30 * 1000, // 30 secondes - évite les refetch trop fréquents
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-    fetchEvents();
-  }, [options.organizationId, options.teamId, options.publicOnly, options.searchQuery, options.dateRange?.start, options.dateRange?.end, options.causeFilters]);
-
-  return { events, isLoading, error };
+  return { 
+    events, 
+    isLoading, 
+    error: error?.message || null 
+  };
 };
 
 export const useOrganizationEvents = (searchQuery?: string, teamId?: string) => {

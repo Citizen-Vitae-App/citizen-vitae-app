@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { format, addMonths } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { format, addMonths, setDay } from 'date-fns';
+import { fr, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export interface RecurrenceData {
@@ -35,6 +35,36 @@ const WEEK_DAYS = [
   { value: 'sat', label: 'S' },
   { value: 'sun', label: 'D' },
 ];
+
+// Map day codes to day of week index (0 = Sunday, 1 = Monday, etc.)
+const DAY_CODE_TO_INDEX: Record<string, number> = {
+  'sun': 0,
+  'mon': 1,
+  'tue': 2,
+  'wed': 3,
+  'thu': 4,
+  'fri': 5,
+  'sat': 6,
+};
+
+// Get full day name in the appropriate language
+const getDayNameFull = (dayCode: string): string => {
+  const dayIndex = DAY_CODE_TO_INDEX[dayCode];
+  if (dayIndex === undefined) return dayCode;
+  
+  // Use a reference date (any Sunday) and add days to get the target day
+  const referenceDate = new Date(2024, 0, 7); // January 7, 2024 is a Sunday
+  const targetDate = setDay(referenceDate, dayIndex);
+  
+  // Detect language from browser or use French as default
+  const isEnglish = navigator.language?.startsWith('en') ?? false;
+  const locale = isEnglish ? enUS : fr;
+  
+  const dayName = format(targetDate, 'EEEE', { locale });
+  
+  // Return lowercase for French, capitalize first letter for English
+  return isEnglish ? dayName.charAt(0).toUpperCase() + dayName.slice(1).toLowerCase() : dayName.toLowerCase();
+};
 
 const FREQUENCY_OPTIONS = [
   { value: 'daily', label: 'jour' },
@@ -253,7 +283,7 @@ export function EventRecurrenceSection({ value, onChange }: EventRecurrenceSecti
               <>
                 Toutes les {value.interval > 1 ? `${value.interval} semaines` : 'semaines'} le{' '}
                 {value.weekDays
-                  .map((d) => WEEK_DAYS.find((wd) => wd.value === d)?.label)
+                  .map((d) => getDayNameFull(d))
                   .join(', ')}
               </>
             )}

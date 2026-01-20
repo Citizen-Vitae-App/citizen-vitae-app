@@ -20,34 +20,36 @@ export function useUserOrganizations() {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      // Fetch organization memberships with organization details
-      const { data: memberships, error: membershipsError } = await supabase
-        .from('organization_members')
-        .select(`
-          role,
-          is_owner,
-          organization:organizations(
-            id,
-            name,
-            logo_url,
-            type
-          )
-        `)
-        .eq('user_id', user.id);
+      // 🚀 Batch: Fetch memberships + team leadership en parallèle
+      const [membershipsResult, teamMembershipsResult] = await Promise.all([
+        supabase
+          .from('organization_members')
+          .select(`
+            role,
+            is_owner,
+            organization:organizations(
+              id,
+              name,
+              logo_url,
+              type
+            )
+          `)
+          .eq('user_id', user.id),
+        supabase
+          .from('team_members')
+          .select(`
+            is_leader,
+            team:teams(organization_id)
+          `)
+          .eq('user_id', user.id)
+          .eq('is_leader', true),
+      ]);
 
-      if (membershipsError) throw membershipsError;
+      if (membershipsResult.error) throw membershipsResult.error;
+      if (teamMembershipsResult.error) throw teamMembershipsResult.error;
 
-      // Fetch team memberships to check if user is a leader
-      const { data: teamMemberships, error: teamError } = await supabase
-        .from('team_members')
-        .select(`
-          is_leader,
-          team:teams(organization_id)
-        `)
-        .eq('user_id', user.id)
-        .eq('is_leader', true);
-
-      if (teamError) throw teamError;
+      const memberships = membershipsResult.data;
+      const teamMemberships = teamMembershipsResult.data;
 
       // Get organization IDs where user is a leader
       const leaderOrgIds = new Set(
@@ -72,6 +74,7 @@ export function useUserOrganizations() {
       return organizations;
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes - Les orgs changent rarement
   });
 
   const organizations = data ?? [];

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface UseBackgroundImageUploadOptions {
   bucket: string;
@@ -52,6 +53,21 @@ export function useBackgroundImageUpload({
   }, [bucket]);
 
   const handleFileSelect = useCallback((file: File) => {
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Veuillez utiliser un fichier PNG ou JPEG.');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+      return;
+    }
+
     // Reset previous state
     setUploadError(null);
     setUploadedUrl(null);
@@ -79,7 +95,17 @@ export function useBackgroundImageUpload({
         })
         .catch((error) => {
           if (currentFileRef.current === file) {
-            setUploadError("Erreur lors de l'upload de l'image");
+            // Check if error is related to file size
+            if (error.message?.toLowerCase().includes('size') || 
+                error.message?.toLowerCase().includes('too large') ||
+                error.statusCode === '413') {
+              const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+              setUploadError(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo.`);
+              toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+            } else {
+              setUploadError("Erreur lors de l'upload de l'image");
+              toast.error("Erreur lors de l'upload de l'image. Veuillez réessayer.");
+            }
             setIsUploading(false);
           }
           console.error('Background upload failed:', error);
@@ -106,7 +132,17 @@ export function useBackgroundImageUpload({
         })
         .catch((error) => {
           if (currentFileRef.current === file) {
-            setUploadError("Erreur lors de l'upload de l'image");
+            // Check if error is related to file size
+            if (error.message?.toLowerCase().includes('size') || 
+                error.message?.toLowerCase().includes('too large') ||
+                error.statusCode === '413') {
+              const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+              setUploadError(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo.`);
+              toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+            } else {
+              setUploadError("Erreur lors de l'upload de l'image");
+              toast.error("Erreur lors de l'upload de l'image. Veuillez réessayer.");
+            }
             setIsUploading(false);
           }
           console.error('Background upload failed:', error);

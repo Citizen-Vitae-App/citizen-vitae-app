@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import * as LucideIcons from 'lucide-react';
@@ -296,7 +296,16 @@ const EventFilters = ({
       {/* Panel intégré */}
       <div className="fixed left-1/2 -translate-x-1/2 top-14 md:top-20 z-50 w-[calc(100%-1rem)] md:w-full max-w-4xl bg-background border border-border rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto">
         {/* Tabs */}
-        <div className="flex justify-center pt-6 pb-4">
+        <div className="relative flex justify-center pt-6 pb-4">
+          {/* Close button - Mobile only */}
+          <button
+            onClick={onClose}
+            className="md:hidden absolute top-6 right-4 p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground z-10"
+            aria-label="Fermer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
           <div className="inline-flex bg-muted rounded-full p-1">
             <button
               onClick={() => setActiveTab('dates')}

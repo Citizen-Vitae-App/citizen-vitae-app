@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,6 +43,7 @@ interface OriginalEventData {
 
 export default function EditEvent() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { eventId } = useParams<{ eventId: string }>();
   const [isLoading, setIsLoading] = useState(true);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
@@ -235,6 +237,23 @@ export default function EditEvent() {
     const file = e.target.files?.[0];
     if (!file || !organizationId) return;
 
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Veuillez utiliser un fichier PNG ou JPEG.');
+      e.target.value = '';
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+      e.target.value = '';
+      return;
+    }
+
     // Immediate preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -260,7 +279,16 @@ export default function EditEvent() {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          toast.error("Erreur lors de l'upload de l'image");
+          
+          // Check if error is related to file size
+          if (uploadError.message?.toLowerCase().includes('size') || 
+              uploadError.message?.toLowerCase().includes('too large') ||
+              uploadError.statusCode === '413') {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+          } else {
+            toast.error("Erreur lors de l'upload de l'image. Veuillez réessayer.");
+          }
           setIsImageUploading(false);
           return null;
         }
@@ -329,6 +357,12 @@ export default function EditEvent() {
       const { error } = await supabase.from('events').delete().eq('id', eventId);
       if (error) throw error;
 
+      // Invalidate organization events queries to refresh the list immediately
+      queryClient.invalidateQueries({ 
+        queryKey: ['organization-events'],
+        exact: false // Invalidate all variants (with different teamId/searchQuery)
+      });
+
       toast.success('Événement supprimé');
       navigate('/organization/dashboard');
     } catch (error) {
@@ -384,6 +418,12 @@ export default function EditEvent() {
         }
         toast.success(`Série supprimée (${eventsToDelete?.length || 0} événements)`);
       }
+
+      // Invalidate organization events queries to refresh the list immediately
+      queryClient.invalidateQueries({ 
+        queryKey: ['organization-events'],
+        exact: false // Invalidate all variants (with different teamId/searchQuery)
+      });
 
       setScopeDialogOpen(false);
       navigate('/organization/dashboard');
@@ -541,6 +581,13 @@ export default function EditEvent() {
       
       // Mark events as recently modified for visual feedback
       useRecentlyModifiedEvents.getState().markEventsAsRecent(eventIds, originalEvent?.recurrenceGroupId);
+      
+      // Invalidate organization events queries to refresh the list immediately
+      // This ensures updated events appear without requiring a page refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ['organization-events'],
+        exact: false // Invalidate all variants (with different teamId/searchQuery)
+      });
 
       navigate('/organization/dashboard?tab=events');
     } catch (error) {
@@ -578,6 +625,16 @@ export default function EditEvent() {
       }
 
       await performUpdate(pendingFormData, eventIdsToUpdate);
+      
+      // Mark events as recently modified for visual feedback
+      useRecentlyModifiedEvents.getState().markEventsAsRecent(eventIdsToUpdate, groupId);
+      
+      // Invalidate organization events queries to refresh the list immediately
+      queryClient.invalidateQueries({ 
+        queryKey: ['organization-events'],
+        exact: false // Invalidate all variants (with different teamId/searchQuery)
+      });
+      
       setScopeDialogOpen(false);
       setPendingFormData(null);
     } catch (error) {
@@ -666,7 +723,7 @@ export default function EditEvent() {
                   />
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/jpg"
                     onChange={handleImageUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -682,6 +739,14 @@ export default function EditEvent() {
                       <ImageIcon className="w-6 h-6 text-primary-foreground" />
                     )}
                   </div>
+                  {/* Max size indicator - only show on hover when no image uploaded */}
+                  {!newImagePreview && !existingImageUrl && (
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <p className="text-xs text-foreground bg-background/95 backdrop-blur-sm px-2 py-1 rounded shadow-lg border border-border whitespace-nowrap">
+                        Max 2 Mo
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
