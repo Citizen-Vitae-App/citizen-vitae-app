@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { env } from "process";
 
 /**
  * Initialise Sentry pour le monitoring et le débogage à distance
@@ -18,6 +19,8 @@ export const initSentry = () => {
     dsn,
     environment,
     release: `citizen-vitae-app@${release}`,
+    enabled: true,
+    debug: environment === 'development',
     
     // Intégrations pour React
     integrations: [
@@ -41,7 +44,7 @@ export const initSentry = () => {
     replaysOnErrorSampleRate: 1.0,
 
     // Ne pas envoyer les erreurs en développement local (optionnel)
-    enabled: environment !== 'development',
+    //enabled: environment !== 'development',
 
     // Filtrage des erreurs
     beforeSend(event, hint) {
