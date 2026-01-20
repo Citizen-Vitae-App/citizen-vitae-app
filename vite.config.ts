@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -10,6 +11,17 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
+    // Plugin Sentry pour l'upload des source maps (uniquement en production)
+    mode === 'production' && sentryVitePlugin({
+      org: process.env.VITE_SENTRY_ORG,
+      project: process.env.VITE_SENTRY_PROJECT,
+      authToken: process.env.VITE_SENTRY_AUTH_TOKEN,
+      // Upload des source maps uniquement si les variables sont configurées
+      disable: !process.env.VITE_SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: "./dist/**",
+      },
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -45,7 +57,8 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 1000,
-    sourcemap: mode === 'development',
+    // Toujours générer les source maps pour Sentry
+    sourcemap: true,
   },
   define: {
     global: {},
