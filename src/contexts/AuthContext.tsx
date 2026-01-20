@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/lib/logger';
 import { queryClient } from '@/lib/queryClient';
+import { setSentryUser } from '@/lib/sentry';
 
 interface Profile {
   id: string;
@@ -67,6 +68,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null);
           setRoles([]);
           setIsLoading(false);
+          // Nettoyer l'utilisateur de Sentry lors de la déconnexion
+          setSentryUser(null);
         }
       }
     );
@@ -195,6 +198,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Mettre à jour les states locaux
       if (profile) setProfile(profile);
       if (rolesData) setRoles(rolesData.map((r: UserRole) => r.role));
+
+      // Configurer l'utilisateur dans Sentry pour le tracking
+      if (profile) {
+        const { data: userData } = await supabase.auth.getUser();
+        setSentryUser({
+          id: userId,
+          email: userData?.user?.email,
+          username: profile.first_name && profile.last_name 
+            ? `${profile.first_name} ${profile.last_name}` 
+            : undefined,
+        });
+      }
 
       // After setting profile, handle pending invitations (une seule fois par user)
       if (profile && !invitationsHandled.has(userId)) {
@@ -395,6 +410,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // Nettoyer l'utilisateur de Sentry
+    setSentryUser(null);
     navigate('/');
   };
 

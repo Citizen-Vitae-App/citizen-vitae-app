@@ -2,6 +2,7 @@ import { Building2, Users, Calendar, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSuperAdminStats } from '@/hooks/useSuperAdminStats';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SentryTestButton } from '@/components/SentryTestButton';
 
 export function OverviewTab() {
   const { stats, isLoading } = useSuperAdminStats();
@@ -91,6 +92,11 @@ export function OverviewTab() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Section de test Sentry - visible uniquement pour les super admins */}
+      <div className="mt-6">
+        <SentryTestButton />
       </div>
     </div>
   );
