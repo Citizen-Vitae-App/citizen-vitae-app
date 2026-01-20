@@ -135,7 +135,20 @@ Sentry est configuré pour protéger les données sensibles :
 
 ## 🧪 Test de l'intégration
 
-Pour tester que Sentry fonctionne correctement :
+### Méthode 1 : Utiliser le composant de test (Recommandé)
+
+Un composant de test a été intégré dans le **tableau de bord Super Admin** :
+
+1. Connectez-vous avec un compte super admin
+2. Allez sur `/super-admin`
+3. Dans l'onglet "Vue d'ensemble", vous trouverez la section **"Tests Sentry"**
+4. Cliquez sur les différents boutons pour tester :
+   - **Erreur capturée** : Envoie une erreur gérée à Sentry
+   - **Message info** : Envoie un message informatif
+   - **Avertissement** : Envoie un warning
+   - **Crash ErrorBoundary** : ⚠️ Fait volontairement planter l'app pour tester l'ErrorBoundary
+
+### Méthode 2 : Tester manuellement dans le code
 
 ```typescript
 // Dans n'importe quel composant
