@@ -244,7 +244,16 @@ export function useOrganizationSettings() {
     
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      toast.error('Erreur lors du téléchargement');
+      
+      // Check if error is related to file size
+      if (uploadError.message?.toLowerCase().includes('size') || 
+          uploadError.message?.toLowerCase().includes('too large') ||
+          uploadError.statusCode === '413') {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+      } else {
+        toast.error('Erreur lors du téléchargement. Veuillez réessayer.');
+      }
       return null;
     }
     

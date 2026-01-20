@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -12,18 +13,14 @@ interface Favorite {
 export const useFavorites = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Fetch user favorites
-  useEffect(() => {
-    if (!user) {
-      setFavorites([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchFavorites = async () => {
+  // Fetch user favorites avec React Query
+  const { data: favorites = [], isLoading } = useQuery({
+    queryKey: ['favorites', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('user_favorites')
         .select('*')
@@ -31,15 +28,18 @@ export const useFavorites = () => {
 
       if (error) {
         console.error('Error fetching favorites:', error);
-      } else {
-        setFavorites(data || []);
+        return [];
       }
-      setIsLoading(false);
-    };
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 
-    fetchFavorites();
+  // Realtime subscription - optimisé
+  useEffect(() => {
+    if (!user?.id) return;
 
-    // Realtime subscription
     const channel = supabase
       .channel('user-favorites-changes')
       .on(
@@ -51,11 +51,15 @@ export const useFavorites = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setFavorites(prev => [...prev, payload.new as Favorite]);
-          } else if (payload.eventType === 'DELETE') {
-            setFavorites(prev => prev.filter(f => f.id !== (payload.old as Favorite).id));
-          }
+          // Mise à jour directe du cache sans refetch
+          queryClient.setQueryData(['favorites', user.id], (old: Favorite[] = []) => {
+            if (payload.eventType === 'INSERT') {
+              return [...old, payload.new as Favorite];
+            } else if (payload.eventType === 'DELETE') {
+              return old.filter(f => f.id !== (payload.old as Favorite).id);
+            }
+            return old;
+          });
         }
       )
       .subscribe();
@@ -63,58 +67,17 @@ export const useFavorites = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id, queryClient]);
 
   const isFavorite = useCallback((eventId: string) => {
     return favorites.some(f => f.event_id === eventId);
   }, [favorites]);
 
-  const toggleFavorite = useCallback(async (eventId: string) => {
-    if (!user) {
-      return { needsAuth: true };
-    }
-
-    const existing = favorites.find(f => f.event_id === eventId);
-
-    if (existing) {
-      // Optimistic update - remove immediately from local state
-      setFavorites(prev => prev.filter(f => f.id !== existing.id));
+  // Mutation pour ajouter un favori
+  const addFavoriteMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      if (!user?.id) throw new Error('User not authenticated');
       
-      // Remove from database
-      const { error } = await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('id', existing.id);
-
-      if (error) {
-        console.error('Error removing favorite:', error);
-        // Rollback on error
-        setFavorites(prev => [...prev, existing]);
-        toast({
-          title: "Erreur",
-          description: "Impossible de retirer des favoris",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      toast({
-        title: "Retiré des favoris",
-        description: "L'événement a été retiré de vos favoris"
-      });
-      return { success: true, added: false };
-    } else {
-      // Create temporary favorite for optimistic update
-      const tempFavorite: Favorite = {
-        id: `temp-${Date.now()}`,
-        event_id: eventId,
-        created_at: new Date().toISOString()
-      };
-      
-      // Optimistic update - add immediately to local state
-      setFavorites(prev => [...prev, tempFavorite]);
-      
-      // Add to database
       const { data, error } = await supabase
         .from('user_favorites')
         .insert({
@@ -124,28 +87,108 @@ export const useFavorites = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error adding favorite:', error);
-        // Rollback on error
-        setFavorites(prev => prev.filter(f => f.id !== tempFavorite.id));
-        toast({
-          title: "Erreur",
-          description: "Impossible d'ajouter aux favoris",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      // Replace temp with real data
-      setFavorites(prev => prev.map(f => f.id === tempFavorite.id ? data : f));
-
+      if (error) throw error;
+      return data;
+    },
+    onMutate: async (eventId) => {
+      // Optimistic update
+      const tempFavorite: Favorite = {
+        id: `temp-${Date.now()}`,
+        event_id: eventId,
+        created_at: new Date().toISOString()
+      };
+      
+      queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) => 
+        [...old, tempFavorite]
+      );
+      
+      return { tempFavorite };
+    },
+    onSuccess: (data, _, context) => {
+      // Remplacer le temp par le vrai
+      queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) =>
+        old.map(f => f.id === context.tempFavorite.id ? data : f)
+      );
+      
       toast({
         title: "Ajouté aux favoris",
         description: "L'événement a été ajouté à vos favoris"
       });
+    },
+    onError: (_, __, context) => {
+      // Rollback
+      if (context?.tempFavorite) {
+        queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) =>
+          old.filter(f => f.id !== context.tempFavorite.id)
+        );
+      }
+      
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter aux favoris",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Mutation pour retirer un favori
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async (favoriteId: string) => {
+      const { error } = await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('id', favoriteId);
+
+      if (error) throw error;
+    },
+    onMutate: async (favoriteId) => {
+      // Optimistic update
+      const previousFavorites = queryClient.getQueryData(['favorites', user?.id]) as Favorite[];
+      const removed = previousFavorites?.find(f => f.id === favoriteId);
+      
+      queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) =>
+        old.filter(f => f.id !== favoriteId)
+      );
+      
+      return { removed };
+    },
+    onSuccess: () => {
+      toast({
+        title: "Retiré des favoris",
+        description: "L'événement a été retiré de vos favoris"
+      });
+    },
+    onError: (_, __, context) => {
+      // Rollback
+      if (context?.removed) {
+        queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) =>
+          [...old, context.removed]
+        );
+      }
+      
+      toast({
+        title: "Erreur",
+        description: "Impossible de retirer des favoris",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const toggleFavorite = useCallback(async (eventId: string) => {
+    if (!user) {
+      return { needsAuth: true };
+    }
+
+    const existing = favorites.find(f => f.event_id === eventId);
+
+    if (existing) {
+      removeFavoriteMutation.mutate(existing.id);
+      return { success: true, added: false };
+    } else {
+      addFavoriteMutation.mutate(eventId);
       return { success: true, added: true };
     }
-  }, [user, favorites, toast]);
+  }, [user, favorites, addFavoriteMutation, removeFavoriteMutation]);
 
   return {
     favorites,

@@ -150,18 +150,46 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       return;
     }
     
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+      e.target.value = '';
+      return;
+    }
+    
     const url = await uploadImage(file, 'logo');
     if (url) {
       handleInputChange('logo_url', url);
+      toast.success('Logo mis à jour avec succès');
     }
   };
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Veuillez utiliser un fichier PNG ou JPEG.');
+      e.target.value = '';
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
+      e.target.value = '';
+      return;
+    }
+    
     const url = await uploadImage(file, 'cover');
     if (url) {
       handleInputChange('cover_image_url', url);
+      toast.success('Image de couverture mise à jour avec succès');
     }
   };
 
@@ -279,14 +307,23 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
               </div>
             )}
             {/* Cover edit button */}
-            <label className="absolute top-3 right-3 cursor-pointer">
-              <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
-              <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md" asChild>
-                <span>
-                  <Pencil className="h-4 w-4" />
-                </span>
-              </Button>
-            </label>
+            <div className="absolute top-3 right-3 group">
+              <label className="cursor-pointer">
+                <input type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleCoverUpload} />
+                <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md" asChild>
+                  <span>
+                    <Pencil className="h-4 w-4" />
+                  </span>
+                </Button>
+              </label>
+              {!formData.cover_image_url && (
+                <div className="absolute top-full right-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <p className="text-xs text-foreground bg-background/95 backdrop-blur-sm px-2 py-1 rounded shadow-lg border border-border whitespace-nowrap">
+                    Max 2 Mo
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Logo overlapping cover */}
@@ -298,14 +335,23 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
                   {formData.name?.charAt(0) || 'O'}
                 </AvatarFallback>
               </Avatar>
-              <label className="absolute -bottom-1 -right-1 cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full bg-background shadow-md hover:bg-muted" asChild>
-                  <span>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </span>
-                </Button>
-              </label>
+              <div className="absolute -bottom-1 -right-1 group">
+                <label className="cursor-pointer">
+                  <input type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleLogoUpload} />
+                  <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full bg-background shadow-md hover:bg-muted" asChild>
+                    <span>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </span>
+                  </Button>
+                </label>
+                {!formData.logo_url && (
+                  <div className="absolute top-full right-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    <p className="text-[10px] text-foreground bg-background/95 backdrop-blur-sm px-1.5 py-0.5 rounded shadow-lg border border-border whitespace-nowrap">
+                      Max 2 Mo
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

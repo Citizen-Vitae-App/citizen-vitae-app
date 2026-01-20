@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/lib/logger';
+import { queryClient } from '@/lib/queryClient';
 
 interface Profile {
   id: string;
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [invitationsHandled, setInvitationsHandled] = useState<Set<string>>(new Set()); // ✅ Flag pour éviter les appels multiples
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false); // 🚀 Évite les appels dupliqués
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,17 +88,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchProfileAndRoles = async (userId: string) => {
-    try {
-      // First, try to get the profile
-      const profileResult = await supabase.from('profiles')
-        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
-        .eq('id', userId)
-        .maybeSingle();
+    // 🚀 Éviter les appels dupliqués si déjà en cours de fetch
+    if (isFetchingProfile) {
+      logger.debug('AuthProvider', 'Fetch already in progress, skipping duplicate call');
+      return;
+    }
 
-      let profileData = profileResult.data;
+    setIsFetchingProfile(true);
+    
+    try {
+      // 🎯 Utiliser le cache React Query pour éviter les appels dupliqués
+      const [profileData, rolesData] = await Promise.all([
+        // Profile avec cache React Query
+        queryClient.fetchQuery({
+          queryKey: ['profile', userId],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+              .eq('id', userId)
+              .maybeSingle();
+            
+            if (error) throw error;
+            return data;
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes de cache
+        }),
+        // Roles avec cache React Query
+        queryClient.fetchQuery({
+          queryKey: ['user_roles', userId],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', userId);
+            
+            if (error) throw error;
+            return data || [];
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes de cache
+        }),
+      ]);
+
+      let profile = profileData;
 
       // If no profile exists, create it (this handles the missing profile bug)
-      if (!profileData) {
+      if (!profile) {
         logger.info('AuthProvider', 'No profile found for user, creating one...');
         const { data: userData } = await supabase.auth.getUser();
         const userEmail = userData?.user?.email;
@@ -114,45 +151,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (insertError) {
           logger.error('[AuthProvider] Error creating profile:', insertError);
         } else {
-          profileData = newProfile;
+          profile = newProfile;
           logger.info('AuthProvider', 'Profile created successfully');
+          
+          // Mettre à jour le cache avec le nouveau profil
+          queryClient.setQueryData(['profile', userId], newProfile);
         }
       }
 
-      // Also create user_preferences if missing
-      if (profileData) {
-        const { data: prefsExist } = await supabase
-          .from('user_preferences')
-          .select('user_id')
-          .eq('user_id', userId)
-          .maybeSingle();
+      // Also create user_preferences if missing (avec cache)
+      if (profile) {
+        const prefsExist = await queryClient.fetchQuery({
+          queryKey: ['user_preferences', userId],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('user_preferences')
+              .select('user_id')
+              .eq('user_id', userId)
+              .maybeSingle();
+            
+            if (error) throw error;
+            return data;
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes de cache
+        });
 
         if (!prefsExist) {
-          await supabase.from('user_preferences').insert({
+          const { data: newPrefs } = await supabase.from('user_preferences').insert({
             user_id: userId,
             language: 'fr',
             email_opt_in: true,
             sms_opt_in: false,
             geolocation_enabled: false,
-          });
+          }).select().single();
+          
+          // Mettre à jour le cache avec les nouvelles préférences
+          if (newPrefs) {
+            queryClient.setQueryData(['user_preferences', userId], newPrefs);
+          }
         }
       }
 
-      // Fetch roles
-      const rolesData = await supabase.from('user_roles').select('role').eq('user_id', userId);
-
-      if (profileData) setProfile(profileData);
-      if (rolesData.data) setRoles(rolesData.data.map((r: UserRole) => r.role));
+      // Mettre à jour les states locaux
+      if (profile) setProfile(profile);
+      if (rolesData) setRoles(rolesData.map((r: UserRole) => r.role));
 
       // After setting profile, handle pending invitations (une seule fois par user)
-      if (profileData && !invitationsHandled.has(userId)) {
-        await handlePendingInvitations(userId, profileData);
+      if (profile && !invitationsHandled.has(userId)) {
+        await handlePendingInvitations(userId, profile);
         setInvitationsHandled(prev => new Set(prev).add(userId));
       }
     } catch (error) {
       logger.error('Error fetching profile/roles:', error);
     } finally {
       setIsLoading(false);
+      setIsFetchingProfile(false); // 🚀 Libérer le flag
     }
   };
 
@@ -245,11 +298,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshProfile = async () => {
     if (!user?.id) return;
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
-        .eq('id', user.id)
-        .single();
+      // 🎯 Invalider le cache et refetch depuis le serveur
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      
+      const data = await queryClient.fetchQuery({
+        queryKey: ['profile', user.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes de cache
+      });
+      
       if (data) setProfile(data);
     } catch (error) {
       logger.error('Error refreshing profile:', error);
