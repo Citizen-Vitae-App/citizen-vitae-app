@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { CauseThemeTag } from '@/components/CauseThemeTag';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,9 +22,10 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
+  
+  // État pour la date de naissance (Date object pour le DatePicker)
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined); 
+  
   const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +35,18 @@ export default function Onboarding() {
   const [geoStatus, setGeoStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'error'>('idle');
   const [geoError, setGeoError] = useState<string | null>(null);
 
-  // Thèmes par défaut au cas où la base ne renvoie rien
+  // Empêcher le scroll pendant tout l'onboarding
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
+  // Thèmes par défaut (Fallback)
   const defaultThemes: CauseTheme[] = [
     { name: 'Environnement', icon: 'Leaf', color: '#10b981', id: 'env' },
     { name: 'Éducation', icon: 'GraduationCap', color: '#3b82f6', id: 'edu' },
@@ -47,24 +59,6 @@ export default function Onboarding() {
     { name: 'Logement', icon: 'Home', color: '#f97316', id: 'housing' },
     { name: 'Égalité & diversité', icon: 'Users', color: '#a855f7', id: 'equality' },
   ];
-
-  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
-  const months = [
-    { value: '01', label: 'Janvier' },
-    { value: '02', label: 'Février' },
-    { value: '03', label: 'Mars' },
-    { value: '04', label: 'Avril' },
-    { value: '05', label: 'Mai' },
-    { value: '06', label: 'Juin' },
-    { value: '07', label: 'Juillet' },
-    { value: '08', label: 'Août' },
-    { value: '09', label: 'Septembre' },
-    { value: '10', label: 'Octobre' },
-    { value: '11', label: 'Novembre' },
-    { value: '12', label: 'Décembre' },
-  ];
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
   
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -80,7 +74,7 @@ export default function Onboarding() {
       if (profile.first_name) setFirstName(profile.first_name);
       if (profile.last_name) setLastName(profile.last_name);
       
-      // Si prénom ET nom sont déjà remplis → sauter l'étape 1, aller à l'étape 2 (vérification ID)
+      // Si prénom ET nom sont déjà remplis → sauter l'étape 1
       if (profile.first_name && profile.last_name) {
         setHasGoogleData(true);
         setStep(2);
@@ -93,6 +87,8 @@ export default function Onboarding() {
   }, []);
 
   const fetchCauseThemes = async () => {
+    // Note Architecte: Utilisation correcte de supabase.from (lecture simple hors AuthContext)
+    // Idéalement, à migrer vers useQuery plus tard pour le cache
     const { data, error } = await supabase
       .from('cause_themes')
       .select('*')
@@ -100,7 +96,6 @@ export default function Onboarding() {
     
     if (error) {
       console.error('Erreur chargement thèmes', error);
-      toast.error("Impossible de charger les thèmes, affichage d'une liste par défaut");
       setCauseThemes(defaultThemes);
       return;
     }
@@ -132,15 +127,12 @@ export default function Onboarding() {
     }
 
     setIsLoading(false);
-    setStep(2); // Step 2 is now identity verification
+    setStep(2);
   };
 
   const handleStep2 = () => {
-    // Step 2: Identity verification - user can proceed, verification is optional during onboarding
-    setStep(3); // Go to geolocation step
+    setStep(3); 
   };
-
-  // Request geolocation permission
   const requestGeolocation = async () => {
     if (!navigator.geolocation) {
       setGeoStatus('error');
@@ -190,21 +182,36 @@ export default function Onboarding() {
   };
 
   const handleStep3 = async () => {
-    // Step 3: Geolocation - user can skip or enable
-    setStep(4); // Go to date of birth
+    setStep(4);
   };
 
   const handleStep4 = async () => {
-    if (!day || !month || !year) {
-      toast.error('Veuillez sélectionner votre date de naissance complète');
+    if (!dateOfBirth) {
+      toast.error('Veuillez sélectionner votre date de naissance');
+      return;
+    }
+
+    // Validation de l'âge minimum (13 ans)
+    const today = new Date();
+    let age = today.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+      age--;
+    }
+    
+    if (age < 13) {
+      toast.error("Vous devez avoir au moins 13 ans.");
       return;
     }
 
     setIsLoading(true);
-    const birthDate = `${year}-${month}-${day.padStart(2, '0')}`;
+    
+    // Convertir la date en format ISO (YYYY-MM-DD) pour Supabase
+    const dateString = dateOfBirth.toISOString().split('T')[0];
+    
     const { error } = await supabase
       .from('profiles')
-      .update({ date_of_birth: birthDate })
+      .update({ date_of_birth: dateString })
       .eq('id', user?.id);
 
     if (error) {
@@ -271,7 +278,6 @@ export default function Onboarding() {
 
     toast.success('Bienvenue sur CitizenVitae !');
     
-    // Redirection selon le rôle
     if (userRoles.includes('super_admin')) {
       navigate('/admin');
     } else if (userRoles.includes('organization')) {
@@ -290,7 +296,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
+    <div className="h-screen w-screen relative flex items-center justify-center p-4 overflow-hidden">
       {/* Background gradient */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div 
@@ -306,7 +312,7 @@ export default function Onboarding() {
         />
       </div>
 
-      <div className="w-full max-w-2xl bg-background rounded-2xl shadow-lg p-8">
+      <div className="w-full max-w-2xl bg-background rounded-2xl shadow-lg p-8 overflow-y-auto max-h-[calc(100vh-2rem)]">
         {/* Progress indicator - now 5 steps */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {[1, 2, 3, 4, 5].map((s) => (
@@ -492,61 +498,24 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 4: Date of Birth */}
+        {/* Step 4: Date of Birth - DatePicker moderne */}
         {step === 4 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold mb-2">Date de naissance</h1>
-              <p className="text-muted-foreground">Quand êtes-vous né(e) ?</p>
+              <p className="text-muted-foreground">Cette information reste privée</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Jour</Label>
-                <Select value={day} onValueChange={setDay}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="JJ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {days.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {d}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Mois</Label>
-                <Select value={month} onValueChange={setMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="MM" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Année</Label>
-                <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="AAAA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((y) => (
-                      <SelectItem key={y} value={y}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="date-of-birth">Votre date de naissance</Label>
+                <DatePicker
+                  date={dateOfBirth}
+                  onDateChange={setDateOfBirth}
+                  placeholder="JJ/MM/AAAA"
+                  maxDate={new Date()}
+                  minDate={new Date(1920, 0, 1)}
+                />
               </div>
             </div>
 
@@ -563,7 +532,7 @@ export default function Onboarding() {
                 onClick={handleStep4} 
                 className="w-full" 
                 size="lg"
-                disabled={isLoading}
+                disabled={isLoading || !dateOfBirth}
               >
                 Continuer
               </Button>
