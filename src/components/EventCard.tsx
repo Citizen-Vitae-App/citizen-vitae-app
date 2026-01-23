@@ -153,8 +153,6 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
 // Note: React.memo retiré car le composant utilise useFavorites() qui change l'état interne
 // sans changer les props. Le composant doit se re-rendre quand l'état des favoris change.
 // Le hook useFavorites gère déjà son propre état et optimise les re-renders.
-const EventCard = EventCardComponent;
-
-EventCard.displayName = 'EventCard';
+const EventCard = Object.assign(EventCardComponent, { displayName: 'EventCard' });
 
 export default EventCard;

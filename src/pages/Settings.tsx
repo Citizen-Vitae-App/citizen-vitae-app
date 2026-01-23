@@ -102,8 +102,9 @@ export default function Settings() {
       }
 
       // Vérifier le résultat
-      if (data && !data.success) {
-        throw new Error(data.message || 'Erreur lors de la suppression du compte');
+      const result = data as { success?: boolean; message?: string } | null;
+      if (result && !result.success) {
+        throw new Error(result.message || 'Erreur lors de la suppression du compte');
       }
 
       // Afficher le message de succès
