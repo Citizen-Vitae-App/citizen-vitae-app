@@ -209,61 +209,77 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <body style="margin: 0; padding: 0; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
           <table role="presentation" style="width: 100%; border-collapse: collapse;">
             <tr>
               <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                  <!-- Header -->
+                <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(1, 37, 115, 0.15); overflow: hidden;">
+                  <!-- Header with Logo -->
                   <tr>
-                    <td style="padding: 40px 40px 20px 40px; text-align: center; border-bottom: 1px solid #e4e4e7;">
-                      <h1 style="margin: 0; color: #10b981; font-size: 28px; font-weight: 700;">Citizen Vitae</h1>
-                      <p style="margin: 8px 0 0 0; color: #71717a; font-size: 14px;">La plateforme de certification de l'engagement citoyen</p>
+                    <td style="background: linear-gradient(135deg, #012573 0%, #013a9d 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="https://tqrypdyxhemnupiwcfvd.supabase.co/storage/v1/object/public/public-assets/2500db7e-8966-4596-a8a8-7e21a789f58d/logo%20CzV.svg" alt="Citizen Vitae" style="height: 45px; max-width: 280px; margin-bottom: 12px;" />
+                      <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 15px; font-weight: 500;">La plateforme de certification de l'engagement citoyen</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Decorative Banner -->
+                  <tr>
+                    <td style="background: linear-gradient(90deg, #E23428 0%, #E23428 50%, #012573 50%, #012573 100%); height: 6px;">
                     </td>
                   </tr>
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding: 40px;">
-                      <h2 style="margin: 0 0 16px 0; color: #18181b; font-size: 24px; font-weight: 600;">
-                        🎉 Vous êtes invité(e) !
-                      </h2>
-                      <p style="margin: 0 0 24px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
-                        Vous avez été sélectionné(e) pour créer et gérer une organisation sur Citizen Vitae.
+                    <td style="padding: 50px 40px;">
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <h2 style="margin: 0; color: #012573; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+                          Vous êtes invité(e) !
+                        </h2>
+                      </div>
+                      
+                      <p style="margin: 0 0 24px 0; color: #334155; font-size: 16px; line-height: 1.7; text-align: center;">
+                        Vous avez été sélectionné(e) pour <strong style="color: #012573;">créer et gérer une organisation</strong> sur Citizen Vitae.
                       </p>
-                      <p style="margin: 0 0 32px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
-                        En tant que propriétaire d'organisation, vous pourrez :
-                      </p>
-                      <ul style="margin: 0 0 32px 0; padding-left: 20px; color: #3f3f46; font-size: 15px; line-height: 1.8;">
-                        <li>Créer et gérer des événements citoyens</li>
-                        <li>Certifier l'engagement de vos participants</li>
-                        <li>Délivrer des certificats d'engagement</li>
-                        <li>Constituer votre équipe de collaborateurs</li>
-                      </ul>
+                      
+                      <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #E23428; padding: 24px 28px; margin: 30px 0; border-radius: 0 12px 12px 0;">
+                        <h3 style="margin: 0 0 16px 0; color: #012573; font-size: 17px; font-weight: 700;">
+                          En tant que propriétaire d'organisation, vous pourrez :
+                        </h3>
+                        <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 15px; line-height: 1.9;">
+                          <li style="margin-bottom: 8px;"><strong>Créer et gérer</strong> des événements citoyens</li>
+                          <li style="margin-bottom: 8px;"><strong>Certifier l'engagement</strong> de vos participants</li>
+                          <li style="margin-bottom: 8px;"><strong>Délivrer des certificats</strong> d'engagement officiels</li>
+                          <li style="margin-bottom: 0;"><strong>Constituer votre équipe</strong> de collaborateurs</li>
+                        </ul>
+                      </div>
                       
                       <!-- CTA Button -->
-                      <table role="presentation" style="width: 100%;">
+                      <table role="presentation" style="width: 100%; margin: 35px 0;">
                         <tr>
                           <td align="center">
-                            <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                            <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; padding: 18px 45px; text-decoration: none; border-radius: 12px; font-size: 17px; font-weight: 700; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
                               Créer mon organisation
                             </a>
                           </td>
                         </tr>
                       </table>
                       
-                      <p style="margin: 32px 0 0 0; color: #71717a; font-size: 14px; text-align: center;">
-                        Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-                        <a href="${magicLinkUrl}" style="color: #10b981; word-break: break-all;">${magicLinkUrl}</a>
-                      </p>
+                      <div style="background-color: #fef9f6; border: 1px solid #fed7aa; padding: 16px 20px; border-radius: 10px; margin-top: 30px;">
+                        <p style="margin: 0; color: #92400e; font-size: 13px; text-align: center; line-height: 1.6;">
+                          <strong>Astuce :</strong> Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+                          <a href="${magicLinkUrl}" style="color: #E23428; word-break: break-all; text-decoration: underline;">${magicLinkUrl}</a>
+                        </p>
+                      </div>
                     </td>
                   </tr>
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="padding: 24px 40px; background-color: #fafafa; border-radius: 0 0 16px 16px; border-top: 1px solid #e4e4e7;">
-                      <p style="margin: 0; color: #a1a1aa; font-size: 13px; text-align: center; line-height: 1.5;">
-                        Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.<br>
+                    <td style="padding: 30px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; text-align: center; line-height: 1.6;">
+                        Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+                      </p>
+                      <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
                         © ${new Date().getFullYear()} Citizen Vitae. Tous droits réservés.
                       </p>
                     </td>

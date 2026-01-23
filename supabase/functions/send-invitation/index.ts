@@ -287,7 +287,7 @@ if (isContactEmail) {
 function generateCollaboratorInviteHtml(organizationName: string, organizationLogoUrl?: string, role?: string, customRoleTitle?: string, recipientEmail?: string, baseUrl?: string): string {
   const roleLabel = customRoleTitle || (role === 'admin' ? 'Administrateur' : 'Membre');
   const siteUrl = baseUrl || Deno.env.get("SITE_URL") || 'https://dev.citizenvitae.com';
-  const citizenVitaeLogo = `${siteUrl}/images/citizen-vitae-logo.png`;
+  const citizenVitaeLogo = 'https://tqrypdyxhemnupiwcfvd.supabase.co/storage/v1/object/public/public-assets/2500db7e-8966-4596-a8a8-7e21a789f58d/logo%20CzV.svg';
   const authLink = recipientEmail 
     ? `${siteUrl}/auth?email=${encodeURIComponent(recipientEmail)}`
     : `${siteUrl}/auth`;
@@ -300,60 +300,62 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Invitation à collaborer - Citizen Vitae</title>
       </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 auto;">
           <tr>
             <td style="padding: 40px 20px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(1, 37, 115, 0.15);">
                 <!-- Header with logos -->
                 <tr>
-                  <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td style="text-align: center;">
-                          <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 50px; margin-bottom: 16px;" />
-                          ${organizationLogoUrl ? `
-                          <div style="margin: 16px 0;">
-                            <span style="color: rgba(255,255,255,0.7); font-size: 24px;">×</span>
-                          </div>
-                          <div style="display: inline-block; width: 60px; height: 60px; border-radius: 50%; background: white; overflow: hidden; padding: 4px; box-sizing: border-box;">
-                            <img src="${organizationLogoUrl}" alt="${organizationName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
-                          </div>
-                          ` : ''}
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="background: linear-gradient(135deg, #012573 0%, #013a9d 100%); padding: 40px 30px; text-align: center;">
+                    <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 45px; max-width: 280px; margin-bottom: ${organizationLogoUrl ? '20px' : '12px'};" />
+                    ${organizationLogoUrl ? `
+                    <div style="margin: 20px 0 16px 0;">
+                      <span style="color: rgba(255,255,255,0.6); font-size: 20px; display: block; margin-bottom: 12px;">×</span>
+                      <div style="display: inline-block; width: 70px; height: 70px; border-radius: 50%; background: white; overflow: hidden; padding: 6px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <img src="${organizationLogoUrl}" alt="${organizationName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                      </div>
+                    </div>
+                    ` : '<p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 15px; font-weight: 500;">La plateforme de certification de l\'engagement citoyen</p>'}
+                  </td>
+                </tr>
+                
+                <!-- Decorative Banner -->
+                <tr>
+                  <td style="background: linear-gradient(90deg, #E23428 0%, #E23428 50%, #012573 50%, #012573 100%); height: 6px;">
                   </td>
                 </tr>
                 
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 40px 30px;">
-                    <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px; font-weight: 700; text-align: center;">
-                      Bienvenue dans l'équipe !
-                    </h2>
+                  <td style="padding: 50px 40px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <h2 style="margin: 0; color: #012573; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
+                        Bienvenue dans l'équipe !
+                      </h2>
+                    </div>
                     
-                    <p style="margin: 0 0 20px; color: #4b5563; font-size: 16px; line-height: 1.7; text-align: center;">
-                      <strong>${organizationName}</strong> vous invite à rejoindre son équipe sur <strong>Citizen Vitae</strong> en tant que <strong>${roleLabel}</strong>.
+                    <p style="margin: 0 0 24px; color: #334155; font-size: 16px; line-height: 1.7; text-align: center;">
+                      <strong style="color: #012573;">${organizationName}</strong> vous invite à rejoindre son équipe sur <strong>Citizen Vitae</strong> en tant que <strong style="color: #E23428;">${roleLabel}</strong>.
                     </p>
                     
-                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; padding: 24px; margin: 24px 0; border-radius: 12px;">
-                      <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: 600;">En tant que collaborateur, vous pourrez :</h3>
-                      <ul style="margin: 0; padding-left: 20px; color: #15803d; font-size: 14px; line-height: 1.8;">
-                        <li>Gérer les événements et missions de l'organisation</li>
-                        <li>Certifier les participations des bénévoles</li>
-                        <li>Suivre l'impact citoyen de votre organisation</li>
-                        <li>Collaborer avec les autres membres de l'équipe</li>
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #E23428; padding: 24px 28px; margin: 30px 0; border-radius: 0 12px 12px 0;">
+                      <h3 style="margin: 0 0 16px; color: #012573; font-size: 17px; font-weight: 700;">En tant que collaborateur, vous pourrez :</h3>
+                      <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 15px; line-height: 1.9;">
+                        <li style="margin-bottom: 8px;"><strong>Gérer les événements</strong> et missions de l'organisation</li>
+                        <li style="margin-bottom: 8px;"><strong>Certifier les participations</strong> des bénévoles</li>
+                        <li style="margin-bottom: 8px;"><strong>Suivre l'impact citoyen</strong> de votre organisation</li>
+                        <li style="margin-bottom: 0;"><strong>Collaborer</strong> avec les autres membres de l'équipe</li>
                       </ul>
                     </div>
                     
-                    <p style="margin: 0 0 30px; color: #6b7280; font-size: 14px; line-height: 1.6; text-align: center;">
+                    <p style="margin: 0 0 30px; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
                       Créez votre compte en quelques clics pour commencer à collaborer dès maintenant.
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);">
-                        Créer mon compte collaborateur
+                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
+                        Créer mon compte
                       </a>
                     </div>
                   </td>
@@ -361,12 +363,12 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
                 
                 <!-- Footer -->
                 <tr>
-                  <td style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                    <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px;">
+                  <td style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; line-height: 1.6;">
                       Cette invitation vous a été envoyée par ${organizationName}
                     </p>
-                    <p style="margin: 0; color: #9ca3af; font-size: 11px;">
-                      Citizen Vitae - La plateforme de valorisation de l'engagement citoyen
+                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                      © ${new Date().getFullYear()} Citizen Vitae - La plateforme de valorisation de l'engagement citoyen
                     </p>
                   </td>
                 </tr>
@@ -381,7 +383,7 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
 
 function generateInvitationEmailHtml(organizationName: string, customMessage?: string, recipientEmail?: string, baseUrl?: string): string {
   const siteUrl = baseUrl || Deno.env.get("SITE_URL") || 'https://dev.citizenvitae.com';
-  const citizenVitaeLogo = `${siteUrl}/images/citizen-vitae-logo.png`;
+  const citizenVitaeLogo = 'https://tqrypdyxhemnupiwcfvd.supabase.co/storage/v1/object/public/public-assets/2500db7e-8966-4596-a8a8-7e21a789f58d/logo%20CzV.svg';
   const authLink = recipientEmail 
     ? `${siteUrl}/auth?email=${encodeURIComponent(recipientEmail)}`
     : `${siteUrl}/auth`;
@@ -394,43 +396,65 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Invitation à rejoindre Citizen Vitae</title>
       </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 auto;">
           <tr>
             <td style="padding: 40px 20px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(1, 37, 115, 0.15);">
                 <!-- Header -->
                 <tr>
-                  <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-                    <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 50px; margin-bottom: 16px;" />
-                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Valorisez votre engagement citoyen</p>
+                  <td style="background: linear-gradient(135deg, #012573 0%, #013a9d 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 45px; max-width: 280px; margin-bottom: 12px;" />
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 15px; font-weight: 500;">Valorisez votre engagement citoyen</p>
+                  </td>
+                </tr>
+                
+                <!-- Decorative Banner -->
+                <tr>
+                  <td style="background: linear-gradient(90deg, #E23428 0%, #E23428 50%, #012573 50%, #012573 100%); height: 6px;">
                   </td>
                 </tr>
                 
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 40px 30px;">
-                    <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 22px; font-weight: 600;">
-                      Vous êtes invité(e) à rejoindre ${organizationName} !
-                    </h2>
+                  <td style="padding: 50px 40px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <h2 style="margin: 0; color: #012573; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
+                        Vous êtes invité(e) à rejoindre
+                      </h2>
+                      <h3 style="margin: 8px 0 0 0; color: #E23428; font-size: 24px; font-weight: 700;">
+                        ${organizationName}
+                      </h3>
+                    </div>
                     
-                    <p style="margin: 0 0 20px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                      L'organisation <strong>${organizationName}</strong> vous invite à rejoindre leur communauté de bénévoles sur Citizen Vitae.
+                    <p style="margin: 0 0 24px; color: #334155; font-size: 16px; line-height: 1.7; text-align: center;">
+                      L'organisation <strong style="color: #012573;">${organizationName}</strong> vous invite à rejoindre leur communauté de bénévoles sur <strong>Citizen Vitae</strong>.
                     </p>
                     
                     ${customMessage ? `
-                    <div style="background-color: #f9fafb; border-left: 4px solid #10b981; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-                      <p style="margin: 0; color: #374151; font-size: 14px; font-style: italic;">"${customMessage}"</p>
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #E23428; padding: 20px 24px; margin: 30px 0; border-radius: 0 12px 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                      <p style="margin: 0; color: #475569; font-size: 15px; font-style: italic; line-height: 1.6;">"${customMessage}"</p>
                     </div>
                     ` : ''}
                     
-                    <p style="margin: 0 0 30px; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                    <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; padding: 24px 28px; margin: 30px 0; border-radius: 12px;">
+                      <h3 style="margin: 0 0 12px; color: #012573; font-size: 17px; font-weight: 700; text-align: center;">
+                        Avec Citizen Vitae, vous pouvez :
+                      </h3>
+                      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 15px; line-height: 1.9;">
+                        <li style="margin-bottom: 8px;"><strong>Certifier</strong> vos engagements citoyens</li>
+                        <li style="margin-bottom: 8px;"><strong>Valoriser</strong> vos compétences acquises</li>
+                        <li style="margin-bottom: 0;"><strong>Télécharger</strong> vos certificats officiels</li>
+                      </ul>
+                    </div>
+                    
+                    <p style="margin: 0 0 30px; color: #64748b; font-size: 15px; line-height: 1.6; text-align: center;">
                       Créez votre compte gratuitement et commencez à certifier vos engagements citoyens.
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);">
-                        Créer mon compte
+                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
+                        🚀 Créer mon compte
                       </a>
                     </div>
                   </td>
@@ -438,9 +462,12 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
                 
                 <!-- Footer -->
                 <tr>
-                  <td style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                  <td style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; line-height: 1.6;">
                       Cet email vous a été envoyé par ${organizationName} via Citizen Vitae.
+                    </p>
+                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                      © ${new Date().getFullYear()} Citizen Vitae. Tous droits réservés.
                     </p>
                   </td>
                 </tr>
@@ -454,6 +481,8 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
 }
 
 function generateContactEmailHtml(organizationName: string, message: string): string {
+  const citizenVitaeLogo = 'https://tqrypdyxhemnupiwcfvd.supabase.co/storage/v1/object/public/public-assets/2500db7e-8966-4596-a8a8-7e21a789f58d/logo%20CzV.svg';
+  
   return `
     <!DOCTYPE html>
     <html>
@@ -462,32 +491,48 @@ function generateContactEmailHtml(organizationName: string, message: string): st
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Message de ${organizationName}</title>
       </head>
-      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 auto;">
           <tr>
             <td style="padding: 40px 20px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(1, 37, 115, 0.15);">
                 <!-- Header -->
                 <tr>
-                  <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 30px; text-align: center;">
-                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Message de ${organizationName}</h1>
+                  <td style="background: linear-gradient(135deg, #012573 0%, #013a9d 100%); padding: 35px 30px; text-align: center;">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.3px;">Message de ${organizationName}</h1>
+                  </td>
+                </tr>
+                
+                <!-- Decorative Banner -->
+                <tr>
+                  <td style="background: linear-gradient(90deg, #E23428 0%, #E23428 50%, #012573 50%, #012573 100%); height: 6px;">
                   </td>
                 </tr>
                 
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 40px 30px;">
-                    <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                      <p style="margin: 0; color: #374151; font-size: 16px; line-height: 1.7; white-space: pre-wrap;">${message}</p>
+                  <td style="padding: 50px 40px;">
+                    <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #E23428; padding: 28px 32px; border-radius: 0 12px 12px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 30px;">
+                      <p style="margin: 0; color: #334155; font-size: 16px; line-height: 1.8; white-space: pre-wrap;">${message}</p>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 24px; background-color: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
+                      <img src="${citizenVitaeLogo}" alt="Citizen Vitae" style="height: 35px; max-width: 220px; margin-bottom: 8px;" />
+                      <p style="margin: 8px 0 0 0; color: #64748b; font-size: 13px; font-weight: 500;">
+                        Via la plateforme Citizen Vitae
+                      </p>
                     </div>
                   </td>
                 </tr>
                 
                 <!-- Footer -->
                 <tr>
-                  <td style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                  <td style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; line-height: 1.6;">
                       Ce message vous a été envoyé par ${organizationName} via Citizen Vitae.
+                    </p>
+                    <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                      © ${new Date().getFullYear()} Citizen Vitae. Tous droits réservés.
                     </p>
                   </td>
                 </tr>
