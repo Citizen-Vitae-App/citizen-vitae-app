@@ -354,8 +354,8 @@ function generateCollaboratorInviteHtml(organizationName: string, organizationLo
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
-                        Créer mon compte
+                      <a href="${authLink}" style="display: inline-block; background-color: #E23428; background-image: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff !important; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
+                        <span style="color: #ffffff !important; text-decoration: none;">Créer mon compte</span>
                       </a>
                     </div>
                   </td>
@@ -453,8 +453,8 @@ function generateInvitationEmailHtml(organizationName: string, customMessage?: s
                     </p>
                     
                     <div style="text-align: center;">
-                      <a href="${authLink}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
-                        🚀 Créer mon compte
+                      <a href="${authLink}" style="display: inline-block; background-color: #E23428; background-image: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff !important; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
+                        <span style="color: #ffffff !important; text-decoration: none;">Créer mon compte</span>
                       </a>
                     </div>
                   </td>

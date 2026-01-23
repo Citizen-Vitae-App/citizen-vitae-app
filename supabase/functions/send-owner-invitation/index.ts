@@ -256,9 +256,9 @@ const handler = async (req: Request): Promise<Response> => {
                       <!-- CTA Button -->
                       <table role="presentation" style="width: 100%; margin: 35px 0;">
                         <tr>
-                          <td align="center">
-                            <a href="${magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff; padding: 18px 45px; text-decoration: none; border-radius: 12px; font-size: 17px; font-weight: 700; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px;">
-                              Créer mon organisation
+                          <td align="center" style="background-color: transparent;">
+                            <a href="${magicLinkUrl}" style="display: inline-block; background-color: #E23428; background-image: linear-gradient(135deg, #E23428 0%, #b91c1c 100%); color: #ffffff !important; padding: 18px 45px; text-decoration: none; border-radius: 12px; font-size: 17px; font-weight: 700; box-shadow: 0 6px 20px rgba(226, 52, 40, 0.4); letter-spacing: 0.3px; mso-line-height-rule: exactly; -webkit-text-size-adjust: none;">
+                              <span style="color: #ffffff !important; text-decoration: none;">Créer mon organisation</span>
                             </a>
                           </td>
                         </tr>
