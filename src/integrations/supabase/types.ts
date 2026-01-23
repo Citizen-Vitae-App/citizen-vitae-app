@@ -529,6 +529,7 @@ export type Database = {
           twitter_url: string | null
           type: string | null
           visibility: string | null
+          volunteer_count: number | null
           website: string | null
         }
         Insert: {
@@ -554,6 +555,7 @@ export type Database = {
           twitter_url?: string | null
           type?: string | null
           visibility?: string | null
+          volunteer_count?: number | null
           website?: string | null
         }
         Update: {
@@ -579,6 +581,7 @@ export type Database = {
           twitter_url?: string | null
           type?: string | null
           visibility?: string | null
+          volunteer_count?: number | null
           website?: string | null
         }
         Relationships: []
