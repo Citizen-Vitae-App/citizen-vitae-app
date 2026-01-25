@@ -798,7 +798,7 @@ export function PeopleTab({
                   </span>
                   {!participant.is_pending_invitation && (
                     <span className="ml-auto text-xs">
-                      {format(new Date(participant.last_participation), 'dd MMM yyyy', { locale: fr })}
+                      {format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}
                     </span>
                   )}
                 </div>
