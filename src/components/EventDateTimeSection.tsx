@@ -244,7 +244,7 @@ export function EventDateTimeSection({
               <PopoverTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 px-3 py-2 h-auto rounded-lg text-sm"
+                  className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
                 >
                   <span className="tabular-nums">
                     {startDate ? formatDateCompact(startDate) : "Début"}
@@ -270,7 +270,7 @@ export function EventDateTimeSection({
               <PopoverTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 px-3 py-2 h-auto rounded-lg text-sm"
+                  className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
                 >
                   <span className="tabular-nums">
                     {endDate ? formatDateCompact(endDate) : "Fin"}
