@@ -220,7 +220,7 @@ export function EventDateTimeSection({
   return (
     <div className="bg-black/[0.03] rounded-lg px-4 py-4 space-y-3">
       {/* Multi-day toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between h-9">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-normal text-foreground">Événement sur plusieurs jours</span>
@@ -229,15 +229,17 @@ export function EventDateTimeSection({
       </div>
 
       {/* Date Selection */}
-      {isMultiDay ? (
-        // Multi-day: Two separate date pickers for start and end
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 shrink-0">
-            <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-normal text-foreground">Période</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Start Date Picker */}
+      {/* Date Selection - Fixed height to prevent layout shift */}
+      <div className="h-9">
+        {isMultiDay ? (
+          // Multi-day: Two separate date pickers for start and end
+          <div className="flex items-center justify-between gap-2 h-full">
+            <div className="flex items-center gap-2 shrink-0">
+              <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-normal text-foreground">Période</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Start Date Picker */}
             <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
               <PopoverTrigger asChild>
                 <Button 
@@ -290,14 +292,14 @@ export function EventDateTimeSection({
                   }} 
                 />
               </PopoverContent>
-            </Popover>
+              </Popover>
+            </div>
           </div>
-        </div>
-      ) : (
-        // Single day: Simple date picker
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          // Single day: Simple date picker
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-2">
+              <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-normal text-foreground">Date</span>
           </div>
           <FormField 
@@ -333,11 +335,12 @@ export function EventDateTimeSection({
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
-              </FormItem>
-            )} 
-          />
-        </div>
-      )}
+                </FormItem>
+              )} 
+            />
+          </div>
+        )}
+      </div>
 
       {/* Time Selection */}
       <div className="flex items-center justify-between flex-wrap gap-y-2">
