@@ -265,7 +265,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
           .eq('organization_id', organizationId);
       }
       setHasChanges(false);
-      toast.success('Paramètres enregistrés');
+      // Toast is already shown by useOrganizationSettings hook
     } finally {
       setIsSaving(false);
     }
