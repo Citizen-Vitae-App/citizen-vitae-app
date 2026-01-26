@@ -182,7 +182,7 @@ export function EventDateTimeSection({
           </div>
           <Popover open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[200px]">
+              <Button variant="outline" className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[200px] rounded-lg">
                 {startDate && endDate ? isSameDay(startDate, endDate) ? <span className="tabular-nums">{format(startDate, "d MMMM yyyy", {
                 locale: fr
               })}</span> : <span className="tabular-nums">
