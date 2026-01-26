@@ -273,7 +273,7 @@ export function EventDateTimeSection({
                   className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 px-3 py-2 h-auto rounded-lg text-sm"
                 >
                   <span className="tabular-nums">
-                    {endDate ? formatDateCompact(endDate, true) : "Fin"}
+                    {endDate ? formatDateCompact(endDate) : "Fin"}
                   </span>
                 </Button>
               </PopoverTrigger>
@@ -313,12 +313,12 @@ export function EventDateTimeSection({
                       <Button 
                         variant="outline" 
                         className={cn(
-                          "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[160px] rounded-lg", 
+                          "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[140px] rounded-lg", 
                           !field.value && "text-muted-foreground"
                         )}
                       >
                         <span className="tabular-nums">
-                          {field.value ? format(field.value, "d MMMM yyyy", { locale: fr }) : "Date"}
+                          {field.value ? format(field.value, "d MMMM", { locale: fr }) : "Date"}
                         </span>
                       </Button>
                     </FormControl>
