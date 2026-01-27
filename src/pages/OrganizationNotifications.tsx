@@ -9,12 +9,15 @@ import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Navbar } from '@/components/Navbar';
+import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const OrganizationNotifications = () => {
   const { user } = useAuth();
   const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const { preferences } = useUserPreferences();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const language = preferences?.language || 'fr';
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -38,10 +41,10 @@ const OrganizationNotifications = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop Navbar */}
-      <Navbar />
+      {/* Header: Mobile uses OrganizationMobileHeader, Desktop uses Navbar */}
+      {isMobile ? <OrganizationMobileHeader /> : <Navbar />}
       
-      <main className="container mx-auto px-4 py-8 pt-20 md:pt-24">
+      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-24'}`}>
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             Notifications
