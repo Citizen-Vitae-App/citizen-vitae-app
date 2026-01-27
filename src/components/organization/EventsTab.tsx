@@ -658,8 +658,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         </div>
       </div>
 
-      {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-0 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0 md:top-28">
+      {/* Search and Actions Bar - Sticky (top-14 on mobile for header, top-28 on desktop for navbar) */}
+      <div className="sticky top-14 md:top-28 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0">
         <div className="flex items-center gap-2">
           {/* Search bar - flexible width */}
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
