@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar as CalendarIconLucide, CalendarCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,10 +41,19 @@ const normalizeTime = (time: string): string => {
   return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
 };
 
-export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
+// Format date with abbreviated month if needed to prevent wrapping
+const formatDateCompact = (date: Date, showYear: boolean = false): string => {
+  const monthFormat = showYear ? "d MMM yyyy" : "d MMM";
+  return format(date, monthFormat, { locale: fr });
+};
+
+export function EventDateTimeSection({
+  form
+}: EventDateTimeSectionProps) {
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
-
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const startDate = form.watch('startDate') as Date | undefined;
   const endDate = form.watch('endDate') as Date | undefined;
   const startTime = form.watch('startTime') as string;
@@ -62,19 +71,14 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
     if (!startDate || !endDate || !startTime || !endTime) return null;
     if (!isSameDay(startDate, endDate)) return null;
     if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) return null;
-    
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
-    
     const startTotal = startHours * 60 + startMinutes;
     const endTotal = endHours * 60 + endMinutes;
-    
     if (endTotal <= startTotal) return null;
-    
     const diffMinutes = endTotal - startTotal;
     // Only show duration for events less than 24h
     if (diffMinutes >= 24 * 60) return null;
-    
     return formatDuration(diffMinutes);
   }, [startDate, endDate, startTime, endTime]);
 
@@ -90,7 +94,6 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
         const [endHours, endMinutes] = endTime.split(':').map(Number);
         const startTotal = startHours * 60 + startMinutes;
         const endTotal = endHours * 60 + endMinutes;
-        
         if (endTotal <= startTotal) {
           // Set end time to start time + 1 hour
           const newEndTotal = Math.min(startTotal + 60, 23 * 60 + 45);
@@ -102,7 +105,7 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
     }
   };
 
-  // Handle date range selection
+  // Handle date range selection (for mobile period picker)
   const handleDateRangeSelect = (range: DateRange | undefined) => {
     if (range?.from) {
       form.setValue('startDate', range.from);
@@ -122,17 +125,36 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
     }
   };
 
+  // Handle start date selection for multi-day
+  const handleStartDateSelect = (date: Date | undefined) => {
+    if (date) {
+      form.setValue('startDate', date);
+      // If end date is before start date, update it
+      if (endDate && date > endDate) {
+        form.setValue('endDate', date);
+      }
+      setStartDateOpen(false);
+    }
+  };
+
+  // Handle end date selection for multi-day
+  const handleEndDateSelect = (date: Date | undefined) => {
+    if (date) {
+      form.setValue('endDate', date);
+      setEndDateOpen(false);
+    }
+  };
+
   // Handle start time change with validation
   const handleStartTimeChange = (value: string) => {
     form.setValue('startTime', value);
-    
+
     // Only validate if it's a valid time format and single-day event
     if (!isMultiDay && startDate && endDate && isSameDay(startDate, endDate) && isValidTimeFormat(value) && isValidTimeFormat(endTime)) {
       const [startHours, startMinutes] = value.split(':').map(Number);
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       const startTotal = startHours * 60 + startMinutes;
       const endTotal = endHours * 60 + endMinutes;
-      
       if (endTotal <= startTotal) {
         // Set end time to start time + 1 hour
         const newEndTotal = Math.min(startTotal + 60, 23 * 60 + 45);
@@ -151,7 +173,6 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
       const [endHours, endMinutes] = value.split(':').map(Number);
       const startTotal = startHours * 60 + startMinutes;
       const endTotal = endHours * 60 + endMinutes;
-      
       if (endTotal <= startTotal) {
         // Don't update if invalid
         return;
@@ -170,155 +191,205 @@ export function EventDateTimeSection({ form }: EventDateTimeSectionProps) {
 
   const dateRange: DateRange = {
     from: startDate,
-    to: endDate,
+    to: endDate
+  };
+
+  // Format multi-day period display - use abbreviated months if same month to prevent wrapping
+  const formatPeriodDisplay = () => {
+    if (!startDate || !endDate) return "Sélectionner les dates";
+    if (isSameDay(startDate, endDate)) {
+      return <span className="tabular-nums">{format(startDate, "d MMMM yyyy", { locale: fr })}</span>;
+    }
+    
+    // If same month, use abbreviated format to prevent 2-line wrapping
+    if (isSameMonth(startDate, endDate)) {
+      return (
+        <span className="tabular-nums">
+          {format(startDate, "d", { locale: fr })} - {format(endDate, "d MMM yyyy", { locale: fr })}
+        </span>
+      );
+    }
+    
+    return (
+      <span className="tabular-nums">
+        {format(startDate, "d MMM", { locale: fr })} - {format(endDate, "d MMM yyyy", { locale: fr })}
+      </span>
+    );
   };
 
   return (
     <div className="bg-black/[0.03] rounded-lg px-4 py-4 space-y-3">
       {/* Multi-day toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between h-9">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-normal text-foreground">Événement sur plusieurs jours</span>
         </div>
-        <Switch
-          checked={isMultiDay}
-          onCheckedChange={handleMultiDayToggle}
-        />
+        <Switch checked={isMultiDay} onCheckedChange={handleMultiDayToggle} />
       </div>
 
       {/* Date Selection */}
-      {isMultiDay ? (
-        // Multi-day: Date range picker
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-normal text-foreground">Période</span>
+      {/* Date Selection - Fixed height to prevent layout shift */}
+      <div className="h-9">
+        {isMultiDay ? (
+          // Multi-day: Two separate date pickers for start and end
+          <div className="flex items-center justify-between gap-2 h-full">
+            <div className="flex items-center gap-2 shrink-0">
+              <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-normal text-foreground">Période</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Start Date Picker */}
+            <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
+                >
+                  <span className="tabular-nums">
+                    {startDate ? formatDateCompact(startDate) : "Début"}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar 
+                  mode="single" 
+                  selected={startDate} 
+                  onSelect={handleStartDateSelect} 
+                  initialFocus 
+                  className="pointer-events-auto" 
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <span className="text-muted-foreground text-sm">-</span>
+            
+            {/* End Date Picker */}
+            <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
+                >
+                  <span className="tabular-nums">
+                    {endDate ? formatDateCompact(endDate) : "Fin"}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar 
+                  mode="single" 
+                  selected={endDate} 
+                  onSelect={handleEndDateSelect} 
+                  initialFocus 
+                  className="pointer-events-auto" 
+                  disabled={(date) => {
+                    const today = new Date(new Date().setHours(0, 0, 0, 0));
+                    if (date < today) return true;
+                    if (startDate && date < startDate) return true;
+                    return false;
+                  }} 
+                />
+              </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <Popover open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[200px]"
-              >
-                {startDate && endDate ? (
-                  isSameDay(startDate, endDate) ? (
-                    <span className="tabular-nums">{format(startDate, "d MMMM yyyy", { locale: fr })}</span>
-                  ) : (
-                    <span className="tabular-nums">
-                      {format(startDate, "d MMM", { locale: fr })} - {format(endDate, "d MMM yyyy", { locale: fr })}
-                    </span>
-                  )
-                ) : (
-                  "Sélectionner les dates"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="range"
-                selected={dateRange}
-                onSelect={handleDateRangeSelect}
-                numberOfMonths={2}
-                initialFocus
-                className="pointer-events-auto"
-                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      ) : (
-        // Single day: Simple date picker
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          // Single day: Simple date picker
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-2">
+              <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-normal text-foreground">Date</span>
           </div>
-          <FormField
-            control={form.control}
-            name="startDate"
+          <FormField 
+            control={form.control} 
+            name="startDate" 
             render={({ field }) => (
               <FormItem>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
-                      <Button
-                        variant="outline"
+                      <Button 
+                        variant="outline" 
                         className={cn(
-                          "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[160px]",
+                          "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[140px] rounded-lg", 
                           !field.value && "text-muted-foreground"
                         )}
                       >
                         <span className="tabular-nums">
-                          {field.value ? format(field.value, "d MMMM yyyy", { locale: fr }) : "Date"}
+                          {field.value ? format(field.value, "d MMMM", { locale: fr }) : "Date"}
                         </span>
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={handleSingleDateSelect}
-                      initialFocus
-                      className="pointer-events-auto"
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    <Calendar 
+                      mode="single" 
+                      selected={field.value} 
+                      onSelect={handleSingleDateSelect} 
+                      initialFocus 
+                      className="pointer-events-auto" 
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
                     />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
+                </FormItem>
+              )} 
+            />
+          </div>
+        )}
+      </div>
 
       {/* Time Selection */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-y-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-normal text-foreground">Horaires</span>
           {duration && (
-            <span className="text-xs text-muted-foreground bg-black/5 px-2 py-0.5 rounded">
+            <span className="text-xs text-muted-foreground bg-black/5 px-2 py-0.5 rounded whitespace-nowrap">
               {duration}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {/* Start Time */}
-          <FormField
-            control={form.control}
-            name="startTime"
+          <FormField 
+            control={form.control} 
+            name="startTime" 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <TimePickerInput
-                    value={field.value}
-                    onChange={handleStartTimeChange}
-                    onBlur={() => handleTimeBlur('startTime')}
+                  <TimePickerInput 
+                    value={field.value} 
+                    onChange={handleStartTimeChange} 
+                    onBlur={() => handleTimeBlur('startTime')} 
+                    className="text-sm md:text-base w-[76px] md:w-[90px]"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )}
+            )} 
           />
           <span className="text-muted-foreground">-</span>
           {/* End Time */}
-          <FormField
-            control={form.control}
-            name="endTime"
+          <FormField 
+            control={form.control} 
+            name="endTime" 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <TimePickerInput
-                    value={field.value}
-                    onChange={handleEndTimeChange}
-                    onBlur={() => handleTimeBlur('endTime')}
+                  <TimePickerInput 
+                    value={field.value} 
+                    onChange={handleEndTimeChange} 
+                    onBlur={() => handleTimeBlur('endTime')} 
+                    className="text-sm md:text-base w-[76px] md:w-[90px]"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )}
+            )} 
           />
         </div>
       </div>

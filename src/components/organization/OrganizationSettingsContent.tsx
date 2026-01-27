@@ -265,7 +265,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
           .eq('organization_id', organizationId);
       }
       setHasChanges(false);
-      toast.success('Paramètres enregistrés');
+      // Toast is already shown by useOrganizationSettings hook
     } finally {
       setIsSaving(false);
     }
@@ -293,9 +293,9 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 -mx-2 md:mx-0">
       {/* LinkedIn-style Header: Cover + Logo */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden rounded-none md:rounded-lg border-x-0 md:border-x">
         <div className="relative">
           {/* Cover Image */}
           <div className="relative w-full h-32 md:h-44 bg-muted">
@@ -357,7 +357,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
         </div>
 
         {/* Content below header */}
-        <CardContent className="pt-16 md:pt-18 space-y-6">
+        <CardContent className="pt-16 md:pt-18 space-y-4 md:space-y-6 px-4 md:px-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nom de l'organisation</Label>
@@ -400,7 +400,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Causes */}
-      <Card>
+      <Card className="rounded-none md:rounded-lg border-x-0 md:border-x">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Globe className="h-5 w-5" />
@@ -436,7 +436,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Visibility */}
-      <Card>
+      <Card className="rounded-none md:rounded-lg border-x-0 md:border-x">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Eye className="h-5 w-5" />
@@ -484,7 +484,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Contact Information */}
-      <Card>
+      <Card className="rounded-none md:rounded-lg border-x-0 md:border-x">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -588,7 +588,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Location */}
-      <Card>
+      <Card className="rounded-none md:rounded-lg border-x-0 md:border-x">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <MapPin className="h-5 w-5" />
@@ -609,7 +609,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Additional Info */}
-      <Card>
+      <Card className="rounded-none md:rounded-lg border-x-0 md:border-x">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -675,7 +675,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       </Card>
 
       {/* Save Button */}
-      <div className={embedded ? "pt-4" : "sticky bottom-20 md:bottom-4 bg-background/95 backdrop-blur-sm border-t border-border -mx-4 px-4 py-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent"}>
+      <div className={embedded ? "pt-4 pb-20 md:pb-0" : "sticky bottom-20 md:bottom-4 bg-background/95 backdrop-blur-sm border-t border-border -mx-2 px-4 py-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent"}>
         <Button 
           onClick={handleSave} 
           disabled={!hasChanges || isSaving || !!slugError} 
