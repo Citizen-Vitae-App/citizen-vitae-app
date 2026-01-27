@@ -25,6 +25,7 @@ const CreateEvent = lazy(() => import("./pages/CreateEvent"));
 const EditEvent = lazy(() => import("./pages/EditEvent"));
 const EventDetail = lazy(() => import("./pages/EventDetail"));
 const SuperAdminDashboard = lazy(() => import("./pages/SuperAdminDashboard"));
+const OrganizationNotifications = lazy(() => import("./pages/OrganizationNotifications"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -68,6 +69,7 @@ const App = () => (
                   <Route path="/organization/events/:eventId/edit" element={<ProtectedRoute requiredRole="organization"><EditEvent /></ProtectedRoute>} />
                   <Route path="/organization/scan" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
                   <Route path="/organization/scan/:eventId" element={<ProtectedRoute requiredRole="organization"><ScanParticipant /></ProtectedRoute>} />
+                  <Route path="/organization/notifications" element={<ProtectedRoute requiredRole="organization"><OrganizationNotifications /></ProtectedRoute>} />
                   <Route path="/admin" element={<Navigate to="/super-admin" replace />} />
                   <Route path="/super-admin" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

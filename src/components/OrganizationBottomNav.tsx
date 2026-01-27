@@ -40,7 +40,7 @@ export const OrganizationBottomNav = ({
       label: 'Notifications',
       icon: Bell,
       isCentral: false,
-      action: () => navigate('/notifications')
+      action: () => navigate('/organization/notifications')
     },
     {
       id: 'organization',
