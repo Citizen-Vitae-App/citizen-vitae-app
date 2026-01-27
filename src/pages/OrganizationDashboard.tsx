@@ -7,8 +7,10 @@ import { MembersTab } from '@/components/organization/MembersTab';
 import { TeamsTab } from '@/components/organization/TeamsTab';
 import { OrganizationTab } from '@/components/organization/OrganizationTab';
 import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
+import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function OrganizationDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,11 +55,13 @@ export default function OrganizationDashboard() {
     }
   }, [isLoading, isLeader, isMember, isAdmin, isOwner, activeTab]);
 
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto px-4 pt-20 md:pt-32 pb-20 md:pb-8">
+        {isMobile ? <OrganizationMobileHeader /> : <Navbar />}
+        <main className={`container mx-auto px-4 pb-20 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-32'}`}>
           <div className="max-w-5xl mx-auto space-y-4">
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-64 w-full" />
@@ -88,13 +92,18 @@ export default function OrganizationDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        userRole={{ isOwner, isAdmin, isLeader, isMember, canViewOrganizationSettings }}
-      />
+      {/* Header: Mobile uses OrganizationMobileHeader, Desktop uses Navbar */}
+      {isMobile ? (
+        <OrganizationMobileHeader />
+      ) : (
+        <Navbar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          userRole={{ isOwner, isAdmin, isLeader, isMember, canViewOrganizationSettings }}
+        />
+      )}
       
-      <main className="container mx-auto px-4 pt-20 md:pt-32 pb-20 md:pb-8">
+      <main className={`container mx-auto px-4 pb-20 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-32'}`}>
         <div className="max-w-5xl mx-auto">
           {activeTab === 'events' && (
             <EventsTab 

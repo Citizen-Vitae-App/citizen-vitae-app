@@ -112,7 +112,7 @@ const Index = () => {
           <div className={`flex items-center ${isMobileSearchOpen ? 'md:justify-between' : 'justify-between'} h-14 md:h-16 gap-3 relative transition-all duration-300`}>
             {/* Logo - Hidden on mobile when search is open */}
             <div className={`flex-shrink-0 transition-all duration-300 ${isMobileSearchOpen ? 'hidden md:block opacity-0 md:opacity-100 w-0 md:w-auto' : 'block opacity-100 w-auto'}`}>
-              <img src={logo} alt="Citizen Vitae" className="h-6 md:h-8 w-auto" width="203" height="32" fetchpriority="high" />
+              <img src={logo} alt="Citizen Vitae" className="h-6 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
             </div>
 
             {/* Search Bar - Desktop */}

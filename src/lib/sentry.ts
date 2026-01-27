@@ -19,7 +19,7 @@ export const initSentry = () => {
     dsn,
     environment,
     release: `citizen-vitae-app@${release}`,
-    enabled: true,
+    enabled: environment !== 'development',
     debug: environment === 'development',
     
     // Intégrations pour React
@@ -42,9 +42,6 @@ export const initSentry = () => {
     
     // Capture 100% des sessions avec erreur
     replaysOnErrorSampleRate: 1.0,
-
-    // Ne pas envoyer les erreurs en développement local (optionnel)
-    //enabled: environment !== 'development',
 
     // Filtrage des erreurs
     beforeSend(event, hint) {

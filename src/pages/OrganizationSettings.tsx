@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/Navbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { OrganizationSettingsContent } from '@/components/organization/OrganizationSettingsContent';
+import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
+import { CitizenModeFAB } from '@/components/CitizenModeFAB';
 
 export default function OrganizationSettings() {
   const navigate = useNavigate();
@@ -18,9 +20,10 @@ export default function OrganizationSettings() {
       </Helmet>
       
       <div className="min-h-screen bg-background">
-        <Navbar />
+        {/* Header: Mobile uses OrganizationMobileHeader, Desktop uses Navbar */}
+        {isMobile ? <OrganizationMobileHeader /> : <Navbar />}
         
-        <main className="container mx-auto px-4 pt-20 md:pt-24 pb-24 md:pb-8">
+        <main className={`container mx-auto px-4 pb-24 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-24'}`}>
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
@@ -41,33 +44,9 @@ export default function OrganizationSettings() {
         
         <MobileBottomNav />
         
-        {/* FAB Mobile - Revenir au mode citoyen */}
-        {isMobile && (
-          <button
-            onClick={() => navigate('/')}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black text-white px-5 py-3 rounded-full shadow-lg transition-all duration-300 ease-out hover:scale-105 active:scale-95"
-          >
-            <ArrowLeftRight className="h-4 w-4" />
-            <span className="text-sm font-medium whitespace-nowrap">Revenir au mode citoyen</span>
-          </button>
-        )}
+        {/* FAB Mobile - Passer au mode citoyen */}
+        <CitizenModeFAB />
       </div>
     </>
-  );
-}
-function CitizenModeFAB() {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  
-  if (!isMobile) return null;
-  
-  return (
-    <button
-      onClick={() => navigate('/')}
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black text-white px-5 py-3 rounded-full shadow-lg transition-all duration-300 ease-out hover:scale-105 active:scale-95"
-    >
-      <ArrowLeftRight className="h-4 w-4" />
-      <span className="text-sm font-medium whitespace-nowrap">Revenir au mode citoyen</span>
-    </button>
   );
 }

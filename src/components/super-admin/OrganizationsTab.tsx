@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, Ban } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -161,18 +161,6 @@ export function OrganizationsTab() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[hsl(217.2,32.6%,17.5%)] border-[hsl(217.2,32.6%,25%)]">
-                            <DropdownMenuItem className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]">
-                              <Eye className="w-4 h-4 mr-2" />
-                              Voir détails
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-[hsl(210,40%,98%)] focus:bg-[hsl(217.2,32.6%,25%)] focus:text-[hsl(210,40%,98%)]">
-                              <Edit className="w-4 h-4 mr-2" />
-                              Éditer
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-amber-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-amber-400">
-                              <Ban className="w-4 h-4 mr-2" />
-                              Suspendre
-                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="text-red-400 focus:bg-[hsl(217.2,32.6%,25%)] focus:text-red-400"
                               onClick={() => deleteOrganization(org.id)}

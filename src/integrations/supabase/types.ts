@@ -529,6 +529,7 @@ export type Database = {
           twitter_url: string | null
           type: string | null
           visibility: string | null
+          volunteer_count: number | null
           website: string | null
         }
         Insert: {
@@ -554,6 +555,7 @@ export type Database = {
           twitter_url?: string | null
           type?: string | null
           visibility?: string | null
+          volunteer_count?: number | null
           website?: string | null
         }
         Update: {
@@ -579,6 +581,7 @@ export type Database = {
           twitter_url?: string | null
           type?: string | null
           visibility?: string | null
+          volunteer_count?: number | null
           website?: string | null
         }
         Relationships: []
@@ -865,6 +868,10 @@ export type Database = {
     }
     Functions: {
       accept_owner_invitation: { Args: { _org_id: string }; Returns: Json }
+      delete_user_account: {
+        Args: { user_id_to_delete: string }
+        Returns: Json
+      }
       get_user_id_by_email:
         | { Args: { _email: string }; Returns: string }
         | { Args: { _email: string; _org_id?: string }; Returns: string }

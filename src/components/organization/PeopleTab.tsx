@@ -714,35 +714,49 @@ export function PeopleTab({
             </p>
           </div>
         </div> : isMobile ?
-    // Mobile: Card list view
-    <div className="space-y-3">
-          {filteredParticipants.map(participant => <div key={participant.user_id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-              <Avatar className={`h-12 w-12 flex-shrink-0 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
+    // Mobile: Card list view - Optimized layout
+    <div className="space-y-2 pb-20">
+          {filteredParticipants.map(participant => (
+            <div 
+              key={participant.user_id} 
+              className="flex items-center gap-3 p-4 bg-muted/20 rounded-xl border border-border/50"
+            >
+              {/* Avatar */}
+              <Avatar className={`h-14 w-14 flex-shrink-0 ${participant.is_pending_invitation ? 'opacity-40' : ''}`}>
                 <AvatarImage src={participant.avatar_url || undefined} />
-                <AvatarFallback className={participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : ''}>
+                <AvatarFallback className={`text-lg ${participant.is_pending_invitation ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
                   {participant.is_pending_invitation ? <Clock className="h-5 w-5" /> : getInitials(participant.first_name, participant.last_name)}
                 </AvatarFallback>
               </Avatar>
+              
+              {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className={`font-medium text-sm truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
-                      {participant.is_pending_invitation ? 'Invitation en attente' : participant.first_name && participant.last_name ? `${participant.first_name} ${participant.last_name}` : 'Nom non renseigné'}
+                {/* Header row: Name + Badge + Menu */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className={`font-semibold text-base truncate ${participant.is_pending_invitation ? 'text-muted-foreground italic' : ''}`}>
+                      {participant.is_pending_invitation 
+                        ? 'Invitation en attente' 
+                        : participant.first_name && participant.last_name 
+                          ? `${participant.first_name} ${participant.last_name}` 
+                          : 'Nom non renseigné'}
                     </h3>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    <p className="text-sm text-muted-foreground truncate">
                       {participant.email || 'Email non renseigné'}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                          <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {participant.is_pending_invitation ? <>
+                        {participant.is_pending_invitation ? (
+                          <>
                             <DropdownMenuItem onClick={() => handleResendInvitation(participant.email!)} disabled={resendInvitation.isPending}>
                               <RefreshCw className={`h-4 w-4 mr-2 ${resendInvitation.isPending ? 'animate-spin' : ''}`} />
                               Renvoyer l'invitation
@@ -752,7 +766,9 @@ export function PeopleTab({
                               <Trash2 className="h-4 w-4 mr-2" />
                               Retirer l'invitation
                             </DropdownMenuItem>
-                          </> : <>
+                          </>
+                        ) : (
+                          <>
                             <DropdownMenuItem onClick={() => handleViewProfile(participant)}>
                               <Eye className="h-4 w-4 mr-2" />
                               Voir le profil
@@ -761,28 +777,34 @@ export function PeopleTab({
                               <Mail className="h-4 w-4 mr-2" />
                               Contacter
                             </DropdownMenuItem>
-                          </>}
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {participant.event_count} mission{participant.event_count > 1 ? 's' : ''}
+                
+                {/* Stats row */}
+                <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    <span>{participant.event_count}</span>
+                    <span>mission{participant.event_count > 1 ? 's' : ''}</span>
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Award className="h-3 w-3" />
-                    {participant.tickets_scanned} certificat{participant.tickets_scanned > 1 ? 's' : ''}
+                  <span className="flex items-center gap-1.5">
+                    <Award className="h-3.5 w-3.5" />
+                    <span>{participant.tickets_scanned}</span>
+                    <span>certificat{participant.tickets_scanned > 1 ? 's' : ''}</span>
                   </span>
-                  {!participant.is_pending_invitation && <span>
-                      {format(new Date(participant.last_participation), 'dd MMM yyyy', {
-                locale: fr
-              })}
-                    </span>}
+                  {!participant.is_pending_invitation && (
+                    <span className="ml-auto text-xs">
+                      {format(new Date(participant.last_participation), 'dd/MM/yy', { locale: fr })}
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>)}
+            </div>
+          ))}
         </div> :
     // Desktop: Table view
     <div className="border rounded-lg overflow-auto w-full max-w-[1400px] max-h-[calc(100vh-280px)]">

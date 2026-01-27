@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { queryClient } from '@/lib/queryClient';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,9 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare, MapPin } from 'lucide-react';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const maskPhoneNumber = (phone: string | null): string => {
   if (!phone || phone.length < 4) return phone || '';
@@ -33,11 +47,13 @@ const maskEmail = (email: string | null): string => {
 };
 
 export default function Settings() {
-  const { user, profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile, refreshProfile, signOut } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useUserPreferences();
   const { latitude, longitude, error: geoError, isLoading: isGeoLoading, permissionDenied, requestLocation } = useGeolocation();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Auto-request location if preference is enabled on mount
   useEffect(() => {
@@ -68,6 +84,55 @@ export default function Settings() {
   const handleVerificationComplete = useCallback(() => {
     refreshProfile?.();
   }, [refreshProfile]);
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+
+    setIsDeletingAccount(true);
+
+    try {
+      // Appel à la fonction RPC PostgreSQL pour supprimer le compte
+      const { data, error } = await supabase.rpc('delete_user_account', {
+        user_id_to_delete: user.id
+      });
+
+      if (error) {
+        console.error('Erreur lors de la suppression:', error);
+        throw error;
+      }
+
+      // Vérifier le résultat
+      const result = data as { success?: boolean; message?: string } | null;
+      if (result && !result.success) {
+        throw new Error(result.message || 'Erreur lors de la suppression du compte');
+      }
+
+      // Afficher le message de succès
+      toast.success('Votre compte a été supprimé avec succès', {
+        duration: 2000,
+      });
+
+      // Attendre un peu pour que l'utilisateur voit le message
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Forcer la déconnexion complète et nettoyer le cache
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // CRITICAL: Invalider tout le cache React Query
+      queryClient.clear();
+      
+      // Nettoyer le localStorage et sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Rediriger vers la page d'accueil (reload complet)
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression du compte:', error);
+      toast.error(error.message || 'Une erreur est survenue lors de la suppression de votre compte');
+      setIsDeletingAccount(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -316,6 +381,48 @@ export default function Settings() {
                 {user?.email}
               </p>
             </div>
+          </div>
+
+          {/* Delete Account Section */}
+          <div className="mt-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  disabled={isDeletingAccount}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer mon compte
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3 text-left">
+                    <p className="font-medium text-foreground">
+                      {profile?.first_name}, nous sommes navrés de vous voir partir
+                    </p>
+                    <p>
+                      Êtes-vous sûr(e) de vouloir clore votre compte ? Vous perdrez toutes vos données sur Citizen Vitae, vos certificats, vos événements enregistrés, etc.
+                    </p>
+                    <p className="text-destructive font-medium">
+                      Cette action est irréversible.
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </section>
       </main>

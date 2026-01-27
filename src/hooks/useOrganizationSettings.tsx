@@ -248,7 +248,7 @@ export function useOrganizationSettings() {
       // Check if error is related to file size
       if (uploadError.message?.toLowerCase().includes('size') || 
           uploadError.message?.toLowerCase().includes('too large') ||
-          uploadError.statusCode === '413') {
+          (uploadError as any).statusCode === '413') {
         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
         toast.error(`L'image est trop volumineuse (${fileSizeMB} Mo). La taille maximale autorisée est de 2 Mo. Veuillez compresser ou choisir une autre image.`);
       } else {

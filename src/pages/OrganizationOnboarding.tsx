@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Building2, Globe, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2, Upload, X } from 'lucide-react';
+import { Building2, Globe, Users, ArrowRight, Check, UserPlus, AlertTriangle, Loader2, Upload, X, Heart } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { captureOwnerInvitation, clearOwnerInvitation } from '@/lib/invitationHandoff';
+import { CauseThemeTag } from '@/components/CauseThemeTag';
 
 const organizationTypes = [
   { value: 'company', label: 'Entreprise' },
@@ -42,6 +43,13 @@ const sectors = [
   'Autre',
 ];
 
+interface CauseTheme {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
 export default function OrganizationOnboarding() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,6 +69,11 @@ export default function OrganizationOnboarding() {
   const [address, setAddress] = useState('');
   const [employeeCount, setEmployeeCount] = useState('');
   
+  // Association-specific fields
+  const [volunteerCount, setVolunteerCount] = useState('');
+  const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
+  const [causeThemes, setCauseThemes] = useState<CauseTheme[]>([]);
+  
   // Logo upload state
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -75,6 +88,22 @@ export default function OrganizationOnboarding() {
   // Capture owner invitation on mount
   useEffect(() => {
     captureOwnerInvitation();
+  }, []);
+
+  // Load cause themes for associations
+  useEffect(() => {
+    const loadCauseThemes = async () => {
+      const { data, error } = await supabase
+        .from('cause_themes')
+        .select('*')
+        .order('name');
+      
+      if (!error && data) {
+        setCauseThemes(data);
+      }
+    };
+    
+    loadCauseThemes();
   }, []);
 
   // Accept the owner invitation via RPC (bypasses RLS)
@@ -169,6 +198,9 @@ export default function OrganizationOnboarding() {
       setWebsite(data.website || '');
       setAddress(data.address || '');
       setEmployeeCount(data.employee_count?.toString() || '');
+      // Load volunteer count for associations (use type assertion since types may not be updated yet)
+      const orgData = data as typeof data & { volunteer_count?: number };
+      setVolunteerCount(orgData.volunteer_count?.toString() || '');
       if (data.logo_url) {
         setExistingLogoUrl(data.logo_url);
       }
@@ -205,6 +237,14 @@ export default function OrganizationOnboarding() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const toggleCause = (causeId: string) => {
+    setSelectedCauses(prev => 
+      prev.includes(causeId) 
+        ? prev.filter(id => id !== causeId)
+        : [...prev, causeId]
+    );
   };
 
   const handleStep1 = async () => {
@@ -265,20 +305,64 @@ export default function OrganizationOnboarding() {
   const handleStep2 = async () => {
     setIsLoading(true);
     
-    const { error } = await supabase
-      .from('organizations')
-      .update({ 
-        sector,
-        description,
-        employee_count: employeeCount ? parseInt(employeeCount) : null,
-      })
-      .eq('id', orgId);
+    // Different update logic based on organization type
+    if (orgType === 'association') {
+      // For associations: save volunteer_count and causes
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          description,
+          volunteer_count: volunteerCount ? parseInt(volunteerCount) : null,
+        } as any) // Type assertion for volunteer_count
+        .eq('id', orgId);
 
-    if (error) {
-      toast.error('Erreur lors de la sauvegarde');
-      console.error(error);
-      setIsLoading(false);
-      return;
+      if (error) {
+        toast.error('Erreur lors de la sauvegarde');
+        console.error(error);
+        setIsLoading(false);
+        return;
+      }
+
+      // Save selected causes to organization_cause_themes
+      if (selectedCauses.length > 0 && orgId) {
+        // First delete existing causes
+        await supabase
+          .from('organization_cause_themes')
+          .delete()
+          .eq('organization_id', orgId);
+        
+        // Then insert new causes
+        const causesToInsert = selectedCauses.map(causeId => ({
+          organization_id: orgId,
+          cause_theme_id: causeId,
+        }));
+        
+        const { error: causesError } = await supabase
+          .from('organization_cause_themes')
+          .insert(causesToInsert);
+        
+        if (causesError) {
+          console.error('Error saving causes:', causesError);
+          // Don't block the flow for this error
+        }
+      }
+    } else {
+      // For companies, foundations, institutions: save sector and employee_count
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          sector,
+          description,
+          employee_count: employeeCount ? parseInt(employeeCount) : null,
+        })
+        .eq('id', orgId);
+
+      if (error) {
+        toast.error('Erreur lors de la sauvegarde');
+        console.error(error);
+        setIsLoading(false);
+        return;
+      }
     }
 
     setIsLoading(false);
@@ -355,17 +439,33 @@ export default function OrganizationOnboarding() {
     navigate('/organization/dashboard');
   };
 
+  // Get the step 2 title based on organization type
+  const getStep2Title = () => {
+    if (orgType === 'association') {
+      return "Détails de l'association";
+    }
+    return "Détails de l'organisation";
+  };
+
+  // Get selected cause names for the recap
+  const getSelectedCauseNames = () => {
+    return causeThemes
+      .filter(cause => selectedCauses.includes(cause.id))
+      .map(cause => cause.name)
+      .join(', ');
+  };
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
-      {/* Background gradient */}
+      {/* Background gradient - Light blue theme */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div 
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl"
           style={{
             background: `radial-gradient(circle, 
-              hsl(142, 76%, 85%) 0%,
-              hsl(142, 70%, 90%) 35%,
-              hsl(120, 60%, 92%) 60%,
+              hsl(200, 80%, 85%) 0%,
+              hsl(205, 75%, 88%) 35%,
+              hsl(210, 70%, 92%) 60%,
               transparent 80%
             )`
           }}
@@ -392,7 +492,7 @@ export default function OrganizationOnboarding() {
         {/* Loading state while accepting invitation */}
         {!invitationError && !invitationAccepted && (
           <div className="space-y-6 text-center py-12">
-            <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" />
+            <Loader2 className="w-12 h-12 text-sky-500 animate-spin mx-auto" />
             <div>
               <h1 className="text-xl font-semibold">Préparation de votre espace...</h1>
               <p className="text-muted-foreground">Veuillez patienter</p>
@@ -409,7 +509,7 @@ export default function OrganizationOnboarding() {
                 <div 
                   key={s}
                   className={`h-2 w-12 rounded-full transition-colors ${
-                    s <= step ? 'bg-emerald-500' : 'bg-muted'
+                    s <= step ? 'bg-sky-500' : 'bg-muted'
                   }`}
                 />
               ))}
@@ -419,8 +519,8 @@ export default function OrganizationOnboarding() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-sky-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Configurez votre organisation</h1>
@@ -508,7 +608,7 @@ export default function OrganizationOnboarding() {
 
             <Button 
               onClick={handleStep1} 
-              className="w-full bg-emerald-600 hover:bg-emerald-700" 
+              className="w-full bg-sky-600 hover:bg-sky-700" 
               size="lg"
               disabled={isLoading}
             >
@@ -518,57 +618,115 @@ export default function OrganizationOnboarding() {
           </div>
         )}
 
-        {/* Step 2: Details */}
+        {/* Step 2: Details - Conditional based on organization type */}
         {step === 2 && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <Users className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                {orgType === 'association' ? (
+                  <Heart className="w-6 h-6 text-sky-600" />
+                ) : (
+                  <Users className="w-6 h-6 text-sky-600" />
+                )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Détails de l'organisation</h1>
+                <h1 className="text-2xl font-bold">{getStep2Title()}</h1>
                 <p className="text-muted-foreground">Parlez-nous de votre structure</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="sector">Secteur d'activité</Label>
-                <Select value={sector} onValueChange={setSector}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un secteur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectors.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Association-specific fields */}
+              {orgType === 'association' ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Causes soutenues</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Sélectionnez les causes que votre association défend
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {causeThemes.map((cause) => (
+                        <CauseThemeTag
+                          key={cause.id}
+                          name={cause.name}
+                          icon={cause.icon}
+                          color={cause.color}
+                          selected={selectedCauses.includes(cause.id)}
+                          onClick={() => toggleCause(cause.id)}
+                        />
+                      ))}
+                    </div>
+                    {causeThemes.length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">
+                        Chargement des causes...
+                      </p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Décrivez brièvement votre organisation et sa mission..."
-                  rows={4}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Décrivez brièvement votre association et sa mission..."
+                      rows={4}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="employeeCount">Nombre d'employés</Label>
-                <Input
-                  id="employeeCount"
-                  type="number"
-                  value={employeeCount}
-                  onChange={(e) => setEmployeeCount(e.target.value)}
-                  placeholder="Ex: 50"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="volunteerCount">Nombre de bénévoles annuels</Label>
+                    <Input
+                      id="volunteerCount"
+                      type="number"
+                      value={volunteerCount}
+                      onChange={(e) => setVolunteerCount(e.target.value)}
+                      placeholder="Ex: 150"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Company, Foundation, Institution fields */}
+                  <div className="space-y-2">
+                    <Label htmlFor="sector">Secteur d'activité</Label>
+                    <Select value={sector} onValueChange={setSector}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un secteur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sectors.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Décrivez brièvement votre organisation et sa mission..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeCount">Nombre d'employés</Label>
+                    <Input
+                      id="employeeCount"
+                      type="number"
+                      value={employeeCount}
+                      onChange={(e) => setEmployeeCount(e.target.value)}
+                      placeholder="Ex: 50"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex gap-4">
@@ -582,7 +740,7 @@ export default function OrganizationOnboarding() {
               </Button>
               <Button 
                 onClick={handleStep2} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
+                className="w-full bg-sky-600 hover:bg-sky-700" 
                 size="lg"
                 disabled={isLoading}
               >
@@ -597,8 +755,8 @@ export default function OrganizationOnboarding() {
         {step === 3 && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <Globe className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                <Globe className="w-6 h-6 text-sky-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Coordonnées</h1>
@@ -641,7 +799,7 @@ export default function OrganizationOnboarding() {
               </Button>
               <Button 
                 onClick={handleStep3} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
+                className="w-full bg-sky-600 hover:bg-sky-700" 
                 size="lg"
                 disabled={isLoading}
               >
@@ -656,8 +814,8 @@ export default function OrganizationOnboarding() {
         {step === 4 && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <Check className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                <Check className="w-6 h-6 text-sky-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Organisation configurée !</h1>
@@ -678,10 +836,32 @@ export default function OrganizationOnboarding() {
                     {organizationTypes.find(t => t.value === orgType)?.label || orgType}
                   </span>
                 </div>
-                {sector && (
+                {/* Show sector for companies/foundations/institutions */}
+                {orgType !== 'association' && sector && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Secteur :</span>
                     <span className="font-medium">{sector}</span>
+                  </div>
+                )}
+                {/* Show causes for associations */}
+                {orgType === 'association' && selectedCauses.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Causes :</span>
+                    <span className="font-medium text-right max-w-[60%]">{getSelectedCauseNames()}</span>
+                  </div>
+                )}
+                {/* Show volunteer count for associations */}
+                {orgType === 'association' && volunteerCount && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bénévoles :</span>
+                    <span className="font-medium">{volunteerCount}</span>
+                  </div>
+                )}
+                {/* Show employee count for others */}
+                {orgType !== 'association' && employeeCount && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Employés :</span>
+                    <span className="font-medium">{employeeCount}</span>
                   </div>
                 )}
               </div>
@@ -694,7 +874,7 @@ export default function OrganizationOnboarding() {
               
               <Button 
                 onClick={handleFinishWithProfile} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
+                className="w-full bg-sky-600 hover:bg-sky-700" 
                 size="lg"
                 disabled={isLoading}
               >
