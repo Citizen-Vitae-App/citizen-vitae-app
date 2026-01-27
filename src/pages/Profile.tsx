@@ -26,11 +26,7 @@ export default function Profile() {
   // Check if we're in organization context
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
-  // Security: If user tries to access organization context without proper role, redirect
-  if (isOrganizationContext && !hasRole('organization')) {
-    return <Navigate to="/profile" replace />;
-  }
-
+  // Call hooks before any conditional returns (React rules)
   const {
     organizations,
     favoriteCauses,
@@ -40,6 +36,11 @@ export default function Profile() {
     totalCertifiedMissions,
     isLoading
   } = useUserProfile();
+  
+  // Security: If user tries to access organization context without proper role, redirect
+  if (isOrganizationContext && !hasRole('organization')) {
+    return <Navigate to="/profile" replace />;
+  }
 
   if (isLoading) {
     return (
