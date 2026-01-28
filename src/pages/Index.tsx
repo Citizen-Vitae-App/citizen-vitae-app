@@ -177,7 +177,7 @@ const Index = () => {
                       placeholder="Rechercher un événement..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="border-0 bg-transparent px-3 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground text-sm flex-1"
+                      className="border-0 bg-transparent px-3 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground flex-1 text-base"
                       autoFocus
                     />
                     <button

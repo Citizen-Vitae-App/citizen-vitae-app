@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/react";
-import { env } from "process";
 
 /**
  * Initialise Sentry pour le monitoring et le débogage à distance
