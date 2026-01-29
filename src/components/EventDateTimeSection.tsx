@@ -296,48 +296,50 @@ export function EventDateTimeSection({
             </div>
           </div>
         ) : (
-          // Single day: Simple date picker
+          // Single day: Simple date picker - date centered above start time
           <div className="flex items-center justify-between h-full">
             <div className="flex items-center gap-2">
               <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-normal text-foreground">Date</span>
-          </div>
-          <FormField 
-            control={form.control} 
-            name="startDate" 
-            render={({ field }) => (
-              <FormItem>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button 
-                        variant="outline" 
-                        className={cn(
-                          "justify-start text-left font-normal bg-black/5 hover:bg-black/10 border-0 min-w-[140px] rounded-lg", 
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        <span className="tabular-nums">
-                          {field.value ? format(field.value, "d MMMM", { locale: fr }) : "Date"}
-                        </span>
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar 
-                      mode="single" 
-                      selected={field.value} 
-                      onSelect={handleSingleDateSelect} 
-                      initialFocus 
-                      className="pointer-events-auto" 
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-                </FormItem>
-              )} 
-            />
+              <span className="text-sm font-normal text-foreground">Date</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FormField 
+                control={form.control} 
+                name="startDate" 
+                render={({ field }) => (
+                  <FormItem>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button 
+                            variant="outline" 
+                            className={cn(
+                              "justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]", 
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <span className="tabular-nums">
+                              {field.value ? format(field.value, "d MMM", { locale: fr }).replace('.', '') : "Date"}
+                            </span>
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar 
+                          mode="single" 
+                          selected={field.value} 
+                          onSelect={handleSingleDateSelect} 
+                          initialFocus 
+                          className="pointer-events-auto" 
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )} 
+              />
+            </div>
           </div>
         )}
       </div>
