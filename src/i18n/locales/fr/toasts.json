@@ -1,0 +1,48 @@
+{
+  "preferences": {
+    "updated": "Préférences mises à jour",
+    "updatedDescription": "Vos préférences ont été enregistrées.",
+    "updateError": "Erreur",
+    "updateErrorDescription": "Impossible de mettre à jour vos préférences."
+  },
+  "auth": {
+    "logoutSuccess": "Déconnexion réussie",
+    "logoutError": "Erreur lors de la déconnexion",
+    "loginSuccess": "Connexion réussie",
+    "loginError": "Erreur lors de la connexion"
+  },
+  "account": {
+    "deleteSuccess": "Compte supprimé",
+    "deleteSuccessDescription": "Votre compte a été supprimé avec succès.",
+    "deleteError": "Erreur lors de la suppression",
+    "deleteErrorDescription": "Impossible de supprimer votre compte."
+  },
+  "registration": {
+    "confirmed": "Inscription confirmée",
+    "confirmedDescription": "Vous êtes inscrit à cet événement.",
+    "cancelled": "Désinscription confirmée",
+    "cancelledDescription": "Vous avez été désinscrit de cet événement.",
+    "error": "Erreur d'inscription",
+    "errorDescription": "Impossible de vous inscrire à cet événement."
+  },
+  "event": {
+    "created": "Événement créé",
+    "createdDescription": "L'événement a été créé avec succès.",
+    "updated": "Événement mis à jour",
+    "updatedDescription": "L'événement a été mis à jour avec succès.",
+    "deleted": "Événement supprimé",
+    "deletedDescription": "L'événement a été supprimé avec succès.",
+    "error": "Erreur",
+    "errorDescription": "Une erreur est survenue."
+  },
+  "favorite": {
+    "added": "Ajouté aux favoris",
+    "removed": "Retiré des favoris"
+  },
+  "generic": {
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Attention",
+    "info": "Information"
+  }
+}
