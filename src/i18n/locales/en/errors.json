@@ -1,0 +1,39 @@
+{
+  "generic": {
+    "unexpected": "An unexpected error occurred",
+    "network": "Network connection error",
+    "timeout": "Request timed out",
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "serverError": "Server error"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "invalidDate": "Invalid date",
+    "invalidUrl": "Invalid URL",
+    "tooShort": "Too short (minimum {{min}} characters)",
+    "tooLong": "Too long (maximum {{max}} characters)",
+    "passwordMismatch": "Passwords do not match",
+    "invalidFormat": "Invalid format"
+  },
+  "auth": {
+    "invalidCredentials": "Invalid credentials",
+    "emailNotVerified": "Email not verified",
+    "accountDisabled": "Account disabled",
+    "sessionExpired": "Session expired, please log in again"
+  },
+  "event": {
+    "notFound": "Event not found",
+    "registrationClosed": "Registration is closed",
+    "eventFull": "Event is full",
+    "alreadyRegistered": "You are already registered"
+  },
+  "organization": {
+    "notFound": "Organization not found",
+    "notMember": "You are not a member of this organization",
+    "notAdmin": "You do not have administrator rights"
+  }
+}

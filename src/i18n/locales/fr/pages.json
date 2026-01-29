@@ -1,0 +1,77 @@
+{
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez vos préférences et paramètres de compte",
+    "sections": {
+      "account": "Compte",
+      "notifications": "Notifications",
+      "language": "Langue",
+      "privacy": "Confidentialité",
+      "danger": "Zone de danger"
+    },
+    "email": {
+      "label": "Email",
+      "description": "Votre adresse email de connexion"
+    },
+    "emailNotifications": {
+      "label": "Notifications par email",
+      "description": "Recevoir les notifications par email"
+    },
+    "smsNotifications": {
+      "label": "Notifications SMS",
+      "description": "Recevoir les notifications par SMS"
+    },
+    "phoneNumber": {
+      "label": "Numéro de téléphone",
+      "placeholder": "+33 6 12 34 56 78"
+    },
+    "language": {
+      "label": "Langue de l'application",
+      "description": "Choisissez votre langue préférée",
+      "french": "Français",
+      "english": "English"
+    },
+    "geolocation": {
+      "label": "Géolocalisation",
+      "description": "Autoriser l'accès à votre position"
+    },
+    "logout": "Se déconnecter",
+    "deleteAccount": {
+      "button": "Supprimer mon compte",
+      "title": "Supprimer le compte",
+      "message": "{{firstName}}, nous sommes navrés de vous voir partir",
+      "warning": "Êtes-vous sûr(e) de vouloir clore votre compte ? Vous perdrez toutes vos données sur Citizen Vitae, vos certificats, vos événements enregistrés, etc.",
+      "irreversible": "Cette action est irréversible.",
+      "confirm": "Supprimer définitivement",
+      "confirming": "Suppression...",
+      "cancel": "Annuler"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "editProfile": "Modifier le profil",
+    "viewProfile": "Voir le profil"
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Connectez-vous à votre compte"
+    },
+    "register": {
+      "title": "Inscription",
+      "subtitle": "Créez votre compte"
+    }
+  },
+  "events": {
+    "title": "Événements",
+    "upcoming": "À venir",
+    "past": "Passés",
+    "myEvents": "Mes événements",
+    "noEvents": "Aucun événement"
+  },
+  "notFound": {
+    "title": "Page non trouvée",
+    "message": "La page que vous recherchez n'existe pas.",
+    "backHome": "Retour à l'accueil"
+  }
+}

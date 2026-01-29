@@ -1,0 +1,48 @@
+{
+  "labels": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "postalCode": "Postal code",
+    "description": "Description",
+    "name": "Name",
+    "title": "Title",
+    "date": "Date",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "time": "Time",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "location": "Location",
+    "capacity": "Capacity",
+    "language": "Language"
+  },
+  "placeholders": {
+    "email": "your@email.com",
+    "phone": "+1 234 567 8900",
+    "search": "Search...",
+    "description": "Enter a description..."
+  },
+  "hints": {
+    "optional": "Optional",
+    "required": "Required"
+  },
+  "buttons": {
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear"
+  },
+  "event": {
+    "multiDay": "Multi-day event",
+    "period": "Period",
+    "schedule": "Schedule",
+    "selectDate": "Select a date",
+    "selectTime": "Select a time"
+  }
+}

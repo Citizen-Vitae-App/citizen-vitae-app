@@ -1,0 +1,39 @@
+{
+  "generic": {
+    "unexpected": "Une erreur inattendue s'est produite",
+    "network": "Erreur de connexion réseau",
+    "timeout": "La requête a expiré",
+    "notFound": "Ressource non trouvée",
+    "unauthorized": "Accès non autorisé",
+    "forbidden": "Accès interdit",
+    "serverError": "Erreur serveur"
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalidEmail": "Adresse email invalide",
+    "invalidPhone": "Numéro de téléphone invalide",
+    "invalidDate": "Date invalide",
+    "invalidUrl": "URL invalide",
+    "tooShort": "Trop court (minimum {{min}} caractères)",
+    "tooLong": "Trop long (maximum {{max}} caractères)",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "invalidFormat": "Format invalide"
+  },
+  "auth": {
+    "invalidCredentials": "Identifiants invalides",
+    "emailNotVerified": "Email non vérifié",
+    "accountDisabled": "Compte désactivé",
+    "sessionExpired": "Session expirée, veuillez vous reconnecter"
+  },
+  "event": {
+    "notFound": "Événement non trouvé",
+    "registrationClosed": "Les inscriptions sont fermées",
+    "eventFull": "L'événement est complet",
+    "alreadyRegistered": "Vous êtes déjà inscrit"
+  },
+  "organization": {
+    "notFound": "Organisation non trouvée",
+    "notMember": "Vous n'êtes pas membre de cette organisation",
+    "notAdmin": "Vous n'avez pas les droits administrateur"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "preferences": {
+    "updated": "Preferences updated",
+    "updatedDescription": "Your preferences have been saved.",
+    "updateError": "Error",
+    "updateErrorDescription": "Unable to update your preferences."
+  },
+  "auth": {
+    "logoutSuccess": "Logged out successfully",
+    "logoutError": "Error logging out",
+    "loginSuccess": "Logged in successfully",
+    "loginError": "Error logging in"
+  },
+  "account": {
+    "deleteSuccess": "Account deleted",
+    "deleteSuccessDescription": "Your account has been deleted successfully.",
+    "deleteError": "Deletion error",
+    "deleteErrorDescription": "Unable to delete your account."
+  },
+  "registration": {
+    "confirmed": "Registration confirmed",
+    "confirmedDescription": "You are registered for this event.",
+    "cancelled": "Unregistration confirmed",
+    "cancelledDescription": "You have been unregistered from this event.",
+    "error": "Registration error",
+    "errorDescription": "Unable to register for this event."
+  },
+  "event": {
+    "created": "Event created",
+    "createdDescription": "The event has been created successfully.",
+    "updated": "Event updated",
+    "updatedDescription": "The event has been updated successfully.",
+    "deleted": "Event deleted",
+    "deletedDescription": "The event has been deleted successfully.",
+    "error": "Error",
+    "errorDescription": "An error occurred."
+  },
+  "favorite": {
+    "added": "Added to favorites",
+    "removed": "Removed from favorites"
+  },
+  "generic": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  }
+}

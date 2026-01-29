@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { changeLanguage, type SupportedLanguage } from '@/i18n/config';
 
 export interface UserPreferences {
   user_id: string;
@@ -25,6 +27,7 @@ export interface UpdatePreferencesData {
 export const useUserPreferences = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('toasts');
 
   // Fetch user preferences
   const { data: preferences, isLoading, error } = useQuery({
@@ -77,21 +80,24 @@ export const useUserPreferences = () => {
         .single();
 
       if (error) throw error;
+      
+      // If language is being updated, sync with i18next
+      if (updates.language) {
+        await changeLanguage(updates.language as SupportedLanguage);
+      }
+      
       return data as UserPreferences;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-preferences', user?.id] });
-      toast({
-        title: 'Préférences mises à jour',
-        description: 'Vos préférences ont été enregistrées.',
+      toast.success(t('preferences.updated'), {
+        description: t('preferences.updatedDescription'),
       });
     },
     onError: (error) => {
       console.error('Error updating preferences:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour vos préférences.',
-        variant: 'destructive',
+      toast.error(t('preferences.updateError'), {
+        description: t('preferences.updateErrorDescription'),
       });
     },
   });
