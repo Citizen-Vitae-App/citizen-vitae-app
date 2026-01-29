@@ -319,7 +319,7 @@ export function EventDateTimeSection({
                             )}
                           >
                             <span className="tabular-nums">
-                              {field.value ? format(field.value, "d MMM", { locale: fr }).replace('.', '') : "Date"}
+                              {field.value ? format(field.value, "d MMM", { locale: fr }) : "Date"}
                             </span>
                           </Button>
                         </FormControl>
