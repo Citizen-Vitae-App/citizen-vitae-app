@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecentlyModifiedEvents } from '@/hooks/useRecentlyModifiedEvents';
 import { useForm } from 'react-hook-form';
@@ -45,7 +47,13 @@ export default function EditEvent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { eventId } = useParams<{ eventId: string }>();
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Scroll to top on mount
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -670,8 +678,8 @@ export default function EditEvent() {
             }}
           />
         </div>
-        <Navbar />
-        <main className="container mx-auto px-4 pt-32 pb-12">
+        {isMobile ? <OrganizationMobileHeader /> : <Navbar />}
+        <main className={`container mx-auto px-4 pb-12 ${isMobile ? 'pt-20' : 'pt-32'}`}>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -697,9 +705,10 @@ export default function EditEvent() {
         />
       </div>
 
-      <Navbar />
+      {/* Header: Mobile uses OrganizationMobileHeader, Desktop uses Navbar */}
+      {isMobile ? <OrganizationMobileHeader /> : <Navbar />}
       
-      <main className="container mx-auto px-4 pt-32 pb-12">
+      <main className={`container mx-auto px-4 pb-12 ${isMobile ? 'pt-20' : 'pt-32'}`}>
         <div className="max-w-6xl mx-auto space-y-12">
           {/* Back button */}
           <Button 
