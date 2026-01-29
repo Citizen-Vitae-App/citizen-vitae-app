@@ -36,29 +36,32 @@ export const resources = {
 
 export type SupportedLanguage = 'fr' | 'en';
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources,
-    defaultNS,
-    fallbackLng: 'fr',
-    supportedLngs: ['fr', 'en'],
-    
-    interpolation: {
-      escapeValue: false, // React already escapes values
-    },
-    
-    detection: {
-      order: ['localStorage', 'navigator'],
-      lookupLocalStorage: 'i18nextLng',
-      caches: ['localStorage'],
-    },
-    
-    react: {
-      useSuspense: false, // Disable suspense to prevent loading flashes
-    },
-  });
+// Prevent re-initialization on HMR
+if (!i18n.isInitialized) {
+  i18n
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init({
+      resources,
+      defaultNS,
+      fallbackLng: 'fr',
+      supportedLngs: ['fr', 'en'],
+      
+      interpolation: {
+        escapeValue: false, // React already escapes values
+      },
+      
+      detection: {
+        order: ['localStorage', 'navigator'],
+        lookupLocalStorage: 'i18nextLng',
+        caches: ['localStorage'],
+      },
+      
+      react: {
+        useSuspense: false, // Disable suspense to prevent loading flashes
+      },
+    });
+}
 
 // Helper function to change language (used for DB sync)
 export const changeLanguage = async (lng: SupportedLanguage): Promise<void> => {
