@@ -30,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2 } from 'lucide-react';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -383,6 +383,21 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* Logout Button - Mobile only */}
+          <div className="mt-4 md:hidden">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={async () => {
+                await signOut();
+                navigate('/');
+              }}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {preferences?.language === 'en' ? 'Log out' : 'Se déconnecter'}
+            </Button>
+          </div>
+
           {/* Delete Account Section */}
           <div className="mt-4">
             <AlertDialog>
@@ -393,32 +408,40 @@ export default function Settings() {
                   disabled={isDeletingAccount}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Supprimer mon compte
+                  {preferences?.language === 'en' ? 'Delete my account' : 'Supprimer mon compte'}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {preferences?.language === 'en' ? 'Delete account' : 'Supprimer le compte'}
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="space-y-3 text-left">
                     <p className="font-medium text-foreground">
-                      {profile?.first_name}, nous sommes navrés de vous voir partir
+                      {profile?.first_name}, {preferences?.language === 'en' ? "we're sorry to see you go" : 'nous sommes navrés de vous voir partir'}
                     </p>
                     <p>
-                      Êtes-vous sûr(e) de vouloir clore votre compte ? Vous perdrez toutes vos données sur Citizen Vitae, vos certificats, vos événements enregistrés, etc.
+                      {preferences?.language === 'en' 
+                        ? 'Are you sure you want to close your account? You will lose all your data on Citizen Vitae, your certificates, your registered events, etc.'
+                        : 'Êtes-vous sûr(e) de vouloir clore votre compte ? Vous perdrez toutes vos données sur Citizen Vitae, vos certificats, vos événements enregistrés, etc.'}
                     </p>
                     <p className="text-destructive font-medium">
-                      Cette action est irréversible.
+                      {preferences?.language === 'en' ? 'This action is irreversible.' : 'Cette action est irréversible.'}
                     </p>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogCancel>
+                    {preferences?.language === 'en' ? 'Cancel' : 'Annuler'}
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     disabled={isDeletingAccount}
                   >
-                    {isDeletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
+                    {isDeletingAccount 
+                      ? (preferences?.language === 'en' ? 'Deleting...' : 'Suppression...') 
+                      : (preferences?.language === 'en' ? 'Delete permanently' : 'Supprimer définitivement')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
