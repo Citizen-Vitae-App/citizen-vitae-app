@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, isSameDay, isSameMonth } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
 import { Calendar as CalendarIconLucide, CalendarCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { TimePickerInput } from '@/components/TimePickerInput';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/hooks/useLocale';
 import type { DateRange } from 'react-day-picker';
 
 interface EventDateTimeSectionProps {
@@ -42,14 +43,15 @@ const normalizeTime = (time: string): string => {
 };
 
 // Format date with abbreviated month if needed to prevent wrapping
-const formatDateCompact = (date: Date, showYear: boolean = false): string => {
+const formatDateCompact = (date: Date, locale: Locale, showYear: boolean = false): string => {
   const monthFormat = showYear ? "d MMM yyyy" : "d MMM";
-  return format(date, monthFormat, { locale: fr });
+  return format(date, monthFormat, { locale });
 };
 
 export function EventDateTimeSection({
   form
 }: EventDateTimeSectionProps) {
+  const { locale, language } = useLocale();
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
@@ -196,23 +198,23 @@ export function EventDateTimeSection({
 
   // Format multi-day period display - use abbreviated months if same month to prevent wrapping
   const formatPeriodDisplay = () => {
-    if (!startDate || !endDate) return "Sélectionner les dates";
+    if (!startDate || !endDate) return language === 'en' ? "Select dates" : "Sélectionner les dates";
     if (isSameDay(startDate, endDate)) {
-      return <span className="tabular-nums">{format(startDate, "d MMMM yyyy", { locale: fr })}</span>;
+      return <span className="tabular-nums">{format(startDate, "d MMMM yyyy", { locale })}</span>;
     }
     
     // If same month, use abbreviated format to prevent 2-line wrapping
     if (isSameMonth(startDate, endDate)) {
       return (
         <span className="tabular-nums">
-          {format(startDate, "d", { locale: fr })} - {format(endDate, "d MMM yyyy", { locale: fr })}
+          {format(startDate, "d", { locale })} - {format(endDate, "d MMM yyyy", { locale })}
         </span>
       );
     }
     
     return (
       <span className="tabular-nums">
-        {format(startDate, "d MMM", { locale: fr })} - {format(endDate, "d MMM yyyy", { locale: fr })}
+        {format(startDate, "d MMM", { locale })} - {format(endDate, "d MMM yyyy", { locale })}
       </span>
     );
   };
@@ -223,7 +225,9 @@ export function EventDateTimeSection({
       <div className="flex items-center justify-between h-9">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-normal text-foreground">Événement sur plusieurs jours</span>
+          <span className="text-sm font-normal text-foreground">
+            {language === 'en' ? 'Multi-day event' : 'Événement sur plusieurs jours'}
+          </span>
         </div>
         <Switch checked={isMultiDay} onCheckedChange={handleMultiDayToggle} />
       </div>
@@ -236,7 +240,7 @@ export function EventDateTimeSection({
           <div className="flex items-center justify-between gap-2 h-full">
             <div className="flex items-center gap-2 shrink-0">
               <CalendarIconLucide className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-normal text-foreground">Période</span>
+              <span className="text-sm font-normal text-foreground">{language === 'en' ? 'Period' : 'Période'}</span>
             </div>
             <div className="flex items-center gap-2">
               {/* Start Date Picker */}
@@ -247,7 +251,7 @@ export function EventDateTimeSection({
                   className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
                 >
                   <span className="tabular-nums">
-                    {startDate ? formatDateCompact(startDate) : "Début"}
+                    {startDate ? formatDateCompact(startDate, locale) : (language === 'en' ? "Start" : "Début")}
                   </span>
                 </Button>
               </PopoverTrigger>
@@ -257,7 +261,8 @@ export function EventDateTimeSection({
                   selected={startDate} 
                   onSelect={handleStartDateSelect} 
                   initialFocus 
-                  className="pointer-events-auto" 
+                  className="pointer-events-auto"
+                  locale={locale}
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
                 />
               </PopoverContent>
@@ -273,7 +278,7 @@ export function EventDateTimeSection({
                   className="justify-center text-center font-normal bg-black/5 hover:bg-black/10 border-0 px-2 h-9 rounded-lg text-sm md:text-base w-[76px] md:w-[90px]"
                 >
                   <span className="tabular-nums">
-                    {endDate ? formatDateCompact(endDate) : "Fin"}
+                    {endDate ? formatDateCompact(endDate, locale) : (language === 'en' ? "End" : "Fin")}
                   </span>
                 </Button>
               </PopoverTrigger>
@@ -283,7 +288,8 @@ export function EventDateTimeSection({
                   selected={endDate} 
                   onSelect={handleEndDateSelect} 
                   initialFocus 
-                  className="pointer-events-auto" 
+                  className="pointer-events-auto"
+                  locale={locale}
                   disabled={(date) => {
                     const today = new Date(new Date().setHours(0, 0, 0, 0));
                     if (date < today) return true;
@@ -319,7 +325,7 @@ export function EventDateTimeSection({
                             )}
                           >
                             <span className="tabular-nums">
-                              {field.value ? format(field.value, "d MMM", { locale: fr }) : "Date"}
+                              {field.value ? format(field.value, "d MMM", { locale }) : "Date"}
                             </span>
                           </Button>
                         </FormControl>
@@ -330,7 +336,8 @@ export function EventDateTimeSection({
                           selected={field.value} 
                           onSelect={handleSingleDateSelect} 
                           initialFocus 
-                          className="pointer-events-auto" 
+                          className="pointer-events-auto"
+                          locale={locale}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
                         />
                       </PopoverContent>
@@ -348,7 +355,7 @@ export function EventDateTimeSection({
       <div className="flex items-center justify-between flex-wrap gap-y-2">
         <div className="flex items-center gap-2 shrink-0">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-normal text-foreground">Horaires</span>
+          <span className="text-sm font-normal text-foreground">{language === 'en' ? 'Time' : 'Horaires'}</span>
           {duration && (
             <span className="text-xs text-muted-foreground bg-black/5 px-2 py-0.5 rounded whitespace-nowrap">
               {duration}
@@ -400,7 +407,10 @@ export function EventDateTimeSection({
       {isMultiDay && startDate && endDate && !isSameDay(startDate, endDate) && startTime && endTime && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-1 border-t border-black/5">
           <span>
-            Du {format(startDate, "d MMMM", { locale: fr })} à {startTime} au {format(endDate, "d MMMM yyyy", { locale: fr })} à {endTime}
+            {language === 'en' 
+              ? `From ${format(startDate, "MMMM d", { locale })} at ${startTime} to ${format(endDate, "MMMM d, yyyy", { locale })} at ${endTime}`
+              : `Du ${format(startDate, "d MMMM", { locale })} à ${startTime} au ${format(endDate, "d MMMM yyyy", { locale })} à ${endTime}`
+            }
           </span>
         </div>
       )}
