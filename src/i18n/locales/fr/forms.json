@@ -1,0 +1,48 @@
+{
+  "labels": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "city": "Ville",
+    "country": "Pays",
+    "postalCode": "Code postal",
+    "description": "Description",
+    "name": "Nom",
+    "title": "Titre",
+    "date": "Date",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "time": "Heure",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin",
+    "location": "Lieu",
+    "capacity": "Capacité",
+    "language": "Langue"
+  },
+  "placeholders": {
+    "email": "votre@email.com",
+    "phone": "+33 6 12 34 56 78",
+    "search": "Rechercher...",
+    "description": "Entrez une description..."
+  },
+  "hints": {
+    "optional": "Optionnel",
+    "required": "Requis"
+  },
+  "buttons": {
+    "submit": "Envoyer",
+    "reset": "Réinitialiser",
+    "clear": "Effacer"
+  },
+  "event": {
+    "multiDay": "Événement sur plusieurs jours",
+    "period": "Période",
+    "schedule": "Horaires",
+    "selectDate": "Sélectionner une date",
+    "selectTime": "Sélectionner une heure"
+  }
+}

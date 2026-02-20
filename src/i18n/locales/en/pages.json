@@ -1,0 +1,77 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your preferences and account settings",
+    "sections": {
+      "account": "Account",
+      "notifications": "Notifications",
+      "language": "Language",
+      "privacy": "Privacy",
+      "danger": "Danger zone"
+    },
+    "email": {
+      "label": "Email",
+      "description": "Your login email address"
+    },
+    "emailNotifications": {
+      "label": "Email notifications",
+      "description": "Receive notifications by email"
+    },
+    "smsNotifications": {
+      "label": "SMS notifications",
+      "description": "Receive notifications by SMS"
+    },
+    "phoneNumber": {
+      "label": "Phone number",
+      "placeholder": "+1 234 567 8900"
+    },
+    "language": {
+      "label": "Application language",
+      "description": "Choose your preferred language",
+      "french": "Français",
+      "english": "English"
+    },
+    "geolocation": {
+      "label": "Geolocation",
+      "description": "Allow access to your location"
+    },
+    "logout": "Log out",
+    "deleteAccount": {
+      "button": "Delete my account",
+      "title": "Delete account",
+      "message": "{{firstName}}, we're sorry to see you go",
+      "warning": "Are you sure you want to close your account? You will lose all your data on Citizen Vitae, your certificates, your registered events, etc.",
+      "irreversible": "This action is irreversible.",
+      "confirm": "Delete permanently",
+      "confirming": "Deleting...",
+      "cancel": "Cancel"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit profile",
+    "viewProfile": "View profile"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "subtitle": "Log in to your account"
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Create your account"
+    }
+  },
+  "events": {
+    "title": "Events",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "myEvents": "My events",
+    "noEvents": "No events"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The page you are looking for does not exist.",
+    "backHome": "Back to home"
+  }
+}

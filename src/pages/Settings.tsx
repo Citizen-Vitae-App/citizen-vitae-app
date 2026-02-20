@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IdentityVerificationCard } from '@/components/IdentityVerificationCard';
@@ -30,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2 } from 'lucide-react';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +49,9 @@ const maskEmail = (email: string | null): string => {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { t } = useTranslation('pages');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tToasts } = useTranslation('toasts');
   const { user, profile, refreshProfile, signOut } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useUserPreferences();
   const { latitude, longitude, error: geoError, isLoading: isGeoLoading, permissionDenied, requestLocation } = useGeolocation();
@@ -71,8 +75,10 @@ export default function Settings() {
     if (checked) {
       // Request browser permission first
       requestLocation();
-      toast.message('Demande de localisation…', {
-        description: 'Confirmez l\'autorisation dans votre navigateur si besoin.',
+      toast.message(preferences?.language === 'en' ? 'Requesting location…' : 'Demande de localisation…', {
+        description: preferences?.language === 'en' 
+          ? 'Confirm permission in your browser if needed.' 
+          : 'Confirmez l\'autorisation dans votre navigateur si besoin.',
         duration: 4000,
       });
     }
@@ -108,7 +114,8 @@ export default function Settings() {
       }
 
       // Afficher le message de succès
-      toast.success('Votre compte a été supprimé avec succès', {
+      toast.success(tToasts('account.deleteSuccess'), {
+        description: tToasts('account.deleteSuccessDescription'),
         duration: 2000,
       });
 
@@ -129,7 +136,9 @@ export default function Settings() {
       window.location.href = '/';
     } catch (error: any) {
       console.error('Erreur lors de la suppression du compte:', error);
-      toast.error(error.message || 'Une erreur est survenue lors de la suppression de votre compte');
+      toast.error(tToasts('account.deleteError'), {
+        description: error.message || tToasts('account.deleteErrorDescription'),
+      });
       setIsDeletingAccount(false);
     }
   };
@@ -155,7 +164,7 @@ export default function Settings() {
       <MainNavbar />
       
       <main className="container mx-auto px-4 pt-6 md:pt-8 pb-16 max-w-2xl">
-        <h1 className="text-2xl font-bold mb-8">Paramètres</h1>
+        <h1 className="text-2xl font-bold mb-8">{t('settings.title')}</h1>
 
         {/* Identity Verification Section */}
         <section className="mb-8">
@@ -172,7 +181,7 @@ export default function Settings() {
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Localisation</h2>
+            <h2 className="text-lg font-semibold">{t('settings.geolocation.label')}</h2>
           </div>
 
           <div className="bg-black/[0.03] rounded-lg p-4">
@@ -181,10 +190,10 @@ export default function Settings() {
                 <MapPin className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <Label htmlFor="geolocation-toggle" className="font-medium">
-                    Activer la géolocalisation
+                    {t('settings.geolocation.label')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Nécessaire pour démarrer une mission sur place
+                    {t('settings.geolocation.description')}
                   </p>
                 </div>
               </div>
@@ -200,17 +209,25 @@ export default function Settings() {
             {preferences?.geolocation_enabled && (
               <div className="mt-3 pl-8 text-sm text-muted-foreground">
                 {isGeoLoading ? (
-                  <span>Vérification en cours…</span>
+                  <span>{preferences?.language === 'en' ? 'Checking…' : 'Vérification en cours…'}</span>
                 ) : latitude !== null && longitude !== null ? (
-                  <span className="text-green-600">✅ Localisation active</span>
+                  <span className="text-green-600">
+                    {preferences?.language === 'en' ? '✅ Location active' : '✅ Localisation active'}
+                  </span>
                 ) : permissionDenied ? (
                   <span className="text-amber-600">
-                    ⚠️ Accès refusé par le navigateur — réactivez-la dans les réglages.
+                    {preferences?.language === 'en' 
+                      ? '⚠️ Access denied by browser — enable it in settings.' 
+                      : '⚠️ Accès refusé par le navigateur — réactivez-la dans les réglages.'}
                   </span>
                 ) : geoError ? (
                   <span className="text-amber-600">⚠️ {geoError}</span>
                 ) : (
-                  <span>En attente de la permission du navigateur…</span>
+                  <span>
+                    {preferences?.language === 'en' 
+                      ? 'Waiting for browser permission…' 
+                      : 'En attente de la permission du navigateur…'}
+                  </span>
                 )}
               </div>
             )}
@@ -221,11 +238,11 @@ export default function Settings() {
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Globe className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Langue</h2>
+            <h2 className="text-lg font-semibold">{t('settings.sections.language')}</h2>
           </div>
           <div className="bg-black/[0.03] rounded-lg p-4">
             <Label htmlFor="language" className="text-sm text-muted-foreground mb-2 block">
-              Langue de l'interface et des notifications
+              {t('settings.language.description')}
             </Label>
             <Select
               value={preferences?.language || 'fr'}
@@ -236,8 +253,8 @@ export default function Settings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="fr">{t('settings.language.french')}</SelectItem>
+                <SelectItem value="en">{t('settings.language.english')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -247,7 +264,7 @@ export default function Settings() {
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Notifications</h2>
+            <h2 className="text-lg font-semibold">{t('settings.sections.notifications')}</h2>
           </div>
           
           <div className="space-y-4">
@@ -258,10 +275,10 @@ export default function Settings() {
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label htmlFor="email-opt-in" className="font-medium">
-                      Notifications par email
+                      {t('settings.emailNotifications.label')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Recevez des rappels et mises à jour par email
+                      {t('settings.emailNotifications.description')}
                     </p>
                   </div>
                 </div>
@@ -286,10 +303,10 @@ export default function Settings() {
                   <MessageSquare className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label htmlFor="sms-opt-in" className="font-medium">
-                      Notifications par SMS
+                      {t('settings.smsNotifications.label')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Recevez des rappels importants par SMS
+                      {t('settings.smsNotifications.description')}
                     </p>
                   </div>
                 </div>
@@ -317,14 +334,14 @@ export default function Settings() {
                         setIsEditingPhone(true);
                       }}
                     >
-                      Modifier
+                      {tCommon('edit')}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Input
                       type="tel"
-                      placeholder="+33 6 12 34 56 78"
+                      placeholder={t('settings.phoneNumber.placeholder')}
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       className="w-48 h-9 bg-background"
@@ -334,7 +351,7 @@ export default function Settings() {
                       onClick={handlePhoneSave}
                       disabled={isUpdating || !phoneNumber}
                     >
-                      Enregistrer
+                      {tCommon('save')}
                     </Button>
                     {isEditingPhone && (
                       <Button
@@ -342,7 +359,7 @@ export default function Settings() {
                         size="sm"
                         onClick={() => setIsEditingPhone(false)}
                       >
-                        Annuler
+                        {tCommon('cancel')}
                       </Button>
                     )}
                   </div>
@@ -355,9 +372,13 @@ export default function Settings() {
               <div className="flex items-center gap-3">
                 <Bell className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">Notifications in-app</p>
+                  <p className="font-medium">
+                    {preferences?.language === 'en' ? 'In-app notifications' : 'Notifications in-app'}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Toujours activées pour vous tenir informé des mises à jour importantes
+                    {preferences?.language === 'en' 
+                      ? 'Always enabled to keep you informed of important updates' 
+                      : 'Toujours activées pour vous tenir informé des mises à jour importantes'}
                   </p>
                 </div>
               </div>
@@ -368,12 +389,14 @@ export default function Settings() {
         {/* Account Info Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-lg font-semibold">Compte</h2>
+            <h2 className="text-lg font-semibold">{t('settings.sections.account')}</h2>
           </div>
           <div className="bg-black/[0.03] rounded-lg p-4">
             <div className="space-y-2 text-sm">
               <p>
-                <span className="text-muted-foreground">Nom : </span>
+                <span className="text-muted-foreground">
+                  {preferences?.language === 'en' ? 'Name: ' : 'Nom : '}
+                </span>
                 {profile?.first_name} {profile?.last_name}
               </p>
               <p>
@@ -381,6 +404,21 @@ export default function Settings() {
                 {user?.email}
               </p>
             </div>
+          </div>
+
+          {/* Logout Button - Mobile only */}
+          <div className="mt-4 md:hidden">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={async () => {
+                await signOut();
+                navigate('/');
+              }}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {t('settings.logout')}
+            </Button>
           </div>
 
           {/* Delete Account Section */}
@@ -393,32 +431,38 @@ export default function Settings() {
                   disabled={isDeletingAccount}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Supprimer mon compte
+                  {t('settings.deleteAccount.button')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {t('settings.deleteAccount.title')}
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="space-y-3 text-left">
                     <p className="font-medium text-foreground">
-                      {profile?.first_name}, nous sommes navrés de vous voir partir
+                      {t('settings.deleteAccount.message', { firstName: profile?.first_name })}
                     </p>
                     <p>
-                      Êtes-vous sûr(e) de vouloir clore votre compte ? Vous perdrez toutes vos données sur Citizen Vitae, vos certificats, vos événements enregistrés, etc.
+                      {t('settings.deleteAccount.warning')}
                     </p>
                     <p className="text-destructive font-medium">
-                      Cette action est irréversible.
+                      {t('settings.deleteAccount.irreversible')}
                     </p>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogCancel>
+                    {t('settings.deleteAccount.cancel')}
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     disabled={isDeletingAccount}
                   >
-                    {isDeletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
+                    {isDeletingAccount 
+                      ? t('settings.deleteAccount.confirming') 
+                      : t('settings.deleteAccount.confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -427,11 +471,7 @@ export default function Settings() {
         </section>
       </main>
 
-      {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-      
-      {/* Bottom padding for mobile nav */}
-      <div className="h-16 md:hidden" />
     </div>
   );
 }
