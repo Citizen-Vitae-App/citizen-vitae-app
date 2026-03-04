@@ -280,11 +280,29 @@ export default function OrganizationOnboarding() {
       logoUrl = publicUrlData.publicUrl;
     }
     
-    // Mettre à jour l'organisation existante
+    // Regenerate slug from the (possibly corrected) name
+    const newSlug = orgName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    // Check slug uniqueness (exclude current org)
+    const { data: slugConflict } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('slug', newSlug)
+      .neq('id', orgId!)
+      .maybeSingle();
+
+    const finalSlug = slugConflict ? `${newSlug}-${Date.now().toString(36)}` : newSlug;
+
     const { error } = await supabase
       .from('organizations')
       .update({ 
         name: orgName, 
+        slug: finalSlug,
         type: orgType,
         visibility: 'public',
         logo_url: logoUrl || null,

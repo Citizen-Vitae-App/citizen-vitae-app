@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          setIsLoading(true);
           setTimeout(() => {
             fetchProfileAndRoles(session.user.id);
           }, 0);
@@ -68,6 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null);
           setRoles([]);
           setIsLoading(false);
+          queryClient.clear();
           // Nettoyer l'utilisateur de Sentry lors de la déconnexion
           setSentryUser(null);
         }
@@ -410,6 +412,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     // Nettoyer l'utilisateur de Sentry
     setSentryUser(null);
     navigate('/');
