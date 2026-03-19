@@ -256,6 +256,23 @@ const Index = () => {
                   )}
                 </button>
               )}
+              
+              {/* Near Me Button - Mobile */}
+              {!isMobileSearchOpen && (
+                <button
+                  onClick={handleNearMeToggle}
+                  disabled={isGeoLoading || showMobileLoginPrompt}
+                  className={`border rounded-full p-2.5 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                    isNearMeActive
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : showMobileLoginPrompt
+                        ? 'border-border bg-background/50 opacity-50 pointer-events-none'
+                        : 'border-border bg-background/50 text-foreground hover:bg-background/70 hover:shadow-md hover:border-primary/30'
+                  }`}
+                >
+                  <Locate className={`w-4 h-4 ${isGeoLoading ? 'animate-pulse' : ''}`} />
+                </button>
+              )}
             </div>
 
             {/* User Actions - Desktop only */}
