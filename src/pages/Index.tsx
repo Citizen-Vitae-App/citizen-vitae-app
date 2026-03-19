@@ -183,7 +183,20 @@ const Index = () => {
                   </span>
                 )}
               </button>
-            </div>
+
+              {/* Near Me Button - Desktop */}
+              <button
+                onClick={handleNearMeToggle}
+                disabled={isGeoLoading}
+                className={`border rounded-md px-5 py-3.5 flex items-center gap-2 shadow-sm whitespace-nowrap backdrop-blur-sm transition-all duration-200 ${
+                  isNearMeActive
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-background/50 text-foreground hover:bg-background/70 hover:shadow-md hover:border-primary/30'
+                }`}
+              >
+                <Locate className={`w-4 h-4 ${isGeoLoading ? 'animate-pulse' : ''}`} />
+                <span className="text-sm">Près de moi</span>
+              </button>
 
             {/* Search Bar - Mobile (transforms from button to full bar) */}
             <div className="flex md:hidden flex-1 items-center justify-end gap-2">
