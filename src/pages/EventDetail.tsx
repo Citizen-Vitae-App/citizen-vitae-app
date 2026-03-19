@@ -41,8 +41,7 @@ const EventDetail = () => {
     isFavorite,
     toggleFavorite
   } = useFavorites();
-  const [event, setEvent] = useState<EventWithOrganization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: event, isLoading } = useEventDetail(eventId);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
@@ -71,38 +70,6 @@ const EventDetail = () => {
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [eventId]);
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId) return;
-      const {
-        data,
-        error
-      } = await supabase.from('events').select(`
-          *,
-          organizations!inner (
-            id,
-            name,
-            logo_url,
-            description
-          ),
-          event_cause_themes (
-            cause_themes (
-              id,
-              name,
-              color,
-              icon
-            )
-          )
-        `).eq('id', eventId).eq('is_public', true).maybeSingle();
-      if (error) {
-        console.error('Error fetching event:', error);
-      } else {
-        setEvent(data as EventWithOrganization);
-      }
-      setIsLoading(false);
-    };
-    fetchEvent();
   }, [eventId]);
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), "EEEE d MMMM yyyy", {
