@@ -9,7 +9,6 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
 import { CertificationCard } from '@/components/CertificationCard';
 import { CertificationButton } from '@/components/CertificationButton';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,35 +25,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-interface CauseTheme {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-}
-interface EventWithOrganization {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string;
-  start_date: string;
-  end_date: string;
-  cover_image_url: string | null;
-  capacity: number | null;
-  latitude: number | null;
-  longitude: number | null;
-  organization_id: string;
-  allow_self_certification: boolean | null;
-  organizations: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    description: string | null;
-  };
-  event_cause_themes?: {
-    cause_themes: CauseTheme;
-  }[];
-}
+import { useEventDetail } from '@/hooks/useEventDetail';
 const EventDetail = () => {
   const {
     eventId
