@@ -46,15 +46,38 @@ const Index = () => {
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isNearMeActive, setIsNearMeActive] = useState(false);
+  const { latitude, longitude, isLoading: isGeoLoading, requestLocation } = useGeolocation();
   
   // Debounce search query pour éviter les appels API trop fréquents
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   
-  const { events, isLoading: isEventsLoading } = usePublicEvents({
+  const { events: rawEvents, isLoading: isEventsLoading } = usePublicEvents({
     searchQuery: debouncedSearchQuery,
     dateRange,
     causeFilters: selectedCauses
   });
+
+  // Sort events by distance when geo is active
+  const events = useMemo(() => {
+    if (!isNearMeActive || !latitude || !longitude) return rawEvents;
+    return [...rawEvents]
+      .filter((e: any) => e.latitude != null && e.longitude != null)
+      .map((e: any) => ({
+        ...e,
+        _distance: haversineDistance(latitude, longitude, Number(e.latitude), Number(e.longitude)),
+      }))
+      .sort((a: any, b: any) => a._distance - b._distance);
+  }, [rawEvents, isNearMeActive, latitude, longitude]);
+
+  const handleNearMeToggle = () => {
+    if (!isNearMeActive) {
+      requestLocation();
+      setIsNearMeActive(true);
+    } else {
+      setIsNearMeActive(false);
+    }
+  };
 
   const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
 
