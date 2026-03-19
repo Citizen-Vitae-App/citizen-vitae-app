@@ -14,64 +14,6 @@ import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { CertificateCard } from '@/components/CertificateCard';
 import { useMyMissions, type RegistrationWithEvent } from '@/hooks/useMyMissions';
-import { MissionCertificationButton } from '@/components/MissionCertificationButton';
-import { FaceMatchVerification } from '@/components/FaceMatchVerification';
-import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
-import { CertificateCard } from '@/components/CertificateCard';
-interface CertificateDataFromDB {
-  user: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-  };
-  event: {
-    id: string;
-    name: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-  };
-  organization: {
-    id: string;
-    name: string;
-    logoUrl: string | null;
-  };
-  validator: {
-    name: string;
-    role: string;
-  };
-  certifiedAt: string;
-  isSelfCertified: boolean;
-}
-interface RegistrationWithEvent {
-  id: string;
-  status: string;
-  attended_at: string | null;
-  face_match_passed: boolean | null;
-  qr_token: string | null;
-  event_id: string;
-  certificate_url: string | null;
-  certificate_id: string | null;
-  certificate_data: CertificateDataFromDB | null;
-  validated_by: string | null;
-  events: {
-    id: string;
-    name: string;
-    location: string;
-    start_date: string;
-    end_date: string;
-    cover_image_url: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    allow_self_certification: boolean | null;
-    organization_id: string;
-    organizations: {
-      name: string;
-      logo_url: string | null;
-    };
-  };
-}
 const MyMissions = () => {
   const {
     user
@@ -79,52 +21,11 @@ const MyMissions = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'upcoming';
-  const [registrations, setRegistrations] = useState<RegistrationWithEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: registrations = [], isLoading } = useMyMissions();
   const [showFaceMatch, setShowFaceMatch] = useState(false);
   const [showSelfCertification, setShowSelfCertification] = useState(false);
   const [selectedEventForFaceMatch, setSelectedEventForFaceMatch] = useState<RegistrationWithEvent | null>(null);
   const [selectedEventForSelfCert, setSelectedEventForSelfCert] = useState<RegistrationWithEvent | null>(null);
-  useEffect(() => {
-    const fetchRegistrations = async () => {
-      if (!user) return;
-      const {
-        data,
-        error
-      } = await supabase.from('event_registrations').select(`
-          id,
-          status,
-          attended_at,
-          face_match_passed,
-          qr_token,
-          event_id,
-          certificate_url,
-          certificate_id,
-          certificate_data,
-          validated_by,
-          events!inner (
-            id,
-            name,
-            location,
-            start_date,
-            end_date,
-            cover_image_url,
-            latitude,
-            longitude,
-            allow_self_certification,
-            organization_id,
-            organizations!inner (name, logo_url)
-          )
-        `).eq('user_id', user.id);
-      if (error) {
-        console.error('Error fetching registrations:', error);
-      } else {
-        setRegistrations(data as unknown as RegistrationWithEvent[]);
-      }
-      setIsLoading(false);
-    };
-    fetchRegistrations();
-  }, [user]);
   const now = new Date();
 
   // À venir: events that haven't ended yet, sorted by start_date ascending (closest first)
