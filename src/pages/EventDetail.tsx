@@ -26,6 +26,7 @@ import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEventDetail } from '@/hooks/useEventDetail';
+import { useGeocode } from '@/hooks/useGeocode';
 const EventDetail = () => {
   const {
     eventId
