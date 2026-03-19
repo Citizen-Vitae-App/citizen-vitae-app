@@ -43,6 +43,7 @@ const EventDetail = () => {
     toggleFavorite
   } = useFavorites();
   const { data: event, isLoading } = useEventDetail(eventId);
+  const { coords } = useGeocode(event?.location, event?.latitude, event?.longitude);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
