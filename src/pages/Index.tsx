@@ -18,6 +18,8 @@ import { usePublicEvents } from '@/hooks/useEvents';
 import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { generateShortTitle } from '@/lib/utils';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { haversineDistance, formatDistance } from '@/lib/geo';
 import { hasActiveOwnerInvitation, getOwnerInvitationRedirectUrl, captureOwnerInvitation } from '@/lib/invitationHandoff';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
