@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X, MapPin, Locate } from "lucide-react";
 import { PageTransition } from '@/components/PageTransition';
 import { EventCardSkeletons } from '@/components/EventCardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
