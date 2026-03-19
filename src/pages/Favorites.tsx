@@ -84,46 +84,32 @@ const Favorites = () => {
         </div>
 
         {isLoading || favoritesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-4">
-                <Skeleton className="h-64 w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ))}
-          </div>
+          <EventCardSkeletons count={4} />
         ) : events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Heart className="h-16 w-16 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              Aucun favori pour le moment
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Explorez les événements et ajoutez-les à vos favoris en cliquant sur le cœur
-            </p>
-            <Link 
-              to="/" 
-              className="text-primary hover:underline font-medium"
-            >
-              Découvrir les événements
-            </Link>
-          </div>
+          <EmptyState
+            icon="heart"
+            title="Aucun favori pour le moment"
+            description="Explorez les événements et ajoutez-les à vos favoris en cliquant sur le cœur"
+            ctaLabel="Découvrir les événements"
+            ctaLink="/"
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                id={event.id}
-                title={event.name}
-                shortTitle={generateShortTitle(event.name)}
-                organization={event.organizations.name}
-                date={formatDate(event.start_date)}
-                location={event.location}
-                image={event.cover_image_url || defaultCover}
-              />
-            ))}
-          </div>
+          <PageTransition>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  id={event.id}
+                  title={event.name}
+                  shortTitle={generateShortTitle(event.name)}
+                  organization={event.organizations.name}
+                  date={formatDate(event.start_date)}
+                  location={event.location}
+                  image={event.cover_image_url || defaultCover}
+                />
+              ))}
+            </div>
+          </PageTransition>
         )}
       </main>
 

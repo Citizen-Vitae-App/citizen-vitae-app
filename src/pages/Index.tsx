@@ -373,17 +373,15 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12 flex-1">
+        <PageTransition>
         {isEventsLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <EventCardSkeletons count={6} />
         ) : events.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement disponible</h3>
-            <p className="text-muted-foreground">
-              {searchQuery || activeFiltersCount > 0 ? 'Aucun événement ne correspond à vos critères' : 'Revenez bientôt pour découvrir de nouveaux événements'}
-            </p>
+          <EmptyState
+            icon={searchQuery || activeFiltersCount > 0 ? 'search' : 'calendar'}
+            title={searchQuery || activeFiltersCount > 0 ? 'Aucun événement ne correspond à vos critères' : 'Aucun événement disponible'}
+            description={searchQuery || activeFiltersCount > 0 ? 'Essayez de modifier vos filtres ou votre recherche' : 'Revenez bientôt pour découvrir de nouveaux événements'}
+          >
             {activeFiltersCount > 0 && (
               <Button 
                 variant="outline" 
@@ -396,7 +394,7 @@ const Index = () => {
                 Effacer les filtres
               </Button>
             )}
-          </div>
+          </EmptyState>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
             {events.map((event) => (
@@ -414,6 +412,7 @@ const Index = () => {
             ))}
           </div>
         )}
+        </PageTransition>
       </main>
 
       {/* Mobile Bottom Navigation - Only show when logged in */}
