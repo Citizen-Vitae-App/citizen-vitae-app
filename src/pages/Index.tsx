@@ -7,7 +7,7 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Footer } from '@/components/Footer';
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import logo from '@/assets/logo.svg';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
