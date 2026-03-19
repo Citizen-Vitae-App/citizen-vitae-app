@@ -339,7 +339,7 @@ const EventDetail = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
-                  <p>Désinscription impossible moins de 24h avant la fin de l'événement</p>
+                  <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
