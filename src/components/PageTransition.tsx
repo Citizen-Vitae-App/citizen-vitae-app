@@ -9,7 +9,7 @@ const pageVariants = {
 
 const pageTransition = {
   duration: 0.25,
-  ease: 'easeOut',
+  ease: 'easeOut' as const,
 };
 
 interface PageTransitionProps {
