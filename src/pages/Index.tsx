@@ -79,7 +79,7 @@ const Index = () => {
     }
   };
 
-  const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
+  const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length + (isNearMeActive ? 1 : 0);
 
   // Capture any owner invitation from URL on mount
   useEffect(() => {
