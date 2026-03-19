@@ -75,7 +75,7 @@ const MyMissions = () => {
     const event = registration.events;
     return <div key={registration.id} className="border border-border rounded-xl overflow-hidden cursor-pointer" onClick={() => navigate(`/events/${event.id}`)}>
         <div className="aspect-[16/9] w-full overflow-hidden">
-          <img src={event.cover_image_url || defaultCover} alt={event.name} className="w-full h-full object-cover" />
+          <img src={event.cover_image_url || defaultCover} alt={event.name} loading="lazy" className="w-full h-full object-cover" />
         </div>
         <div className="p-4 space-y-4" onClick={e => e.stopPropagation()}>
           <div onClick={() => navigate(`/events/${event.id}`)} className="cursor-pointer">
