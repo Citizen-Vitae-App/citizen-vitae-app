@@ -306,7 +306,7 @@ const EventDetail = () => {
           <MapPin className="h-4 w-4 flex-shrink-0" />
           <span className="underline underline-offset-2 group-hover:text-primary transition-colors duration-200">{event.location}</span>
         </a>
-        {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
+        {coords ? <EventMap lat={coords.latitude} lng={coords.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>}
       </div>
