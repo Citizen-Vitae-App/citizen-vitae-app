@@ -9,7 +9,6 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
 import { CertificationCard } from '@/components/CertificationCard';
 import { CertificationButton } from '@/components/CertificationButton';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,35 +25,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-interface CauseTheme {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-}
-interface EventWithOrganization {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string;
-  start_date: string;
-  end_date: string;
-  cover_image_url: string | null;
-  capacity: number | null;
-  latitude: number | null;
-  longitude: number | null;
-  organization_id: string;
-  allow_self_certification: boolean | null;
-  organizations: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    description: string | null;
-  };
-  event_cause_themes?: {
-    cause_themes: CauseTheme;
-  }[];
-}
+import { useEventDetail } from '@/hooks/useEventDetail';
 const EventDetail = () => {
   const {
     eventId
@@ -70,8 +41,7 @@ const EventDetail = () => {
     isFavorite,
     toggleFavorite
   } = useFavorites();
-  const [event, setEvent] = useState<EventWithOrganization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: event, isLoading } = useEventDetail(eventId);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
@@ -100,38 +70,6 @@ const EventDetail = () => {
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [eventId]);
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId) return;
-      const {
-        data,
-        error
-      } = await supabase.from('events').select(`
-          *,
-          organizations!inner (
-            id,
-            name,
-            logo_url,
-            description
-          ),
-          event_cause_themes (
-            cause_themes (
-              id,
-              name,
-              color,
-              icon
-            )
-          )
-        `).eq('id', eventId).eq('is_public', true).maybeSingle();
-      if (error) {
-        console.error('Error fetching event:', error);
-      } else {
-        setEvent(data as EventWithOrganization);
-      }
-      setIsLoading(false);
-    };
-    fetchEvent();
   }, [eventId]);
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), "EEEE d MMMM yyyy", {

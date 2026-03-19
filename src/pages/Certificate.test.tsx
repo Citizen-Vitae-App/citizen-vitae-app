@@ -11,10 +11,10 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/components/certificate/CertificatePreview', () => {
-  const { forwardRef } = require('react');
+vi.mock('@/components/certificate/CertificatePreview', async () => {
+  const React = await import('react');
   return {
-    CertificatePreview: forwardRef(({ data }: any, ref: any) => (
+    CertificatePreview: React.forwardRef(({ data }: any, ref: any) => (
       <div ref={ref} data-testid="certificate-preview">
         Certificate for {data.firstName} {data.lastName}
       </div>
