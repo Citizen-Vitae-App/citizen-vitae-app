@@ -1,4 +1,7 @@
 import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X } from "lucide-react";
+import { PageTransition } from '@/components/PageTransition';
+import { EventCardSkeletons } from '@/components/EventCardSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { logger } from "@/lib/logger";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
