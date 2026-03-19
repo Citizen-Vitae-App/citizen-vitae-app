@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
+import { EmptyState } from '@/components/EmptyState';
+import { PageTransition } from '@/components/PageTransition';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainNavbar } from '@/components/MainNavbar';
@@ -98,30 +100,22 @@ const MyMissions = () => {
         </div>
       </div>;
   };
-  const renderEmptyState = (message: string, showCTA: boolean = true) => <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-        <Calendar className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <h2 className="text-foreground mb-4 text-base font-medium">
-        {message}
-      </h2>
-      {showCTA && (
-        <Link to="/" className="inline-flex items-center justify-center px-6 py-3 text-white font-medium transition-colors hover:opacity-90 rounded-2xl" style={{
-          background: 'linear-gradient(to right, #012573, #083AD2)'
-        }}>
-          Découvrir les missions
-        </Link>
-      )}
-    </div>;
+  const renderEmptyState = (message: string, showCTA: boolean = true) => (
+    <EmptyState
+      icon="clipboard"
+      title={message}
+      description={showCTA ? "Découvrez et participez aux missions citoyennes près de chez vous" : undefined}
+      ctaLabel={showCTA ? "Découvrir les missions" : undefined}
+      ctaLink={showCTA ? "/" : undefined}
+    />
+  );
 
-  const renderCancelledEmptyState = () => <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-        <CheckCircle className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <h2 className="text-foreground text-base font-medium">
-        Aucune annulation
-      </h2>
-    </div>;
+  const renderCancelledEmptyState = () => (
+    <EmptyState
+      icon="calendar"
+      title="Aucune annulation"
+    />
+  );
   return <div className="min-h-screen bg-background">
       {/* Navigation - Desktop only */}
       <MainNavbar />
