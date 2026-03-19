@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
+import { EmptyState } from '@/components/EmptyState';
+import { PageTransition } from '@/components/PageTransition';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainNavbar } from '@/components/MainNavbar';
