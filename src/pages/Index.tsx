@@ -197,6 +197,7 @@ const Index = () => {
                 <Locate className={`w-4 h-4 ${isGeoLoading ? 'animate-pulse' : ''}`} />
                 <span className="text-sm">Près de moi</span>
               </button>
+            </div>
 
             {/* Search Bar - Mobile (transforms from button to full bar) */}
             <div className="flex md:hidden flex-1 items-center justify-end gap-2">
