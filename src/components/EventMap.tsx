@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 interface EventMapProps {
   lat: number;
   lng: number;

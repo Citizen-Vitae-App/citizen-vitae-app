@@ -72,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
               </p>
             </div>
 
-            {this.state.error && (
+            {this.state.error && !import.meta.env.PROD && (
               <details className="text-left">
                 <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Détails techniques
