@@ -436,18 +436,25 @@ const Index = () => {
           </EmptyState>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-            {events.map((event) => (
-              <EventCard 
-                key={event.id}
-                id={event.id}
-                title={event.name}
-                shortTitle={generateShortTitle(event.name)}
-                organization={event.organization_name || 'Organisation'}
-                organizationId={event.organization_id}
-                date={formatEventDate(event.start_date)}
-                location={event.location}
-                image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
-              />
+            {events.map((event: any) => (
+              <div key={event.id}>
+                <EventCard 
+                  id={event.id}
+                  title={event.name}
+                  shortTitle={generateShortTitle(event.name)}
+                  organization={event.organization_name || 'Organisation'}
+                  organizationId={event.organization_id}
+                  date={formatEventDate(event.start_date)}
+                  location={event.location}
+                  image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
+                />
+                {isNearMeActive && event._distance != null && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    <span>{formatDistance(event._distance)}</span>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
