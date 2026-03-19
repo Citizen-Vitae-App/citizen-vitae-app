@@ -94,7 +94,7 @@ const MyMissions = () => {
           <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
         </div>
         <div className="w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-          <img src={event.cover_image_url || defaultCover} alt={event.name} className="w-full h-full object-cover" />
+          <img src={event.cover_image_url || defaultCover} alt={event.name} loading="lazy" className="w-full h-full object-cover" />
         </div>
       </div>;
   };
