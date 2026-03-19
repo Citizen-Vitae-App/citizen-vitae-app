@@ -1,4 +1,4 @@
-/// <reference types="google.maps" />
+
 import { useEffect, useRef, useState } from 'react';
 import mapMarkerIcon from '@/assets/map-marker.svg';
 
