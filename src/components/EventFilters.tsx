@@ -47,7 +47,10 @@ const EventFilters = ({
   dateRange,
   onDateRangeChange,
   selectedCauses,
-  onCausesChange
+  onCausesChange,
+  isNearMeActive = false,
+  onNearMeToggle,
+  isGeoLoading = false,
 }: EventFiltersProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('dates');
   const [currentMonth, setCurrentMonth] = useState(new Date());
