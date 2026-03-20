@@ -1,4 +1,4 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X, MapPin, Locate } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X, MapPin } from "lucide-react";
 import { PageTransition } from '@/components/PageTransition';
 import { EventCardSkeletons } from '@/components/EventCardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -184,19 +184,6 @@ const Index = () => {
                 )}
               </button>
 
-              {/* Near Me Button - Desktop */}
-              <button
-                onClick={handleNearMeToggle}
-                disabled={isGeoLoading}
-                className={`border rounded-md px-5 py-3.5 flex items-center gap-2 shadow-sm whitespace-nowrap backdrop-blur-sm transition-all duration-200 ${
-                  isNearMeActive
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border bg-background/50 text-foreground hover:bg-background/70 hover:shadow-md hover:border-primary/30'
-                }`}
-              >
-                <Locate className={`w-4 h-4 ${isGeoLoading ? 'animate-pulse' : ''}`} />
-                <span className="text-sm">Près de moi</span>
-              </button>
             </div>
 
             {/* Search Bar - Mobile (transforms from button to full bar) */}
@@ -257,22 +244,6 @@ const Index = () => {
                 </button>
               )}
               
-              {/* Near Me Button - Mobile */}
-              {!isMobileSearchOpen && (
-                <button
-                  onClick={handleNearMeToggle}
-                  disabled={isGeoLoading || showMobileLoginPrompt}
-                  className={`border rounded-full p-2.5 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                    isNearMeActive
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : showMobileLoginPrompt
-                        ? 'border-border bg-background/50 opacity-50 pointer-events-none'
-                        : 'border-border bg-background/50 text-foreground hover:bg-background/70 hover:shadow-md hover:border-primary/30'
-                  }`}
-                >
-                  <Locate className={`w-4 h-4 ${isGeoLoading ? 'animate-pulse' : ''}`} />
-                </button>
-              )}
             </div>
 
             {/* User Actions - Desktop only */}
@@ -403,6 +374,9 @@ const Index = () => {
         onDateRangeChange={setDateRange}
         selectedCauses={selectedCauses}
         onCausesChange={setSelectedCauses}
+        isNearMeActive={isNearMeActive}
+        onNearMeToggle={handleNearMeToggle}
+        isGeoLoading={isGeoLoading}
       />
 
       {/* Mobile Login Prompt - Centered overlay */}
