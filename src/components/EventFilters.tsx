@@ -107,6 +107,7 @@ const EventFilters = ({
     onDateRangeChange({ start: null, end: null });
     onCausesChange([]);
     setHoverDate(null);
+    if (isNearMeActive && onNearMeToggle) onNearMeToggle();
   };
 
   // Calculate effective end date (either selected end or hover date for preview)
