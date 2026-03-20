@@ -24,7 +24,10 @@ interface EventFiltersProps {
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   selectedCauses: string[];
-  onCausesChange: (causes: string[]) => void;
+  onCausesChange: (causes: string[]);
+  isNearMeActive?: boolean;
+  onNearMeToggle?: () => void;
+  isGeoLoading?: boolean;
 }
 
 type TabType = 'dates' | 'mois' | 'flexible';
