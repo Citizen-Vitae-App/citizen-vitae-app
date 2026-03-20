@@ -24,7 +24,7 @@ interface EventFiltersProps {
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   selectedCauses: string[];
-  onCausesChange: (causes: string[]);
+  onCausesChange: (causes: string[]) => void;
   isNearMeActive?: boolean;
   onNearMeToggle?: () => void;
   isGeoLoading?: boolean;
