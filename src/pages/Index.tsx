@@ -374,6 +374,9 @@ const Index = () => {
         onDateRangeChange={setDateRange}
         selectedCauses={selectedCauses}
         onCausesChange={setSelectedCauses}
+        isNearMeActive={isNearMeActive}
+        onNearMeToggle={handleNearMeToggle}
+        isGeoLoading={isGeoLoading}
       />
 
       {/* Mobile Login Prompt - Centered overlay */}
