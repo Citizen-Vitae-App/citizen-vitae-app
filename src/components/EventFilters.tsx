@@ -350,6 +350,25 @@ const EventFilters = ({
           </div>
         </div>
 
+        {/* Autour de moi toggle */}
+        {onNearMeToggle && (
+          <div className="px-4 md:px-8 pb-4">
+            <button
+              onClick={onNearMeToggle}
+              disabled={isGeoLoading}
+              className={cn(
+                "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all border",
+                isNearMeActive
+                  ? "border-2 border-[#012573] bg-[#012573]/10 text-[#012573]"
+                  : "border-border bg-background hover:border-[#012573]/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Locate className={cn("w-4 h-4", isGeoLoading && "animate-pulse")} />
+              <span>Autour de moi</span>
+            </button>
+          </div>
+        )}
+
         <div className="px-4 md:px-8 pb-6">
           {activeTab === 'dates' && (
             <>
