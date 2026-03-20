@@ -182,7 +182,7 @@ const Certificate = () => {
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/my-missions?tab=certificates" className="flex items-center gap-3">
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </Link>
             <div className="hidden md:flex items-center gap-2">
