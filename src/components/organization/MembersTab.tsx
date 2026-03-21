@@ -443,18 +443,15 @@ export function MembersTab({
   };
   const isCurrentUser = (member: OrganizationMember) => member.user_id === currentUserId;
   return <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted border-0" />
-          </div>
-          {(canManageMembers || isLeader) && <Button onClick={() => setAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter
-            </Button>}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 md:w-72 md:flex-none">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Rechercher..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted border-0" />
         </div>
+        {(canManageMembers || isLeader) && <Button onClick={() => setAddDialogOpen(true)} className="shrink-0" size={isMobile ? "icon" : "default"}>
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Ajouter</span>
+          </Button>}
       </div>
 
       {isLoading ? <div className="space-y-3">
