@@ -674,8 +674,12 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
         </CardContent>
       </Card>
 
-      {/* Save Button */}
-      <div className={embedded ? "pt-4 pb-20 md:pb-0" : "sticky bottom-20 md:bottom-4 bg-background/95 backdrop-blur-sm border-t border-border -mx-2 px-4 py-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent"}>
+      {/* Save Button - sticky when changes exist, static when no changes */}
+      <div className={
+        hasChanges 
+          ? "sticky bottom-20 md:bottom-4 z-30 bg-background/95 backdrop-blur-sm border-t border-border -mx-2 px-4 py-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent"
+          : (embedded ? "pt-4 pb-20 md:pb-0" : "pt-4 pb-20 md:pb-0")
+      }>
         <Button 
           onClick={handleSave} 
           disabled={!hasChanges || isSaving || !!slugError} 
