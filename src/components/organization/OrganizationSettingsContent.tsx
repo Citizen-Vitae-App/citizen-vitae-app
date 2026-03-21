@@ -293,7 +293,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 -mx-2 md:mx-0 overflow-x-hidden">
+    <div className="space-y-4 md:space-y-6 -mx-2 md:mx-0">
       {/* LinkedIn-style Header: Cover + Logo */}
       <Card className="overflow-hidden rounded-none md:rounded-lg border-x-0 md:border-x">
         <div className="relative">
@@ -677,7 +677,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
       {/* Save Button - sticky when changes exist, static when no changes */}
       <div className={
         hasChanges 
-          ? "sticky bottom-16 md:bottom-4 z-30 bg-background/95 backdrop-blur-sm border-t border-border -mx-4 px-4 py-3 md:mx-0 md:px-0 md:border-0 md:bg-transparent"
+          ? "sticky bottom-16 md:bottom-4 z-30 bg-background/95 backdrop-blur-sm border-t border-border -mx-2 px-4 py-3 md:mx-0 md:px-0 md:border-0 md:bg-transparent"
           : "pt-2 pb-2 md:pb-0"
       }>
         <Button 
