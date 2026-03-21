@@ -293,7 +293,7 @@ export function OrganizationSettingsContent({ embedded = false }: OrganizationSe
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 -mx-2 md:mx-0 overflow-x-hidden">
+    <div className="space-y-4 md:space-y-6 -mx-2 md:mx-0">
       {/* LinkedIn-style Header: Cover + Logo */}
       <Card className="overflow-hidden rounded-none md:rounded-lg border-x-0 md:border-x">
         <div className="relative">
