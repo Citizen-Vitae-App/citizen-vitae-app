@@ -344,7 +344,7 @@ const OrganizationPublic = () => {
               <Badge variant="secondary">{getTypeLabel(organization.type)}</Badge>
             </div>
             {organization.bio && (
-              <p className="text-muted-foreground mt-1">{organization.bio}</p>
+              <div className="text-muted-foreground mt-1 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(organization.bio) }} />
             )}
           </div>
         </div>
