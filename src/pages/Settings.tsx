@@ -399,6 +399,71 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* Citizen CV Export Section */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">CV Citoyen</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-black/[0.03] rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                Partagez votre profil citoyen avec un lien ou un QR code. Seules les expériences que vous avez marquées comme visibles seront affichées.
+              </p>
+              
+              {/* Copy link */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-background border rounded-lg px-3 py-2 text-sm text-muted-foreground truncate font-mono">
+                  {citizenCVUrl}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyLink}
+                  className="flex-shrink-0"
+                >
+                  {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+
+              {/* QR Code toggle */}
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowQR(!showQR)}
+                  className="gap-2"
+                >
+                  <QrCode className="h-4 w-4" />
+                  {showQR ? 'Masquer le QR code' : 'Afficher le QR code'}
+                </Button>
+
+                {showQR && (
+                  <div className="mt-4 flex justify-center">
+                    <div className="bg-background border rounded-lg p-4">
+                      <QRCodeSVG
+                        value={citizenCVUrl}
+                        size={180}
+                        level="H"
+                        includeMargin
+                        imageSettings={{
+                          src: sigle,
+                          x: undefined,
+                          y: undefined,
+                          height: 30,
+                          width: 30,
+                          excavate: true,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Account Info Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">
