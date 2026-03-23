@@ -1,11 +1,15 @@
-import { BookOpen, ChevronRight, Calendar, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, ChevronRight, Calendar, Building2, Pencil, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import * as Icons from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import type { CertifiedMission } from '@/hooks/useUserProfile';
 
 interface CitizenExperiencesSectionProps {
@@ -14,8 +18,33 @@ interface CitizenExperiencesSectionProps {
 }
 
 export function CitizenExperiencesSection({ missions, totalCount }: CitizenExperiencesSectionProps) {
+  const [editMode, setEditMode] = useState(false);
+  const [visibilityMap, setVisibilityMap] = useState<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    missions.forEach(m => { map[m.id] = m.is_public !== false; });
+    return map;
+  });
+  const [saving, setSaving] = useState(false);
+
   // Show max 5 recent missions
   const displayedMissions = missions.slice(0, 5);
+
+  const handleToggleVisibility = async (missionId: string, isPublic: boolean) => {
+    setVisibilityMap(prev => ({ ...prev, [missionId]: isPublic }));
+    
+    try {
+      const { error } = await supabase
+        .from('event_registrations')
+        .update({ is_public: isPublic } as any)
+        .eq('id', missionId);
+      
+      if (error) throw error;
+    } catch {
+      // Revert on error
+      setVisibilityMap(prev => ({ ...prev, [missionId]: !isPublic }));
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    }
+  };
 
   if (missions.length === 0) {
     return (
@@ -42,6 +71,24 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
             {totalCount}
           </Badge>
         </h2>
+        <Button
+          variant={editMode ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setEditMode(!editMode)}
+          className="gap-1.5"
+        >
+          {editMode ? (
+            <>
+              <Eye className="h-4 w-4" />
+              Terminé
+            </>
+          ) : (
+            <>
+              <Pencil className="h-4 w-4" />
+              Visibilité
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Timeline-style list */}
@@ -51,7 +98,14 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
 
         <div className="space-y-4">
           {displayedMissions.map((mission, index) => (
-            <MissionCard key={mission.id} mission={mission} isFirst={index === 0} />
+            <MissionCard
+              key={mission.id}
+              mission={mission}
+              isFirst={index === 0}
+              editMode={editMode}
+              isPublic={visibilityMap[mission.id] !== false}
+              onToggleVisibility={handleToggleVisibility}
+            />
           ))}
         </div>
       </div>
@@ -74,9 +128,12 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
 interface MissionCardProps {
   mission: CertifiedMission;
   isFirst: boolean;
+  editMode: boolean;
+  isPublic: boolean;
+  onToggleVisibility: (id: string, isPublic: boolean) => void;
 }
 
-function MissionCard({ mission, isFirst }: MissionCardProps) {
+function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility }: MissionCardProps) {
   const formatDateRange = (startDateStr: string, endDateStr: string) => {
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr);
@@ -100,7 +157,7 @@ function MissionCard({ mission, isFirst }: MissionCardProps) {
   };
 
   return (
-    <div className="relative pl-14">
+    <div className={`relative pl-14 ${editMode && !isPublic ? 'opacity-50' : ''}`}>
       {/* Timeline dot */}
       <div
         className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
@@ -111,6 +168,20 @@ function MissionCard({ mission, isFirst }: MissionCardProps) {
       />
 
       <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        {/* Edit mode toggle */}
+        {editMode && (
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {isPublic ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {isPublic ? 'Visible sur le CV' : 'Masqué du CV'}
+            </div>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(checked) => onToggleVisibility(mission.id, checked)}
+              className="scale-90"
+            />
+          </div>
+        )}
         <div className="flex items-start gap-4">
           {/* Organization logo */}
           <Avatar className="h-10 w-10 flex-shrink-0">

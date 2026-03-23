@@ -155,6 +155,7 @@ export type Database = {
           face_match_at: string | null
           face_match_passed: boolean | null
           id: string
+          is_public: boolean
           qr_token: string | null
           registered_at: string
           status: string
@@ -174,6 +175,7 @@ export type Database = {
           face_match_at?: string | null
           face_match_passed?: boolean | null
           id?: string
+          is_public?: boolean
           qr_token?: string | null
           registered_at?: string
           status?: string
@@ -193,6 +195,7 @@ export type Database = {
           face_match_at?: string | null
           face_match_passed?: boolean | null
           id?: string
+          is_public?: boolean
           qr_token?: string | null
           registered_at?: string
           status?: string
