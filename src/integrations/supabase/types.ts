@@ -852,6 +852,12 @@ export type Database = {
           geolocation_enabled: boolean
           language: string
           phone_number: string | null
+          profile_visibility: string
+          show_causes: boolean
+          show_experiences: boolean
+          show_impact: boolean
+          show_organizations: boolean
+          show_upcoming_events: boolean
           sms_opt_in: boolean
           updated_at: string | null
           user_id: string
@@ -862,6 +868,12 @@ export type Database = {
           geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
+          profile_visibility?: string
+          show_causes?: boolean
+          show_experiences?: boolean
+          show_impact?: boolean
+          show_organizations?: boolean
+          show_upcoming_events?: boolean
           sms_opt_in?: boolean
           updated_at?: string | null
           user_id: string
@@ -872,6 +884,12 @@ export type Database = {
           geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
+          profile_visibility?: string
+          show_causes?: boolean
+          show_experiences?: boolean
+          show_impact?: boolean
+          show_organizations?: boolean
+          show_upcoming_events?: boolean
           sms_opt_in?: boolean
           updated_at?: string | null
           user_id?: string
