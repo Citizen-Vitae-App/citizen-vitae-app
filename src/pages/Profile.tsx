@@ -130,6 +130,9 @@ export default function Profile() {
 
         {/* Bottom padding for mobile nav */}
         <div className="h-16 md:hidden" />
+
+        {/* Privacy Sheet */}
+        <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
       </div>
     </>
   );
