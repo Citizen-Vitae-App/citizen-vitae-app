@@ -37,6 +37,7 @@ const VerifyParticipant = lazy(() => import("./pages/VerifyParticipant"));
 const Certificate = lazy(() => import("./pages/Certificate"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
+const CitizenCV = lazy(() => import("./pages/CitizenCV"));
 
 // Minimal loading fallback
 const PageLoader = () => (
