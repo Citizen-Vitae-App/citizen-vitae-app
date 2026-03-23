@@ -4,11 +4,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Eye, Users, Globe, Lock, Building2, Heart, BarChart3, BookOpen, Calendar, Copy, Check, QrCode, ExternalLink } from 'lucide-react';
+import { Eye, Users, Globe, Lock, Building2, Heart, BarChart3, BookOpen, Calendar, Copy, Check, QrCode, ExternalLink, Pencil, X, Link2 } from 'lucide-react';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
+import { toast } from 'sonner';
 import sigle from '@/assets/icon-sigle.svg';
 
 interface ProfilePrivacySheetProps {
@@ -18,7 +22,34 @@ interface ProfilePrivacySheetProps {
 
 export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { preferences, updatePreferences, isUpdating } = useUserPreferences();
+  
+  const { data: slug } = useQuery({
+    queryKey: ['profile-slug', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase.from('profiles').select('slug').eq('id', user.id).single();
+      return (data as any)?.slug as string | null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const updateSlug = useMutation({
+    mutationFn: async (newSlug: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      const cleaned = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!cleaned || cleaned.length < 3) throw new Error('Le slug doit contenir au moins 3 caractères');
+      const { error } = await supabase.from('profiles').update({ slug: cleaned } as any).eq('id', user.id);
+      if (error) { if (error.code === '23505') throw new Error('Cette URL est déjà prise'); throw error; }
+      return cleaned;
+    },
+    onSuccess: (newSlug) => {
+      queryClient.setQueryData(['profile-slug', user?.id], newSlug);
+      toast.success('URL mise à jour');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   
   const [visibility, setVisibility] = useState<'connections' | 'network' | 'public'>('public');
   const [sections, setSections] = useState({
@@ -30,8 +61,11 @@ export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetP
   });
   const [linkCopied, setLinkCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugDraft, setSlugDraft] = useState('');
 
-  const citizenCVUrl = user ? `${window.location.origin}/citizen/${user.id}` : '';
+  const baseUrl = 'citizenvitae.com/in/';
+  const citizenCVUrl = slug ? `${window.location.origin}/in/${slug}` : '';
 
   // Sync from preferences
   useEffect(() => {
