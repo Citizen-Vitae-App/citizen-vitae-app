@@ -177,6 +177,7 @@ export function useUserProfile() {
           id,
           event_id,
           attended_at,
+          is_public,
           events (
             id,
             name,
