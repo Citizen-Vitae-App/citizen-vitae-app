@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CameraCapture } from './CameraCapture';
 import { CertificationQRCode } from './CertificationQRCode';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'error';
 
@@ -110,11 +110,11 @@ export const FaceMatchVerification = ({
       // If cached result, skip animation and go directly to QR code
       if (data.cached) {
         setStage('qr-code');
-        toast.success('Face Match déjà validé !');
+        toast({ title: 'Face Match validé' });
       } else {
         // Show success animation then transition to QR code
         setStage('success');
-        toast.success('Face Match validé !');
+        toast({ title: 'Face Match validé' });
       }
     } catch (err) {
       console.error('Face match error:', err);
@@ -185,7 +185,7 @@ export const FaceMatchVerification = ({
 
         {stage === 'success' && (
           <div className="flex flex-col items-center gap-4 py-8">
-            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center animate-scale-in">
+            <div className="checkmark-animated w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
             </div>
             <p className="text-lg font-semibold text-green-600 dark:text-green-400 text-center animate-fade-in">
@@ -199,12 +199,14 @@ export const FaceMatchVerification = ({
 
         {stage === 'qr-code' && (
           qrToken ? (
-            <CertificationQRCode
-              qrToken={qrToken}
-              registrationId={registrationId}
-              eventName={eventName}
-              eventDate={eventDate}
-            />
+            <div className="animate-slide-up">
+              <CertificationQRCode
+                qrToken={qrToken}
+                registrationId={registrationId}
+                eventName={eventName}
+                eventDate={eventDate}
+              />
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-4 py-8">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
