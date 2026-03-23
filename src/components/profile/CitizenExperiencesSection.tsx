@@ -157,7 +157,7 @@ function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility 
   };
 
   return (
-    <div className="relative pl-14">
+    <div className={`relative pl-14 ${editMode && !isPublic ? 'opacity-50' : ''}`}>
       {/* Timeline dot */}
       <div
         className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
@@ -168,6 +168,20 @@ function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility 
       />
 
       <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+        {/* Edit mode toggle */}
+        {editMode && (
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {isPublic ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {isPublic ? 'Visible sur le CV' : 'Masqué du CV'}
+            </div>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(checked) => onToggleVisibility(mission.id, checked)}
+              className="scale-90"
+            />
+          </div>
+        )}
         <div className="flex items-start gap-4">
           {/* Organization logo */}
           <Avatar className="h-10 w-10 flex-shrink-0">
