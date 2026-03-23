@@ -78,9 +78,18 @@ export default function Profile() {
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
 
         <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
-          {/* Settings button - mobile only, not in organization context */}
+          {/* Action buttons */}
           {!isOrganizationContext && (
-            <div className="flex justify-end mb-1 md:hidden">
+            <div className="flex justify-end gap-2 mb-1 md:hidden">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setPrivacyOpen(true)}>
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
+                import('sonner').then(m => m.toast.success('Lien du CV copié !'));
+              }}>
+                <Share2 className="h-4 w-4" />
+              </Button>
               <Link to="/settings">
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                   <Settings className="h-4 w-4" />
