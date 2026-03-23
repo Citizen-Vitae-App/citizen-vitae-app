@@ -133,7 +133,7 @@ interface MissionCardProps {
   onToggleVisibility: (id: string, isPublic: boolean) => void;
 }
 
-function MissionCard({ mission, isFirst }: MissionCardProps) {
+function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility }: MissionCardProps) {
   const formatDateRange = (startDateStr: string, endDateStr: string) => {
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr);
