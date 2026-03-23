@@ -12,12 +12,32 @@ import { Helmet } from 'react-helmet-async';
 import sigle from '@/assets/icon-sigle.svg';
 
 export default function CitizenCV() {
-  const { userId } = useParams<{ userId: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['citizen-cv', userId],
+    queryKey: ['citizen-cv', slug],
     queryFn: async () => {
-      if (!userId) throw new Error('No userId');
+      if (!slug) throw new Error('No slug');
+
+      // Resolve slug or UUID to profile
+      let userId: string;
+      
+      // Check if it's a UUID pattern
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      
+      if (isUUID) {
+        userId = slug;
+      } else {
+        // Look up by slug using raw query to avoid type issues
+        const { data: profileBySlug, error: slugError } = await (supabase
+          .from('profiles')
+          .select('id') as any)
+          .eq('slug', slug)
+          .single();
+        
+        if (slugError || !profileBySlug) throw new Error('Profile not found');
+        userId = profileBySlug.id;
+      }
 
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
@@ -91,7 +111,7 @@ export default function CitizenCV() {
 
       return { profile, missions };
     },
-    enabled: !!userId,
+    enabled: !!slug,
   });
 
   if (isLoading) {

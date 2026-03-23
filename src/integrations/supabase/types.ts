@@ -671,6 +671,7 @@ export type Database = {
           last_name: string | null
           onboarding_completed: boolean | null
           reference_selfie_url: string | null
+          slug: string | null
           suspended_at: string | null
           suspended_by: string | null
           verification_status: string | null
@@ -689,6 +690,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          slug?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           verification_status?: string | null
@@ -707,6 +709,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          slug?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           verification_status?: string | null
@@ -980,6 +983,7 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      unaccent: { Args: { "": string }; Returns: string }
       update_registration_certification: {
         Args: {
           _attended_at?: string
