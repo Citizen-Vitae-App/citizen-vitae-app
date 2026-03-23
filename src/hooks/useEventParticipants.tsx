@@ -31,6 +31,7 @@ export const useEventParticipants = (eventId: string | undefined) => {
       const { data, error } = await supabase
         .from('event_registrations')
         .select(`
+          id,
           user_id,
           status,
           registered_at,
