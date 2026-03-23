@@ -60,6 +60,17 @@ export default function Settings() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+
+  const citizenCVUrl = user?.id ? `${window.location.origin}/citizen/${user.id}` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(citizenCVUrl);
+    setLinkCopied(true);
+    toast.success('Lien copié !');
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   // Auto-request location if preference is enabled on mount
   useEffect(() => {
