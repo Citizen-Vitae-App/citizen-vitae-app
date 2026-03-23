@@ -22,6 +22,7 @@ export interface CertifiedMission {
   start_date: string;
   end_date: string;
   attended_at: string;
+  is_public: boolean;
   causes: Array<{
     id: string;
     name: string;
