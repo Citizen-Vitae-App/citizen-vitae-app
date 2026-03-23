@@ -74,8 +74,8 @@ export function ProfileSidebar() {
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
 
-  const baseUrl = 'citizenvitae.com/in/';
-  const citizenCVUrl = slug ? `${window.location.origin}/in/${slug}` : '';
+  const baseUrl = 'citizenvitae.com/cv/';
+  const citizenCVUrl = slug ? `${window.location.origin}/cv/${slug}` : '';
 
   const visibility = (preferences as any)?.profile_visibility || 'public';
   const sections = {
