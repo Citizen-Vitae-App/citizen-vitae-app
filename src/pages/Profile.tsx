@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -7,11 +8,12 @@ import { FavoriteCausesSection } from '@/components/profile/FavoriteCausesSectio
 import { CitizenImpactSection } from '@/components/profile/CitizenImpactSection';
 import { CitizenExperiencesSection } from '@/components/profile/CitizenExperiencesSection';
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
+import { ProfilePrivacySheet } from '@/components/profile/ProfilePrivacySheet';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
-import { Settings } from 'lucide-react';
+import { Settings, Eye, Share2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
