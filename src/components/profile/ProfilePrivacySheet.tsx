@@ -100,7 +100,7 @@ export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetP
               {citizenCVUrl}
             </div>
             <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleCopyLink}>
-              {linkCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {linkCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowQR(!showQR)} className="gap-2 w-full">
