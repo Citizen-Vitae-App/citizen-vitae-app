@@ -64,29 +64,23 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-muted-foreground" />
+        <h2 className="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
+          <BookOpen className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           Expériences citoyennes
-          <Badge variant="secondary" className="ml-2">
+          <Badge variant="secondary" className="ml-1">
             {totalCount}
           </Badge>
         </h2>
         <Button
           variant={editMode ? "default" : "ghost"}
-          size="sm"
+          size="icon"
           onClick={() => setEditMode(!editMode)}
-          className="gap-1.5"
+          className="h-8 w-8 flex-shrink-0"
         >
           {editMode ? (
-            <>
-              <Eye className="h-4 w-4" />
-              Terminé
-            </>
+            <Eye className="h-4 w-4" />
           ) : (
-            <>
-              <Pencil className="h-4 w-4" />
-              Visibilité
-            </>
+            <Pencil className="h-4 w-4" />
           )}
         </Button>
       </div>
