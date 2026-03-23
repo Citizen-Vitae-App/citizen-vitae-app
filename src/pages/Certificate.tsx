@@ -45,6 +45,7 @@ const Certificate = () => {
   const [error, setError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,7 +57,6 @@ const Certificate = () => {
       }
 
       try {
-        // SECURITY: Use the secure public_certificates view that only exposes safe fields
         const { data, error: fetchError } = await supabase
           .from('public_certificates')
           .select('certificate_data, event_id')
@@ -71,6 +71,12 @@ const Certificate = () => {
         }
 
         if (!data || !data.certificate_data) {
+          // Retry up to 5 times with 2s delay (certificate may still be generating)
+          if (retryCount < 5) {
+            console.log(`[Certificate] Data not ready, retry ${retryCount + 1}/5...`);
+            setTimeout(() => setRetryCount(prev => prev + 1), 2000);
+            return;
+          }
           setError('Certificat non trouvé');
           setIsLoading(false);
           return;
@@ -79,7 +85,6 @@ const Certificate = () => {
         const dbData = data.certificate_data as unknown as CertificateDataFromDB;
         setEventId(data.event_id);
 
-        // Transform DB data to CertificateData format
         const transformedData: CertificateData = {
           firstName: dbData.user.firstName,
           lastName: dbData.user.lastName,
@@ -105,7 +110,7 @@ const Certificate = () => {
     };
 
     fetchCertificate();
-  }, [certificateId]);
+  }, [certificateId, retryCount]);
 
   const handleDownload = async () => {
     if (!certificateData) return;

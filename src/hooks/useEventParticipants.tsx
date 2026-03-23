@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EventParticipant {
+  registration_id: string;
   user_id: string;
   first_name: string | null;
   last_name: string | null;
