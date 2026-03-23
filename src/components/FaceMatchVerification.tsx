@@ -199,12 +199,14 @@ export const FaceMatchVerification = ({
 
         {stage === 'qr-code' && (
           qrToken ? (
-            <CertificationQRCode
-              qrToken={qrToken}
-              registrationId={registrationId}
-              eventName={eventName}
-              eventDate={eventDate}
-            />
+            <div className="animate-slide-up">
+              <CertificationQRCode
+                qrToken={qrToken}
+                registrationId={registrationId}
+                eventName={eventName}
+                eventDate={eventDate}
+              />
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-4 py-8">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />

@@ -153,3 +153,54 @@ All colors MUST be HSL.
 .pac-logo::after {
   display: none;
 }
+
+/* Slide-up animation for QR code */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* CSS Checkmark animation */
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 30;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-circle {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.checkmark-animated {
+  animation: checkmark-circle 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.checkmark-animated svg path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: checkmark-draw 0.4s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
