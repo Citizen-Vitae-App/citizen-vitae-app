@@ -79,6 +79,7 @@ export const useEventsParticipantCounts = (eventIds: string[]) => {
       const { data, error } = await supabase
         .from('event_registrations')
         .select(`
+          id,
           event_id,
           user_id,
           status,
@@ -101,17 +102,16 @@ export const useEventsParticipantCounts = (eventIds: string[]) => {
 
       const countMap = new Map<string, EventParticipantCount>();
 
-      // Initialize all event IDs with empty counts
       eventIds.forEach(id => {
         countMap.set(id, { event_id: id, count: 0, participants: [] });
       });
 
-      // Aggregate data
       (data || []).forEach((reg: any) => {
         const eventData = countMap.get(reg.event_id);
         if (eventData) {
           eventData.count += 1;
           eventData.participants.push({
+            registration_id: reg.id,
             user_id: reg.user_id,
             first_name: reg.profiles.first_name,
             last_name: reg.profiles.last_name,
