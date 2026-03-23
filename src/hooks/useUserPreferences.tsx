@@ -12,6 +12,12 @@ export interface UserPreferences {
   sms_opt_in: boolean;
   phone_number: string | null;
   geolocation_enabled: boolean;
+  profile_visibility: 'connections' | 'network' | 'public';
+  show_organizations: boolean;
+  show_causes: boolean;
+  show_impact: boolean;
+  show_experiences: boolean;
+  show_upcoming_events: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +28,12 @@ export interface UpdatePreferencesData {
   sms_opt_in?: boolean;
   phone_number?: string | null;
   geolocation_enabled?: boolean;
+  profile_visibility?: 'connections' | 'network' | 'public';
+  show_organizations?: boolean;
+  show_causes?: boolean;
+  show_impact?: boolean;
+  show_experiences?: boolean;
+  show_upcoming_events?: boolean;
 }
 
 export const useUserPreferences = () => {
