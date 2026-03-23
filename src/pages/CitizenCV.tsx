@@ -28,11 +28,11 @@ export default function CitizenCV() {
       if (isUUID) {
         userId = slug;
       } else {
-        // Look up by slug
-        const { data: profileBySlug, error: slugError } = await supabase
+        // Look up by slug using raw query to avoid type issues
+        const { data: profileBySlug, error: slugError } = await (supabase
           .from('profiles')
-          .select('id')
-          .eq('slug' as any, slug)
+          .select('id') as any)
+          .eq('slug', slug)
           .single();
         
         if (slugError || !profileBySlug) throw new Error('Profile not found');
