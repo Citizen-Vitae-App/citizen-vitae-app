@@ -157,7 +157,7 @@ function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility 
   };
 
   return (
-    <div className={`relative pl-14 ${editMode && !isPublic ? 'opacity-50' : ''}`}>
+    <div className={`relative pl-14 transition-opacity ${!isPublic ? 'opacity-50' : ''}`}>
       {/* Timeline dot */}
       <div
         className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
@@ -167,7 +167,14 @@ function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility 
         }`}
       />
 
-      <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
+      <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow relative">
+        {/* Hidden badge - always visible when not public */}
+        {!isPublic && !editMode && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 text-xs text-muted-foreground">
+            <EyeOff className="h-3.5 w-3.5" />
+            <span>Masqué</span>
+          </div>
+        )}
         {/* Edit mode toggle */}
         {editMode && (
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
