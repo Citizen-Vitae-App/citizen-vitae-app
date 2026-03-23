@@ -98,7 +98,14 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
 
         <div className="space-y-4">
           {displayedMissions.map((mission, index) => (
-            <MissionCard key={mission.id} mission={mission} isFirst={index === 0} />
+            <MissionCard
+              key={mission.id}
+              mission={mission}
+              isFirst={index === 0}
+              editMode={editMode}
+              isPublic={visibilityMap[mission.id] !== false}
+              onToggleVisibility={handleToggleVisibility}
+            />
           ))}
         </div>
       </div>
