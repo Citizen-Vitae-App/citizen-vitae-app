@@ -1,25 +1,81 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, Users, Globe, Lock, Building2, Heart, BarChart3, BookOpen, Calendar, Copy, Check, QrCode, ChevronDown, ChevronUp, Share2, ExternalLink } from 'lucide-react';
+import { Eye, Users, Globe, Lock, Building2, Heart, BarChart3, BookOpen, Calendar, Copy, Check, QrCode, ChevronDown, ChevronUp, Share2, ExternalLink, Pencil, X, Link2 } from 'lucide-react';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import sigle from '@/assets/icon-sigle.svg';
+
+function useProfileSlug() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: slug, isLoading } = useQuery({
+    queryKey: ['profile-slug', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('slug')
+        .eq('id', user.id)
+        .single();
+      if (error) throw error;
+      return (data as any)?.slug as string | null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const updateSlug = useMutation({
+    mutationFn: async (newSlug: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      const cleaned = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!cleaned || cleaned.length < 3) throw new Error('Le slug doit contenir au moins 3 caractères');
+      if (cleaned.length > 50) throw new Error('Le slug ne peut pas dépasser 50 caractères');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ slug: cleaned } as any)
+        .eq('id', user.id);
+      if (error) {
+        if (error.code === '23505') throw new Error('Cette URL est déjà prise');
+        throw error;
+      }
+      return cleaned;
+    },
+    onSuccess: (newSlug) => {
+      queryClient.setQueryData(['profile-slug', user?.id], newSlug);
+      toast.success('URL personnalisée mise à jour');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  return { slug, isLoading, updateSlug };
+}
 
 export function ProfileSidebar() {
   const { user } = useAuth();
   const { preferences, updatePreferences } = useUserPreferences();
+  const { slug, updateSlug } = useProfileSlug();
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugDraft, setSlugDraft] = useState('');
 
-  const citizenCVUrl = user ? `${window.location.origin}/citizen/${user.id}` : '';
+  const baseUrl = 'citizenvitae.com/in/';
+  const citizenCVUrl = slug ? `${window.location.origin}/in/${slug}` : '';
 
   const visibility = (preferences as any)?.profile_visibility || 'public';
   const sections = {
@@ -46,6 +102,19 @@ export function ProfileSidebar() {
     } catch { /* fallback */ }
   };
 
+  const handleStartEditSlug = () => {
+    setSlugDraft(slug || '');
+    setEditingSlug(true);
+  };
+
+  const handleSaveSlug = () => {
+    if (slugDraft && slugDraft !== slug) {
+      updateSlug.mutate(slugDraft, { onSuccess: () => setEditingSlug(false) });
+    } else {
+      setEditingSlug(false);
+    }
+  };
+
   const sectionItems = [
     { key: 'show_organizations', label: 'Organisations', icon: Building2 },
     { key: 'show_causes', label: 'Causes favorites', icon: Heart },
@@ -55,7 +124,7 @@ export function ProfileSidebar() {
   ];
 
   const visibilityOptions = [
-    { value: 'connections', label: 'Connexions', description: 'Membres de vos organisations', icon: Lock },
+    { value: 'connections', label: 'Connexions directes', description: 'Membres de vos organisations', icon: Lock },
     { value: 'network', label: 'Réseau étendu', description: 'Vos relations et leurs réseaux', icon: Users },
     { value: 'public', label: 'Public', description: 'Tout le monde', icon: Globe },
   ];
@@ -87,7 +156,6 @@ export function ProfileSidebar() {
             className="overflow-hidden"
           >
             <div className="rounded-xl bg-muted/30 p-4 space-y-4">
-              {/* Visibility level */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                   Qui peut voir votre profil
@@ -113,7 +181,6 @@ export function ProfileSidebar() {
 
               <Separator />
 
-              {/* Section toggles */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                   Sections visibles
@@ -164,42 +231,87 @@ export function ProfileSidebar() {
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="rounded-xl bg-muted/30 p-4 space-y-3">
-              {/* CV Link */}
+            <div className="rounded-xl bg-muted/30 p-4 space-y-4">
+              {/* Custom URL section */}
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                  Lien du CV citoyen
+                <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1.5">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Votre URL personnalisée
                 </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-background rounded-lg px-3 py-2 text-xs text-muted-foreground truncate font-mono border border-border">
-                    {citizenCVUrl}
+                <p className="text-xs text-muted-foreground mb-3">
+                  Personnalisez l'URL de votre CV citoyen.
+                </p>
+
+                {editingSlug ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{baseUrl}</span>
+                      <Input
+                        value={slugDraft}
+                        onChange={(e) => setSlugDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        className="h-8 text-sm font-mono"
+                        placeholder="votre-nom"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="h-7 text-xs flex-1" onClick={handleSaveSlug} disabled={updateSlug.isPending}>
+                        <Check className="h-3 w-3 mr-1" />
+                        Enregistrer
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingSlug(false)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleCopyLink}>
-                    {linkCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                  </Button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-background rounded-lg px-3 py-2 text-xs text-foreground truncate font-mono border border-border">
+                      {baseUrl}<span className="font-semibold">{slug || '...'}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleStartEditSlug}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Copy link */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-background rounded-lg px-3 py-2 text-xs text-muted-foreground truncate font-mono border border-border">
+                  {citizenCVUrl || 'Chargement...'}
                 </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleCopyLink} disabled={!citizenCVUrl}>
+                  {linkCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
               </div>
 
               {/* QR Code */}
-              <div className="flex justify-center pt-2">
-                <div className="bg-background rounded-xl p-3 border border-border">
-                  <QRCodeSVG
-                    value={citizenCVUrl}
-                    size={120}
-                    level="H"
-                    includeMargin
-                    imageSettings={{ src: sigle, x: undefined, y: undefined, height: 20, width: 20, excavate: true }}
-                  />
+              {citizenCVUrl && (
+                <div className="flex justify-center pt-1">
+                  <div className="bg-background rounded-xl p-3 border border-border">
+                    <QRCodeSVG
+                      value={citizenCVUrl}
+                      size={120}
+                      level="H"
+                      includeMargin
+                      imageSettings={{ src: sigle, x: undefined, y: undefined, height: 20, width: 20, excavate: true }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* View public profile link */}
-              <Button variant="outline" size="sm" className="w-full gap-2" asChild>
-                <a href={citizenCVUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Voir mon CV public
-                </a>
-              </Button>
+              {/* View public profile */}
+              {citizenCVUrl && (
+                <Button variant="outline" size="sm" className="w-full gap-2" asChild>
+                  <a href={citizenCVUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Voir mon CV public
+                  </a>
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

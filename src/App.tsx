@@ -84,7 +84,8 @@ const App = () => (
                     <Route path="/certificate/:certificateId" element={<Certificate />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/citizen/:userId" element={<CitizenCV />} />
+                    <Route path="/in/:slug" element={<CitizenCV />} />
+                    <Route path="/citizen/:slug" element={<CitizenCV />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
