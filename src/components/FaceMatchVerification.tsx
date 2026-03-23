@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CameraCapture } from './CameraCapture';
 import { CertificationQRCode } from './CertificationQRCode';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'error';
 
