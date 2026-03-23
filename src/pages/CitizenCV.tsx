@@ -28,15 +28,12 @@ export default function CitizenCV() {
       if (isUUID) {
         userId = slug;
       } else {
-        // Look up by slug using raw query to avoid type issues
-        const { data: profileBySlug, error: slugError } = await (supabase
-          .from('profiles')
-          .select('id') as any)
-          .eq('slug', slug)
-          .single();
+        // Look up by slug using security definer function
+        const { data: profileBySlug, error: slugError } = await supabase
+          .rpc('get_profile_by_slug', { _slug: slug });
         
-        if (slugError || !profileBySlug) throw new Error('Profile not found');
-        userId = profileBySlug.id;
+        if (slugError || !profileBySlug || profileBySlug.length === 0) throw new Error('Profile not found');
+        userId = profileBySlug[0].id;
       }
 
       // Fetch profile

@@ -963,6 +963,16 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: Json
       }
+      get_profile_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          avatar_url: string
+          first_name: string
+          id: string
+          id_verified: boolean
+          last_name: string
+        }[]
+      }
       get_user_id_by_email:
         | { Args: { _email: string }; Returns: string }
         | { Args: { _email: string; _org_id?: string }; Returns: string }
