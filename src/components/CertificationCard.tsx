@@ -77,6 +77,7 @@ export const CertificationCard = ({
     timeMessage,
     locationMessage,
     isAfterEvent,
+    isInCatchupWindow,
   } = useCertificationEligibility({
     eventStartDate,
     eventEndDate,
@@ -175,6 +176,7 @@ export const CertificationCard = ({
     return 'idle';
   };
 
+  // Hide card only if past the catch-up window (H+1) AND not attended
   if (isAfterEvent && !localAttendedAt && localStatus !== 'self_certified') {
     return null;
   }

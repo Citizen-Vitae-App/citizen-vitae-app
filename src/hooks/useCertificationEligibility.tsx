@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { parseISO, subHours, format, isSameDay } from 'date-fns';
+import { parseISO, subHours, addHours, format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { calculateDistance } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ interface UseCertificationEligibilityProps {
 
 const RADIUS_METERS = 500;
 const HOURS_BEFORE_START = 1;
+const CATCHUP_HOURS_AFTER_END = 1;
 
 export const useCertificationEligibility = ({
   eventStartDate,
@@ -30,11 +31,13 @@ export const useCertificationEligibility = ({
     const startDate = parseISO(eventStartDate);
     const endDate = parseISO(eventEndDate);
     const windowStart = subHours(startDate, HOURS_BEFORE_START);
+    const catchupEnd = addHours(endDate, CATCHUP_HOURS_AFTER_END);
 
-    // Time validation
-    const isWithinTimeWindow = now >= windowStart && now <= endDate;
+    // Time validation - extended with catch-up window
+    const isWithinTimeWindow = now >= windowStart && now <= catchupEnd;
     const isBeforeWindow = now < windowStart;
-    const isAfterEvent = now > endDate;
+    const isAfterEvent = now > catchupEnd;
+    const isInCatchupWindow = now > endDate && now <= catchupEnd;
 
     // Location validation
     let distanceFromEvent: number | null = null;
@@ -60,12 +63,13 @@ export const useCertificationEligibility = ({
     if (isBeforeWindow) {
       const isTodayEvent = isSameDay(now, startDate);
       if (isTodayEvent) {
-        // Same day: show time
         timeMessage = `Disponible à partir de ${format(windowStart, "HH'h'mm", { locale: fr })}`;
       } else {
-        // Different day: show date
         timeMessage = `Disponible le ${format(startDate, "d MMMM", { locale: fr })}`;
       }
+    } else if (isInCatchupWindow) {
+      const minutesLeft = Math.round((catchupEnd.getTime() - now.getTime()) / 60000);
+      timeMessage = `Rattrapage en cours — ${minutesLeft} min restantes`;
     } else if (isAfterEvent) {
       timeMessage = 'L\'événement est terminé';
     }
@@ -91,6 +95,7 @@ export const useCertificationEligibility = ({
       locationMessage,
       isBeforeWindow,
       isAfterEvent,
+      isInCatchupWindow,
       windowStart,
       needsGeolocation,
     };
