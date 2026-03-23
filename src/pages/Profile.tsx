@@ -80,17 +80,29 @@ export default function Profile() {
         <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
           {/* Action buttons */}
           {!isOrganizationContext && (
-            <div className="flex justify-end gap-2 mb-1 md:hidden">
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setPrivacyOpen(true)}>
+            <div className="flex justify-end gap-2 mb-1">
+              <Button variant="outline" size="sm" className="gap-1.5 hidden md:flex" onClick={() => setPrivacyOpen(true)}>
+                <Eye className="h-4 w-4" />
+                Confidentialité
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 hidden md:flex" onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
+                import('sonner').then(m => m.toast.success('Lien du CV copié !'));
+              }}>
+                <Share2 className="h-4 w-4" />
+                Partager mon CV
+              </Button>
+              {/* Mobile: icon-only buttons */}
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => setPrivacyOpen(true)}>
                 <Eye className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
                 import('sonner').then(m => m.toast.success('Lien du CV copié !'));
               }}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Link to="/settings">
+              <Link to="/settings" className="md:hidden">
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                   <Settings className="h-4 w-4" />
                 </Button>
