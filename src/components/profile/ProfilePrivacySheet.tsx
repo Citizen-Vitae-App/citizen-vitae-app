@@ -123,17 +123,60 @@ export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetP
           </SheetDescription>
         </SheetHeader>
 
-        {/* CV Export Section */}
+        {/* CV URL Section */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            Lien du CV citoyen
+            <Link2 className="h-4 w-4 text-muted-foreground" />
+            Votre URL personnalisée
           </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Personnalisez l'URL de votre CV citoyen.
+          </p>
+
+          {editingSlug ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{baseUrl}</span>
+                <Input
+                  value={slugDraft}
+                  onChange={(e) => setSlugDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  className="h-8 text-sm font-mono"
+                  placeholder="votre-nom"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="h-7 text-xs flex-1" onClick={() => {
+                  if (slugDraft && slugDraft !== slug) {
+                    updateSlug.mutate(slugDraft, { onSuccess: () => setEditingSlug(false) });
+                  } else {
+                    setEditingSlug(false);
+                  }
+                }} disabled={updateSlug.isPending}>
+                  <Check className="h-3 w-3 mr-1" />
+                  Enregistrer
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingSlug(false)}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1 bg-muted rounded-lg px-3 py-2 text-xs truncate font-mono">
+                {baseUrl}<span className="font-semibold text-foreground">{slug || '...'}</span>
+              </div>
+              <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => { setSlugDraft(slug || ''); setEditingSlug(true); }}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mb-3">
             <div className="flex-1 bg-muted rounded-lg px-3 py-2 text-xs text-muted-foreground truncate font-mono">
-              {citizenCVUrl}
+              {citizenCVUrl || 'Chargement...'}
             </div>
-            <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleCopyLink}>
+            <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleCopyLink} disabled={!citizenCVUrl}>
               {linkCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
           </div>
@@ -141,7 +184,7 @@ export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetP
             <QrCode className="h-4 w-4" />
             {showQR ? 'Masquer le QR code' : 'Afficher le QR code'}
           </Button>
-          {showQR && (
+          {showQR && citizenCVUrl && (
             <div className="mt-3 flex justify-center">
               <div className="bg-background border rounded-lg p-3">
                 <QRCodeSVG
