@@ -120,7 +120,6 @@ export function ProfileSidebar() {
     { key: 'show_causes', label: 'Causes favorites', icon: Heart },
     { key: 'show_impact', label: 'Impact citoyen', icon: BarChart3 },
     { key: 'show_experiences', label: 'Expériences', icon: BookOpen },
-    { key: 'show_upcoming_events', label: 'Événements à venir', icon: Calendar },
   ];
 
   const visibilityOptions = [
