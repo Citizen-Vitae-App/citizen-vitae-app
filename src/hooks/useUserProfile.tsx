@@ -238,6 +238,7 @@ export function useUserProfile() {
             start_date: event.start_date,
             end_date: event.end_date,
             attended_at: reg.attended_at!,
+            is_public: (reg as any).is_public !== false,
             causes,
           };
         })
