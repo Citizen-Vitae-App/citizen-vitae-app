@@ -64,8 +64,8 @@ export function ProfilePrivacySheet({ open, onOpenChange }: ProfilePrivacySheetP
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
 
-  const baseUrl = 'citizenvitae.com/in/';
-  const citizenCVUrl = slug ? `${window.location.origin}/in/${slug}` : '';
+  const baseUrl = 'citizenvitae.com/cv/';
+  const citizenCVUrl = slug ? `${window.location.origin}/cv/${slug}` : '';
 
   // Sync from preferences
   useEffect(() => {
