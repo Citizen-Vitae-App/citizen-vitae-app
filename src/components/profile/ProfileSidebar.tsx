@@ -74,7 +74,11 @@ export function ProfileSidebar() {
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
 
-  const baseUrl = 'citizenvitae.com/cv/';
+  const currentHost = window.location.host;
+  const displayHost = currentHost.includes('lovableproject.com') || currentHost.includes('lovable.app')
+    ? currentHost
+    : currentHost.replace(/^www\./, '');
+  const baseUrl = `${displayHost}/cv/`;
   const citizenCVUrl = slug ? `${window.location.origin}/cv/${slug}` : '';
 
   const visibility = (preferences as any)?.profile_visibility || 'public';
