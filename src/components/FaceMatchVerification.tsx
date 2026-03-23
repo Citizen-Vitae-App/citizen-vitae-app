@@ -185,7 +185,7 @@ export const FaceMatchVerification = ({
 
         {stage === 'success' && (
           <div className="flex flex-col items-center gap-4 py-8">
-            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center animate-scale-in">
+            <div className="checkmark-animated w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
             </div>
             <p className="text-lg font-semibold text-green-600 dark:text-green-400 text-center animate-fade-in">
