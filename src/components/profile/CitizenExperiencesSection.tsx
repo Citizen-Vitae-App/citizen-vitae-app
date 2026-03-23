@@ -1,11 +1,15 @@
-import { BookOpen, ChevronRight, Calendar, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, ChevronRight, Calendar, Building2, Pencil, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import * as Icons from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import type { CertifiedMission } from '@/hooks/useUserProfile';
 
 interface CitizenExperiencesSectionProps {
@@ -14,8 +18,33 @@ interface CitizenExperiencesSectionProps {
 }
 
 export function CitizenExperiencesSection({ missions, totalCount }: CitizenExperiencesSectionProps) {
+  const [editMode, setEditMode] = useState(false);
+  const [visibilityMap, setVisibilityMap] = useState<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    missions.forEach(m => { map[m.id] = m.is_public !== false; });
+    return map;
+  });
+  const [saving, setSaving] = useState(false);
+
   // Show max 5 recent missions
   const displayedMissions = missions.slice(0, 5);
+
+  const handleToggleVisibility = async (missionId: string, isPublic: boolean) => {
+    setVisibilityMap(prev => ({ ...prev, [missionId]: isPublic }));
+    
+    try {
+      const { error } = await supabase
+        .from('event_registrations')
+        .update({ is_public: isPublic } as any)
+        .eq('id', missionId);
+      
+      if (error) throw error;
+    } catch {
+      // Revert on error
+      setVisibilityMap(prev => ({ ...prev, [missionId]: !isPublic }));
+      toast.error('Erreur lors de la mise à jour de la visibilité');
+    }
+  };
 
   if (missions.length === 0) {
     return (
@@ -42,6 +71,24 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
             {totalCount}
           </Badge>
         </h2>
+        <Button
+          variant={editMode ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setEditMode(!editMode)}
+          className="gap-1.5"
+        >
+          {editMode ? (
+            <>
+              <Eye className="h-4 w-4" />
+              Terminé
+            </>
+          ) : (
+            <>
+              <Pencil className="h-4 w-4" />
+              Visibilité
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Timeline-style list */}
