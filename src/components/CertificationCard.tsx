@@ -77,6 +77,7 @@ export const CertificationCard = ({
     timeMessage,
     locationMessage,
     isAfterEvent,
+    isInCatchupWindow,
   } = useCertificationEligibility({
     eventStartDate,
     eventEndDate,
