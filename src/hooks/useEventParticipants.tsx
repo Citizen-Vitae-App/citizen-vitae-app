@@ -52,6 +52,7 @@ export const useEventParticipants = (eventId: string | undefined) => {
       if (error) throw error;
 
       return (data || []).map((reg: any) => ({
+        registration_id: reg.id,
         user_id: reg.user_id,
         first_name: reg.profiles.first_name,
         last_name: reg.profiles.last_name,
