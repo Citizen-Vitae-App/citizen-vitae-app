@@ -22,8 +22,9 @@ import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
-  const { hasRole } = useAuth();
+  const { hasRole, user } = useAuth();
   const isMobile = useIsMobile();
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   
   // Check if we're in organization context
   const isOrganizationContext = searchParams.get('context') === 'organization';
