@@ -110,11 +110,11 @@ export const FaceMatchVerification = ({
       // If cached result, skip animation and go directly to QR code
       if (data.cached) {
         setStage('qr-code');
-        toast.success('Face Match déjà validé !');
+        toast({ title: 'Face Match validé' });
       } else {
         // Show success animation then transition to QR code
         setStage('success');
-        toast.success('Face Match validé !');
+        toast({ title: 'Face Match validé' });
       }
     } catch (err) {
       console.error('Face match error:', err);
