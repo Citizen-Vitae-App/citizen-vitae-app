@@ -8,6 +8,7 @@ import { FavoriteCausesSection } from '@/components/profile/FavoriteCausesSectio
 import { CitizenImpactSection } from '@/components/profile/CitizenImpactSection';
 import { CitizenExperiencesSection } from '@/components/profile/CitizenExperiencesSection';
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
+import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
 import { ProfilePrivacySheet } from '@/components/profile/ProfilePrivacySheet';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,10 +27,8 @@ export default function Profile() {
   const isMobile = useIsMobile();
   const [privacyOpen, setPrivacyOpen] = useState(false);
   
-  // Check if we're in organization context
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
-  // Call hooks before any conditional returns (React rules)
   const {
     organizations,
     favoriteCauses,
@@ -40,7 +39,6 @@ export default function Profile() {
     isLoading
   } = useUserProfile();
   
-  // Security: If user tries to access organization context without proper role, redirect
   if (isOrganizationContext && !hasRole('organization')) {
     return <Navigate to="/profile" replace />;
   }
@@ -49,7 +47,7 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-background">
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
-        <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
+        <main className={`container mx-auto px-4 pb-24 max-w-4xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
           <div className="space-y-6">
             <Skeleton className="h-40 w-full rounded-2xl" />
             <Skeleton className="h-32 w-full rounded-xl" />
@@ -74,35 +72,22 @@ export default function Profile() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Header: Organization header on mobile in org context, else MainNavbar */}
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
 
-        <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
-          {/* Action buttons */}
-          {!isOrganizationContext && (
+        <main className={`container mx-auto px-4 pb-24 max-w-5xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
+          {/* Mobile: action buttons row */}
+          {!isOrganizationContext && isMobile && (
             <div className="flex justify-end gap-2 mb-1">
-              <Button variant="outline" size="sm" className="gap-1.5 hidden md:flex" onClick={() => setPrivacyOpen(true)}>
-                <Eye className="h-4 w-4" />
-                Confidentialité
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 hidden md:flex" onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
-                import('sonner').then(m => m.toast.success('Lien du CV copié !'));
-              }}>
-                <Share2 className="h-4 w-4" />
-                Partager mon CV
-              </Button>
-              {/* Mobile: icon-only buttons */}
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => setPrivacyOpen(true)}>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setPrivacyOpen(true)}>
                 <Eye className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => {
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
                 import('sonner').then(m => m.toast.success('Lien du CV copié !'));
               }}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Link to="/settings" className="md:hidden">
+              <Link to="/settings">
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -110,41 +95,41 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Header with identity */}
-          <ProfileHeader organizations={organizations} />
+          {/* Two-column layout on desktop */}
+          <div className="flex gap-8">
+            {/* Main content */}
+            <div className="flex-1 min-w-0 max-w-2xl">
+              <ProfileHeader organizations={organizations} />
+              <OrganizationsSection organizations={organizations} />
+              <FavoriteCausesSection causes={favoriteCauses} />
+              <CitizenImpactSection radarData={radarData} totalMissions={totalCertifiedMissions} isEligible={isRadarEligible} />
+              <CitizenExperiencesSection missions={certifiedMissions} totalCount={totalCertifiedMissions} />
+              <UpcomingEventsSection />
+            </div>
 
-          {/* Organizations */}
-          <OrganizationsSection organizations={organizations} />
-
-          {/* Favorite causes */}
-          <FavoriteCausesSection causes={favoriteCauses} />
-
-          {/* Citizen impact radar - conditional */}
-          <CitizenImpactSection radarData={radarData} totalMissions={totalCertifiedMissions} isEligible={isRadarEligible} />
-
-          {/* Citizen experiences / missions */}
-          <CitizenExperiencesSection missions={certifiedMissions} totalCount={totalCertifiedMissions} />
-
-          {/* Upcoming events */}
-          <UpcomingEventsSection />
+            {/* Right sidebar - desktop only */}
+            {!isOrganizationContext && !isMobile && (
+              <aside className="w-72 flex-shrink-0 hidden md:block">
+                <ProfileSidebar />
+              </aside>
+            )}
+          </div>
         </main>
 
-        {/* Bottom navigation based on context */}
+        {/* Bottom navigation */}
         {isOrganizationContext && isMobile ? (
           <>
             <OrganizationBottomNav activeTab="" onTabChange={() => {}} />
-            {/* Switch to citizen mode FAB */}
             <CitizenModeFAB />
           </>
         ) : (
           <MobileBottomNav />
         )}
 
-        {/* Bottom padding for mobile nav */}
-        <div className="h-16 md:hidden" />
-
-        {/* Privacy Sheet */}
-        <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+        {/* Mobile: Privacy Sheet (kept for mobile only) */}
+        {isMobile && (
+          <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+        )}
       </div>
     </>
   );
