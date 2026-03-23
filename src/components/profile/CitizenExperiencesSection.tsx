@@ -121,6 +121,9 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
 interface MissionCardProps {
   mission: CertifiedMission;
   isFirst: boolean;
+  editMode: boolean;
+  isPublic: boolean;
+  onToggleVisibility: (id: string, isPublic: boolean) => void;
 }
 
 function MissionCard({ mission, isFirst }: MissionCardProps) {
