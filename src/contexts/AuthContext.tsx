@@ -324,7 +324,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         queryFn: async () => {
           const { data, error } = await supabase
             .from('profiles')
-            .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+            .select('id, first_name, last_name, avatar_url, bio, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
             .eq('id', user.id)
             .single();
           
