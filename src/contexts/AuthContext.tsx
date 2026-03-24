@@ -11,6 +11,7 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
+  bio: string | null;
   date_of_birth: string | null;
   onboarding_completed: boolean;
   id_verified: boolean;
