@@ -291,10 +291,6 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
               {profile.bio && (
                 <p className="mt-1 text-sm text-sidebar-primary font-normal">{profile.bio}</p>
               )}
-              
-              {primaryTitle && (
-                <p className="text-muted-foreground mt-1 text-sm">{primaryTitle}</p>
-              )}
 
               {/* Identity verification CTA - only show if NOT verified */}
               {!profile?.id_verified && (
