@@ -288,8 +288,8 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
               </h1>
               
               {/* Bio field */}
-              {(profile as any).bio && (
-                <p className="text-muted-foreground mt-1 text-sm">{(profile as any).bio}</p>
+              {profile.bio && (
+                <p className="text-muted-foreground mt-1 text-sm">{profile.bio}</p>
               )}
               
               {primaryTitle && (
