@@ -52,7 +52,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     setEditData({
       first_name: profile.first_name || '',
       last_name: profile.last_name || '',
-      bio: (profile as any).bio || '',
+      bio: profile.bio || '',
     });
     setIsEditing(true);
   };
@@ -72,7 +72,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
           first_name: editData.first_name,
           last_name: editData.last_name,
           bio: editData.bio,
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -288,8 +288,8 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
               </h1>
               
               {/* Bio field */}
-              {(profile as any).bio && (
-                <p className="text-muted-foreground mt-1 text-sm">{(profile as any).bio}</p>
+              {profile.bio && (
+                <p className="text-muted-foreground mt-1 text-sm">{profile.bio}</p>
               )}
               
               {primaryTitle && (
