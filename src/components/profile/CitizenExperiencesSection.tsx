@@ -152,9 +152,9 @@ function MissionCard({ mission, isFirst, editMode, isPublic, onToggleVisibility 
 
   return (
     <div className={`relative pl-14 transition-opacity ${!isPublic ? 'opacity-50' : ''}`}>
-      {/* Timeline dot */}
+      {/* Timeline dot - vertically centered */}
       <div
-        className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
+        className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 ${
           isFirst
             ? 'bg-primary border-primary'
             : 'bg-background border-border'
