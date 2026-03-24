@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut, FileText, Copy, Check, QrCode } from 'lucide-react';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import sigle from '@/assets/icon-sigle.svg';
 import { toast } from 'sonner';
