@@ -52,7 +52,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     setEditData({
       first_name: profile.first_name || '',
       last_name: profile.last_name || '',
-      bio: (profile as any).bio || '',
+      bio: profile.bio || '',
     });
     setIsEditing(true);
   };
