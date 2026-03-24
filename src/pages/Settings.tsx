@@ -31,9 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut, FileText, Copy, Check, QrCode } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
-import sigle from '@/assets/icon-sigle.svg';
+import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -60,17 +58,8 @@ export default function Settings() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [showQR, setShowQR] = useState(false);
 
-  const citizenCVUrl = user?.id ? `${window.location.origin}/citizen/${user.id}` : '';
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(citizenCVUrl);
-    setLinkCopied(true);
-    toast.success('Lien copié !');
-    setTimeout(() => setLinkCopied(false), 2000);
-  };
 
   // Auto-request location if preference is enabled on mount
   useEffect(() => {
@@ -199,16 +188,10 @@ export default function Settings() {
 
           <div className="bg-black/[0.03] rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="geolocation-toggle" className="font-medium">
-                    {t('settings.geolocation.label')}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.geolocation.description')}
-                  </p>
-                </div>
+              <div>
+                <Label htmlFor="geolocation-toggle" className="font-medium">
+                  {t('settings.geolocation.description')}
+                </Label>
               </div>
               <Switch
                 id="geolocation-toggle"
@@ -220,7 +203,7 @@ export default function Settings() {
 
             {/* Status message */}
             {preferences?.geolocation_enabled && (
-              <div className="mt-3 pl-8 text-sm text-muted-foreground">
+              <div className="mt-3 text-sm text-muted-foreground">
                 {isGeoLoading ? (
                   <span>{preferences?.language === 'en' ? 'Checking…' : 'Vérification en cours…'}</span>
                 ) : latitude !== null && longitude !== null ? (
@@ -399,70 +382,8 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Citizen CV Export Section */}
-        <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">CV Citoyen</h2>
-          </div>
 
-          <div className="space-y-4">
-            <div className="bg-black/[0.03] rounded-lg p-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                Partagez votre profil citoyen avec un lien ou un QR code. Seules les expériences que vous avez marquées comme visibles seront affichées.
-              </p>
-              
-              {/* Copy link */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-background border rounded-lg px-3 py-2 text-sm text-muted-foreground truncate font-mono">
-                  {citizenCVUrl}
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyLink}
-                  className="flex-shrink-0"
-                >
-                  {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
 
-              {/* QR Code toggle */}
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowQR(!showQR)}
-                  className="gap-2"
-                >
-                  <QrCode className="h-4 w-4" />
-                  {showQR ? 'Masquer le QR code' : 'Afficher le QR code'}
-                </Button>
-
-                {showQR && (
-                  <div className="mt-4 flex justify-center">
-                    <div className="bg-background border rounded-lg p-4">
-                      <QRCodeSVG
-                        value={citizenCVUrl}
-                        size={180}
-                        level="H"
-                        includeMargin
-                        imageSettings={{
-                          src: sigle,
-                          x: undefined,
-                          y: undefined,
-                          height: 30,
-                          width: 30,
-                          excavate: true,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Account Info Section */}
         <section>
