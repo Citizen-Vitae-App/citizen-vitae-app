@@ -33,7 +33,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Mail, Phone, Globe, Bell, MessageSquare, MapPin, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const maskPhoneNumber = (phone: string | null): string => {
