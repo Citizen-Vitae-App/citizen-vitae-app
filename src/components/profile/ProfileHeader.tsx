@@ -72,7 +72,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
           first_name: editData.first_name,
           last_name: editData.last_name,
           bio: editData.bio,
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;
