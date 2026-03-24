@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: userEmail,
             onboarding_completed: false,
           })
-          .select('id, first_name, last_name, avatar_url, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
+          .select('id, first_name, last_name, avatar_url, bio, date_of_birth, onboarding_completed, id_verified, verification_status, didit_session_id')
           .single();
 
         if (insertError) {
