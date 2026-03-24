@@ -189,16 +189,10 @@ export default function Settings() {
 
           <div className="bg-black/[0.03] rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="geolocation-toggle" className="font-medium">
-                    {t('settings.geolocation.label')}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.geolocation.description')}
-                  </p>
-                </div>
+              <div>
+                <Label htmlFor="geolocation-toggle" className="font-medium">
+                  {t('settings.geolocation.description')}
+                </Label>
               </div>
               <Switch
                 id="geolocation-toggle"
@@ -210,7 +204,7 @@ export default function Settings() {
 
             {/* Status message */}
             {preferences?.geolocation_enabled && (
-              <div className="mt-3 pl-8 text-sm text-muted-foreground">
+              <div className="mt-3 text-sm text-muted-foreground">
                 {isGeoLoading ? (
                   <span>{preferences?.language === 'en' ? 'Checking…' : 'Vérification en cours…'}</span>
                 ) : latitude !== null && longitude !== null ? (
