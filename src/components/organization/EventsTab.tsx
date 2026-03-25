@@ -623,61 +623,62 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
   }
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-2xl font-bold">{kpis.newThisMonth}</p>
-                {kpis.growthPercent !== null && (
-                  <span
-                    className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    <TrendingUp className={`h-3.5 w-3.5 ${kpis.growthPercent < 0 ? "rotate-180" : ""}`} />
-                    {kpis.growthPercent >= 0 ? "+" : ""}
-                    {kpis.growthPercent}%
-                  </span>
-                )}
+      {/* Sticky header: KPI Cards + Search/Actions */}
+      <div className="sticky top-14 md:top-28 z-20 bg-background -mx-4 px-4 md:mx-0 md:px-0 shadow-[0_1px_0_0_hsl(var(--border))]">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 pb-3">
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">{kpis.newThisMonth}</p>
+                  {kpis.growthPercent !== null && (
+                    <span
+                      className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      <TrendingUp className={`h-3.5 w-3.5 ${kpis.growthPercent < 0 ? "rotate-180" : ""}`} />
+                      {kpis.growthPercent >= 0 ? "+" : ""}
+                      {kpis.growthPercent}%
+                    </span>
+                  )}
+                </div>
               </div>
+              <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
           </div>
-        </div>
 
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Cause la plus présente</p>
-              <div className="flex items-center gap-2 mt-1">
-                {kpis.topCause ? (
-                  <>
-                    <p className="text-lg font-bold">{kpis.topCause.name}</p>
-                    <span className="text-sm text-muted-foreground">({kpis.topCause.count})</span>
-                  </>
-                ) : (
-                  <p className="text-lg text-muted-foreground">Aucune</p>
-                )}
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Cause la plus présente</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {kpis.topCause ? (
+                    <>
+                      <p className="text-lg font-bold">{kpis.topCause.name}</p>
+                      <span className="text-sm text-muted-foreground">({kpis.topCause.count})</span>
+                    </>
+                  ) : (
+                    <p className="text-lg text-muted-foreground">Aucune</p>
+                  )}
+                </div>
               </div>
+              <Tag className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <Tag className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Missions actives</p>
+                <p className="text-2xl font-bold mt-1">{kpis.activeMissions}</p>
+              </div>
+              <Activity className="h-8 w-8 text-muted-foreground/50" />
+            </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Missions actives</p>
-              <p className="text-2xl font-bold mt-1">{kpis.activeMissions}</p>
-            </div>
-            <Activity className="h-8 w-8 text-muted-foreground/50" />
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-14 md:top-28 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0 shadow-[0_1px_0_0_hsl(var(--border))]">
+        {/* Search and Actions Bar */}
         <div className="flex items-center gap-2">
           {/* Search bar - flexible width */}
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
