@@ -384,6 +384,60 @@ export type Database = {
           },
         ]
       }
+      manual_experiences: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_month: number | null
+          end_year: number | null
+          experience_type: string
+          id: string
+          is_current: boolean
+          location: string | null
+          location_type: string | null
+          organization_name: string
+          start_month: number
+          start_year: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_month?: number | null
+          end_year?: number | null
+          experience_type: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          location_type?: string | null
+          organization_name: string
+          start_month: number
+          start_year: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_month?: number | null
+          end_year?: number | null
+          experience_type?: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          location_type?: string | null
+          organization_name?: string
+          start_month?: number
+          start_year?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
