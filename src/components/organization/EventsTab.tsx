@@ -679,7 +679,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         </div>
 
         {/* Search and Actions Bar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-3">
           {/* Search bar - flexible width */}
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
