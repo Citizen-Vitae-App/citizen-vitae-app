@@ -28,19 +28,20 @@ interface CalendarEvent {
   recurrence_group_id: string | null;
 }
 
+export interface CalendarToolbarApi {
+  handlePrev: () => void;
+  handleNext: () => void;
+  handleToday: () => void;
+  handleViewChange: (view: CalendarViewType) => void;
+}
+
 interface EventCalendarViewProps {
   events: CalendarEvent[];
   organizationId: string;
   participantCounts?: Map<string, { count: number }>;
   isMember?: boolean;
-  toolbarRef?: React.MutableRefObject<{
-    handlePrev: () => void;
-    handleNext: () => void;
-    handleToday: () => void;
-    handleViewChange: (view: CalendarViewType) => void;
-    currentView: CalendarViewType;
-    currentTitle: string;
-  } | null>;
+  onToolbarReady?: (api: CalendarToolbarApi) => void;
+  onStateChange?: (state: { currentView: CalendarViewType; currentTitle: string }) => void;
 }
 
 export type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
