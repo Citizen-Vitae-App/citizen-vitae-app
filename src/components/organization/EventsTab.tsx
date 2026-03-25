@@ -21,7 +21,9 @@ import {
   TrendingUp,
   Activity,
   Tag,
+  List,
 } from "lucide-react";
+import { EventCalendarView } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
