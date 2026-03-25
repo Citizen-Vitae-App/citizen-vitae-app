@@ -119,7 +119,7 @@ export const Navbar = ({
     return user?.email?.[0].toUpperCase() || 'U';
   };
 
-  return <header className="hidden md:block absolute top-0 left-0 right-0 px-4 md:px-8 py-4 md:py-6 z-10">
+  return <header className="hidden md:block fixed top-0 left-0 right-0 px-4 md:px-8 py-4 md:py-6 z-30 bg-background">
       <div className="flex items-center justify-between">
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <img src={logo} alt="CitizenVitae" className="h-6 md:h-8" width="203" height="32" />
