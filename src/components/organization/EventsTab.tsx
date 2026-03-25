@@ -21,7 +21,9 @@ import {
   TrendingUp,
   Activity,
   Tag,
+  List,
 } from "lucide-react";
+import { EventCalendarView } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
@@ -162,6 +164,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     canManageAllEvents,
     isMember,
   });
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
@@ -703,7 +706,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                   <span className="hidden md:inline">Scanner</span>
                 </Link>
               </Button>
-              <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+               <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
                 <Link to="/organization/create-event">
                   <Plus className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Créer</span>
@@ -711,10 +714,45 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
               </Button>
             </>
           )}
+
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 shrink-0">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-md transition-all ${
+                viewMode === 'list'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vue liste"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`p-2 rounded-md transition-all ${
+                viewMode === 'calendar'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vue calendrier"
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Events list */}
+      {/* Calendar view */}
+      {viewMode === 'calendar' ? (
+        <EventCalendarView
+          events={filteredEvents}
+          organizationId={organizationId}
+          participantCounts={participantCounts}
+          isMember={isMember}
+        />
+      ) : (
+      /* Events list */
       <div className="w-full">
         {filteredEvents.length === 0 ? (
           <div className="border rounded-lg overflow-hidden w-full">
@@ -1096,6 +1134,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           </div>
         )}
       </div>
+      )}
 
       {/* Delete confirmation dialog for non-recurring events */}
       <AlertDialog open={!!deleteEventId} onOpenChange={(open) => !open && setDeleteEventId(null)}>
