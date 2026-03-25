@@ -363,6 +363,13 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     });
 
     // Sorting
+    const getStatusPriority = (startDate: string, endDate: string) => {
+      const status = getEventStatus(startDate, endDate);
+      if (status === "En cours") return 0;
+      if (status === "À venir") return 1;
+      return 2; // Passé
+    };
+
     if (sortField) {
       result = [...result].sort((a, b) => {
         let comparison = 0;
