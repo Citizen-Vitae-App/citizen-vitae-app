@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 
 interface CalendarEvent {
   id: string;
