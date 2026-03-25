@@ -51,7 +51,7 @@ const VIEW_LABELS: Record<CalendarViewType, string> = {
   timeGridDay: 'Jour',
 };
 
-export function EventCalendarView({ events, organizationId, participantCounts, isMember = false }: EventCalendarViewProps) {
+export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, toolbarRef }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const calendarRef = useRef<FullCalendar>(null);
