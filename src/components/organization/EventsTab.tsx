@@ -15,6 +15,8 @@ import {
   MoreVertical,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Trash2,
   Copy,
