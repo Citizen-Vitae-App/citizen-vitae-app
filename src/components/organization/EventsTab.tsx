@@ -168,6 +168,15 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     isMember,
   });
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const calendarToolbarRef = useRef<{
+    handlePrev: () => void;
+    handleNext: () => void;
+    handleToday: () => void;
+    handleViewChange: (view: CalendarViewType) => void;
+    currentView: CalendarViewType;
+    currentTitle: string;
+  } | null>(null);
+  const [calendarToolbarState, setCalendarToolbarState] = useState<{ currentView: CalendarViewType; currentTitle: string }>({ currentView: 'dayGridMonth', currentTitle: '' });
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
