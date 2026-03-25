@@ -15,6 +15,8 @@ import {
   MoreVertical,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Trash2,
   Copy,
@@ -23,7 +25,7 @@ import {
   Tag,
   List,
 } from "lucide-react";
-import { EventCalendarView } from "./EventCalendarView";
+import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
@@ -33,6 +35,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -165,6 +168,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     isMember,
   });
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [calendarApi, setCalendarApi] = useState<CalendarToolbarApi | null>(null);
+  const [calendarState, setCalendarState] = useState<{ currentView: CalendarViewType; currentTitle: string }>({ currentView: 'dayGridMonth', currentTitle: '' });
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
@@ -742,6 +747,40 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </button>
           </div>
         </div>
+
+        {/* Calendar toolbar - inside sticky header */}
+        {viewMode === 'calendar' && calendarApi && (
+          <div className="flex items-center justify-between gap-2 flex-wrap pb-3">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handlePrev()}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
+                Aujourd'hui
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handleNext()}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <h3 className="text-base font-semibold capitalize ml-2">{calendarState.currentTitle}</h3>
+            </div>
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+              {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
+                <button
+                  key={view}
+                  onClick={() => calendarApi.handleViewChange(view)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                    calendarState.currentView === view
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Calendar view */}
@@ -751,6 +790,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           organizationId={organizationId}
           participantCounts={participantCounts}
           isMember={isMember}
+          onToolbarReady={setCalendarApi}
+          onStateChange={setCalendarState}
         />
       ) : (
       /* Events list */

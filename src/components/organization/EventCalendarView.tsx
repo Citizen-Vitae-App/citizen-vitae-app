@@ -1,18 +1,13 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CalendarEvent {
@@ -28,22 +23,31 @@ interface CalendarEvent {
   recurrence_group_id: string | null;
 }
 
+export interface CalendarToolbarApi {
+  handlePrev: () => void;
+  handleNext: () => void;
+  handleToday: () => void;
+  handleViewChange: (view: CalendarViewType) => void;
+}
+
 interface EventCalendarViewProps {
   events: CalendarEvent[];
   organizationId: string;
   participantCounts?: Map<string, { count: number }>;
   isMember?: boolean;
+  onToolbarReady?: (api: CalendarToolbarApi) => void;
+  onStateChange?: (state: { currentView: CalendarViewType; currentTitle: string }) => void;
 }
 
-type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
+export type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
 
-const VIEW_LABELS: Record<CalendarViewType, string> = {
+export const VIEW_LABELS: Record<CalendarViewType, string> = {
   dayGridMonth: 'Mois',
   timeGridWeek: 'Semaine',
   timeGridDay: 'Jour',
 };
 
-export function EventCalendarView({ events, organizationId, participantCounts, isMember = false }: EventCalendarViewProps) {
+export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, onToolbarReady, onStateChange }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const calendarRef = useRef<FullCalendar>(null);
@@ -147,6 +151,24 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     setCurrentTitle(info.view.title);
   }, []);
 
+  // Expose toolbar controls to parent
+  useEffect(() => {
+    onToolbarReady?.({
+      handlePrev: () => calendarRef.current?.getApi().prev(),
+      handleNext: () => calendarRef.current?.getApi().next(),
+      handleToday: () => calendarRef.current?.getApi().today(),
+      handleViewChange: (view: CalendarViewType) => {
+        setCurrentView(view);
+        calendarRef.current?.getApi().changeView(view);
+      },
+    });
+  }, [onToolbarReady]);
+
+  // Notify parent of state changes
+  useEffect(() => {
+    onStateChange?.({ currentView, currentTitle });
+  }, [currentView, currentTitle, onStateChange]);
+
   // Custom event render
   const renderEventContent = useCallback((eventInfo: any) => {
     const { isPast, isLive, participantCount, capacity } = eventInfo.event.extendedProps;
@@ -180,42 +202,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   }, []);
 
   return (
-    <div className="space-y-3">
-      {/* Calendar toolbar */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        {/* Navigation */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrev}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={handleToday}>
-            Aujourd'hui
-          </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <h3 className="text-base font-semibold capitalize ml-2">{currentTitle}</h3>
-        </div>
-
-        {/* View switcher */}
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-          {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
-            <button
-              key={view}
-              onClick={() => handleViewChange(view)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                currentView === view
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div>
       {/* FullCalendar */}
       <div className="fc-notion-theme rounded-lg border border-border overflow-hidden bg-background">
         <FullCalendar
