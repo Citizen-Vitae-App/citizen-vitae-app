@@ -238,24 +238,52 @@ All colors MUST be HSL.
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: hsl(3 79% 53%);
+  color: white;
   border-radius: 9999px;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 600;
 }
 
 .fc-notion-theme .fc .fc-daygrid-day-frame {
   min-height: 90px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  position: relative;
+  transition: background 0.15s ease;
 }
 
 .fc-notion-theme .fc .fc-daygrid-day-frame:hover {
-  background: hsl(var(--accent));
+  background: hsl(3 79% 53% / 0.04);
+}
+
+.fc-notion-theme .fc .fc-daygrid-day-frame::after {
+  content: '+';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: hsl(3 79% 53%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day-frame:hover::after {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
