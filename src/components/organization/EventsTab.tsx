@@ -164,6 +164,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     canManageAllEvents,
     isMember,
   });
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
