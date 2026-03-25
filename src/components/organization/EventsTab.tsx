@@ -399,6 +399,14 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         }
         return sortDirection === "asc" ? comparison : -comparison;
       });
+    } else {
+      // Default sort: En cours first, À venir second, Passé last, then by start_date ascending
+      result = [...result].sort((a, b) => {
+        const priorityA = getStatusPriority(a.start_date, a.end_date);
+        const priorityB = getStatusPriority(b.start_date, b.end_date);
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+      });
     }
     return result;
   }, [allEvents, searchQuery, filters, sortField, sortDirection, participantCounts]);
