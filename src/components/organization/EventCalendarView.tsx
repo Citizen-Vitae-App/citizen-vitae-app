@@ -43,7 +43,7 @@ interface EventCalendarViewProps {
   } | null>;
 }
 
-type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
+export type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
 
 const VIEW_LABELS: Record<CalendarViewType, string> = {
   dayGridMonth: 'Mois',
