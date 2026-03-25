@@ -677,7 +677,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       </div>
 
       {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-14 md:top-28 z-20 bg-[hsl(30,25%,97%)] py-3 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="sticky top-14 md:top-28 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0 shadow-[0_1px_0_0_hsl(var(--border))]">
         <div className="flex items-center gap-2">
           {/* Search bar - flexible width */}
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
