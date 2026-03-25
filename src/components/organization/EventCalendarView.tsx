@@ -158,20 +158,21 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
 
   // Expose toolbar controls to parent
   useEffect(() => {
-    if (toolbarRef) {
-      toolbarRef.current = {
-        handlePrev: () => calendarRef.current?.getApi().prev(),
-        handleNext: () => calendarRef.current?.getApi().next(),
-        handleToday: () => calendarRef.current?.getApi().today(),
-        handleViewChange: (view: CalendarViewType) => {
-          setCurrentView(view);
-          calendarRef.current?.getApi().changeView(view);
-        },
-        currentView,
-        currentTitle,
-      };
-    }
-  }, [toolbarRef, currentView, currentTitle]);
+    onToolbarReady?.({
+      handlePrev: () => calendarRef.current?.getApi().prev(),
+      handleNext: () => calendarRef.current?.getApi().next(),
+      handleToday: () => calendarRef.current?.getApi().today(),
+      handleViewChange: (view: CalendarViewType) => {
+        setCurrentView(view);
+        calendarRef.current?.getApi().changeView(view);
+      },
+    });
+  }, [onToolbarReady]);
+
+  // Notify parent of state changes
+  useEffect(() => {
+    onStateChange?.({ currentView, currentTitle });
+  }, [currentView, currentTitle, onStateChange]);
 
   // Custom event render
   const renderEventContent = useCallback((eventInfo: any) => {
