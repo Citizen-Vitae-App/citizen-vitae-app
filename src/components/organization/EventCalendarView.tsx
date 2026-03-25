@@ -33,6 +33,14 @@ interface EventCalendarViewProps {
   organizationId: string;
   participantCounts?: Map<string, { count: number }>;
   isMember?: boolean;
+  toolbarRef?: React.MutableRefObject<{
+    handlePrev: () => void;
+    handleNext: () => void;
+    handleToday: () => void;
+    handleViewChange: (view: CalendarViewType) => void;
+    currentView: CalendarViewType;
+    currentTitle: string;
+  } | null>;
 }
 
 type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
