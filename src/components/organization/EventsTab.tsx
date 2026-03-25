@@ -1134,6 +1134,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           </div>
         )}
       </div>
+      )}
 
       {/* Delete confirmation dialog for non-recurring events */}
       <AlertDialog open={!!deleteEventId} onOpenChange={(open) => !open && setDeleteEventId(null)}>
