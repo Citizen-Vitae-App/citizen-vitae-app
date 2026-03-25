@@ -155,6 +155,23 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     setCurrentTitle(info.view.title);
   }, []);
 
+  // Expose toolbar controls to parent
+  useEffect(() => {
+    if (toolbarRef) {
+      toolbarRef.current = {
+        handlePrev: () => calendarRef.current?.getApi().prev(),
+        handleNext: () => calendarRef.current?.getApi().next(),
+        handleToday: () => calendarRef.current?.getApi().today(),
+        handleViewChange: (view: CalendarViewType) => {
+          setCurrentView(view);
+          calendarRef.current?.getApi().changeView(view);
+        },
+        currentView,
+        currentTitle,
+      };
+    }
+  }, [toolbarRef, currentView, currentTitle]);
+
   // Custom event render
   const renderEventContent = useCallback((eventInfo: any) => {
     const { isPast, isLive, participantCount, capacity } = eventInfo.event.extendedProps;
@@ -188,42 +205,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   }, []);
 
   return (
-    <div className="space-y-3">
-      {/* Calendar toolbar */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        {/* Navigation */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrev}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={handleToday}>
-            Aujourd'hui
-          </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <h3 className="text-base font-semibold capitalize ml-2">{currentTitle}</h3>
-        </div>
-
-        {/* View switcher */}
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-          {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
-            <button
-              key={view}
-              onClick={() => handleViewChange(view)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                currentView === view
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div>
       {/* FullCalendar */}
       <div className="fc-notion-theme rounded-lg border border-border overflow-hidden bg-background">
         <FullCalendar
