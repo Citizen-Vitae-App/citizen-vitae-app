@@ -46,7 +46,7 @@ interface EventCalendarViewProps {
 
 export type CalendarViewType = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay';
 
-const VIEW_LABELS: Record<CalendarViewType, string> = {
+export const VIEW_LABELS: Record<CalendarViewType, string> = {
   dayGridMonth: 'Mois',
   timeGridWeek: 'Semaine',
   timeGridDay: 'Jour',
