@@ -743,7 +743,16 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         </div>
       </div>
 
-      {/* Events list */}
+      {/* Calendar view */}
+      {viewMode === 'calendar' ? (
+        <EventCalendarView
+          events={filteredEvents}
+          organizationId={organizationId}
+          participantCounts={participantCounts}
+          isMember={isMember}
+        />
+      ) : (
+      /* Events list */
       <div className="w-full">
         {filteredEvents.length === 0 ? (
           <div className="border rounded-lg overflow-hidden w-full">
