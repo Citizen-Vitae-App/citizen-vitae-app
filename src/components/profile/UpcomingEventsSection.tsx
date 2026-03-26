@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function UpcomingEventsSection() {
   const { user } = useAuth();
@@ -16,73 +17,52 @@ export function UpcomingEventsSection() {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      // Get user's organization IDs
-      const { data: memberships } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id);
-
-      const orgIds = (memberships || []).map((m) => m.organization_id);
-
-      // Get user's favorite cause IDs
-      const { data: userCauses } = await supabase
-        .from('user_cause_themes')
-        .select('cause_theme_id')
-        .eq('user_id', user.id);
-
-      const causeIds = (userCauses || []).map((c) => c.cause_theme_id);
-
       const now = new Date().toISOString();
 
-      // Get upcoming public events
-      let query = supabase
-        .from('events')
+      // Get events the user is registered to (upcoming)
+      const { data: registrations } = await supabase
+        .from('event_registrations')
         .select(`
-          id,
-          name,
-          start_date,
-          location,
-          organization_id,
-          organizations (name)
+          event_id,
+          events!inner (
+            id, name, start_date, end_date, location, cover_image_url,
+            organization_id,
+            organizations!inner (name, logo_url)
+          )
         `)
-        .eq('is_public', true)
-        .gte('start_date', now)
-        .order('start_date', { ascending: true })
-        .limit(3);
+        .eq('user_id', user.id)
+        .gte('events.start_date', now);
 
-      // If user has organizations, prioritize those events
-      if (orgIds.length > 0) {
-        query = query.in('organization_id', orgIds);
+      // Get events the user has favorited (upcoming)
+      const { data: favorites } = await supabase
+        .from('user_favorites')
+        .select(`
+          event_id,
+          events!inner (
+            id, name, start_date, end_date, location, cover_image_url,
+            organization_id,
+            organizations!inner (name, logo_url)
+          )
+        `)
+        .eq('user_id', user.id)
+        .gte('events.start_date', now);
+
+      // Merge and deduplicate by event id
+      const eventsMap = new Map<string, any>();
+
+      for (const r of registrations || []) {
+        const e = r.events as any;
+        if (e) eventsMap.set(e.id, e);
+      }
+      for (const f of favorites || []) {
+        const e = f.events as any;
+        if (e) eventsMap.set(e.id, e);
       }
 
-      const { data: events, error } = await query;
-
-      if (error) {
-        console.error('Error fetching upcoming events:', error);
-        return [];
-      }
-
-      // If we have cause preferences, filter events matching those causes
-      if (causeIds.length > 0 && events && events.length > 0) {
-        const eventIds = events.map((e) => e.id);
-        const { data: eventCauses } = await supabase
-          .from('event_cause_themes')
-          .select('event_id')
-          .in('event_id', eventIds)
-          .in('cause_theme_id', causeIds);
-
-        if (eventCauses && eventCauses.length > 0) {
-          const matchingEventIds = new Set(eventCauses.map((ec) => ec.event_id));
-          // Sort: events matching causes first
-          events.sort((a, b) => {
-            const aMatch = matchingEventIds.has(a.id) ? 0 : 1;
-            const bMatch = matchingEventIds.has(b.id) ? 0 : 1;
-            return aMatch - bMatch;
-          });
-        }
-      }
-
-      return events || [];
+      // Sort by start_date ascending
+      return Array.from(eventsMap.values()).sort(
+        (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+      );
     },
     enabled: !!user?.id,
   });
@@ -99,7 +79,7 @@ export function UpcomingEventsSection() {
           Événements à venir
         </h2>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/" className="flex items-center gap-1">
+          <Link to="/my-missions" className="flex items-center gap-1">
             Voir tout
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -110,27 +90,46 @@ export function UpcomingEventsSection() {
         {upcomingEvents.map((event) => {
           const org = event.organizations as any;
           return (
-            <Link key={event.id} to={`/event/${event.id}`}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    {/* Date badge */}
-                    <div className="flex-shrink-0 text-center bg-primary/10 rounded-lg px-3 py-2">
-                      <p className="text-lg font-bold text-primary">
-                        {format(new Date(event.start_date), 'd', { locale: fr })}
-                      </p>
-                      <p className="text-xs text-primary uppercase">
-                        {format(new Date(event.start_date), 'MMM', { locale: fr })}
-                      </p>
+            <Link key={event.id} to={`/events/${event.id}`}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex">
+                    {/* Event cover image */}
+                    <div className="w-24 h-24 flex-shrink-0 bg-muted">
+                      {event.cover_image_url ? (
+                        <img
+                          src={event.cover_image_url}
+                          alt={event.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                          <Calendar className="h-8 w-8 text-primary/40" />
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{org?.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3" />
-                        {event.location}
-                      </p>
+                    <div className="flex-1 min-w-0 p-3 flex flex-col justify-center gap-1">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5 flex-shrink-0">
+                          <AvatarImage src={org?.logo_url || ''} alt={org?.name} />
+                          <AvatarFallback className="text-[10px] bg-muted">
+                            {org?.name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground truncate">{org?.name}</span>
+                      </div>
+                      <h3 className="font-semibold text-sm text-foreground truncate">{event.name}</h3>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>
+                          {format(new Date(event.start_date), 'EEE d MMM • HH:mm', { locale: fr })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <span className="truncate max-w-[120px]">{event.location}</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
