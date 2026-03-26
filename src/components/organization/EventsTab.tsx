@@ -629,9 +629,9 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Sticky header: KPI Cards + Search/Actions */}
-       <div className="sticky top-14 md:top-28 z-20 bg-background -mx-4 px-4 md:mx-0 md:px-0 shadow-[0_1px_0_0_hsl(var(--border))]">
+       <div className="sticky top-14 md:top-28 z-20 -mt-4 bg-background px-4 pt-4 md:-mt-6 md:px-0 md:pt-6 shadow-[0_1px_0_0_hsl(var(--border))]">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 md:pt-6 pb-3">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
           <div className="p-4 rounded-xl border border-border bg-background">
             <div className="flex items-center justify-between">
               <div>
