@@ -103,7 +103,7 @@ export default function OrganizationDashboard() {
         />
       )}
       
-      <main className={`container mx-auto px-4 pb-20 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-32'}`}>
+      <main className={`container mx-auto px-4 pb-20 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-28'}`}>
         <div className="max-w-5xl mx-auto">
           {activeTab === 'events' && (
             <EventsTab 
