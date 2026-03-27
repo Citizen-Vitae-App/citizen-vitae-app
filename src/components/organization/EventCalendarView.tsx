@@ -62,7 +62,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
-  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number } }>({ isOpen: false, date: new Date() });
+  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
 
   // Convert events to FullCalendar format
   const calendarEvents = events.map(event => {
