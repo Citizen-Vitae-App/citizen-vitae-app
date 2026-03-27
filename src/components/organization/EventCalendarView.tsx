@@ -103,7 +103,6 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         .eq('id', eventId);
 
       if (error) throw error;
-      toast.success('Date mise à jour');
       queryClient.invalidateQueries({ queryKey: ['organization-events', organizationId] });
     } catch (err) {
       logger.error('Error updating event date:', err);
@@ -124,7 +123,6 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         .eq('id', eventId);
 
       if (error) throw error;
-      toast.success('Durée mise à jour');
       queryClient.invalidateQueries({ queryKey: ['organization-events', organizationId] });
     } catch (err) {
       logger.error('Error updating event duration:', err);
