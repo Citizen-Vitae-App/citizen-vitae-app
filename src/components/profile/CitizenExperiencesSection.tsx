@@ -127,7 +127,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
         <>
           {/* Timeline */}
           <div className="relative">
-            <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
+            <div className="absolute left-3 sm:left-6 top-0 bottom-0 w-px bg-border" />
             <div className="space-y-4">
               {/* Certified missions */}
               {displayedMissions.map((mission, index) => (
