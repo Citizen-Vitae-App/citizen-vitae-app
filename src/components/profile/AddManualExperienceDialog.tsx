@@ -410,6 +410,36 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
             </div>
           </form>
         </Form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[90vh] px-4 pb-6">
+          <DrawerHeader className="text-left px-0">
+            <DrawerTitle>Ajouter une expérience</DrawerTitle>
+            <DrawerDescription>
+              Ajoutez une expérience citoyenne non certifiée à votre profil.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="overflow-y-auto">
+            {formContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Ajouter une expérience</DialogTitle>
+          <DialogDescription>
+            Ajoutez une expérience citoyenne non certifiée à votre profil.
+          </DialogDescription>
+        </DialogHeader>
+        {formContent}
       </DialogContent>
     </Dialog>
   );
