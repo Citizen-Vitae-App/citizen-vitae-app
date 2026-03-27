@@ -72,11 +72,17 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const isPast = end < now;
     const isLive = start <= now && end >= now;
 
+    // Get cause theme color (first theme if multiple)
+    const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
+    const themeColor = causeTheme?.color || null;
+
     return {
       id: event.id,
       title: event.name,
       start: event.start_date,
       end: event.end_date,
+      backgroundColor: themeColor || undefined,
+      borderColor: themeColor || undefined,
       extendedProps: {
         location: event.location,
         is_public: event.is_public,
@@ -85,10 +91,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         capacity: event.capacity,
         isPast,
         isLive,
+        themeColor,
+        themeName: causeTheme?.name || null,
       },
-      classNames: [
-        isPast ? 'fc-event-past' : isLive ? 'fc-event-live' : 'fc-event-upcoming',
-      ],
       editable: !isMember,
     };
   });
