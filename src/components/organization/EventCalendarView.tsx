@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+import { QuickEventDialog } from './QuickEventDialog';
 
 interface CalendarEvent {
   id: string;
@@ -53,6 +54,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
+  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number } }>({ isOpen: false, date: new Date() });
 
   // Convert events to FullCalendar format
   const calendarEvents = events.map(event => {
@@ -134,9 +136,14 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   // Handle date click for quick creation
   const handleDateClick = useCallback((info: any) => {
     if (isMember) return;
-    const dateStr = info.dateStr;
-    navigate(`/organization/create-event?date=${encodeURIComponent(dateStr)}`);
-  }, [navigate, isMember]);
+    const clickDate = info.date as Date;
+    const jsEvent = info.jsEvent as MouseEvent;
+    setQuickEvent({
+      isOpen: true,
+      date: clickDate,
+      position: { top: jsEvent.clientY, left: jsEvent.clientX },
+    });
+  }, [isMember]);
 
   // Calendar navigation
   const handlePrev = () => calendarRef.current?.getApi().prev();
@@ -259,6 +266,13 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           }}
         />
       </div>
+      <QuickEventDialog
+        isOpen={quickEvent.isOpen}
+        onClose={() => setQuickEvent(prev => ({ ...prev, isOpen: false }))}
+        date={quickEvent.date}
+        organizationId={organizationId}
+        position={quickEvent.position}
+      />
     </div>
   );
 }
