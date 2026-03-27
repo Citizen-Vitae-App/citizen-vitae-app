@@ -199,29 +199,29 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
 
   // Custom event render
   const renderEventContent = useCallback((eventInfo: any) => {
-    const { isPast, isLive, participantCount, capacity } = eventInfo.event.extendedProps;
+    const { isPast, participantCount, capacity, themeColor } = eventInfo.event.extendedProps;
     const isMonthView = eventInfo.view.type === 'dayGridMonth';
 
     if (isMonthView) {
       return (
-        <div className="flex items-center gap-1 px-1 py-0.5 w-full overflow-hidden">
-          <div className={cn(
-            "w-1.5 h-1.5 rounded-full shrink-0",
-            isPast ? "bg-muted-foreground/50" : isLive ? "bg-green-500" : "bg-primary"
-          )} />
+        <div className={cn("flex items-center gap-1 px-1 py-0.5 w-full overflow-hidden", isPast && "opacity-50")}>
+          <div
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: themeColor || 'hsl(var(--primary))' }}
+          />
           <span className="text-xs font-medium truncate">{eventInfo.event.title}</span>
         </div>
       );
     }
 
     return (
-      <div className="p-1.5 w-full h-full overflow-hidden">
+      <div className={cn("p-1.5 w-full h-full overflow-hidden", isPast && "opacity-50")}>
         <p className="text-xs font-semibold truncate leading-tight">{eventInfo.event.title}</p>
-        <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+        <p className="text-[10px] opacity-80 truncate mt-0.5">
           {eventInfo.timeText}
         </p>
         {participantCount > 0 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[10px] opacity-80 mt-0.5">
             {participantCount}{capacity ? `/${capacity}` : ''} part.
           </p>
         )}
