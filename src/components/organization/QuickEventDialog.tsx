@@ -179,24 +179,30 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
 
   if (!isOpen) return null;
 
-  // Position the card to the right or left of the click point
+  // Position the card to the right or left of the calendar cell
   const computeStyle = (): React.CSSProperties => {
     if (!position) {
       return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 50 };
     }
     const cardWidth = 340;
     const cardHeight = isExpanded ? 600 : 360;
-    const margin = 12;
+    const gap = 8;
 
-    // Try right side first, then left
-    let left = position.left + margin;
-    if (left + cardWidth > window.innerWidth - margin) {
-      left = position.left - cardWidth - margin;
+    // position.left is the right edge of the cell; try placing card to the right of the cell
+    let left = position.left + gap;
+    if (left + cardWidth > window.innerWidth - gap) {
+      // Not enough room on the right — place to the left of the cell
+      const cellLeft = position.left - (position.cellWidth || 0);
+      left = cellLeft - cardWidth - gap;
     }
-    left = Math.max(margin, Math.min(left, window.innerWidth - cardWidth - margin));
+    left = Math.max(gap, Math.min(left, window.innerWidth - cardWidth - gap));
 
-    let top = Math.min(position.top - 40, window.innerHeight - cardHeight - margin);
-    top = Math.max(margin, top);
+    // Vertically align with the top of the cell
+    let top = position.top;
+    if (top + cardHeight > window.innerHeight - gap) {
+      top = window.innerHeight - cardHeight - gap;
+    }
+    top = Math.max(gap, top);
 
     return { position: 'fixed', top, left, zIndex: 50 };
   };
