@@ -21,7 +21,7 @@ interface QuickEventDialogProps {
   onClose: () => void;
   date: Date;
   organizationId: string;
-  position?: { top: number; left: number };
+  position?: { top: number; left: number; cellWidth?: number; cellHeight?: number };
 }
 
 export function QuickEventDialog({ isOpen, onClose, date, organizationId, position }: QuickEventDialogProps) {
