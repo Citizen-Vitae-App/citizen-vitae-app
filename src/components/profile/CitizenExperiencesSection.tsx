@@ -200,18 +200,18 @@ function CertifiedMissionCard({ mission, isFirst, editMode, isPublic, onToggleVi
         }`}
       />
       <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow relative">
-        {/* Certified badge */}
-        <div className="absolute top-3 right-3 flex items-center gap-1">
-          {!isPublic && !editMode && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
-              <EyeOff className="h-3.5 w-3.5" />
-              Masqué
-            </span>
-          )}
+        {/* Certified badge + hidden indicator */}
+        <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
           <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5 gap-0.5">
             <img src={czvIcon} alt="" className="h-3 w-3" />
             Certifié
           </Badge>
+          {!isPublic && !editMode && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <EyeOff className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Masqué</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-start gap-4">
