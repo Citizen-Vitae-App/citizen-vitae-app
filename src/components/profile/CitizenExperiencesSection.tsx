@@ -209,24 +209,10 @@ function CertifiedMissionCard({ mission, isFirst, editMode, isPublic, onToggleVi
             </span>
           )}
           <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5 gap-0.5">
-            <BadgeCheck className="h-3 w-3" />
+            <img src={czvIcon} alt="" className="h-3 w-3" />
             Certifié
           </Badge>
         </div>
-
-        {editMode && (
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              {isPublic ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-              {isPublic ? 'Visible sur le CV' : 'Masqué du CV'}
-            </div>
-            <Switch
-              checked={isPublic}
-              onCheckedChange={(checked) => onToggleVisibility(mission.id, checked)}
-              className="scale-90"
-            />
-          </div>
-        )}
 
         <div className="flex items-start gap-4">
           <Avatar className="h-10 w-10 flex-shrink-0">
@@ -265,6 +251,20 @@ function CertifiedMissionCard({ mission, isFirst, editMode, isPublic, onToggleVi
             )}
           </div>
         </div>
+
+        {editMode && (
+          <div className="flex items-center justify-end gap-1.5 mt-3 pt-2 border-t border-border">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              {isPublic ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {isPublic ? 'Visible' : 'Masqué'}
+            </span>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(checked) => onToggleVisibility(mission.id, checked)}
+              className="scale-90"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
