@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { BookOpen, ChevronRight, Calendar, Building2, Pencil, Eye, EyeOff, Plus, MapPin, BadgeCheck } from 'lucide-react';
+import { BookOpen, ChevronRight, Calendar, Building2, Pencil, Eye, EyeOff, Plus, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import czvIcon from '@/assets/icon-sigle-czv.svg';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
