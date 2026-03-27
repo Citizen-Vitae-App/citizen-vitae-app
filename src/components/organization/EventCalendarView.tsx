@@ -22,6 +22,14 @@ interface CalendarEvent {
   cover_image_url: string | null;
   capacity: number | null;
   recurrence_group_id: string | null;
+  event_cause_themes?: {
+    cause_themes: {
+      id: string;
+      name: string;
+      color: string;
+      icon: string;
+    };
+  }[];
 }
 
 export interface CalendarToolbarApi {
