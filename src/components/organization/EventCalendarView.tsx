@@ -22,6 +22,14 @@ interface CalendarEvent {
   cover_image_url: string | null;
   capacity: number | null;
   recurrence_group_id: string | null;
+  event_cause_themes?: {
+    cause_themes: {
+      id: string;
+      name: string;
+      color: string;
+      icon: string;
+    };
+  }[];
 }
 
 export interface CalendarToolbarApi {
@@ -54,7 +62,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
-  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number } }>({ isOpen: false, date: new Date() });
+  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
 
   // Convert events to FullCalendar format
   const calendarEvents = events.map(event => {
@@ -64,11 +72,17 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const isPast = end < now;
     const isLive = start <= now && end >= now;
 
+    // Get cause theme color (first theme if multiple)
+    const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
+    const themeColor = causeTheme?.color || null;
+
     return {
       id: event.id,
       title: event.name,
       start: event.start_date,
       end: event.end_date,
+      backgroundColor: themeColor || undefined,
+      borderColor: themeColor || undefined,
       extendedProps: {
         location: event.location,
         is_public: event.is_public,
@@ -77,10 +91,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         capacity: event.capacity,
         isPast,
         isLive,
+        themeColor,
+        themeName: causeTheme?.name || null,
       },
-      classNames: [
-        isPast ? 'fc-event-past' : isLive ? 'fc-event-live' : 'fc-event-upcoming',
-      ],
       editable: !isMember,
     };
   });
@@ -131,16 +144,26 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
   }, [organizationId, queryClient]);
 
-  // Handle date click for quick creation
+  // Handle date click for quick creation — capture cell rect for positioning
   const handleDateClick = useCallback((info: any) => {
     if (isMember) return;
     const clickDate = info.date as Date;
-    const jsEvent = info.jsEvent as MouseEvent;
-    setQuickEvent({
-      isOpen: true,
-      date: clickDate,
-      position: { top: jsEvent.clientY, left: jsEvent.clientX },
-    });
+    const dayEl = info.dayEl as HTMLElement;
+    if (dayEl) {
+      const rect = dayEl.getBoundingClientRect();
+      setQuickEvent({
+        isOpen: true,
+        date: clickDate,
+        position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
+      });
+    } else {
+      const jsEvent = info.jsEvent as MouseEvent;
+      setQuickEvent({
+        isOpen: true,
+        date: clickDate,
+        position: { top: jsEvent.clientY, left: jsEvent.clientX, cellWidth: 0, cellHeight: 0 },
+      });
+    }
   }, [isMember]);
 
   // Calendar navigation
@@ -176,29 +199,29 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
 
   // Custom event render
   const renderEventContent = useCallback((eventInfo: any) => {
-    const { isPast, isLive, participantCount, capacity } = eventInfo.event.extendedProps;
+    const { isPast, participantCount, capacity, themeColor } = eventInfo.event.extendedProps;
     const isMonthView = eventInfo.view.type === 'dayGridMonth';
 
     if (isMonthView) {
       return (
-        <div className="flex items-center gap-1 px-1 py-0.5 w-full overflow-hidden">
-          <div className={cn(
-            "w-1.5 h-1.5 rounded-full shrink-0",
-            isPast ? "bg-muted-foreground/50" : isLive ? "bg-green-500" : "bg-primary"
-          )} />
+        <div className={cn("flex items-center gap-1 px-1 py-0.5 w-full overflow-hidden", isPast && "opacity-50")}>
+          <div
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: themeColor || 'hsl(var(--primary))' }}
+          />
           <span className="text-xs font-medium truncate">{eventInfo.event.title}</span>
         </div>
       );
     }
 
     return (
-      <div className="p-1.5 w-full h-full overflow-hidden">
+      <div className={cn("p-1.5 w-full h-full overflow-hidden", isPast && "opacity-50")}>
         <p className="text-xs font-semibold truncate leading-tight">{eventInfo.event.title}</p>
-        <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+        <p className="text-[10px] opacity-80 truncate mt-0.5">
           {eventInfo.timeText}
         </p>
         {participantCount > 0 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[10px] opacity-80 mt-0.5">
             {participantCount}{capacity ? `/${capacity}` : ''} part.
           </p>
         )}
