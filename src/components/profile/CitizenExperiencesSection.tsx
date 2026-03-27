@@ -288,9 +288,9 @@ function ManualExperienceCard({ experience, isFirst }: { experience: ManualExper
   };
 
   return (
-    <div className="relative pl-14">
+    <div className="relative pl-8 sm:pl-14">
       <div
-        className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 ${
+        className={`absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 ${
           isFirst ? 'bg-primary border-primary' : 'bg-background border-border'
         }`}
       />
