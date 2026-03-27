@@ -14,6 +14,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
   Form,
   FormControl,
   FormField,
@@ -151,32 +159,25 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
     createMutation.mutate(values);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Ajouter une expérience</DialogTitle>
-          <DialogDescription>
-            Ajoutez une expérience citoyenne non certifiée à votre profil.
-          </DialogDescription>
-        </DialogHeader>
+  const isMobile = useIsMobile();
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Titre *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex : Bénévole aux Restos du Cœur" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Title */}
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Titre *</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex : Bénévole aux Restos du Cœur" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
             {/* Experience type */}
             <FormField
@@ -409,6 +410,36 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
             </div>
           </form>
         </Form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[90vh] px-4 pb-6">
+          <DrawerHeader className="text-left px-0">
+            <DrawerTitle>Ajouter une expérience</DrawerTitle>
+            <DrawerDescription>
+              Ajoutez une expérience citoyenne non certifiée à votre profil.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="overflow-y-auto">
+            {formContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Ajouter une expérience</DialogTitle>
+          <DialogDescription>
+            Ajoutez une expérience citoyenne non certifiée à votre profil.
+          </DialogDescription>
+        </DialogHeader>
+        {formContent}
       </DialogContent>
     </Dialog>
   );
