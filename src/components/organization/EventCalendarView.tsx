@@ -144,16 +144,26 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
   }, [organizationId, queryClient]);
 
-  // Handle date click for quick creation
+  // Handle date click for quick creation — capture cell rect for positioning
   const handleDateClick = useCallback((info: any) => {
     if (isMember) return;
     const clickDate = info.date as Date;
-    const jsEvent = info.jsEvent as MouseEvent;
-    setQuickEvent({
-      isOpen: true,
-      date: clickDate,
-      position: { top: jsEvent.clientY, left: jsEvent.clientX },
-    });
+    const dayEl = info.dayEl as HTMLElement;
+    if (dayEl) {
+      const rect = dayEl.getBoundingClientRect();
+      setQuickEvent({
+        isOpen: true,
+        date: clickDate,
+        position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
+      });
+    } else {
+      const jsEvent = info.jsEvent as MouseEvent;
+      setQuickEvent({
+        isOpen: true,
+        date: clickDate,
+        position: { top: jsEvent.clientY, left: jsEvent.clientX, cellWidth: 0, cellHeight: 0 },
+      });
+    }
   }, [isMember]);
 
   // Calendar navigation
