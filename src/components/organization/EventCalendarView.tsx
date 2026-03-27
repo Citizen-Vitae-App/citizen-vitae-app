@@ -259,10 +259,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           datesSet={handleDatesSet}
           eventContent={renderEventContent}
           nowIndicator={true}
-          allDaySlot={true}
-          allDayText="Journée"
-          slotMinTime="06:00:00"
-          slotMaxTime="23:00:00"
+          allDaySlot={false}
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
           slotDuration="00:30:00"
           slotLabelInterval="01:00"
           slotLabelFormat={{
