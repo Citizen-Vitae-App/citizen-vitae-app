@@ -300,7 +300,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
 
     return (
-      <div className={cn("p-1.5 w-full h-full overflow-hidden", isPast && "opacity-50")}>
+      <div className={cn("p-1.5 w-full h-full overflow-hidden")}>
         <p className="text-xs font-semibold truncate leading-tight">{eventInfo.event.title}</p>
         <p className="text-[10px] opacity-80 truncate mt-0.5">
           {eventInfo.timeText}
