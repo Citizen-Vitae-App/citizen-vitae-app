@@ -189,26 +189,26 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
   }, [organizationId, queryClient]);
 
-  // Handle date click for quick creation — capture cell rect for positioning
+  // Handle date click for quick creation — use mouse position for precise placement
   const handleDateClick = useCallback((info: any) => {
     if (isMember) return;
     const clickDate = info.date as Date;
+    const jsEvent = info.jsEvent as MouseEvent;
     const dayEl = info.dayEl as HTMLElement;
-    if (dayEl) {
-      const rect = dayEl.getBoundingClientRect();
-      setQuickEvent({
-        isOpen: true,
-        date: clickDate,
-        position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
-      });
-    } else {
-      const jsEvent = info.jsEvent as MouseEvent;
-      setQuickEvent({
-        isOpen: true,
-        date: clickDate,
-        position: { top: jsEvent.clientY, left: jsEvent.clientX, cellWidth: 0, cellHeight: 0 },
-      });
-    }
+    const rect = dayEl?.getBoundingClientRect();
+
+    // Always use mouse Y for vertical precision (dayEl can be a full column in week view)
+    // Use dayEl rect for horizontal positioning (left/right of the column)
+    setQuickEvent({
+      isOpen: true,
+      date: clickDate,
+      position: {
+        top: jsEvent.clientY,
+        left: rect ? rect.right : jsEvent.clientX,
+        cellWidth: rect ? rect.width : 0,
+        cellHeight: 0, // treat as point-click so popover centers on mouse Y
+      },
+    });
   }, [isMember]);
 
   // Calendar navigation
