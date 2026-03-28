@@ -80,29 +80,46 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   // Reset form when opened
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
-      setLocation('');
-      setDescription('');
-      setIsPublic(true);
-      setCapacity('');
-      setRequireApproval(false);
-      setAllowSelfCertification(false);
-      setIsExpanded(false);
-      setSelectedCauseTheme(null);
-      resetImage();
-      const hours = date.getHours();
-      const mins = date.getMinutes();
-      if (hours !== 0 || mins !== 0) {
-        setStartTime(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
-        const endH = hours + 1;
-        setEndTime(`${String(endH > 23 ? 23 : endH).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+      if (editEvent) {
+        setTitle(editEvent.name);
+        setLocation(editEvent.location || '');
+        setDescription(editEvent.description || '');
+        setIsPublic(editEvent.is_public ?? true);
+        setCapacity(editEvent.capacity ? String(editEvent.capacity) : '');
+        setRequireApproval(editEvent.require_approval ?? false);
+        setAllowSelfCertification(editEvent.allow_self_certification ?? false);
+        setSelectedCauseTheme(editEvent.cause_theme_id || null);
+        setIsExpanded(false);
+        resetImage();
+        const start = new Date(editEvent.start_date);
+        const end = new Date(editEvent.end_date);
+        setStartTime(`${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`);
+        setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`);
       } else {
-        setStartTime('09:00');
-        setEndTime('10:00');
+        setTitle('');
+        setLocation('');
+        setDescription('');
+        setIsPublic(true);
+        setCapacity('');
+        setRequireApproval(false);
+        setAllowSelfCertification(false);
+        setIsExpanded(false);
+        setSelectedCauseTheme(null);
+        resetImage();
+        const hours = date.getHours();
+        const mins = date.getMinutes();
+        if (hours !== 0 || mins !== 0) {
+          setStartTime(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+          const endH = hours + 1;
+          setEndTime(`${String(endH > 23 ? 23 : endH).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+        } else {
+          setStartTime('09:00');
+          setEndTime('10:00');
+        }
       }
       setTimeout(() => titleInputRef.current?.focus(), 100);
     }
-  }, [isOpen, date, resetImage]);
+  }, [isOpen, date, resetImage, editEvent]);
 
   // Close on outside click
   useEffect(() => {
