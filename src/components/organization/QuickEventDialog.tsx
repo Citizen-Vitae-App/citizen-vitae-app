@@ -268,7 +268,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     if (top + cardHeight > window.innerHeight - gap) {
       top = window.innerHeight - cardHeight - gap;
     }
-    top = Math.max(gap, top);
+    // Never go above the calendar day-header bar
+    const colHeader = document.querySelector('.fc-col-header');
+    const minTop = colHeader ? colHeader.getBoundingClientRect().bottom + gap : gap;
+    top = Math.max(minTop, top);
 
     return { position: 'fixed', top, left, zIndex: 50 };
   };
