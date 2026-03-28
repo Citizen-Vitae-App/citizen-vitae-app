@@ -337,6 +337,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         date={quickEvent.date}
         organizationId={organizationId}
         position={quickEvent.position}
+        editEvent={quickEvent.editEvent}
       />
     </div>
   );
