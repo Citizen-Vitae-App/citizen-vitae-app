@@ -627,13 +627,10 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return <div className="text-center py-12 text-destructive">Erreur lors du chargement des événements</div>;
   }
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Sticky header: KPI Cards + Search/Actions */}
-       <div className="sticky top-14 md:top-[76px] z-20 px-4 py-2 md:px-0 md:py-3">
-        <div
-          aria-hidden="true"
-          className="absolute -top-40 bottom-0 left-1/2 w-screen -translate-x-1/2 bg-background shadow-[0_1px_0_0_hsl(var(--border))] -z-10"
-        />
+    <div className="flex flex-col h-full">
+      {/* Fixed header: KPI Cards + Search/Actions */}
+      <div className="shrink-0 py-2 md:py-3 bg-background">
+        {/* KPI Cards */}
         {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
           <div className="p-4 rounded-xl border border-border bg-background">
@@ -787,7 +784,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         )}
       </div>
 
-      {/* Calendar view */}
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto pb-8">
       {viewMode === 'calendar' ? (
         <EventCalendarView
           events={filteredEvents}
@@ -1181,6 +1179,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         )}
       </div>
       )}
+      </div>
 
       {/* Delete confirmation dialog for non-recurring events */}
       <AlertDialog open={!!deleteEventId} onOpenChange={(open) => !open && setDeleteEventId(null)}>
