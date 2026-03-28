@@ -342,6 +342,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
           dateClick={handleDateClick}
+          select={handleSelect}
           datesSet={handleDatesSet}
           eventContent={renderEventContent}
           nowIndicator={true}
