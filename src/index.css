@@ -260,30 +260,21 @@ All colors MUST be HSL.
   background: hsl(3 79% 53% / 0.04);
 }
 
-.fc-notion-theme .fc .fc-daygrid-day-frame::after {
-  content: '+';
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: hsl(3 79% 53%);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  pointer-events: none;
+/* Current day highlight in week/day column headers */
+.fc-notion-theme .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: hsl(3 79% 53%);
+  font-weight: 700;
 }
 
-.fc-notion-theme .fc .fc-daygrid-day-frame:hover::after {
-  opacity: 1;
-  transform: scale(1);
+.fc-notion-theme .fc .fc-col-header-cell.fc-day-today {
+  background: hsl(3 79% 53% / 0.08);
+}
+
+/* Sticky column headers */
+.fc-notion-theme .fc .fc-scrollgrid-section-header > * {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {

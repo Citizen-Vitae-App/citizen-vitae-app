@@ -11,6 +11,21 @@ import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { QuickEventDialog } from './QuickEventDialog';
 
+interface EditEventData {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  is_public: boolean | null;
+  description?: string | null;
+  capacity?: number | null;
+  require_approval?: boolean | null;
+  allow_self_certification?: boolean | null;
+  cover_image_url?: string | null;
+  cause_theme_id?: string | null;
+}
+
 interface CalendarEvent {
   id: string;
   name: string;
