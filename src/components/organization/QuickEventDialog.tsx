@@ -16,15 +16,31 @@ import { logger } from '@/lib/logger';
 import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 
+interface EditEventData {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  is_public: boolean | null;
+  description?: string | null;
+  capacity?: number | null;
+  require_approval?: boolean | null;
+  allow_self_certification?: boolean | null;
+  cover_image_url?: string | null;
+  cause_theme_id?: string | null;
+}
+
 interface QuickEventDialogProps {
   isOpen: boolean;
   onClose: () => void;
   date: Date;
   organizationId: string;
   position?: { top: number; left: number; cellWidth?: number; cellHeight?: number };
+  editEvent?: EditEventData;
 }
 
-export function QuickEventDialog({ isOpen, onClose, date, organizationId, position }: QuickEventDialogProps) {
+export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent }: QuickEventDialogProps) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [startTime, setStartTime] = useState('09:00');
