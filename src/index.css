@@ -270,11 +270,32 @@ All colors MUST be HSL.
   background: hsl(3 79% 53% / 0.08);
 }
 
-/* Sticky column headers */
+/* Sticky column headers for week/day views */
+.fc-notion-theme .fc .fc-scrollgrid-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+}
+
 .fc-notion-theme .fc .fc-scrollgrid-section-header > * {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.fc-notion-theme .fc thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+}
+
+.fc-notion-theme .fc .fc-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {

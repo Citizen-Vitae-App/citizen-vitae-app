@@ -288,6 +288,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           headerToolbar={false}
           height="auto"
           contentHeight="auto"
+          stickyHeaderDates={true}
           aspectRatio={1.8}
           editable={!isMember}
           droppable={!isMember}
