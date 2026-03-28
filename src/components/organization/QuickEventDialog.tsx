@@ -167,7 +167,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         endDate.setTime(startDate.getTime() + 3600000);
       }
 
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = editEvent?.cover_image_url || null;
       if (coverImage) {
         if (isImageUploading) {
           toast.info("Finalisation de l'upload...");
@@ -175,36 +175,67 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         imageUrl = await waitForUpload();
       }
 
-      const { data: eventData, error } = await supabase.from('events').insert({
-        name: title.trim(),
-        location: location.trim() || 'À définir',
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-        organization_id: organizationId,
-        is_public: isPublic,
-        description: description.trim() || null,
-        capacity: capacity ? parseInt(capacity) : null,
-        require_approval: requireApproval,
-        allow_self_certification: allowSelfCertification,
-        cover_image_url: imageUrl,
-      }).select('id').single();
+      if (editEvent) {
+        // UPDATE existing event
+        const { error } = await supabase.from('events').update({
+          name: title.trim(),
+          location: location.trim() || 'À définir',
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          is_public: isPublic,
+          description: description.trim() || null,
+          capacity: capacity ? parseInt(capacity) : null,
+          require_approval: requireApproval,
+          allow_self_certification: allowSelfCertification,
+          cover_image_url: imageUrl,
+          updated_at: new Date().toISOString(),
+        }).eq('id', editEvent.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Insert cause theme if selected
-      if (selectedCauseTheme && eventData?.id) {
-        await supabase.from('event_cause_themes').insert({
-          event_id: eventData.id,
-          cause_theme_id: selectedCauseTheme,
-        });
+        // Update cause theme
+        await supabase.from('event_cause_themes').delete().eq('event_id', editEvent.id);
+        if (selectedCauseTheme) {
+          await supabase.from('event_cause_themes').insert({
+            event_id: editEvent.id,
+            cause_theme_id: selectedCauseTheme,
+          });
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+        onClose();
+      } else {
+        // CREATE new event
+        const { data: eventData, error } = await supabase.from('events').insert({
+          name: title.trim(),
+          location: location.trim() || 'À définir',
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          organization_id: organizationId,
+          is_public: isPublic,
+          description: description.trim() || null,
+          capacity: capacity ? parseInt(capacity) : null,
+          require_approval: requireApproval,
+          allow_self_certification: allowSelfCertification,
+          cover_image_url: imageUrl,
+        }).select('id').single();
+
+        if (error) throw error;
+
+        if (selectedCauseTheme && eventData?.id) {
+          await supabase.from('event_cause_themes').insert({
+            event_id: eventData.id,
+            cause_theme_id: selectedCauseTheme,
+          });
+        }
+
+        toast.success('Événement créé');
+        queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+        onClose();
       }
-
-      toast.success('Événement créé');
-      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
-      onClose();
     } catch (err) {
-      logger.error('Quick event creation failed:', err);
-      toast.error("Erreur lors de la création");
+      logger.error('Quick event save failed:', err);
+      toast.error(editEvent ? "Erreur lors de la mise à jour" : "Erreur lors de la création");
     } finally {
       setIsSaving(false);
     }
