@@ -261,8 +261,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
     left = Math.max(gap, Math.min(left, window.innerWidth - cardWidth - gap));
 
-    // Vertically align with the top of the cell
-    let top = position.top;
+    // Vertically center the card on the event element
+    const eventCenterY = position.top + (position.cellHeight || 0) / 2;
+    let top = eventCenterY - cardHeight / 2;
+    // Clamp within viewport
     if (top + cardHeight > window.innerHeight - gap) {
       top = window.innerHeight - cardHeight - gap;
     }
