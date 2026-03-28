@@ -113,10 +113,40 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     };
   });
 
-  // Handle event click
+  // Handle event click — open edit popover
   const handleEventClick = useCallback((info: any) => {
-    navigate(`/organization/events/${info.event.id}/edit`);
-  }, [navigate]);
+    if (isMember) {
+      navigate(`/organization/events/${info.event.id}/edit`);
+      return;
+    }
+    const eventId = info.event.id;
+    const originalEvent = events.find(e => e.id === eventId);
+    if (!originalEvent) {
+      navigate(`/organization/events/${eventId}/edit`);
+      return;
+    }
+
+    const causeThemeId = originalEvent.event_cause_themes?.[0]?.cause_themes?.id || null;
+    const el = info.el as HTMLElement;
+    const rect = el.getBoundingClientRect();
+
+    setQuickEvent({
+      isOpen: true,
+      date: new Date(originalEvent.start_date),
+      editEvent: {
+        id: originalEvent.id,
+        name: originalEvent.name,
+        start_date: originalEvent.start_date,
+        end_date: originalEvent.end_date,
+        location: originalEvent.location,
+        is_public: originalEvent.is_public,
+        capacity: originalEvent.capacity,
+        cover_image_url: originalEvent.cover_image_url,
+        cause_theme_id: causeThemeId,
+      },
+      position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
+    });
+  }, [events, isMember, navigate]);
 
   // Handle event drag & drop (date change)
   const handleEventDrop = useCallback(async (info: any) => {
