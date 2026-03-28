@@ -91,12 +91,12 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
     const themeColor = causeTheme?.color || null;
 
-    // For past events, use a muted version of the theme color
+    // Past events: light tinted background, dark text for readability
     const bgColor = isPast
-      ? (themeColor ? `${themeColor}30` : undefined)
+      ? (themeColor ? `${themeColor}20` : 'hsl(var(--muted))')
       : (themeColor || undefined);
     const txtColor = isPast
-      ? (themeColor || 'hsl(var(--muted-foreground))')
+      ? 'hsl(var(--foreground))'
       : (themeColor ? '#fff' : undefined);
 
     return {
@@ -223,30 +223,40 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     if (isMember) return;
     const startDate = info.start as Date;
     const endDate = info.end as Date;
-    const jsEvent = info.jsEvent as MouseEvent;
 
-    // Find the column element for positioning
-    const dayEl = document.querySelector(`.fc-timegrid-col[data-date="${startDate.toISOString().split('T')[0]}"]`) as HTMLElement;
+    // Use the column element to position the popover to the side (same as dateClick)
+    const dateStr = startDate.toISOString().split('T')[0];
+    const dayEl = document.querySelector(`.fc-timegrid-col[data-date="${dateStr}"]`) as HTMLElement
+      || document.querySelector(`.fc-day[data-date="${dateStr}"]`) as HTMLElement;
     const rect = dayEl?.getBoundingClientRect();
+
+    // Vertical: use the midpoint of the selected range for centering
+    const startSlot = document.querySelector(`.fc-timegrid-slot[data-time="${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}:00"]`) as HTMLElement;
+    const endSlot = document.querySelector(`.fc-timegrid-slot[data-time="${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00"]`) as HTMLElement;
+    let topY = rect?.top || 300;
+    if (startSlot && endSlot) {
+      const startRect = startSlot.getBoundingClientRect();
+      const endRect = endSlot.getBoundingClientRect();
+      topY = (startRect.top + endRect.top) / 2;
+    } else if (startSlot) {
+      topY = startSlot.getBoundingClientRect().top;
+    }
 
     setQuickEvent({
       isOpen: true,
       date: startDate,
       position: {
-        top: jsEvent?.clientY || (rect?.top || 200),
-        left: rect ? rect.right : (jsEvent?.clientX || 400),
+        top: topY,
+        left: rect ? rect.right : 400,
         cellWidth: rect ? rect.width : 0,
         cellHeight: 0,
       },
     });
 
-    // Pre-set the end time by encoding it in the date object's hours
-    // The QuickEventDialog will pick up the hours from the date
-    // We need to store end time separately — use a small trick via state
+    // Send the time range to the QuickEventDialog
     setTimeout(() => {
       const startH = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
       const endH = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-      // Dispatch a custom event so QuickEventDialog can pick up the time range
       window.dispatchEvent(new CustomEvent('quick-event-time-range', { detail: { startTime: startH, endTime: endH } }));
     }, 50);
   }, [isMember]);
