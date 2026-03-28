@@ -223,31 +223,20 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     if (isMember) return;
     const startDate = info.start as Date;
     const endDate = info.end as Date;
+    const jsEvent = info.jsEvent as MouseEvent;
 
-    // Use the column element to position the popover to the side (same as dateClick)
+    // Use the same positioning logic as handleDateClick: mouse Y + column right edge
     const dateStr = startDate.toISOString().split('T')[0];
     const dayEl = document.querySelector(`.fc-timegrid-col[data-date="${dateStr}"]`) as HTMLElement
       || document.querySelector(`.fc-day[data-date="${dateStr}"]`) as HTMLElement;
     const rect = dayEl?.getBoundingClientRect();
 
-    // Vertical: use the midpoint of the selected range for centering
-    const startSlot = document.querySelector(`.fc-timegrid-slot[data-time="${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}:00"]`) as HTMLElement;
-    const endSlot = document.querySelector(`.fc-timegrid-slot[data-time="${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00"]`) as HTMLElement;
-    let topY = rect?.top || 300;
-    if (startSlot && endSlot) {
-      const startRect = startSlot.getBoundingClientRect();
-      const endRect = endSlot.getBoundingClientRect();
-      topY = (startRect.top + endRect.top) / 2;
-    } else if (startSlot) {
-      topY = startSlot.getBoundingClientRect().top;
-    }
-
     setQuickEvent({
       isOpen: true,
       date: startDate,
       position: {
-        top: topY,
-        left: rect ? rect.right : 400,
+        top: jsEvent ? jsEvent.clientY : (rect?.top || 300),
+        left: rect ? rect.right : (jsEvent ? jsEvent.clientX : 400),
         cellWidth: rect ? rect.width : 0,
         cellHeight: 0,
       },
