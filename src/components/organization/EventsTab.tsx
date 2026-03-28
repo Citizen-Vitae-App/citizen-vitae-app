@@ -627,9 +627,9 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return <div className="text-center py-12 text-destructive">Erreur lors du chargement des événements</div>;
   }
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Sticky header: KPI Cards + Search/Actions */}
-       <div className="sticky top-14 md:top-[76px] z-20 px-4 py-2 md:px-0 md:py-3">
+    <div className="flex flex-col h-full">
+      {/* Fixed header: KPI Cards + Search/Actions */}
+      <div className="shrink-0 py-2 md:py-3 bg-background">
         <div
           aria-hidden="true"
           className="absolute -top-40 bottom-0 left-1/2 w-screen -translate-x-1/2 bg-background shadow-[0_1px_0_0_hsl(var(--border))] -z-10"
