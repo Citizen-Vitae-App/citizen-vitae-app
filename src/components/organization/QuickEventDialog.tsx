@@ -16,15 +16,31 @@ import { logger } from '@/lib/logger';
 import { useBackgroundImageUpload } from '@/hooks/useBackgroundImageUpload';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 
+interface EditEventData {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  is_public: boolean | null;
+  description?: string | null;
+  capacity?: number | null;
+  require_approval?: boolean | null;
+  allow_self_certification?: boolean | null;
+  cover_image_url?: string | null;
+  cause_theme_id?: string | null;
+}
+
 interface QuickEventDialogProps {
   isOpen: boolean;
   onClose: () => void;
   date: Date;
   organizationId: string;
   position?: { top: number; left: number; cellWidth?: number; cellHeight?: number };
+  editEvent?: EditEventData;
 }
 
-export function QuickEventDialog({ isOpen, onClose, date, organizationId, position }: QuickEventDialogProps) {
+export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent }: QuickEventDialogProps) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [startTime, setStartTime] = useState('09:00');
@@ -64,29 +80,46 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   // Reset form when opened
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
-      setLocation('');
-      setDescription('');
-      setIsPublic(true);
-      setCapacity('');
-      setRequireApproval(false);
-      setAllowSelfCertification(false);
-      setIsExpanded(false);
-      setSelectedCauseTheme(null);
-      resetImage();
-      const hours = date.getHours();
-      const mins = date.getMinutes();
-      if (hours !== 0 || mins !== 0) {
-        setStartTime(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
-        const endH = hours + 1;
-        setEndTime(`${String(endH > 23 ? 23 : endH).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+      if (editEvent) {
+        setTitle(editEvent.name);
+        setLocation(editEvent.location || '');
+        setDescription(editEvent.description || '');
+        setIsPublic(editEvent.is_public ?? true);
+        setCapacity(editEvent.capacity ? String(editEvent.capacity) : '');
+        setRequireApproval(editEvent.require_approval ?? false);
+        setAllowSelfCertification(editEvent.allow_self_certification ?? false);
+        setSelectedCauseTheme(editEvent.cause_theme_id || null);
+        setIsExpanded(false);
+        resetImage();
+        const start = new Date(editEvent.start_date);
+        const end = new Date(editEvent.end_date);
+        setStartTime(`${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`);
+        setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`);
       } else {
-        setStartTime('09:00');
-        setEndTime('10:00');
+        setTitle('');
+        setLocation('');
+        setDescription('');
+        setIsPublic(true);
+        setCapacity('');
+        setRequireApproval(false);
+        setAllowSelfCertification(false);
+        setIsExpanded(false);
+        setSelectedCauseTheme(null);
+        resetImage();
+        const hours = date.getHours();
+        const mins = date.getMinutes();
+        if (hours !== 0 || mins !== 0) {
+          setStartTime(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+          const endH = hours + 1;
+          setEndTime(`${String(endH > 23 ? 23 : endH).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+        } else {
+          setStartTime('09:00');
+          setEndTime('10:00');
+        }
       }
       setTimeout(() => titleInputRef.current?.focus(), 100);
     }
-  }, [isOpen, date, resetImage]);
+  }, [isOpen, date, resetImage, editEvent]);
 
   // Close on outside click
   useEffect(() => {
@@ -134,7 +167,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         endDate.setTime(startDate.getTime() + 3600000);
       }
 
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = editEvent?.cover_image_url || null;
       if (coverImage) {
         if (isImageUploading) {
           toast.info("Finalisation de l'upload...");
@@ -142,36 +175,67 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         imageUrl = await waitForUpload();
       }
 
-      const { data: eventData, error } = await supabase.from('events').insert({
-        name: title.trim(),
-        location: location.trim() || 'À définir',
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-        organization_id: organizationId,
-        is_public: isPublic,
-        description: description.trim() || null,
-        capacity: capacity ? parseInt(capacity) : null,
-        require_approval: requireApproval,
-        allow_self_certification: allowSelfCertification,
-        cover_image_url: imageUrl,
-      }).select('id').single();
+      if (editEvent) {
+        // UPDATE existing event
+        const { error } = await supabase.from('events').update({
+          name: title.trim(),
+          location: location.trim() || 'À définir',
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          is_public: isPublic,
+          description: description.trim() || null,
+          capacity: capacity ? parseInt(capacity) : null,
+          require_approval: requireApproval,
+          allow_self_certification: allowSelfCertification,
+          cover_image_url: imageUrl,
+          updated_at: new Date().toISOString(),
+        }).eq('id', editEvent.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Insert cause theme if selected
-      if (selectedCauseTheme && eventData?.id) {
-        await supabase.from('event_cause_themes').insert({
-          event_id: eventData.id,
-          cause_theme_id: selectedCauseTheme,
-        });
+        // Update cause theme
+        await supabase.from('event_cause_themes').delete().eq('event_id', editEvent.id);
+        if (selectedCauseTheme) {
+          await supabase.from('event_cause_themes').insert({
+            event_id: editEvent.id,
+            cause_theme_id: selectedCauseTheme,
+          });
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+        onClose();
+      } else {
+        // CREATE new event
+        const { data: eventData, error } = await supabase.from('events').insert({
+          name: title.trim(),
+          location: location.trim() || 'À définir',
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          organization_id: organizationId,
+          is_public: isPublic,
+          description: description.trim() || null,
+          capacity: capacity ? parseInt(capacity) : null,
+          require_approval: requireApproval,
+          allow_self_certification: allowSelfCertification,
+          cover_image_url: imageUrl,
+        }).select('id').single();
+
+        if (error) throw error;
+
+        if (selectedCauseTheme && eventData?.id) {
+          await supabase.from('event_cause_themes').insert({
+            event_id: eventData.id,
+            cause_theme_id: selectedCauseTheme,
+          });
+        }
+
+        toast.success('Événement créé');
+        queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+        onClose();
       }
-
-      toast.success('Événement créé');
-      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
-      onClose();
     } catch (err) {
-      logger.error('Quick event creation failed:', err);
-      toast.error("Erreur lors de la création");
+      logger.error('Quick event save failed:', err);
+      toast.error(editEvent ? "Erreur lors de la mise à jour" : "Erreur lors de la création");
     } finally {
       setIsSaving(false);
     }
@@ -401,7 +465,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               disabled={!title.trim() || isSaving}
               className="h-8 px-4 text-xs"
             >
-              {isSaving ? 'Création...' : 'Enregistrer'}
+              {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
             </Button>
           </div>
         </div>

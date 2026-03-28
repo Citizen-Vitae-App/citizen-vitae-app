@@ -11,6 +11,21 @@ import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { QuickEventDialog } from './QuickEventDialog';
 
+interface EditEventData {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  is_public: boolean | null;
+  description?: string | null;
+  capacity?: number | null;
+  require_approval?: boolean | null;
+  allow_self_certification?: boolean | null;
+  cover_image_url?: string | null;
+  cause_theme_id?: string | null;
+}
+
 interface CalendarEvent {
   id: string;
   name: string;
@@ -62,7 +77,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
-  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
+  const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; editEvent?: EditEventData; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
 
   // Convert events to FullCalendar format
   const calendarEvents = events.map(event => {
@@ -98,10 +113,40 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     };
   });
 
-  // Handle event click
+  // Handle event click — open edit popover
   const handleEventClick = useCallback((info: any) => {
-    navigate(`/organization/events/${info.event.id}/edit`);
-  }, [navigate]);
+    if (isMember) {
+      navigate(`/organization/events/${info.event.id}/edit`);
+      return;
+    }
+    const eventId = info.event.id;
+    const originalEvent = events.find(e => e.id === eventId);
+    if (!originalEvent) {
+      navigate(`/organization/events/${eventId}/edit`);
+      return;
+    }
+
+    const causeThemeId = originalEvent.event_cause_themes?.[0]?.cause_themes?.id || null;
+    const el = info.el as HTMLElement;
+    const rect = el.getBoundingClientRect();
+
+    setQuickEvent({
+      isOpen: true,
+      date: new Date(originalEvent.start_date),
+      editEvent: {
+        id: originalEvent.id,
+        name: originalEvent.name,
+        start_date: originalEvent.start_date,
+        end_date: originalEvent.end_date,
+        location: originalEvent.location,
+        is_public: originalEvent.is_public,
+        capacity: originalEvent.capacity,
+        cover_image_url: originalEvent.cover_image_url,
+        cause_theme_id: causeThemeId,
+      },
+      position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
+    });
+  }, [events, isMember, navigate]);
 
   // Handle event drag & drop (date change)
   const handleEventDrop = useCallback(async (info: any) => {
@@ -292,6 +337,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         date={quickEvent.date}
         organizationId={organizationId}
         position={quickEvent.position}
+        editEvent={quickEvent.editEvent}
       />
     </div>
   );

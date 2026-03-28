@@ -632,7 +632,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
        <div className="sticky top-14 md:top-28 z-20 px-4 py-3 md:px-0 md:py-4">
         <div
           aria-hidden="true"
-          className="absolute -top-24 bottom-0 left-1/2 w-screen -translate-x-1/2 bg-background shadow-[0_1px_0_0_hsl(var(--border))] -z-10"
+          className="absolute -top-32 bottom-0 left-1/2 w-screen -translate-x-1/2 bg-background shadow-[0_1px_0_0_hsl(var(--border))] -z-10"
         />
         {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
