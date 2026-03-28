@@ -155,6 +155,7 @@ export type Database = {
           face_match_at: string | null
           face_match_passed: boolean | null
           id: string
+          is_public: boolean
           qr_token: string | null
           registered_at: string
           status: string
@@ -174,6 +175,7 @@ export type Database = {
           face_match_at?: string | null
           face_match_passed?: boolean | null
           id?: string
+          is_public?: boolean
           qr_token?: string | null
           registered_at?: string
           status?: string
@@ -193,6 +195,7 @@ export type Database = {
           face_match_at?: string | null
           face_match_passed?: boolean | null
           id?: string
+          is_public?: boolean
           qr_token?: string | null
           registered_at?: string
           status?: string
@@ -380,6 +383,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      manual_experiences: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_month: number | null
+          end_year: number | null
+          experience_type: string
+          id: string
+          is_current: boolean
+          location: string | null
+          location_type: string | null
+          organization_name: string
+          start_month: number
+          start_year: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_month?: number | null
+          end_year?: number | null
+          experience_type: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          location_type?: string | null
+          organization_name: string
+          start_month: number
+          start_year: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_month?: number | null
+          end_year?: number | null
+          experience_type?: string
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          location_type?: string | null
+          organization_name?: string
+          start_month?: number
+          start_year?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -668,6 +725,7 @@ export type Database = {
           last_name: string | null
           onboarding_completed: boolean | null
           reference_selfie_url: string | null
+          slug: string | null
           suspended_at: string | null
           suspended_by: string | null
           verification_status: string | null
@@ -686,6 +744,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          slug?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           verification_status?: string | null
@@ -704,6 +763,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean | null
           reference_selfie_url?: string | null
+          slug?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           verification_status?: string | null
@@ -849,6 +909,12 @@ export type Database = {
           geolocation_enabled: boolean
           language: string
           phone_number: string | null
+          profile_visibility: string
+          show_causes: boolean
+          show_experiences: boolean
+          show_impact: boolean
+          show_organizations: boolean
+          show_upcoming_events: boolean
           sms_opt_in: boolean
           updated_at: string | null
           user_id: string
@@ -859,6 +925,12 @@ export type Database = {
           geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
+          profile_visibility?: string
+          show_causes?: boolean
+          show_experiences?: boolean
+          show_impact?: boolean
+          show_organizations?: boolean
+          show_upcoming_events?: boolean
           sms_opt_in?: boolean
           updated_at?: string | null
           user_id: string
@@ -869,6 +941,12 @@ export type Database = {
           geolocation_enabled?: boolean
           language?: string
           phone_number?: string | null
+          profile_visibility?: string
+          show_causes?: boolean
+          show_experiences?: boolean
+          show_impact?: boolean
+          show_organizations?: boolean
+          show_upcoming_events?: boolean
           sms_opt_in?: boolean
           updated_at?: string | null
           user_id?: string
@@ -939,6 +1017,16 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: Json
       }
+      get_profile_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          avatar_url: string
+          first_name: string
+          id: string
+          id_verified: boolean
+          last_name: string
+        }[]
+      }
       get_user_id_by_email:
         | { Args: { _email: string }; Returns: string }
         | { Args: { _email: string; _org_id?: string }; Returns: string }
@@ -959,6 +1047,7 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      unaccent: { Args: { "": string }; Returns: string }
       update_registration_certification: {
         Args: {
           _attended_at?: string

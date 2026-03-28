@@ -1091,7 +1091,7 @@ export default function EditEvent() {
           {/* Participants Section */}
           {eventId && (
             <div className="max-w-[916px] mx-auto">
-              <EventParticipantsSection eventId={eventId} />
+              <EventParticipantsSection eventId={eventId} eventEndDate={originalEvent?.endDate} />
             </div>
           )}
         </div>

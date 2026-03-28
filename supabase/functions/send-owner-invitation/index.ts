@@ -106,11 +106,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create a pending organization first
     const pendingOrgName = organizationName || `Organisation de ${normalizedEmail}`;
+    const baseSlug = pendingOrgName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
     const { data: newOrg, error: orgError } = await supabaseClient
       .from("organizations")
       .insert({
         name: pendingOrgName,
         type: orgType,
+        slug,
         is_verified: false,
         visibility: "private",
       })

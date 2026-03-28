@@ -9,7 +9,6 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { ShareDialog } from '@/components/ShareDialog';
 import { CertificationCard } from '@/components/CertificationCard';
 import { CertificationButton } from '@/components/CertificationButton';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,35 +25,8 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-interface CauseTheme {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-}
-interface EventWithOrganization {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string;
-  start_date: string;
-  end_date: string;
-  cover_image_url: string | null;
-  capacity: number | null;
-  latitude: number | null;
-  longitude: number | null;
-  organization_id: string;
-  allow_self_certification: boolean | null;
-  organizations: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    description: string | null;
-  };
-  event_cause_themes?: {
-    cause_themes: CauseTheme;
-  }[];
-}
+import { useEventDetail } from '@/hooks/useEventDetail';
+import { useGeocode } from '@/hooks/useGeocode';
 const EventDetail = () => {
   const {
     eventId
@@ -70,8 +42,8 @@ const EventDetail = () => {
     isFavorite,
     toggleFavorite
   } = useFavorites();
-  const [event, setEvent] = useState<EventWithOrganization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: event, isLoading } = useEventDetail(eventId);
+  const { coords } = useGeocode(event?.location, event?.latitude, event?.longitude);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUnregisterDialogOpen, setIsUnregisterDialogOpen] = useState(false);
   const [showFaceMatch, setShowFaceMatch] = useState(false);
@@ -100,38 +72,6 @@ const EventDetail = () => {
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [eventId]);
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId) return;
-      const {
-        data,
-        error
-      } = await supabase.from('events').select(`
-          *,
-          organizations!inner (
-            id,
-            name,
-            logo_url,
-            description
-          ),
-          event_cause_themes (
-            cause_themes (
-              id,
-              name,
-              color,
-              icon
-            )
-          )
-        `).eq('id', eventId).eq('is_public', true).maybeSingle();
-      if (error) {
-        console.error('Error fetching event:', error);
-      } else {
-        setEvent(data as EventWithOrganization);
-      }
-      setIsLoading(false);
-    };
-    fetchEvent();
   }, [eventId]);
   const formatDate = (dateString: string) => {
     return format(parseISO(dateString), "EEEE d MMMM yyyy", {
@@ -334,7 +274,7 @@ const EventDetail = () => {
 
               {/* CTA Button or Certification Card */}
               {isRegistered ? <>
-                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} />
+                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} certificationStartAt={registration?.certification_start_at} certificationEndAt={registration?.certification_end_at} />
                   <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 text-lg font-semibold transition-all duration-300", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
                     {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                         <X className="h-5 w-5 mr-2" />
@@ -366,7 +306,7 @@ const EventDetail = () => {
           <MapPin className="h-4 w-4 flex-shrink-0" />
           <span className="underline underline-offset-2 group-hover:text-primary transition-colors duration-200">{event.location}</span>
         </a>
-        {event.latitude && event.longitude ? <EventMap lat={event.latitude} lng={event.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
+        {coords ? <EventMap lat={coords.latitude} lng={coords.longitude} zoom={14} iconUrl={mapMarkerIcon} /> : <div className="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
             <p className="text-muted-foreground">Carte non disponible</p>
           </div>}
       </div>
@@ -399,7 +339,7 @@ const EventDetail = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
-                  <p>Désinscription impossible moins de 24h avant la fin de l'événement</p>
+                  <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

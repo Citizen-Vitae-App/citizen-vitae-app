@@ -119,27 +119,27 @@ const VerifyParticipant = () => {
             message: 'Erreur lors de la vérification. Veuillez réessayer.',
           });
         } else if (data?.success) {
-          // Parse the response from the edge function
           const nameParts = (data.user_name || '').split(' ');
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || '';
           
-          // Generate certificate for this registration
-          try {
-            const { data: certData, error: certError } = await supabase.functions.invoke('generate-certificate', {
-              body: {
-                registration_id: registrationId,
-                validated_by: user.id, // The admin who scanned
-              },
-            });
-            if (certError) {
-              logger.error('Error generating certificate:', certError);
-            } else {
-              logger.debug('Certificate generated:', certData?.certificate_url);
+          // Only generate certificate on the departure scan (2nd scan)
+          if (data.scan_type === 'departure' && data.registration_id) {
+            try {
+              const { data: certData, error: certError } = await supabase.functions.invoke('generate-certificate', {
+                body: {
+                  registration_id: data.registration_id || registrationId,
+                  validated_by: user.id,
+                },
+              });
+              if (certError) {
+                logger.error('Error generating certificate:', certError);
+              } else {
+                logger.debug('Certificate generated:', certData?.certificate_url);
+              }
+            } catch (certErr) {
+              logger.error('Error generating certificate:', certErr);
             }
-          } catch (certErr) {
-            logger.error('Error generating certificate:', certErr);
-            // Don't fail the verification if certificate generation fails
           }
           
           setResult({

@@ -190,7 +190,15 @@ export const useOrganizationEvents = (searchQuery?: string, teamId?: string) => 
         .from('events')
         .select(`
           *,
-          organizations!inner (name)
+          organizations!inner (name),
+          event_cause_themes (
+            cause_themes (
+              id,
+              name,
+              color,
+              icon
+            )
+          )
         `)
         .eq('organization_id', organizationId)
         .order('start_date', { ascending: true });

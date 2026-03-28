@@ -22,6 +22,7 @@ export interface CertifiedMission {
   start_date: string;
   end_date: string;
   attended_at: string;
+  is_public: boolean;
   causes: Array<{
     id: string;
     name: string;
@@ -176,6 +177,7 @@ export function useUserProfile() {
           id,
           event_id,
           attended_at,
+          is_public,
           events (
             id,
             name,
@@ -236,6 +238,7 @@ export function useUserProfile() {
             start_date: event.start_date,
             end_date: event.end_date,
             attended_at: reg.attended_at!,
+            is_public: (reg as any).is_public !== false,
             causes,
           };
         })

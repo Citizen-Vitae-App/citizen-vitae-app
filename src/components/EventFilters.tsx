@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Locate } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import * as LucideIcons from 'lucide-react';
@@ -25,6 +25,9 @@ interface EventFiltersProps {
   onDateRangeChange: (range: DateRange) => void;
   selectedCauses: string[];
   onCausesChange: (causes: string[]) => void;
+  isNearMeActive?: boolean;
+  onNearMeToggle?: () => void;
+  isGeoLoading?: boolean;
 }
 
 type TabType = 'dates' | 'mois' | 'flexible';
@@ -44,7 +47,10 @@ const EventFilters = ({
   dateRange,
   onDateRangeChange,
   selectedCauses,
-  onCausesChange
+  onCausesChange,
+  isNearMeActive = false,
+  onNearMeToggle,
+  isGeoLoading = false,
 }: EventFiltersProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('dates');
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -101,6 +107,7 @@ const EventFilters = ({
     onDateRangeChange({ start: null, end: null });
     onCausesChange([]);
     setHoverDate(null);
+    if (isNearMeActive && onNearMeToggle) onNearMeToggle();
   };
 
   // Calculate effective end date (either selected end or hover date for preview)
@@ -342,6 +349,25 @@ const EventFilters = ({
             </button>
           </div>
         </div>
+
+        {/* Autour de moi toggle */}
+        {onNearMeToggle && (
+          <div className="px-4 md:px-8 pb-4">
+            <button
+              onClick={onNearMeToggle}
+              disabled={isGeoLoading}
+              className={cn(
+                "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all border",
+                isNearMeActive
+                  ? "border-2 border-[#012573] bg-[#012573]/10 text-[#012573]"
+                  : "border-border bg-background hover:border-[#012573]/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Locate className={cn("w-4 h-4", isGeoLoading && "animate-pulse")} />
+              <span>Autour de moi</span>
+            </button>
+          </div>
+        )}
 
         <div className="px-4 md:px-8 pb-6">
           {activeTab === 'dates' && (

@@ -1,31 +1,35 @@
+import { useState } from 'react';
 import { useEventParticipants } from '@/hooks/useEventParticipants';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Clock, CheckCircle2, UserCheck, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Clock, CheckCircle2, UserCheck, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { logger } from '@/lib/logger';
 
 interface EventParticipantsSectionProps {
   eventId: string;
+  eventEndDate?: string;
 }
 
 const getCertificationStatus = (participant: {
   certification_start_at: string | null;
   certification_end_at: string | null;
   face_match_passed: boolean | null;
+  status: string;
 }) => {
-  if (participant.certification_end_at) {
-    return 'certified';
-  }
-  if (participant.certification_start_at) {
-    return 'arrived';
-  }
-  if (participant.face_match_passed) {
-    return 'ready';
-  }
+  if (participant.status === 'self_certified') return 'self_certified';
+  if (participant.certification_end_at) return 'certified';
+  if (participant.certification_start_at) return 'arrived';
+  if (participant.face_match_passed) return 'ready';
   return 'pending';
 };
 
@@ -36,6 +40,13 @@ const getCertificationBadge = (status: string) => {
         <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
           <CheckCircle2 className="h-3 w-3 mr-1" />
           Certifié
+        </Badge>
+      );
+    case 'self_certified':
+      return (
+        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+          <UserCheck className="h-3 w-3 mr-1" />
+          Auto-certifié
         </Badge>
       );
     case 'arrived':
@@ -68,8 +79,65 @@ const getInitials = (firstName: string | null, lastName: string | null) => {
   return `${first}${last}`.toUpperCase() || '?';
 };
 
-export function EventParticipantsSection({ eventId }: EventParticipantsSectionProps) {
+export function EventParticipantsSection({ eventId, eventEndDate }: EventParticipantsSectionProps) {
   const { data: participants, isLoading } = useEventParticipants(eventId);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [certifyingId, setCertifyingId] = useState<string | null>(null);
+
+  // Check if we're in manual validation mode (past H+1)
+  const isManualValidationMode = eventEndDate 
+    ? new Date() > new Date(new Date(eventEndDate).getTime() + 60 * 60 * 1000) 
+    : false;
+
+  const handleManualCertify = async (registrationId: string, participantName: string) => {
+    if (!user) return;
+    setCertifyingId(registrationId);
+
+    try {
+      const now = new Date().toISOString();
+
+      // Update registration with certification timestamps
+      const { error: rpcError } = await supabase.rpc('update_registration_certification', {
+        _registration_id: registrationId,
+        _status: 'attended',
+        _attended_at: now,
+        _certification_start_at: now,
+        _certification_end_at: now,
+        _validated_by: user.id,
+      });
+
+      if (rpcError) throw rpcError;
+
+      // Generate certificate
+      try {
+        await supabase.functions.invoke('generate-certificate', {
+          body: {
+            registration_id: registrationId,
+            validated_by: user.id,
+          },
+        });
+      } catch (certErr) {
+        logger.error('Error generating certificate after manual validation:', certErr);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['event-participants', eventId] });
+
+      toast({
+        title: 'Présence certifiée',
+        description: `${participantName} a été certifié(e) manuellement.`,
+      });
+    } catch (err) {
+      logger.error('Manual certification error:', err);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de certifier la présence.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCertifyingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -87,13 +155,26 @@ export function EventParticipantsSection({ eventId }: EventParticipantsSectionPr
     );
   }
 
+  const hasUncertifiedParticipants = participants?.some(p => {
+    const status = getCertificationStatus(p);
+    return status !== 'certified' && status !== 'self_certified';
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Users className="h-5 w-5 text-muted-foreground" />
-        <h3 className="text-xl font-semibold">
-          Participants inscrits ({participants?.length || 0})
-        </h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-xl font-semibold">
+            Participants inscrits ({participants?.length || 0})
+          </h3>
+        </div>
+        {isManualValidationMode && hasUncertifiedParticipants && (
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+            <Clock className="h-3 w-3 mr-1" />
+            Mode validation manuelle
+          </Badge>
+        )}
       </div>
 
       {!participants || participants.length === 0 ? (
@@ -117,7 +198,9 @@ export function EventParticipantsSection({ eventId }: EventParticipantsSectionPr
                 <TableHead>Certification</TableHead>
                 <TableHead>Arrivée</TableHead>
                 <TableHead>Départ</TableHead>
-                <TableHead className="text-right">Durée</TableHead>
+                <TableHead className="text-right">
+                  {isManualValidationMode ? 'Action' : 'Durée'}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -140,6 +223,13 @@ export function EventParticipantsSection({ eventId }: EventParticipantsSectionPr
                   const minutes = durationMinutes % 60;
                   duration = hours > 0 ? `${hours}h${minutes.toString().padStart(2, '0')}` : `${minutes}min`;
                 }
+
+                const participantName = participant.first_name && participant.last_name
+                  ? `${participant.first_name} ${participant.last_name}`
+                  : 'Nom non renseigné';
+
+                const canManualCertify = isManualValidationMode && 
+                  certStatus !== 'certified' && certStatus !== 'self_certified';
                 
                 return (
                   <TableRow key={participant.user_id}>
@@ -151,11 +241,7 @@ export function EventParticipantsSection({ eventId }: EventParticipantsSectionPr
                         </AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {participant.first_name && participant.last_name
-                        ? `${participant.first_name} ${participant.last_name}`
-                        : 'Nom non renseigné'}
-                    </TableCell>
+                    <TableCell className="font-medium">{participantName}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {participant.email || 'Email non renseigné'}
                     </TableCell>
@@ -191,7 +277,22 @@ export function EventParticipantsSection({ eventId }: EventParticipantsSectionPr
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {certStatus === 'certified' ? (
+                      {canManualCertify ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          disabled={certifyingId === participant.registration_id}
+                          onClick={() => handleManualCertify(participant.registration_id, participantName)}
+                        >
+                          {certifyingId === participant.registration_id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Shield className="h-3.5 w-3.5" />
+                          )}
+                          Certifier
+                        </Button>
+                      ) : certStatus === 'certified' || certStatus === 'self_certified' ? (
                         <span className="font-medium text-primary">{duration}</span>
                       ) : (
                         <span className="text-muted-foreground">-</span>

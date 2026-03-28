@@ -52,7 +52,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
     setEditData({
       first_name: profile.first_name || '',
       last_name: profile.last_name || '',
-      bio: (profile as any).bio || '',
+      bio: profile.bio || '',
     });
     setIsEditing(true);
   };
@@ -72,7 +72,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
           first_name: editData.first_name,
           last_name: editData.last_name,
           bio: editData.bio,
-        } as any)
+        })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -283,17 +283,13 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-foreground text-xl font-semibold">
                 {profile?.first_name} {profile?.last_name}
               </h1>
               
               {/* Bio field */}
-              {(profile as any).bio && (
-                <p className="text-muted-foreground mt-1 text-sm">{(profile as any).bio}</p>
-              )}
-              
-              {primaryTitle && (
-                <p className="text-muted-foreground mt-1 text-sm">{primaryTitle}</p>
+              {profile.bio && (
+                <p className="mt-1 text-sm text-sidebar-primary font-normal">{profile.bio}</p>
               )}
 
               {/* Identity verification CTA - only show if NOT verified */}

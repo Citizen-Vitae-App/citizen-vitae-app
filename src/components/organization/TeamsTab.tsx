@@ -85,13 +85,7 @@ export function TeamsTab({ userTeamId, canCreateTeams = true, isLeader = false }
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold">{pageTitle}</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            {pageDescription}
-          </p>
-        </div>
+      <div className="flex justify-end">
         {canCreateTeams && (
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />

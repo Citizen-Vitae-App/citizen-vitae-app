@@ -15,13 +15,17 @@ import {
   MoreVertical,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Trash2,
   Copy,
   TrendingUp,
   Activity,
   Tag,
+  List,
 } from "lucide-react";
+import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
@@ -31,6 +35,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -162,6 +167,9 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     canManageAllEvents,
     isMember,
   });
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [calendarApi, setCalendarApi] = useState<CalendarToolbarApi | null>(null);
+  const [calendarState, setCalendarState] = useState<{ currentView: CalendarViewType; currentTitle: string }>({ currentView: 'dayGridMonth', currentTitle: '' });
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<EventFilters>({
     statuses: [],
@@ -363,6 +371,13 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     });
 
     // Sorting
+    const getStatusPriority = (startDate: string, endDate: string) => {
+      const status = getEventStatus(startDate, endDate);
+      if (status === "En cours") return 0;
+      if (status === "À venir") return 1;
+      return 2; // Passé
+    };
+
     if (sortField) {
       result = [...result].sort((a, b) => {
         let comparison = 0;
@@ -391,6 +406,14 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             break;
         }
         return sortDirection === "asc" ? comparison : -comparison;
+      });
+    } else {
+      // Default sort: En cours first, À venir second, Passé last, then by start_date ascending
+      result = [...result].sort((a, b) => {
+        const priorityA = getStatusPriority(a.start_date, a.end_date);
+        const priorityB = getStatusPriority(b.start_date, b.end_date);
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
     }
     return result;
@@ -604,63 +627,65 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return <div className="text-center py-12 text-destructive">Erreur lors du chargement des événements</div>;
   }
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-2xl font-bold">{kpis.newThisMonth}</p>
-                {kpis.growthPercent !== null && (
-                  <span
-                    className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    <TrendingUp className={`h-3.5 w-3.5 ${kpis.growthPercent < 0 ? "rotate-180" : ""}`} />
-                    {kpis.growthPercent >= 0 ? "+" : ""}
-                    {kpis.growthPercent}%
-                  </span>
-                )}
+    <div className="flex flex-col h-full">
+      {/* Fixed header: KPI Cards + Search/Actions */}
+      <div className="shrink-0 py-2 md:py-3 bg-background">
+        {/* KPI Cards */}
+        {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold">{kpis.newThisMonth}</p>
+                  {kpis.growthPercent !== null && (
+                    <span
+                      className={`text-sm font-medium flex items-center gap-0.5 ${kpis.growthPercent >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      <TrendingUp className={`h-3.5 w-3.5 ${kpis.growthPercent < 0 ? "rotate-180" : ""}`} />
+                      {kpis.growthPercent >= 0 ? "+" : ""}
+                      {kpis.growthPercent}%
+                    </span>
+                  )}
+                </div>
               </div>
+              <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <CalendarIcon className="h-8 w-8 text-muted-foreground/50" />
           </div>
-        </div>
 
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Cause la plus présente</p>
-              <div className="flex items-center gap-2 mt-1">
-                {kpis.topCause ? (
-                  <>
-                    <p className="text-lg font-bold">{kpis.topCause.name}</p>
-                    <span className="text-sm text-muted-foreground">({kpis.topCause.count})</span>
-                  </>
-                ) : (
-                  <p className="text-lg text-muted-foreground">Aucune</p>
-                )}
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Cause la plus présente</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {kpis.topCause ? (
+                    <>
+                      <p className="text-lg font-bold">{kpis.topCause.name}</p>
+                      <span className="text-sm text-muted-foreground">({kpis.topCause.count})</span>
+                    </>
+                  ) : (
+                    <p className="text-lg text-muted-foreground">Aucune</p>
+                  )}
+                </div>
               </div>
+              <Tag className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <Tag className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+
+          <div className="p-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Missions actives</p>
+                <p className="text-2xl font-bold mt-1">{kpis.activeMissions}</p>
+              </div>
+              <Activity className="h-8 w-8 text-muted-foreground/50" />
+            </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Missions actives</p>
-              <p className="text-2xl font-bold mt-1">{kpis.activeMissions}</p>
-            </div>
-            <Activity className="h-8 w-8 text-muted-foreground/50" />
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Actions Bar - Sticky (top-14 on mobile for header, top-28 on desktop for navbar) */}
-      <div className="sticky top-14 md:top-28 z-20 bg-background py-3 -mx-4 px-4 md:mx-0 md:px-0">
-        <div className="flex items-center gap-2">
+        {/* Search and Actions Bar */}
+        <div className="flex items-center gap-2 pb-3">
           {/* Search bar - flexible width */}
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -688,7 +713,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
                   <span className="hidden md:inline">Scanner</span>
                 </Link>
               </Button>
-              <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+               <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
                 <Link to="/organization/create-event">
                   <Plus className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Créer</span>
@@ -696,84 +721,159 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
               </Button>
             </>
           )}
+
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 shrink-0">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-md transition-all ${
+                viewMode === 'list'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vue liste"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`p-2 rounded-md transition-all ${
+                viewMode === 'calendar'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Vue calendrier"
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+
+        {/* Calendar toolbar - inside sticky header */}
+        {viewMode === 'calendar' && calendarApi && (
+          <div className="flex items-center justify-between gap-2 flex-wrap pb-3">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handlePrev()}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
+                Aujourd'hui
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handleNext()}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <h3 className="text-base font-semibold capitalize ml-2">{calendarState.currentTitle}</h3>
+            </div>
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+              {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
+                <button
+                  key={view}
+                  onClick={() => calendarApi.handleViewChange(view)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                    calendarState.currentView === view
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Events list */}
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto pb-8">
+      {viewMode === 'calendar' ? (
+        <EventCalendarView
+          events={filteredEvents}
+          organizationId={organizationId}
+          participantCounts={participantCounts}
+          isMember={isMember}
+          onToolbarReady={setCalendarApi}
+          onStateChange={setCalendarState}
+        />
+      ) : (
+      /* Events list */
       <div className="w-full">
         {filteredEvents.length === 0 ? (
           <div className="border rounded-lg overflow-hidden w-full">
-            <Table className="table-fixed w-full">
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold w-[35%]">
-                    <SortableColumnHeader label="Titre" field="title" />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[14%]">
-                    <ColumnHeaderWithFilter
-                      label="Date"
-                      field="date"
-                      filterType="date"
-                      icon={<CalendarIcon className="h-4 w-4" />}
-                      filters={filters}
-                      setFilters={setFilters}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      toggleSort={toggleSort}
-                      openFilterPanel={openFilterPanel}
-                      setOpenFilterPanel={setOpenFilterPanel}
-                    />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
-                    <ColumnHeaderWithFilter
-                      label="Statut"
-                      field="status"
-                      filterType="status"
-                      filters={filters}
-                      setFilters={setFilters}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      toggleSort={toggleSort}
-                      openFilterPanel={openFilterPanel}
-                      setOpenFilterPanel={setOpenFilterPanel}
-                    />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
-                    <ColumnHeaderWithFilter
-                      label="Visibilité"
-                      field="visibility"
-                      filterType="visibility"
-                      filters={filters}
-                      setFilters={setFilters}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      toggleSort={toggleSort}
-                      openFilterPanel={openFilterPanel}
-                      setOpenFilterPanel={setOpenFilterPanel}
-                    />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[18%]">
-                    <SortableColumnHeader label="Lieu" field="location" />
-                  </TableHead>
-                  <TableHead className="font-semibold w-[10%]">
-                    <ColumnHeaderWithFilter
-                      label="Part."
-                      field="participants"
-                      filterType="participants"
-                      icon={<Users className="h-4 w-4" />}
-                      filters={filters}
-                      setFilters={setFilters}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      toggleSort={toggleSort}
-                      openFilterPanel={openFilterPanel}
-                      setOpenFilterPanel={setOpenFilterPanel}
-                    />
-                  </TableHead>
-                  <TableHead className="w-[5%]"></TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
+            {/* Hide table headers on mobile to prevent overlap */}
+            {!isMobile && (
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold w-[35%]">
+                      <SortableColumnHeader label="Titre" field="title" />
+                    </TableHead>
+                    <TableHead className="font-semibold w-[14%]">
+                      <ColumnHeaderWithFilter
+                        label="Date"
+                        field="date"
+                        filterType="date"
+                        icon={<CalendarIcon className="h-4 w-4" />}
+                        filters={filters}
+                        setFilters={setFilters}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        toggleSort={toggleSort}
+                        openFilterPanel={openFilterPanel}
+                        setOpenFilterPanel={setOpenFilterPanel}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold w-[10%]">
+                      <ColumnHeaderWithFilter
+                        label="Statut"
+                        field="status"
+                        filterType="status"
+                        filters={filters}
+                        setFilters={setFilters}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        toggleSort={toggleSort}
+                        openFilterPanel={openFilterPanel}
+                        setOpenFilterPanel={setOpenFilterPanel}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold w-[10%]">
+                      <ColumnHeaderWithFilter
+                        label="Visibilité"
+                        field="visibility"
+                        filterType="visibility"
+                        filters={filters}
+                        setFilters={setFilters}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        toggleSort={toggleSort}
+                        openFilterPanel={openFilterPanel}
+                        setOpenFilterPanel={setOpenFilterPanel}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold w-[18%]">
+                      <SortableColumnHeader label="Lieu" field="location" />
+                    </TableHead>
+                    <TableHead className="font-semibold w-[10%]">
+                      <ColumnHeaderWithFilter
+                        label="Part."
+                        field="participants"
+                        filterType="participants"
+                        icon={<Users className="h-4 w-4" />}
+                        filters={filters}
+                        setFilters={setFilters}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        toggleSort={toggleSort}
+                        openFilterPanel={openFilterPanel}
+                        setOpenFilterPanel={setOpenFilterPanel}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[5%]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            )}
             <div className="text-center py-12">
               <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement</h3>
@@ -1077,6 +1177,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </Table>
           </div>
         )}
+      </div>
+      )}
       </div>
 
       {/* Delete confirmation dialog for non-recurring events */}

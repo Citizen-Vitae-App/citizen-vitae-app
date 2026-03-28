@@ -15,6 +15,8 @@ interface Registration {
   face_match_at?: string | null;
   qr_token?: string | null;
   attended_at?: string | null;
+  certification_start_at?: string | null;
+  certification_end_at?: string | null;
 }
 
 export const useEventRegistration = (eventId: string | undefined) => {

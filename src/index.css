@@ -153,3 +153,219 @@ All colors MUST be HSL.
 .pac-logo::after {
   display: none;
 }
+
+/* Slide-up animation for QR code */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* CSS Checkmark animation */
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 30;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-circle {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.checkmark-animated {
+  animation: checkmark-circle 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.checkmark-animated svg path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: checkmark-draw 0.4s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* FullCalendar Notion-style theme */
+.fc-notion-theme .fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-today-bg-color: hsl(var(--accent));
+  --fc-neutral-bg-color: hsl(var(--muted));
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-now-indicator-color: hsl(var(--primary));
+  font-family: inherit;
+}
+
+.fc-notion-theme .fc .fc-col-header-cell {
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px 0;
+}
+
+.fc-notion-theme .fc .fc-col-header-cell-cushion {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  text-decoration: none;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day-number {
+  color: hsl(var(--foreground));
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 8px;
+  text-decoration: none;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background: hsl(3 79% 53%);
+  color: white;
+  border-radius: 9999px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day-frame {
+  min-height: 90px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day-frame:hover {
+  background: hsl(3 79% 53% / 0.04);
+}
+
+/* Current day highlight in week/day column headers */
+.fc-notion-theme .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: hsl(3 79% 53%);
+  font-weight: 700;
+}
+
+.fc-notion-theme .fc .fc-col-header-cell.fc-day-today {
+  background: hsl(3 79% 53% / 0.08);
+}
+
+/* Sticky column headers */
+.fc-notion-theme .fc .fc-scrollgrid-section-header > * {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
+
+.fc-notion-theme .fc .fc-event {
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.fc-notion-theme .fc .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.1);
+}
+
+.fc-notion-theme .fc .fc-event.fc-event-upcoming {
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--foreground));
+}
+
+.fc-notion-theme .fc .fc-event.fc-event-live {
+  background: hsl(142 76% 36% / 0.12);
+  color: hsl(142 76% 26%);
+}
+
+.fc-notion-theme .fc .fc-event.fc-event-past {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+}
+
+.fc-notion-theme .fc .fc-timegrid-slot {
+  height: 34px;
+  border-color: hsl(var(--border));
+}
+
+.fc-notion-theme .fc .fc-timegrid-slot-label-cushion {
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.fc-notion-theme .fc .fc-timegrid-event {
+  border-radius: 6px;
+  border-left: 3px solid hsl(var(--primary));
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.08);
+}
+
+.fc-notion-theme .fc .fc-timegrid-event.fc-event-live {
+  border-left-color: hsl(142 76% 36%);
+}
+
+.fc-notion-theme .fc .fc-timegrid-event.fc-event-past {
+  border-left-color: hsl(var(--muted-foreground));
+}
+
+.fc-notion-theme .fc .fc-more-link {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.fc-notion-theme .fc .fc-more-link:hover {
+  color: hsl(var(--foreground));
+}
+
+.fc-notion-theme .fc .fc-scrollgrid {
+  border: none;
+}
+
+.fc-notion-theme .fc .fc-scrollgrid td,
+.fc-notion-theme .fc .fc-scrollgrid th {
+  border-color: hsl(var(--border));
+}
+
+.fc-notion-theme .fc .fc-now-indicator-line {
+  border-color: hsl(0 84% 60%);
+}
+
+.fc-notion-theme .fc .fc-now-indicator-arrow {
+  border-color: hsl(0 84% 60%);
+}
+
+.fc-notion-theme .fc .fc-highlight {
+  background: hsl(var(--primary) / 0.06);
+}
+
+.fc-notion-theme .fc .fc-daygrid-event-harness {
+  margin: 1px 2px;
+}

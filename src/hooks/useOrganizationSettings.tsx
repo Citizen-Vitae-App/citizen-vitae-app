@@ -148,9 +148,31 @@ export function useOrganizationSettings() {
     mutationFn: async (updates: Partial<OrganizationSettings>) => {
       if (!organizationId) throw new Error('No organization found');
       
+      const sanitized = { ...updates };
+
+      // Auto-generate slug from name if slug is empty/missing
+      if ('name' in sanitized && sanitized.name) {
+        if (!sanitized.slug || sanitized.slug.trim() === '') {
+          sanitized.slug = generateSlug(sanitized.name);
+        }
+      }
+
+      // Never send empty string slug — use null instead
+      if ('slug' in sanitized && (!sanitized.slug || sanitized.slug.trim() === '')) {
+        sanitized.slug = null as unknown as string;
+      }
+
+      // If slug changed, ensure uniqueness by checking & appending suffix
+      if (sanitized.slug) {
+        const isAvailable = await checkSlugAvailability(sanitized.slug);
+        if (!isAvailable) {
+          sanitized.slug = `${sanitized.slug}-${Date.now().toString(36)}`;
+        }
+      }
+
       const { error } = await supabase
         .from('organizations')
-        .update(updates)
+        .update(sanitized)
         .eq('id', organizationId);
       
       if (error) throw error;

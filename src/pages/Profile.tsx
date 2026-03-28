@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -7,11 +8,13 @@ import { FavoriteCausesSection } from '@/components/profile/FavoriteCausesSectio
 import { CitizenImpactSection } from '@/components/profile/CitizenImpactSection';
 import { CitizenExperiencesSection } from '@/components/profile/CitizenExperiencesSection';
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
+import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
+import { ProfilePrivacySheet } from '@/components/profile/ProfilePrivacySheet';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
-import { Settings } from 'lucide-react';
+import { Settings, Eye, Share2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
@@ -20,13 +23,12 @@ import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
-  const { hasRole } = useAuth();
+  const { hasRole, user } = useAuth();
   const isMobile = useIsMobile();
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   
-  // Check if we're in organization context
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
-  // Call hooks before any conditional returns (React rules)
   const {
     organizations,
     favoriteCauses,
@@ -37,7 +39,6 @@ export default function Profile() {
     isLoading
   } = useUserProfile();
   
-  // Security: If user tries to access organization context without proper role, redirect
   if (isOrganizationContext && !hasRole('organization')) {
     return <Navigate to="/profile" replace />;
   }
@@ -46,7 +47,7 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-background">
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
-        <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
+        <main className={`container mx-auto px-4 pb-24 max-w-4xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
           <div className="space-y-6">
             <Skeleton className="h-40 w-full rounded-2xl" />
             <Skeleton className="h-32 w-full rounded-xl" />
@@ -71,13 +72,21 @@ export default function Profile() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Header: Organization header on mobile in org context, else MainNavbar */}
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
 
-        <main className={`container mx-auto px-4 pb-24 max-w-2xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
-          {/* Settings button - mobile only, not in organization context */}
-          {!isOrganizationContext && (
-            <div className="flex justify-end mb-1 md:hidden">
+        <main className={`container mx-auto px-4 pb-24 max-w-5xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
+          {/* Mobile: action buttons row */}
+          {!isOrganizationContext && isMobile && (
+            <div className="flex justify-end gap-2 mb-1">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setPrivacyOpen(true)}>
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
+                import('sonner').then(m => m.toast.success('Lien du CV copié !'));
+              }}>
+                <Share2 className="h-4 w-4" />
+              </Button>
               <Link to="/settings">
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
                   <Settings className="h-4 w-4" />
@@ -86,38 +95,41 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Header with identity */}
-          <ProfileHeader organizations={organizations} />
+          {/* Two-column layout on desktop */}
+          <div className="flex gap-8">
+            {/* Main content */}
+            <div className="flex-1 min-w-0 max-w-2xl">
+              <ProfileHeader organizations={organizations} />
+              <OrganizationsSection organizations={organizations} />
+              <FavoriteCausesSection causes={favoriteCauses} />
+              <CitizenImpactSection radarData={radarData} totalMissions={totalCertifiedMissions} isEligible={isRadarEligible} />
+              <CitizenExperiencesSection missions={certifiedMissions} totalCount={totalCertifiedMissions} />
+              <UpcomingEventsSection />
+            </div>
 
-          {/* Organizations */}
-          <OrganizationsSection organizations={organizations} />
-
-          {/* Favorite causes */}
-          <FavoriteCausesSection causes={favoriteCauses} />
-
-          {/* Citizen impact radar - conditional */}
-          <CitizenImpactSection radarData={radarData} totalMissions={totalCertifiedMissions} isEligible={isRadarEligible} />
-
-          {/* Citizen experiences / missions */}
-          <CitizenExperiencesSection missions={certifiedMissions} totalCount={totalCertifiedMissions} />
-
-          {/* Upcoming events */}
-          <UpcomingEventsSection />
+            {/* Right sidebar - desktop only */}
+            {!isOrganizationContext && !isMobile && (
+              <aside className="w-72 flex-shrink-0 hidden md:block">
+                <ProfileSidebar />
+              </aside>
+            )}
+          </div>
         </main>
 
-        {/* Bottom navigation based on context */}
+        {/* Bottom navigation */}
         {isOrganizationContext && isMobile ? (
           <>
             <OrganizationBottomNav activeTab="" onTabChange={() => {}} />
-            {/* Switch to citizen mode FAB */}
             <CitizenModeFAB />
           </>
         ) : (
           <MobileBottomNav />
         )}
 
-        {/* Bottom padding for mobile nav */}
-        <div className="h-16 md:hidden" />
+        {/* Mobile: Privacy Sheet (kept for mobile only) */}
+        {isMobile && (
+          <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+        )}
       </div>
     </>
   );

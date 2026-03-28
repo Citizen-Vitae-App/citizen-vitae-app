@@ -1,10 +1,13 @@
-import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X } from "lucide-react";
+import { Search, Calendar, SlidersHorizontal, User, Settings, LogOut, Lock, Menu, ClipboardList, Globe, HelpCircle, Building, Shield, Heart, X, MapPin } from "lucide-react";
+import { PageTransition } from '@/components/PageTransition';
+import { EventCardSkeletons } from '@/components/EventCardSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { logger } from "@/lib/logger";
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Footer } from '@/components/Footer';
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import logo from '@/assets/logo.svg';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +18,8 @@ import { usePublicEvents } from '@/hooks/useEvents';
 import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { generateShortTitle } from '@/lib/utils';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { haversineDistance, formatDistance } from '@/lib/geo';
 import { hasActiveOwnerInvitation, getOwnerInvitationRedirectUrl, captureOwnerInvitation } from '@/lib/invitationHandoff';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, parseISO } from 'date-fns';
@@ -41,17 +46,40 @@ const Index = () => {
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isNearMeActive, setIsNearMeActive] = useState(false);
+  const { latitude, longitude, isLoading: isGeoLoading, requestLocation } = useGeolocation();
   
   // Debounce search query pour éviter les appels API trop fréquents
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   
-  const { events, isLoading: isEventsLoading } = usePublicEvents({
+  const { events: rawEvents, isLoading: isEventsLoading } = usePublicEvents({
     searchQuery: debouncedSearchQuery,
     dateRange,
     causeFilters: selectedCauses
   });
 
-  const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length;
+  // Sort events by distance when geo is active
+  const events = useMemo(() => {
+    if (!isNearMeActive || !latitude || !longitude) return rawEvents;
+    return [...rawEvents]
+      .filter((e: any) => e.latitude != null && e.longitude != null)
+      .map((e: any) => ({
+        ...e,
+        _distance: haversineDistance(latitude, longitude, Number(e.latitude), Number(e.longitude)),
+      }))
+      .sort((a: any, b: any) => a._distance - b._distance);
+  }, [rawEvents, isNearMeActive, latitude, longitude]);
+
+  const handleNearMeToggle = () => {
+    if (!isNearMeActive) {
+      requestLocation();
+      setIsNearMeActive(true);
+    } else {
+      setIsNearMeActive(false);
+    }
+  };
+
+  const activeFiltersCount = (dateRange.start ? 1 : 0) + selectedCauses.length + (isNearMeActive ? 1 : 0);
 
   // Capture any owner invitation from URL on mount
   useEffect(() => {
@@ -155,6 +183,7 @@ const Index = () => {
                   </span>
                 )}
               </button>
+
             </div>
 
             {/* Search Bar - Mobile (transforms from button to full bar) */}
@@ -214,6 +243,7 @@ const Index = () => {
                   )}
                 </button>
               )}
+              
             </div>
 
             {/* User Actions - Desktop only */}
@@ -344,6 +374,9 @@ const Index = () => {
         onDateRangeChange={setDateRange}
         selectedCauses={selectedCauses}
         onCausesChange={setSelectedCauses}
+        isNearMeActive={isNearMeActive}
+        onNearMeToggle={handleNearMeToggle}
+        isGeoLoading={isGeoLoading}
       />
 
       {/* Mobile Login Prompt - Centered overlay */}
@@ -370,17 +403,15 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12 flex-1">
+        <PageTransition>
         {isEventsLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <EventCardSkeletons count={6} />
         ) : events.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement disponible</h3>
-            <p className="text-muted-foreground">
-              {searchQuery || activeFiltersCount > 0 ? 'Aucun événement ne correspond à vos critères' : 'Revenez bientôt pour découvrir de nouveaux événements'}
-            </p>
+          <EmptyState
+            icon={searchQuery || activeFiltersCount > 0 ? 'search' : 'calendar'}
+            title={searchQuery || activeFiltersCount > 0 ? 'Aucun événement ne correspond à vos critères' : 'Aucun événement disponible'}
+            description={searchQuery || activeFiltersCount > 0 ? 'Essayez de modifier vos filtres ou votre recherche' : 'Revenez bientôt pour découvrir de nouveaux événements'}
+          >
             {activeFiltersCount > 0 && (
               <Button 
                 variant="outline" 
@@ -393,24 +424,32 @@ const Index = () => {
                 Effacer les filtres
               </Button>
             )}
-          </div>
+          </EmptyState>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-            {events.map((event) => (
-              <EventCard 
-                key={event.id}
-                id={event.id}
-                title={event.name}
-                shortTitle={generateShortTitle(event.name)}
-                organization={event.organization_name || 'Organisation'}
-                organizationId={event.organization_id}
-                date={formatEventDate(event.start_date)}
-                location={event.location}
-                image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
-              />
+            {events.map((event: any) => (
+              <div key={event.id}>
+                <EventCard 
+                  id={event.id}
+                  title={event.name}
+                  shortTitle={generateShortTitle(event.name)}
+                  organization={event.organization_name || 'Organisation'}
+                  organizationId={event.organization_id}
+                  date={formatEventDate(event.start_date)}
+                  location={event.location}
+                  image={event.cover_image_url || 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop'}
+                />
+                {isNearMeActive && event._distance != null && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    <span>{formatDistance(event._distance)}</span>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
+        </PageTransition>
       </main>
 
       {/* Mobile Bottom Navigation - Only show when logged in */}

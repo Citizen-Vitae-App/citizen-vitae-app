@@ -587,6 +587,8 @@ serve(async (req) => {
         has_departure: !!registration.certification_end_at
       });
       
+      const SCAN_COOLDOWN_MS = 60_000; // 1 minute between first and second scan
+      
       // Two-scan logic
       if (!registration.certification_start_at) {
         // FIRST SCAN - Arrival
@@ -611,19 +613,49 @@ serve(async (req) => {
           JSON.stringify({ 
             success: true, 
             scan_type: 'arrival',
+            registration_id: registration.id,
             user_name: userName,
             user_avatar: profile?.avatar_url,
             event_name: event?.name,
             arrival_time: new Date().toISOString(),
-            message: `Arrivée enregistrée pour ${userName}`
+            message: `Arrivée enregistrée pour ${userName}`,
+            scan_progress: '1/2',
+            next_scan_available_at: new Date(Date.now() + SCAN_COOLDOWN_MS).toISOString(),
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } 
       else if (!registration.certification_end_at) {
+        // Check 1-minute cooldown between scans
+        const arrivalTime = new Date(registration.certification_start_at);
+        const timeSinceArrival = Date.now() - arrivalTime.getTime();
+        
+        if (timeSinceArrival < SCAN_COOLDOWN_MS) {
+          const remainingMs = SCAN_COOLDOWN_MS - timeSinceArrival;
+          const remainingSeconds = Math.ceil(remainingMs / 1000);
+          
+          log('QR-VERIFY', `Cooldown active for ${userName}: ${remainingSeconds}s remaining`);
+          
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              scan_type: 'cooldown',
+              registration_id: registration.id,
+              user_name: userName,
+              user_avatar: profile?.avatar_url,
+              event_name: event?.name,
+              arrival_time: registration.certification_start_at,
+              cooldown_remaining_seconds: remainingSeconds,
+              next_scan_available_at: new Date(arrivalTime.getTime() + SCAN_COOLDOWN_MS).toISOString(),
+              message: `Veuillez attendre ${remainingSeconds} secondes avant le second scan.`,
+              scan_progress: '1/2',
+            }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         // SECOND SCAN - Departure
         const departureTime = new Date();
-        const arrivalTime = new Date(registration.certification_start_at);
         const durationMs = departureTime.getTime() - arrivalTime.getTime();
         const durationMinutes = Math.round(durationMs / 60000);
         const hours = Math.floor(durationMinutes / 60);
@@ -634,7 +666,7 @@ serve(async (req) => {
           .from('event_registrations')
           .update({ 
             certification_end_at: departureTime.toISOString(),
-            attended_at: departureTime.toISOString(), // Mark as officially attended
+            attended_at: departureTime.toISOString(),
           })
           .eq('id', registration.id);
         
@@ -653,13 +685,15 @@ serve(async (req) => {
             success: true, 
             scan_type: 'departure',
             certified: true,
+            registration_id: registration.id,
             user_name: userName,
             user_avatar: profile?.avatar_url,
             event_name: event?.name,
             arrival_time: registration.certification_start_at,
             departure_time: departureTime.toISOString(),
             duration: durationFormatted,
-            message: `Certification complète pour ${userName}`
+            message: `Certification complète pour ${userName}`,
+            scan_progress: '2/2',
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -681,6 +715,7 @@ serve(async (req) => {
             success: false, 
             error: 'Participant déjà certifié.',
             scan_type: 'already_certified',
+            registration_id: registration.id,
             user_name: userName,
             user_avatar: profile?.avatar_url,
             event_name: event?.name,

@@ -91,7 +91,7 @@ export default function OrganizationDashboard() {
   const availableTabs = getAvailableTabs();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header: Mobile uses OrganizationMobileHeader, Desktop uses Navbar */}
       {isMobile ? (
         <OrganizationMobileHeader />
@@ -103,8 +103,8 @@ export default function OrganizationDashboard() {
         />
       )}
       
-      <main className={`container mx-auto px-4 pb-20 md:pb-8 ${isMobile ? 'pt-20' : 'pt-20 md:pt-32'}`}>
-        <div className="max-w-5xl mx-auto">
+      <main className={`flex-1 overflow-hidden container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-[76px]'}`}>
+        <div className="max-w-5xl mx-auto h-full">
           {activeTab === 'events' && (
             <EventsTab 
               userTeamId={(isLeader || isMember) && !isAdmin && !isOwner ? userTeamId : undefined}
