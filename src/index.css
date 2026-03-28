@@ -354,6 +354,7 @@ All colors MUST be HSL.
 
 .fc-notion-theme .fc .fc-timegrid-event.fc-event-past {
   border-left-color: hsl(var(--muted-foreground));
+  opacity: 0.8;
 }
 
 .fc-notion-theme .fc .fc-more-link {

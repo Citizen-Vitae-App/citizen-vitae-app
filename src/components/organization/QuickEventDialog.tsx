@@ -121,13 +121,28 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
   }, [isOpen, date, resetImage, editEvent]);
 
-  // Close on outside click
+  // Listen for time range from drag-to-select
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.startTime) setStartTime(detail.startTime);
+      if (detail?.endTime) setEndTime(detail.endTime);
+    };
+    window.addEventListener('quick-event-time-range', handler);
+    return () => window.removeEventListener('quick-event-time-range', handler);
+  }, [isOpen]);
+
+  // Close on outside click — but ignore clicks inside Radix portals (dropdowns, etc.)
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
-      if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) {
-        onClose();
-      }
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside the dialog itself
+      if (dialogRef.current && dialogRef.current.contains(target)) return;
+      // Don't close if clicking inside a Radix portal (dropdown menus, popovers, etc.)
+      if (target.closest('[data-radix-popper-content-wrapper]') || target.closest('[role="menu"]') || target.closest('[data-radix-menu-content]')) return;
+      onClose();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);

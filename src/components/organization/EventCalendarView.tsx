@@ -91,13 +91,22 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
     const themeColor = causeTheme?.color || null;
 
+    // For past events, use a muted version of the theme color
+    const bgColor = isPast
+      ? (themeColor ? `${themeColor}30` : undefined)
+      : (themeColor || undefined);
+    const txtColor = isPast
+      ? (themeColor || 'hsl(var(--muted-foreground))')
+      : (themeColor ? '#fff' : undefined);
+
     return {
       id: event.id,
       title: event.name,
       start: event.start_date,
       end: event.end_date,
-      backgroundColor: themeColor || undefined,
-      borderColor: themeColor || undefined,
+      backgroundColor: bgColor,
+      borderColor: isPast ? 'transparent' : (themeColor || undefined),
+      textColor: txtColor,
       extendedProps: {
         location: event.location,
         is_public: event.is_public,
@@ -197,8 +206,6 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const dayEl = info.dayEl as HTMLElement;
     const rect = dayEl?.getBoundingClientRect();
 
-    // Always use mouse Y for vertical precision (dayEl can be a full column in week view)
-    // Use dayEl rect for horizontal positioning (left/right of the column)
     setQuickEvent({
       isOpen: true,
       date: clickDate,
@@ -206,9 +213,42 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         top: jsEvent.clientY,
         left: rect ? rect.right : jsEvent.clientX,
         cellWidth: rect ? rect.width : 0,
-        cellHeight: 0, // treat as point-click so popover centers on mouse Y
+        cellHeight: 0,
       },
     });
+  }, [isMember]);
+
+  // Handle drag-to-select for creating events with a specific time range
+  const handleSelect = useCallback((info: any) => {
+    if (isMember) return;
+    const startDate = info.start as Date;
+    const endDate = info.end as Date;
+    const jsEvent = info.jsEvent as MouseEvent;
+
+    // Find the column element for positioning
+    const dayEl = document.querySelector(`.fc-timegrid-col[data-date="${startDate.toISOString().split('T')[0]}"]`) as HTMLElement;
+    const rect = dayEl?.getBoundingClientRect();
+
+    setQuickEvent({
+      isOpen: true,
+      date: startDate,
+      position: {
+        top: jsEvent?.clientY || (rect?.top || 200),
+        left: rect ? rect.right : (jsEvent?.clientX || 400),
+        cellWidth: rect ? rect.width : 0,
+        cellHeight: 0,
+      },
+    });
+
+    // Pre-set the end time by encoding it in the date object's hours
+    // The QuickEventDialog will pick up the hours from the date
+    // We need to store end time separately — use a small trick via state
+    setTimeout(() => {
+      const startH = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+      const endH = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+      // Dispatch a custom event so QuickEventDialog can pick up the time range
+      window.dispatchEvent(new CustomEvent('quick-event-time-range', { detail: { startTime: startH, endTime: endH } }));
+    }, 50);
   }, [isMember]);
 
   // Calendar navigation
@@ -260,7 +300,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
 
     return (
-      <div className={cn("p-1.5 w-full h-full overflow-hidden", isPast && "opacity-50")}>
+      <div className={cn("p-1.5 w-full h-full overflow-hidden")}>
         <p className="text-xs font-semibold truncate leading-tight">{eventInfo.event.title}</p>
         <p className="text-[10px] opacity-80 truncate mt-0.5">
           {eventInfo.timeText}
@@ -302,6 +342,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
           dateClick={handleDateClick}
+          select={handleSelect}
           datesSet={handleDatesSet}
           eventContent={renderEventContent}
           nowIndicator={true}
