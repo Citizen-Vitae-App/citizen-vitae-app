@@ -91,13 +91,22 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
     const themeColor = causeTheme?.color || null;
 
+    // For past events, use a muted version of the theme color
+    const bgColor = isPast
+      ? (themeColor ? `${themeColor}30` : undefined)
+      : (themeColor || undefined);
+    const txtColor = isPast
+      ? (themeColor || 'hsl(var(--muted-foreground))')
+      : (themeColor ? '#fff' : undefined);
+
     return {
       id: event.id,
       title: event.name,
       start: event.start_date,
       end: event.end_date,
-      backgroundColor: themeColor || undefined,
-      borderColor: themeColor || undefined,
+      backgroundColor: bgColor,
+      borderColor: isPast ? 'transparent' : (themeColor || undefined),
+      textColor: txtColor,
       extendedProps: {
         location: event.location,
         is_public: event.is_public,
