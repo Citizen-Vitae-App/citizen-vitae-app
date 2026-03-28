@@ -223,19 +223,38 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     if (isMember) return;
     const startDate = info.start as Date;
     const endDate = info.end as Date;
-    const jsEvent = info.jsEvent as MouseEvent;
+    const jsEvent = info.jsEvent as MouseEvent | undefined;
 
-    // Use the same positioning logic as handleDateClick: mouse Y + column right edge
-    const dateStr = startDate.toISOString().split('T')[0];
+    // Use LOCAL date (not UTC) for DOM column lookup — FullCalendar uses local dates in data-date attributes
+    const year = startDate.getFullYear();
+    const month = String(startDate.getMonth() + 1).padStart(2, '0');
+    const day = String(startDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
     const dayEl = document.querySelector(`.fc-timegrid-col[data-date="${dateStr}"]`) as HTMLElement
       || document.querySelector(`.fc-day[data-date="${dateStr}"]`) as HTMLElement;
     const rect = dayEl?.getBoundingClientRect();
+
+    // Vertical position: use mouse Y if available, otherwise midpoint of the selection highlight
+    let topY: number;
+    if (jsEvent && jsEvent.clientY) {
+      topY = jsEvent.clientY;
+    } else {
+      // Fallback: find the FC highlight element for the selection
+      const highlight = document.querySelector('.fc-highlight') as HTMLElement;
+      if (highlight) {
+        const hRect = highlight.getBoundingClientRect();
+        topY = hRect.top + hRect.height / 2;
+      } else {
+        topY = rect?.top || 300;
+      }
+    }
 
     setQuickEvent({
       isOpen: true,
       date: startDate,
       position: {
-        top: jsEvent ? jsEvent.clientY : (rect?.top || 300),
+        top: topY,
         left: rect ? rect.right : (jsEvent ? jsEvent.clientX : 400),
         cellWidth: rect ? rect.width : 0,
         cellHeight: 0,
