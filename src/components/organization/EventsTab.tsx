@@ -630,10 +630,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     <div className="flex flex-col h-full">
       {/* Fixed header: KPI Cards + Search/Actions */}
       <div className="shrink-0 py-2 md:py-3 bg-background">
-        <div
-          aria-hidden="true"
-          className="absolute -top-40 bottom-0 left-1/2 w-screen -translate-x-1/2 bg-background shadow-[0_1px_0_0_hsl(var(--border))] -z-10"
-        />
+        {/* KPI Cards */}
         {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
           <div className="p-4 rounded-xl border border-border bg-background">
