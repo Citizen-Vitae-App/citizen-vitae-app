@@ -633,7 +633,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         {/* KPI Cards */}
         {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
@@ -654,7 +654,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Cause la plus présente</p>
@@ -673,7 +673,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Missions actives</p>
