@@ -784,7 +784,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         )}
       </div>
 
-      {/* Calendar view */}
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto pb-8">
       {viewMode === 'calendar' ? (
         <EventCalendarView
           events={filteredEvents}
