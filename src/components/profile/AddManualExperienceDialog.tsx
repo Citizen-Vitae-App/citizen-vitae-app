@@ -419,11 +419,11 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
 
   const mobileFormContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-        <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
           {formFields}
         </div>
-        <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t border-border -mx-4 px-4">
+        <div className="flex-shrink-0 bg-background pt-3 pb-1 border-t border-border -mx-4 px-4">
           <Button type="submit" className="w-full" disabled={createMutation.isPending}>
             {createMutation.isPending ? 'Ajout...' : 'Enregistrer'}
           </Button>
