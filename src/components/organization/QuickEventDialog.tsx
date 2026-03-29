@@ -586,32 +586,41 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         {/* Backdrop */}
         <div
           data-mobile-backdrop
-          className="fixed inset-0 z-40 bg-black/40 animate-in fade-in-0 duration-200"
+          className="fixed inset-0 z-[59] bg-black/50 backdrop-blur-[2px]"
+          style={{
+            opacity: sheetTranslateY > 0 ? Math.max(0.2, 1 - sheetTranslateY / 400) : 1,
+            transition: isDragging ? 'none' : 'opacity 0.3s ease',
+          }}
           onClick={onClose}
         />
         {/* Bottom sheet */}
         <div
           ref={dialogRef}
-          className={`fixed inset-x-0 bottom-0 z-[60] bg-background rounded-t-3xl shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-t border-border/50 animate-in slide-in-from-bottom duration-300 flex flex-col transition-all ${
-            mobileFullScreen ? 'top-8' : 'max-h-[70vh]'
+          className={`fixed inset-x-0 bottom-0 z-[60] bg-background rounded-t-[28px] shadow-[0_-8px_40px_rgb(0,0,0,0.2)] border-t border-border/30 flex flex-col ${
+            mobileFullScreen ? 'top-[env(safe-area-inset-top,8px)]' : 'max-h-[75vh]'
           }`}
+          style={{
+            transform: `translateY(${Math.max(0, sheetTranslateY)}px)`,
+            transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.32,0.72,0,1), top 0.35s cubic-bezier(0.32,0.72,0,1), max-height 0.35s cubic-bezier(0.32,0.72,0,1)',
+            willChange: 'transform',
+          }}
         >
-          {/* Drag handle + header with Annuler / Enregistrer */}
+          {/* Drag handle + header */}
           <div
-            className="shrink-0"
+            className="shrink-0 touch-none"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Drag bar */}
-            <div className="flex justify-center pt-2.5 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+            {/* Grab handle */}
+            <div className="flex justify-center pt-3 pb-1.5">
+              <div className="w-9 h-[5px] rounded-full bg-muted-foreground/40" />
             </div>
-            {/* Header: Annuler — Title — Enregistrer */}
-            <div className="flex items-center justify-between px-4 pb-2">
+            {/* Header: Annuler — Title — Enreg. */}
+            <div className="flex items-center justify-between px-4 pb-2.5">
               <button
                 onClick={onClose}
-                className="text-sm text-muted-foreground font-medium"
+                className="text-sm text-muted-foreground font-medium active:opacity-60 transition-opacity"
               >
                 Annuler
               </button>
@@ -630,7 +639,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           </div>
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
             {formContent}
           </div>
         </div>
