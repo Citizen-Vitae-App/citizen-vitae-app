@@ -161,9 +161,8 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
 
   const isMobile = useIsMobile();
 
-  const formContent = (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+  const formFields = (
+    <>
         {/* Title */}
         <FormField
           control={form.control}
@@ -179,199 +178,132 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
           )}
         />
 
-            {/* Experience type */}
-            <FormField
-              control={form.control}
-              name="experience_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type d'expérience *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {EXPERIENCE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Experience type */}
+        <FormField
+          control={form.control}
+          name="experience_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type d'expérience *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {EXPERIENCE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Organization */}
-            <FormField
-              control={form.control}
-              name="organization_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Organisation *</FormLabel>
+        {/* Organization */}
+        <FormField
+          control={form.control}
+          name="organization_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Organisation *</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex : Croix-Rouge française" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Start date */}
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="start_month"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mois de début *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input placeholder="Ex : Croix-Rouge française" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Mois" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Start date */}
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="start_month"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mois de début *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Mois" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {MONTHS.map((m) => (
-                          <SelectItem key={m.value} value={m.value}>
-                            {m.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="start_year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Année de début *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Année" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {YEARS.map((y) => (
-                          <SelectItem key={y} value={String(y)}>
-                            {y}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Is current */}
-            <FormField
-              control={form.control}
-              name="is_current"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 space-y-0">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <FormLabel className="font-normal">J'occupe actuellement ce poste</FormLabel>
-                </FormItem>
-              )}
-            />
-
-            {/* End date */}
-            {!isCurrent && (
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="end_month"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mois de fin</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Mois" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {MONTHS.map((m) => (
-                            <SelectItem key={m.value} value={m.value}>
-                              {m.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="end_year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Année de fin</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Année" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {YEARS.map((y) => (
-                            <SelectItem key={y} value={String(y)}>
-                              {y}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <SelectContent>
+                    {MONTHS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
-
-            {/* Location */}
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lieu</FormLabel>
+          />
+          <FormField
+            control={form.control}
+            name="start_year"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Année de début *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Input placeholder="Ex : Paris, France" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Année" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {YEARS.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-            {/* Location type */}
+        {/* Is current */}
+        <FormField
+          control={form.control}
+          name="is_current"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <FormLabel className="font-normal">J'occupe actuellement ce poste</FormLabel>
+            </FormItem>
+          )}
+        />
+
+        {/* End date */}
+        {!isCurrent && (
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
-              name="location_type"
+              name="end_month"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type de lieu</FormLabel>
+                  <FormLabel>Mois de fin</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
+                        <SelectValue placeholder="Mois" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {LOCATION_TYPES.map((lt) => (
-                        <SelectItem key={lt.value} value={lt.value}>
-                          {lt.label}
+                      {MONTHS.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -380,51 +312,137 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
                 </FormItem>
               )}
             />
-
-            {/* Description */}
             <FormField
               control={form.control}
-              name="description"
+              name="end_year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Décrivez votre rôle et vos contributions..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Année de fin</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Année" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {YEARS.map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
+        )}
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Ajout...' : 'Ajouter'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        {/* Location */}
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lieu</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex : Paris, France" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Location type */}
+        <FormField
+          control={form.control}
+          name="location_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type de lieu</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {LOCATION_TYPES.map((lt) => (
+                    <SelectItem key={lt.value} value={lt.value}>
+                      {lt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Description */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Décrivez votre rôle et vos contributions..."
+                  className="min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+    </>
+  );
+
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {formFields}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Ajout...' : 'Ajouter'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+
+  const mobileFormContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+          {formFields}
+        </div>
+        <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t border-border -mx-4 px-4">
+          <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Ajout...' : 'Enregistrer'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh] px-4 pb-6">
-          <DrawerHeader className="text-left px-0">
+        <DrawerContent className="max-h-[90vh] px-4 pb-4 flex flex-col">
+          <DrawerHeader className="text-left px-0 flex-shrink-0">
             <DrawerTitle>Ajouter une expérience</DrawerTitle>
             <DrawerDescription>
               Ajoutez une expérience citoyenne non certifiée à votre profil.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="overflow-y-auto">
-            {formContent}
-          </div>
+          {mobileFormContent}
         </DrawerContent>
       </Drawer>
     );
