@@ -331,7 +331,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className={`${isMobileView ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
         {/* Title input */}
         <Input
           ref={titleInputRef}
