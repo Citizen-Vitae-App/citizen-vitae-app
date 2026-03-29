@@ -279,12 +279,12 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     if (dragStartY.current === null || dragCurrentY.current === null) return;
     const delta = dragStartY.current - dragCurrentY.current;
     // Swipe up: expand to full screen
-    if (delta > 50) {
+    if (delta > 40) {
       setMobileFullScreen(true);
       setIsExpanded(true);
     }
     // Swipe down: if full screen, collapse; if collapsed, close
-    if (delta < -50) {
+    if (delta < -40) {
       if (mobileFullScreen) {
         setMobileFullScreen(false);
         setIsExpanded(false);
