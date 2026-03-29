@@ -259,7 +259,20 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   if (!isOpen) return null;
 
   // Position the card to the right or left of the calendar cell
+  const isMobileView = window.innerWidth < 640;
+
   const computeStyle = (): React.CSSProperties => {
+    if (isMobileView) {
+      // On mobile: center horizontally, position near top with padding
+      return {
+        position: 'fixed',
+        top: 60,
+        left: 8,
+        right: 8,
+        zIndex: 50,
+        maxHeight: 'calc(100vh - 80px)',
+      };
+    }
     if (!position) {
       return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 50 };
     }
@@ -267,23 +280,18 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     const cardHeight = isExpanded ? 600 : 360;
     const gap = 8;
 
-    // position.left is the right edge of the cell; try placing card to the right of the cell
     let left = position.left + gap;
     if (left + cardWidth > window.innerWidth - gap) {
-      // Not enough room on the right — place to the left of the cell
       const cellLeft = position.left - (position.cellWidth || 0);
       left = cellLeft - cardWidth - gap;
     }
     left = Math.max(gap, Math.min(left, window.innerWidth - cardWidth - gap));
 
-    // Vertically center the card on the event element
     const eventCenterY = position.top + (position.cellHeight || 0) / 2;
     let top = eventCenterY - cardHeight / 2;
-    // Clamp within viewport
     if (top + cardHeight > window.innerHeight - gap) {
       top = window.innerHeight - cardHeight - gap;
     }
-    // Never go above the calendar day-header bar
     const colHeader = document.querySelector('.fc-col-header');
     const minTop = colHeader ? colHeader.getBoundingClientRect().bottom + gap : gap;
     top = Math.max(minTop, top);
@@ -295,10 +303,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     <div
       ref={dialogRef}
       style={computeStyle()}
-      className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+      className={`rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden ${isMobileView ? 'w-auto overflow-y-auto' : 'w-[340px]'}`}
     >
       {/* Cover image zone */}
-      <div className="relative h-20 bg-muted overflow-hidden group cursor-pointer">
+      <div className={`relative ${isMobileView ? 'h-14' : 'h-20'} bg-muted overflow-hidden group cursor-pointer`}>
         <img
           src={coverImage || defaultEventCover}
           alt="Cover"
@@ -323,14 +331,14 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className={`${isMobileView ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
         {/* Title input */}
         <Input
           ref={titleInputRef}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ajouter un titre"
-          className="border-0 border-b border-border rounded-none px-0 text-lg font-medium placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:border-primary h-auto pb-2"
+          className={`border-0 border-b border-border rounded-none px-0 font-medium placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:border-primary h-auto pb-2 ${isMobileView ? 'text-base' : 'text-lg'}`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && title.trim() && !isExpanded) handleSave();
           }}
