@@ -25,7 +25,7 @@ import {
   Tag,
   List,
 } from "lucide-react";
-import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS } from "./EventCalendarView";
+import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS, VIEW_LABELS_SHORT } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
