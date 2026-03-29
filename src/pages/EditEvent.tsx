@@ -710,16 +710,18 @@ export default function EditEvent() {
       
       <main className={`container mx-auto px-4 pb-12 ${isMobile ? 'pt-20' : 'pt-32'}`}>
         <div className="max-w-6xl mx-auto space-y-12">
-          {/* Back button */}
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/organization/dashboard?tab=events')}
-            className="gap-2"
-            type="button"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Button>
+          {/* Back button - desktop only (mobile version is overlaid on image) */}
+          {!isMobile && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/organization/dashboard?tab=events')}
+              className="gap-2"
+              type="button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour
+            </Button>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
@@ -730,6 +732,18 @@ export default function EditEvent() {
                     alt="Cover" 
                     className="w-full h-full object-cover" 
                   />
+                  {/* Mobile back button overlaid on image */}
+                  {isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate('/organization/dashboard?tab=events')}
+                      className="absolute top-3 left-3 z-10 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+                      type="button"
+                    >
+                      <ArrowLeft className="h-5 w-5 text-foreground" />
+                    </Button>
+                  )}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/jpg"
