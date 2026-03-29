@@ -555,7 +555,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         {/* Bottom sheet */}
         <div
           ref={dialogRef}
-          className={`fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-t border-border/50 animate-in slide-in-from-bottom duration-300 flex flex-col transition-all ${
+          className={`fixed inset-x-0 bottom-0 z-[60] bg-background rounded-t-3xl shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-t border-border/50 animate-in slide-in-from-bottom duration-300 flex flex-col transition-all ${
             mobileFullScreen ? 'top-8' : 'max-h-[70vh]'
           }`}
         >
