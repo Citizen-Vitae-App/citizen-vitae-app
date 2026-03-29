@@ -597,7 +597,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         <div
           ref={dialogRef}
           className={`fixed inset-x-0 bottom-0 z-[60] bg-background rounded-t-[28px] shadow-[0_-8px_40px_rgb(0,0,0,0.2)] border-t border-border/30 flex flex-col ${
-            mobileFullScreen ? 'top-[env(safe-area-inset-top,8px)]' : 'max-h-[75vh]'
+            mobileFullScreen ? 'max-h-[90vh]' : 'max-h-[75vh]'
           }`}
           style={{
             transform: `translateY(${Math.max(0, sheetTranslateY)}px)`,
