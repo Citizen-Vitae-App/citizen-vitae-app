@@ -392,8 +392,9 @@ All colors MUST be HSL.
   margin: 1px 2px;
 }
 
-/* Rich text editor — style links in blue with underline */
-.ProseMirror a {
+/* Rich text — style links in blue with underline (editor + display) */
+.ProseMirror a,
+.prose a {
   color: hsl(217 91% 50%);
   text-decoration: underline;
   text-decoration-color: hsl(217 91% 50%);
