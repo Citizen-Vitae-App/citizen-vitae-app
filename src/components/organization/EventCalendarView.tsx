@@ -339,7 +339,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   }, []);
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* FullCalendar */}
       <div className="fc-notion-theme overflow-hidden bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border">
         <FullCalendar

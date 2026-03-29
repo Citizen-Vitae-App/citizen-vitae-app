@@ -392,6 +392,19 @@ All colors MUST be HSL.
   margin: 1px 2px;
 }
 
+/* Mobile: prevent horizontal scroll and ensure edge-to-edge */
+@media (max-width: 639px) {
+  .fc-notion-theme .fc .fc-scrollgrid {
+    overflow-x: hidden;
+  }
+  .fc-notion-theme .fc .fc-view-harness {
+    overflow-x: hidden;
+  }
+  .fc-notion-theme {
+    overflow-x: hidden;
+  }
+}
+
 /* Rich text — style links in blue with underline (editor + display) */
 .ProseMirror a,
 .prose a {
