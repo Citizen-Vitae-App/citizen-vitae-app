@@ -303,10 +303,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     <div
       ref={dialogRef}
       style={computeStyle()}
-      className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+      className={`rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden ${isMobileView ? 'w-auto overflow-y-auto' : 'w-[340px]'}`}
     >
       {/* Cover image zone */}
-      <div className="relative h-20 bg-muted overflow-hidden group cursor-pointer">
+      <div className={`relative ${isMobileView ? 'h-14' : 'h-20'} bg-muted overflow-hidden group cursor-pointer`}>
         <img
           src={coverImage || defaultEventCover}
           alt="Cover"
