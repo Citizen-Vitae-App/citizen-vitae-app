@@ -54,10 +54,17 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   const [isExpanded, setIsExpanded] = useState(false);
   const [causeThemes, setCauseThemes] = useState<Array<{ id: string; name: string; icon: string; color: string }>>([]);
   const [selectedCauseTheme, setSelectedCauseTheme] = useState<string | null>(null);
+  // Mobile bottom sheet state
+  const [mobileFullScreen, setMobileFullScreen] = useState(false);
+  const dragStartY = useRef<number | null>(null);
+  const dragCurrentY = useRef<number | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  const isMobileView = typeof window !== 'undefined' && window.innerWidth < 640;
 
   const {
     previewUrl: coverImage,
@@ -80,6 +87,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   // Reset form when opened
   useEffect(() => {
     if (isOpen) {
+      setMobileFullScreen(false);
       if (editEvent) {
         setTitle(editEvent.name);
         setLocation(editEvent.location || '');
@@ -138,15 +146,18 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Don't close if clicking inside the dialog itself
       if (dialogRef.current && dialogRef.current.contains(target)) return;
-      // Don't close if clicking inside a Radix portal (dropdown menus, popovers, etc.)
       if (target.closest('[data-radix-popper-content-wrapper]') || target.closest('[role="menu"]') || target.closest('[data-radix-menu-content]')) return;
+      // On mobile, clicking backdrop closes
+      if (isMobileView && target.closest('[data-mobile-backdrop]')) {
+        onClose();
+        return;
+      }
       onClose();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isMobileView]);
 
   // Close on Escape
   useEffect(() => {
@@ -191,7 +202,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       }
 
       if (editEvent) {
-        // UPDATE existing event
         const { error } = await supabase.from('events').update({
           name: title.trim(),
           location: location.trim() || 'À définir',
@@ -208,7 +218,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
 
         if (error) throw error;
 
-        // Update cause theme
         await supabase.from('event_cause_themes').delete().eq('event_id', editEvent.id);
         if (selectedCauseTheme) {
           await supabase.from('event_cause_themes').insert({
@@ -220,7 +229,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         queryClient.invalidateQueries({ queryKey: ['organization-events'] });
         onClose();
       } else {
-        // CREATE new event
         const { data: eventData, error } = await supabase.from('events').insert({
           name: title.trim(),
           location: location.trim() || 'À définir',
@@ -256,23 +264,42 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
   };
 
+  // Mobile drag handlers for bottom sheet
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+    dragCurrentY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (dragStartY.current === null) return;
+    dragCurrentY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (dragStartY.current === null || dragCurrentY.current === null) return;
+    const delta = dragStartY.current - dragCurrentY.current;
+    // Swipe up: expand to full screen
+    if (delta > 50) {
+      setMobileFullScreen(true);
+      setIsExpanded(true);
+    }
+    // Swipe down: if full screen, collapse; if collapsed, close
+    if (delta < -50) {
+      if (mobileFullScreen) {
+        setMobileFullScreen(false);
+        setIsExpanded(false);
+      } else {
+        onClose();
+      }
+    }
+    dragStartY.current = null;
+    dragCurrentY.current = null;
+  }, [mobileFullScreen, onClose]);
+
   if (!isOpen) return null;
 
-  // Position the card to the right or left of the calendar cell
-  const isMobileView = window.innerWidth < 640;
-
-  const computeStyle = (): React.CSSProperties => {
-    if (isMobileView) {
-      // On mobile: center horizontally, position near top with padding
-      return {
-        position: 'fixed',
-        top: 60,
-        left: 8,
-        right: 8,
-        zIndex: 50,
-        maxHeight: 'calc(100vh - 80px)',
-      };
-    }
+  // Desktop positioning
+  const computeDesktopStyle = (): React.CSSProperties => {
     if (!position) {
       return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 50 };
     }
@@ -299,14 +326,11 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     return { position: 'fixed', top, left, zIndex: 50 };
   };
 
-  return (
-    <div
-      ref={dialogRef}
-      style={computeStyle()}
-      className={`rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden ${isMobileView ? 'w-auto overflow-y-auto' : 'w-[340px]'}`}
-    >
+  // ─── Shared form content ───
+  const formContent = (
+    <>
       {/* Cover image zone */}
-      <div className={`relative ${isMobileView ? 'h-14' : 'h-20'} bg-muted overflow-hidden group cursor-pointer`}>
+      <div className={`relative ${isMobileView ? 'h-16' : 'h-20'} bg-muted overflow-hidden group cursor-pointer`}>
         <img
           src={coverImage || defaultEventCover}
           alt="Cover"
@@ -438,7 +462,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
 
             {/* Options */}
             <div className="space-y-2 bg-muted/50 rounded-md px-3 py-2">
-              {/* Capacity */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
@@ -452,8 +475,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
                   className="w-16 h-7 text-xs text-right border-0 bg-background/60 focus-visible:ring-1 focus-visible:ring-primary/30"
                 />
               </div>
-
-              {/* Require Approval */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
@@ -461,8 +482,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
                 </div>
                 <Switch checked={requireApproval} onCheckedChange={setRequireApproval} />
               </div>
-
-              {/* Self-Certification */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
@@ -474,30 +493,122 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
-          >
-            {isExpanded ? 'Moins d\'options' : 'Plus d\'options'}
-            {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          </button>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 px-3 text-xs">
-              Annuler
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={!title.trim() || isSaving}
-              className="h-8 px-4 text-xs"
+        {/* Desktop actions (hidden on mobile) */}
+        {!isMobileView && (
+          <div className="flex items-center justify-between pt-1">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
             >
-              {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
-            </Button>
+              {isExpanded ? 'Moins d\'options' : 'Plus d\'options'}
+              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 px-3 text-xs">
+                Annuler
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!title.trim() || isSaving}
+                className="h-8 px-4 text-xs"
+              >
+                {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: "Plus d'options" link */}
+        {isMobileView && !isExpanded && (
+          <button
+            onClick={() => { setIsExpanded(true); setMobileFullScreen(true); }}
+            className="text-xs text-primary hover:underline font-medium flex items-center gap-1 pt-1"
+          >
+            Plus d'options
+            <ChevronUp className="h-3 w-3" />
+          </button>
+        )}
+        {isMobileView && isExpanded && (
+          <button
+            onClick={() => { setIsExpanded(false); setMobileFullScreen(false); }}
+            className="text-xs text-primary hover:underline font-medium flex items-center gap-1 pt-1"
+          >
+            Moins d'options
+            <ChevronDown className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  // ─── Mobile: Bottom sheet ───
+  if (isMobileView) {
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          data-mobile-backdrop
+          className="fixed inset-0 z-40 bg-black/40 animate-in fade-in-0 duration-200"
+          onClick={onClose}
+        />
+        {/* Bottom sheet */}
+        <div
+          ref={dialogRef}
+          className={`fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-t border-border/50 animate-in slide-in-from-bottom duration-300 flex flex-col transition-all ${
+            mobileFullScreen ? 'top-8' : 'max-h-[70vh]'
+          }`}
+        >
+          {/* Drag handle + header with Annuler / Enregistrer */}
+          <div
+            className="shrink-0"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Drag bar */}
+            <div className="flex justify-center pt-2.5 pb-1">
+              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+            </div>
+            {/* Header: Annuler — Title — Enregistrer */}
+            <div className="flex items-center justify-between px-4 pb-2">
+              <button
+                onClick={onClose}
+                className="text-sm text-muted-foreground font-medium"
+              >
+                Annuler
+              </button>
+              <span className="text-sm font-semibold text-foreground">
+                {editEvent ? 'Modifier' : 'Nouvel événement'}
+              </span>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!title.trim() || isSaving}
+                className="h-7 px-3 text-xs rounded-full"
+              >
+                {isSaving ? '...' : 'OK'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            {formContent}
           </div>
         </div>
-      </div>
+      </>
+    );
+  }
+
+  // ─── Desktop: Fixed positioned card ───
+  return (
+    <div
+      ref={dialogRef}
+      style={computeDesktopStyle()}
+      className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+    >
+      {formContent}
     </div>
   );
 }
