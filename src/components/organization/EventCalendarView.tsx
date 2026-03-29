@@ -71,6 +71,12 @@ export const VIEW_LABELS: Record<CalendarViewType, string> = {
   timeGridDay: 'Jour',
 };
 
+export const VIEW_LABELS_SHORT: Record<CalendarViewType, string> = {
+  dayGridMonth: 'M',
+  timeGridWeek: 'S',
+  timeGridDay: 'J',
+};
+
 export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, onToolbarReady, onStateChange }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
