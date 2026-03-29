@@ -25,7 +25,7 @@ import {
   Tag,
   List,
 } from "lucide-react";
-import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS } from "./EventCalendarView";
+import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS, VIEW_LABELS_SHORT } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
@@ -751,32 +751,34 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
 
         {/* Calendar toolbar - inside sticky header */}
         {viewMode === 'calendar' && calendarApi && (
-          <div className="flex items-center justify-between gap-2 flex-wrap pb-3">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handlePrev()}>
-                <ChevronLeft className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-1 sm:gap-2 pb-3">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0" onClick={() => calendarApi.handlePrev()}>
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
-                Aujourd'hui
+              {!isMobile && (
+                <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
+                  Aujourd'hui
+                </Button>
+              )}
+              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0" onClick={() => calendarApi.handleNext()}>
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handleNext()}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <h3 className="text-base font-semibold capitalize ml-2">{calendarState.currentTitle}</h3>
+              <h3 className="text-sm sm:text-base font-semibold capitalize ml-1 sm:ml-2 truncate">{calendarState.currentTitle}</h3>
             </div>
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-muted rounded-lg p-0.5 flex-shrink-0">
               {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
                 <button
                   key={view}
                   onClick={() => calendarApi.handleViewChange(view)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                    "px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all",
                     calendarState.currentView === view
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {label}
+                  {isMobile ? VIEW_LABELS_SHORT[view] : label}
                 </button>
               ))}
             </div>

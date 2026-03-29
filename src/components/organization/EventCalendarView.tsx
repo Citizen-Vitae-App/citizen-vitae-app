@@ -71,6 +71,12 @@ export const VIEW_LABELS: Record<CalendarViewType, string> = {
   timeGridDay: 'Jour',
 };
 
+export const VIEW_LABELS_SHORT: Record<CalendarViewType, string> = {
+  dayGridMonth: 'M',
+  timeGridWeek: 'S',
+  timeGridDay: 'J',
+};
+
 export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, onToolbarReady, onStateChange }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -335,7 +341,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   return (
     <div>
       {/* FullCalendar */}
-      <div className="fc-notion-theme rounded-lg border border-border overflow-hidden bg-background">
+      <div className="fc-notion-theme overflow-hidden bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
