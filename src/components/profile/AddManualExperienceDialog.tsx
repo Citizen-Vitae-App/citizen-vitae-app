@@ -435,14 +435,16 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh] px-4 pb-4 flex flex-col">
+        <DrawerContent className="max-h-[90vh] px-4 pb-4 overflow-hidden flex flex-col">
           <DrawerHeader className="text-left px-0 flex-shrink-0">
             <DrawerTitle>Ajouter une expérience</DrawerTitle>
             <DrawerDescription>
               Ajoutez une expérience citoyenne non certifiée à votre profil.
             </DrawerDescription>
           </DrawerHeader>
-          {mobileFormContent}
+          <div className="flex-1 min-h-0">
+            {mobileFormContent}
+          </div>
         </DrawerContent>
       </Drawer>
     );
