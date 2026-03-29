@@ -391,3 +391,11 @@ All colors MUST be HSL.
 .fc-notion-theme .fc .fc-daygrid-event-harness {
   margin: 1px 2px;
 }
+
+/* Rich text editor — style links in blue with underline */
+.ProseMirror a {
+  color: hsl(217 91% 50%);
+  text-decoration: underline;
+  text-decoration-color: hsl(217 91% 50%);
+  cursor: pointer;
+}
