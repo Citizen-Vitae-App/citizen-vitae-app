@@ -266,27 +266,43 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
   };
 
-  // Mobile drag handlers for bottom sheet
+  // Mobile drag handlers — real-time tracking for smooth feel
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     dragStartY.current = e.touches[0].clientY;
     dragCurrentY.current = e.touches[0].clientY;
+    setIsDragging(true);
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (dragStartY.current === null) return;
-    dragCurrentY.current = e.touches[0].clientY;
+    const currentY = e.touches[0].clientY;
+    dragCurrentY.current = currentY;
+    const delta = currentY - dragStartY.current;
+    // Allow dragging down freely, dampen upward drag
+    if (delta > 0) {
+      setSheetTranslateY(delta);
+    } else {
+      // Rubber-band effect when dragging up
+      setSheetTranslateY(delta * 0.3);
+    }
   }, []);
 
   const handleTouchEnd = useCallback(() => {
-    if (dragStartY.current === null || dragCurrentY.current === null) return;
+    if (dragStartY.current === null || dragCurrentY.current === null) {
+      setIsDragging(false);
+      return;
+    }
     const delta = dragStartY.current - dragCurrentY.current;
+    setIsDragging(false);
+    setSheetTranslateY(0);
+
     // Swipe up: expand to full screen
-    if (delta > 40) {
+    if (delta > 50) {
       setMobileFullScreen(true);
       setIsExpanded(true);
     }
     // Swipe down: if full screen, collapse; if collapsed, close
-    if (delta < -40) {
+    if (delta < -80) {
       if (mobileFullScreen) {
         setMobileFullScreen(false);
         setIsExpanded(false);
@@ -297,6 +313,25 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     dragStartY.current = null;
     dragCurrentY.current = null;
   }, [mobileFullScreen, onClose]);
+
+  // Lock body scroll when mobile sheet is open
+  useEffect(() => {
+    if (!isOpen || !isMobileView) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen, isMobileView]);
 
   if (!isOpen) return null;
 
