@@ -338,7 +338,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ajouter un titre"
-          className="border-0 border-b border-border rounded-none px-0 text-lg font-medium placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:border-primary h-auto pb-2"
+          className={`border-0 border-b border-border rounded-none px-0 font-medium placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:border-primary h-auto pb-2 ${isMobileView ? 'text-base' : 'text-lg'}`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && title.trim() && !isExpanded) handleSave();
           }}
