@@ -419,11 +419,13 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
 
   const mobileFormContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
-          {formFields}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full min-h-0 flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 pb-4">
+          <div className="space-y-4">
+            {formFields}
+          </div>
         </div>
-        <div className="flex-shrink-0 bg-background pt-3 pb-1 border-t border-border -mx-4 px-4">
+        <div className="flex-shrink-0 border-t border-border bg-background px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <Button type="submit" className="w-full" disabled={createMutation.isPending}>
             {createMutation.isPending ? 'Ajout...' : 'Enregistrer'}
           </Button>
@@ -435,14 +437,14 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh] px-4 pb-4 overflow-hidden flex flex-col">
-          <DrawerHeader className="text-left px-0 flex-shrink-0">
+        <DrawerContent className="flex h-[90vh] max-h-[90vh] flex-col overflow-hidden px-4 pb-0">
+          <DrawerHeader className="flex-shrink-0 px-0 text-left">
             <DrawerTitle>Ajouter une expérience</DrawerTitle>
             <DrawerDescription>
               Ajoutez une expérience citoyenne non certifiée à votre profil.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {mobileFormContent}
           </div>
         </DrawerContent>
