@@ -56,6 +56,8 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   const [selectedCauseTheme, setSelectedCauseTheme] = useState<string | null>(null);
   // Mobile bottom sheet state
   const [mobileFullScreen, setMobileFullScreen] = useState(false);
+  const [sheetTranslateY, setSheetTranslateY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const dragStartY = useRef<number | null>(null);
   const dragCurrentY = useRef<number | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
