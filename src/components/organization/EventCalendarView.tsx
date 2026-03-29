@@ -341,7 +341,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   return (
     <div>
       {/* FullCalendar */}
-      <div className="fc-notion-theme rounded-lg border border-border overflow-hidden bg-background">
+      <div className="fc-notion-theme rounded-lg border border-border overflow-hidden bg-background sm:mx-0 -mx-4">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
