@@ -482,6 +482,40 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
             )}
           </div>
         </div>
+
+        {/* 3-dot menu for existing events */}
+        {editEvent && (
+          <div className="absolute top-1.5 right-1.5 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="h-7 w-7 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4 text-white" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onSelect={handleDuplicate}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>Dupliquer</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={handleDelete}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Supprimer</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       <div className={`${isMobileView ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
