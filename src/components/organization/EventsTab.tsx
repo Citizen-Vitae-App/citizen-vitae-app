@@ -787,7 +787,14 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto pb-8">
+      <div
+        className={cn(
+          "flex-1 min-h-0",
+          viewMode === 'calendar' && calendarState.currentView !== 'dayGridMonth'
+            ? 'overflow-hidden pb-0'
+            : 'overflow-y-auto pb-8'
+        )}
+      >
       {viewMode === 'calendar' ? (
         <EventCalendarView
           events={filteredEvents}
