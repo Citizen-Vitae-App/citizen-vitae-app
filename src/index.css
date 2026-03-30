@@ -318,6 +318,24 @@ All colors MUST be HSL.
   overflow: visible !important;
 }
 
+/* Time-grid views: sticky day-of-week header row */
+.fc-notion-theme.fc-time-view .fc thead,
+.fc-notion-theme.fc-time-view .fc .fc-col-header,
+.fc-notion-theme.fc-time-view .fc .fc-scrollgrid-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: hsl(var(--background));
+}
+
+.fc-notion-theme.fc-time-view .fc .fc-scrollgrid-section-header > * {
+  position: sticky;
+  top: 0 !important;
+  z-index: 12;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
   color: hsl(var(--muted-foreground));
   opacity: 0.5;
