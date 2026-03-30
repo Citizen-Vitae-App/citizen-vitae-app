@@ -150,7 +150,6 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         backgroundColor: 'hsla(var(--primary) / 0.35)',
         borderColor: 'hsl(var(--primary))',
         textColor: 'hsl(var(--primary))',
-        classNames: ['phantom-event'],
         extendedProps: {
           location: '',
           is_public: true,
@@ -161,11 +160,10 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           isLive: false,
           themeColor: null,
           themeName: null,
+          isPhantom: true,
         },
         editable: true,
-        startEditable: true,
-        durationEditable: true,
-      });
+      } as typeof mapped[0]);
     }
 
     return mapped;
