@@ -38,6 +38,7 @@ interface QuickEventDialogProps {
   organizationId: string;
   position?: { top: number; left: number; cellWidth?: number; cellHeight?: number };
   editEvent?: EditEventData;
+  onEventPreview?: (startISO: string, endISO: string) => void;
 }
 
 export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent }: QuickEventDialogProps) {
