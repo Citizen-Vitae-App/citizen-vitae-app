@@ -227,6 +227,8 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         const { error } = await supabase.from('events').update({
           name: title.trim(),
           location: location.trim() || 'À définir',
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           is_public: isPublic,
