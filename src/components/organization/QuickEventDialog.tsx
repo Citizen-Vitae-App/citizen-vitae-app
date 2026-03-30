@@ -171,7 +171,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (dialogRef.current && dialogRef.current.contains(target)) return;
-      if (target.closest('[data-radix-popper-content-wrapper]') || target.closest('[role="menu"]') || target.closest('[data-radix-menu-content]')) return;
+      if (target.closest('[data-radix-popper-content-wrapper]') || target.closest('[role="menu"]') || target.closest('[data-radix-menu-content]') || target.closest('[role="alertdialog"]') || target.closest('[data-radix-dialog-overlay]')) return;
       // On mobile, clicking backdrop closes
       if (isMobileView && target.closest('[data-mobile-backdrop]')) {
         onClose();
