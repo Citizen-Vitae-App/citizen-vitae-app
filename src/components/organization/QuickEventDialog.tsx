@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag } from 'lucide-react';
+import { Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag, MoreVertical, Copy, Trash2 } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
