@@ -632,7 +632,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       <div className="shrink-0 py-2 md:py-3 bg-background">
         {/* KPI Cards */}
         {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
+          <div className="hidden md:grid grid-cols-3 gap-4 pb-3">
           <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
