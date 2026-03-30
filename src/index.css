@@ -270,7 +270,7 @@ All colors MUST be HSL.
   background: hsl(3 79% 53% / 0.08);
 }
 
-/* Sticky column headers for week/day views */
+/* Sticky column headers for week/day views (internal scroll) */
 .fc-notion-theme .fc .fc-scrollgrid-section-header {
   position: sticky;
   top: 0;
@@ -298,8 +298,15 @@ All colors MUST be HSL.
   background: hsl(var(--background));
 }
 
-/* Ensure the scroller enables sticky behavior */
-.fc-notion-theme .fc .fc-scroller {
+/* Viewport-sticky for month view (height=auto) */
+.fc-notion-theme .fc .fc-scrollgrid-section-sticky > * {
+  top: 0 !important;
+  z-index: 10;
+  background: hsl(var(--background));
+}
+
+/* Ensure the time-grid scroller enables sticky behavior (week/day) */
+.fc-notion-theme .fc .fc-timegrid .fc-scroller {
   overflow: auto !important;
 }
 
