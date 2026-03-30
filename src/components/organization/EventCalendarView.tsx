@@ -87,60 +87,96 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const [currentTitle, setCurrentTitle] = useState('');
   const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; editEvent?: EditEventData; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
   const [previewOverride, setPreviewOverride] = useState<{ id: string; start: string; end: string } | null>(null);
+  const PHANTOM_ID = '__phantom__';
 
   // Convert events to FullCalendar format, applying live preview overrides
-  const calendarEvents = events.map(event => {
-    const now = new Date();
-    const override = previewOverride && previewOverride.id === event.id ? previewOverride : null;
-    const startStr = override ? override.start : event.start_date;
-    const endStr = override ? override.end : event.end_date;
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    const isPast = end < now;
-    const isLive = start <= now && end >= now;
+  const calendarEvents = (() => {
+    const mapped = events.map(event => {
+      const now = new Date();
+      const override = previewOverride && previewOverride.id === event.id ? previewOverride : null;
+      const startStr = override ? override.start : event.start_date;
+      const endStr = override ? override.end : event.end_date;
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      const isPast = end < now;
+      const isLive = start <= now && end >= now;
 
-    // Get cause theme color (first theme if multiple)
-    const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
-    const themeColor = causeTheme?.color || null;
+      // Get cause theme color (first theme if multiple)
+      const causeTheme = event.event_cause_themes?.[0]?.cause_themes;
+      const themeColor = causeTheme?.color || null;
 
-    // Past events: light tinted background, dark text for readability
-    const bgColor = isPast
-      ? (themeColor ? `${themeColor}20` : 'hsl(var(--muted))')
-      : (themeColor || undefined);
-    const txtColor = isPast
-      ? 'hsl(var(--foreground))'
-      : (themeColor ? '#fff' : undefined);
+      // Past events: light tinted background, dark text for readability
+      const bgColor = isPast
+        ? (themeColor ? `${themeColor}20` : 'hsl(var(--muted))')
+        : (themeColor || undefined);
+      const txtColor = isPast
+        ? 'hsl(var(--foreground))'
+        : (themeColor ? '#fff' : undefined);
 
-    return {
-      id: event.id,
-      title: event.name,
-      start: startStr,
-      end: endStr,
-      backgroundColor: bgColor,
-      borderColor: isPast ? 'transparent' : (themeColor || undefined),
-      textColor: txtColor,
-      extendedProps: {
-        location: event.location,
-        is_public: event.is_public,
-        organization_id: event.organization_id,
-        participantCount: participantCounts?.get(event.id)?.count || 0,
-        capacity: event.capacity,
-        isPast,
-        isLive,
-        themeColor,
-        themeName: causeTheme?.name || null,
-      },
-      editable: !isMember,
-    };
-  });
+      return {
+        id: event.id,
+        title: event.name,
+        start: startStr,
+        end: endStr,
+        backgroundColor: bgColor,
+        borderColor: isPast ? 'transparent' : (themeColor || undefined),
+        textColor: txtColor,
+        extendedProps: {
+          location: event.location,
+          is_public: event.is_public,
+          organization_id: event.organization_id,
+          participantCount: participantCounts?.get(event.id)?.count || 0,
+          capacity: event.capacity,
+          isPast,
+          isLive,
+          themeColor,
+          themeName: causeTheme?.name || null,
+        },
+        editable: !isMember,
+      };
+    });
 
-  // Handle event click — open edit popover
+    // Add phantom event during creation mode
+    if (quickEvent.isOpen && !quickEvent.editEvent && previewOverride?.id === PHANTOM_ID) {
+      mapped.push({
+        id: PHANTOM_ID,
+        title: '(Nouvel événement)',
+        start: previewOverride.start,
+        end: previewOverride.end,
+        backgroundColor: 'hsl(var(--primary))',
+        borderColor: 'hsl(var(--primary))',
+        textColor: '#fff',
+        extendedProps: {
+          location: '',
+          is_public: true,
+          organization_id: organizationId,
+          participantCount: 0,
+          capacity: null,
+          isPast: false,
+          isLive: false,
+          themeColor: null,
+          themeName: null,
+        },
+        editable: true,
+      });
+    }
+
+    return mapped;
+  })();
+
+  // Handle event click — open edit popover (or re-focus phantom)
   const handleEventClick = useCallback((info: any) => {
+    const eventId = info.event.id;
+    
+    // Phantom event: just re-focus the popover, don't navigate
+    if (eventId === PHANTOM_ID) {
+      return;
+    }
+    
     if (isMember) {
       navigate(`/organization/events/${info.event.id}/edit`);
       return;
     }
-    const eventId = info.event.id;
     const originalEvent = events.find(e => e.id === eventId);
     if (!originalEvent) {
       navigate(`/organization/events/${eventId}/edit`);
@@ -175,6 +211,22 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const newStart = info.event.start?.toISOString();
     const newEnd = info.event.end?.toISOString() || newStart;
 
+    // Phantom event: update preview + popover state only, no DB call
+    if (eventId === PHANTOM_ID) {
+      setPreviewOverride({ id: PHANTOM_ID, start: newStart, end: newEnd });
+      setQuickEvent(prev => ({ ...prev, date: info.event.start }));
+      // Dispatch time update to QuickEventDialog
+      const s = info.event.start;
+      const e = info.event.end || s;
+      window.dispatchEvent(new CustomEvent('quick-event-time-range', {
+        detail: {
+          startTime: `${String(s.getHours()).padStart(2, '0')}:${String(s.getMinutes()).padStart(2, '0')}`,
+          endTime: `${String(e.getHours()).padStart(2, '0')}:${String(e.getMinutes()).padStart(2, '0')}`,
+        }
+      }));
+      return;
+    }
+
     // If popover is open for this event, update popover state instead of closing
     if (quickEvent.isOpen && quickEvent.editEvent?.id === eventId) {
       const el = info.el as HTMLElement;
@@ -207,6 +259,20 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const eventId = info.event.id;
     const newStart = info.event.start?.toISOString();
     const newEnd = info.event.end?.toISOString();
+
+    // Phantom event: update preview + popover state only, no DB call
+    if (eventId === PHANTOM_ID) {
+      setPreviewOverride({ id: PHANTOM_ID, start: newStart!, end: newEnd! });
+      const s = info.event.start;
+      const e = info.event.end;
+      window.dispatchEvent(new CustomEvent('quick-event-time-range', {
+        detail: {
+          startTime: `${String(s.getHours()).padStart(2, '0')}:${String(s.getMinutes()).padStart(2, '0')}`,
+          endTime: `${String(e.getHours()).padStart(2, '0')}:${String(e.getMinutes()).padStart(2, '0')}`,
+        }
+      }));
+      return;
+    }
 
     // If popover is open for this event, update popover state
     if (quickEvent.isOpen && quickEvent.editEvent?.id === eventId) {
@@ -448,6 +514,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         onEventPreview={(start, end) => {
           if (quickEvent.editEvent) {
             setPreviewOverride({ id: quickEvent.editEvent.id, start, end });
+          } else {
+            // Creation mode: show phantom event
+            setPreviewOverride({ id: PHANTOM_ID, start, end });
           }
         }}
       />
