@@ -305,8 +305,8 @@ All colors MUST be HSL.
   background: hsl(var(--background));
 }
 
-/* Ensure the scroller enables sticky behavior */
-.fc-notion-theme .fc .fc-scroller {
+/* Ensure the time-grid scroller enables sticky behavior (week/day) */
+.fc-notion-theme .fc .fc-timegrid .fc-scroller {
   overflow: auto !important;
 }
 
