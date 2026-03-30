@@ -597,7 +597,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return (
       <div className="space-y-4 md:space-y-6">
         {/* KPI Skeletons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="hidden md:grid grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="p-4 rounded-xl border border-border bg-transparent animate-pulse">
               <div className="h-4 bg-muted rounded w-32 mb-2"></div>
