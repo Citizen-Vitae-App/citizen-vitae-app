@@ -303,18 +303,19 @@ All colors MUST be HSL.
   background: hsl(var(--background));
 }
 
-/* Ensure the time-grid scroller enables sticky behavior (week/day) */
+/* Week/day views: let the surrounding panel own the vertical scroll */
+.fc-notion-theme.fc-time-view .fc .fc-view-harness,
+.fc-notion-theme.fc-time-view .fc .fc-view-harness-active,
+.fc-notion-theme.fc-time-view .fc .fc-scroller,
+.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid,
+.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute,
 .fc-notion-theme.fc-time-view .fc .fc-timegrid .fc-scroller {
-  overflow: auto !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
-/* Week/day views: contain scrolling inside the calendar, no page-level scrollbar */
 .fc-notion-theme.fc-time-view .fc .fc-scrollgrid {
-  overflow: hidden;
-}
-.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow: visible !important;
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
@@ -485,15 +486,15 @@ All colors MUST be HSL.
     transform: translateX(0) !important;
   }
 
-  /* Week/day view: let FullCalendar own the vertical scroll fully */
-  .fc-time-view .fc .fc-view-harness {
-    height: auto !important;
-  }
-
+  /* Week/day view: same single-scroll behavior on mobile */
+  .fc-time-view .fc .fc-view-harness,
+  .fc-time-view .fc .fc-view-harness-active,
   .fc-time-view .fc .fc-scroller,
-  .fc-time-view .fc .fc-scroller-liquid-absolute {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+  .fc-time-view .fc .fc-scroller-liquid,
+  .fc-time-view .fc .fc-scroller-liquid-absolute,
+  .fc-time-view .fc .fc-timegrid .fc-scroller {
+    height: auto !important;
+    overflow: visible !important;
     -webkit-overflow-scrolling: touch;
   }
 
