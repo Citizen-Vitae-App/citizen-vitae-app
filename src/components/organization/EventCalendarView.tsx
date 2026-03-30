@@ -202,6 +202,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         location: originalEvent.location,
         latitude: originalEvent.latitude,
         longitude: originalEvent.longitude,
+        is_public: originalEvent.is_public,
         capacity: originalEvent.capacity,
         cover_image_url: originalEvent.cover_image_url,
         cause_theme_id: causeThemeId,
