@@ -406,7 +406,7 @@ All colors MUST be HSL.
   50% { opacity: 0.75; }
 }
 
-
+.fc-notion-theme .fc .fc-more-link {
   color: hsl(var(--muted-foreground));
   font-size: 0.7rem;
   font-weight: 500;
