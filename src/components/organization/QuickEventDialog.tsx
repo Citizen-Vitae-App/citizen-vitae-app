@@ -98,6 +98,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       if (editEvent) {
         setTitle(editEvent.name);
         setLocation(editEvent.location || '');
+        setCoordinates(editEvent.latitude != null && editEvent.longitude != null ? { latitude: editEvent.latitude, longitude: editEvent.longitude } : null);
         setDescription(editEvent.description || '');
         setIsPublic(editEvent.is_public ?? true);
         setCapacity(editEvent.capacity ? String(editEvent.capacity) : '');
