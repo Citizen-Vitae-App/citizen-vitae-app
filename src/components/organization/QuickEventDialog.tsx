@@ -777,6 +777,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
             {formContent}
           </div>
         </div>
+        {deleteConfirmDialog}
       </>
     );
   }
