@@ -298,6 +298,11 @@ All colors MUST be HSL.
   background: hsl(var(--background));
 }
 
+/* Ensure the scroller enables sticky behavior */
+.fc-notion-theme .fc .fc-scroller {
+  overflow: auto !important;
+}
+
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
   color: hsl(var(--muted-foreground));
   opacity: 0.5;

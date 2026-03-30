@@ -38,9 +38,10 @@ interface QuickEventDialogProps {
   organizationId: string;
   position?: { top: number; left: number; cellWidth?: number; cellHeight?: number };
   editEvent?: EditEventData;
+  onEventPreview?: (startISO: string, endISO: string) => void;
 }
 
-export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent }: QuickEventDialogProps) {
+export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent, onEventPreview }: QuickEventDialogProps) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [startTime, setStartTime] = useState('09:00');
@@ -142,6 +143,19 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     window.addEventListener('quick-event-time-range', handler);
     return () => window.removeEventListener('quick-event-time-range', handler);
   }, [isOpen]);
+
+  // Live preview: update calendar event block when times change
+  useEffect(() => {
+    if (!isOpen || !editEvent || !onEventPreview) return;
+    const [sH, sM] = startTime.split(':').map(Number);
+    const [eH, eM] = endTime.split(':').map(Number);
+    const s = new Date(date);
+    s.setHours(sH, sM, 0, 0);
+    const e = new Date(date);
+    e.setHours(eH, eM, 0, 0);
+    if (e <= s) e.setTime(s.getTime() + 3600000);
+    onEventPreview(s.toISOString(), e.toISOString());
+  }, [isOpen, startTime, endTime, date, editEvent, onEventPreview]);
 
   // Close on outside click — but ignore clicks inside Radix portals (dropdowns, etc.)
   useEffect(() => {
