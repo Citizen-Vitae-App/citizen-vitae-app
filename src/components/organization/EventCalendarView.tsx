@@ -440,7 +440,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   }, []);
 
   return (
-    <div className={currentView === 'dayGridMonth' ? 'overflow-x-hidden' : 'overflow-hidden'}>
+    <div className={currentView === 'dayGridMonth' ? 'overflow-x-hidden' : ''}>
       {/* FullCalendar */}
       <div className={cn(
         "fc-notion-theme bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border overflow-x-hidden",
