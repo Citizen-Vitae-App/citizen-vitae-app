@@ -256,6 +256,8 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         const { data: eventData, error } = await supabase.from('events').insert({
           name: title.trim(),
           location: location.trim() || 'À définir',
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           organization_id: organizationId,
