@@ -367,9 +367,12 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   }, []);
 
   return (
-    <div className="overflow-x-hidden">
+    <div className={currentView === 'dayGridMonth' ? '' : 'overflow-x-hidden'}>
       {/* FullCalendar */}
-      <div className="fc-notion-theme overflow-hidden bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border">
+      <div className={cn(
+        "fc-notion-theme bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border",
+        currentView !== 'dayGridMonth' && "overflow-hidden"
+      )}>
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
