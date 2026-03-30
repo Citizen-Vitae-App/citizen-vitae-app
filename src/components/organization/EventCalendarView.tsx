@@ -473,6 +473,11 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           select={handleSelect}
           datesSet={handleDatesSet}
           eventContent={renderEventContent}
+          eventDidMount={(info: any) => {
+            if (info.event.extendedProps?.isPhantom) {
+              info.el.classList.add('fc-phantom-event');
+            }
+          }}
           nowIndicator={true}
           allDaySlot={false}
           slotMinTime="00:00:00"
