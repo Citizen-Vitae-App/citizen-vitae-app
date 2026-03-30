@@ -392,7 +392,21 @@ All colors MUST be HSL.
   opacity: 0.8;
 }
 
-.fc-notion-theme .fc .fc-more-link {
+/* Phantom event (in-creation) — translucent with dashed border */
+.fc-phantom-event {
+  opacity: 0.6 !important;
+  border-style: dashed !important;
+  border-width: 2px !important;
+  border-left-width: 3px !important;
+  animation: phantom-pulse 2s ease-in-out infinite;
+}
+
+@keyframes phantom-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.75; }
+}
+
+
   color: hsl(var(--muted-foreground));
   font-size: 0.7rem;
   font-weight: 500;

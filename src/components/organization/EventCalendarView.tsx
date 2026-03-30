@@ -147,9 +147,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         title: '(Nouvel événement)',
         start: previewOverride.start,
         end: previewOverride.end,
-        backgroundColor: 'hsl(var(--primary))',
+        backgroundColor: 'hsla(var(--primary) / 0.35)',
         borderColor: 'hsl(var(--primary))',
-        textColor: '#fff',
+        textColor: 'hsl(var(--primary))',
         extendedProps: {
           location: '',
           is_public: true,
@@ -160,9 +160,10 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           isLive: false,
           themeColor: null,
           themeName: null,
+          isPhantom: true,
         },
         editable: true,
-      });
+      } as typeof mapped[0]);
     }
 
     return mapped;
@@ -472,6 +473,11 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           select={handleSelect}
           datesSet={handleDatesSet}
           eventContent={renderEventContent}
+          eventDidMount={(info: any) => {
+            if (info.event.extendedProps?.isPhantom) {
+              info.el.classList.add('fc-phantom-event');
+            }
+          }}
           nowIndicator={true}
           allDaySlot={false}
           slotMinTime="00:00:00"
