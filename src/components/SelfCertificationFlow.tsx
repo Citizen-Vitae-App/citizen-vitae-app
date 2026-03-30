@@ -48,6 +48,7 @@ export const SelfCertificationFlow = ({
   organizationId,
   onSuccess,
 }: SelfCertificationFlowProps) => {
+  const queryClient = useQueryClient();
   const [stage, setStage] = useState<CertificationStage>('instructions');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [comment, setComment] = useState<string>('');
