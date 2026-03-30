@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { CameraCapture } from './CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useGeolocation } from '@/hooks/useGeolocation';
