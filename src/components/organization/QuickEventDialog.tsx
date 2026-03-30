@@ -512,7 +512,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
                   <span>Dupliquer</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={handleDelete}
+                  onSelect={handleDeleteRequest}
                   disabled={isSaving}
                   className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
                 >
