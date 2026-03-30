@@ -790,8 +790,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       <div
         className={cn(
           "flex-1 min-h-0",
-          viewMode === 'calendar' && calendarState.currentView !== 'dayGridMonth'
-            ? 'overflow-hidden pb-0'
+          viewMode === 'calendar'
+            ? 'overflow-y-auto overflow-x-hidden overscroll-contain pb-4'
             : 'overflow-y-auto pb-8'
         )}
       >
