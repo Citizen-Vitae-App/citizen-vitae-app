@@ -341,9 +341,15 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   };
 
   // Delete event
-  const handleDelete = async () => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!editEvent) return;
-    if (!window.confirm('Supprimer cet événement ?')) return;
+    setShowDeleteConfirm(false);
     setIsSaving(true);
     try {
       const { error } = await supabase.from('events').delete().eq('id', editEvent.id);
