@@ -270,52 +270,49 @@ All colors MUST be HSL.
   background: hsl(3 79% 53% / 0.08);
 }
 
-/* Sticky column headers for week/day views (internal scroll) */
+/* Sticky column headers */
 .fc-notion-theme .fc .fc-scrollgrid-section-header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 12;
   background: hsl(var(--background));
 }
 
-.fc-notion-theme .fc .fc-scrollgrid-section-header > * {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.fc-notion-theme .fc thead {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: hsl(var(--background));
-}
-
-.fc-notion-theme .fc .fc-col-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: hsl(var(--background));
-}
-
-/* Viewport-sticky for month view (height=auto) */
+.fc-notion-theme .fc .fc-scrollgrid-section-header > *,
 .fc-notion-theme .fc .fc-scrollgrid-section-sticky > * {
+  position: sticky;
   top: 0 !important;
-  z-index: 10;
+  z-index: 12;
   background: hsl(var(--background));
   border-bottom: 1px solid hsl(var(--border));
 }
 
+.fc-notion-theme.fc-month-view .fc .fc-scrollgrid,
+.fc-notion-theme.fc-month-view .fc .fc-view-harness,
+.fc-notion-theme.fc-month-view .fc .fc-scroller,
+.fc-notion-theme.fc-month-view .fc .fc-scroller-liquid,
+.fc-notion-theme.fc-month-view .fc .fc-scroller-liquid-absolute {
+  overflow: visible !important;
+}
+
+.fc-notion-theme.fc-month-view .fc thead,
+.fc-notion-theme.fc-month-view .fc .fc-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: hsl(var(--background));
+}
+
 /* Ensure the time-grid scroller enables sticky behavior (week/day) */
-.fc-notion-theme .fc .fc-timegrid .fc-scroller {
+.fc-notion-theme.fc-time-view .fc .fc-timegrid .fc-scroller {
   overflow: auto !important;
 }
 
 /* Week/day views: contain scrolling inside the calendar, no page-level scrollbar */
-.fc-notion-theme .fc .fc-scrollgrid {
+.fc-notion-theme.fc-time-view .fc .fc-scrollgrid {
   overflow: hidden;
 }
-.fc-notion-theme .fc .fc-scroller-liquid-absolute {
+.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute {
   overflow-y: auto !important;
   overflow-x: hidden !important;
 }
