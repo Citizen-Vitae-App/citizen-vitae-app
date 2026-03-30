@@ -514,6 +514,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         onEventPreview={(start, end) => {
           if (quickEvent.editEvent) {
             setPreviewOverride({ id: quickEvent.editEvent.id, start, end });
+          } else {
+            // Creation mode: show phantom event
+            setPreviewOverride({ id: PHANTOM_ID, start, end });
           }
         }}
       />
