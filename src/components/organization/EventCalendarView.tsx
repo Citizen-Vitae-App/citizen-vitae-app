@@ -87,6 +87,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const [currentTitle, setCurrentTitle] = useState('');
   const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; editEvent?: EditEventData; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
   const [previewOverride, setPreviewOverride] = useState<{ id: string; start: string; end: string } | null>(null);
+  const PHANTOM_ID = '__phantom__';
 
   // Convert events to FullCalendar format, applying live preview overrides
   const calendarEvents = events.map(event => {
