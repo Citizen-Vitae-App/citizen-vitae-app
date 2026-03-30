@@ -781,14 +781,39 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     );
   }
 
+  const deleteConfirmDialog = (
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer cet événement ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action est irréversible. Toutes les inscriptions associées seront également supprimées.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ─── Desktop: Fixed positioned card ───
   return (
-    <div
-      ref={dialogRef}
-      style={computeDesktopStyle()}
-      className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
-    >
-      {formContent}
-    </div>
+    <>
+      <div
+        ref={dialogRef}
+        style={computeDesktopStyle()}
+        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+      >
+        {formContent}
+      </div>
+      {deleteConfirmDialog}
+    </>
   );
 }
