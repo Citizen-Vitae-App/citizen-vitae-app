@@ -412,11 +412,19 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
       </div>
       <QuickEventDialog
         isOpen={quickEvent.isOpen}
-        onClose={() => setQuickEvent(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => {
+          setQuickEvent(prev => ({ ...prev, isOpen: false }));
+          setPreviewOverride(null);
+        }}
         date={quickEvent.date}
         organizationId={organizationId}
         position={quickEvent.position}
         editEvent={quickEvent.editEvent}
+        onEventPreview={(start, end) => {
+          if (quickEvent.editEvent) {
+            setPreviewOverride({ id: quickEvent.editEvent.id, start, end });
+          }
+        }}
       />
     </div>
   );
