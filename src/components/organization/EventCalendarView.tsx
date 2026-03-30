@@ -33,6 +33,8 @@ interface CalendarEvent {
   start_date: string;
   end_date: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_public: boolean | null;
   organization_id: string;
   cover_image_url: string | null;
