@@ -164,13 +164,19 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     return mapped;
   })();
 
-  // Handle event click — open edit popover
+  // Handle event click — open edit popover (or re-focus phantom)
   const handleEventClick = useCallback((info: any) => {
+    const eventId = info.event.id;
+    
+    // Phantom event: just re-focus the popover, don't navigate
+    if (eventId === PHANTOM_ID) {
+      return;
+    }
+    
     if (isMember) {
       navigate(`/organization/events/${info.event.id}/edit`);
       return;
     }
-    const eventId = info.event.id;
     const originalEvent = events.find(e => e.id === eventId);
     if (!originalEvent) {
       navigate(`/organization/events/${eventId}/edit`);
