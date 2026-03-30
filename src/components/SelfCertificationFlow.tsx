@@ -335,6 +335,9 @@ export const SelfCertificationFlow = ({
       setStage('success');
       toast.success('Présence auto-certifiée avec succès !');
       
+      // Invalidate registration query so button updates
+      queryClient.invalidateQueries({ queryKey: ['event-registration'] });
+      
       // Wait then close
       setTimeout(() => {
         onSuccess();
