@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { QuickEventDialog } from './QuickEventDialog';
 
 interface EditEventData {
@@ -80,6 +81,7 @@ export const VIEW_LABELS_SHORT: Record<CalendarViewType, string> = {
 export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, onToolbarReady, onStateChange }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
@@ -382,13 +384,13 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           }}
           views={{
             dayGridMonth: {
-              dayHeaderFormat: { weekday: 'short' },
+              dayHeaderFormat: { weekday: isMobile ? 'narrow' : 'short' },
             },
             timeGridWeek: {
-              dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+              dayHeaderFormat: { weekday: isMobile ? 'narrow' : 'short', day: 'numeric' },
             },
             timeGridDay: {
-              dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'long' },
+              dayHeaderFormat: { weekday: isMobile ? 'short' : 'long', day: 'numeric', month: isMobile ? 'short' : 'long' },
             },
           }}
           eventTimeFormat={{
