@@ -147,9 +147,10 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         title: '(Nouvel événement)',
         start: previewOverride.start,
         end: previewOverride.end,
-        backgroundColor: 'hsl(var(--primary))',
+        backgroundColor: 'hsla(var(--primary) / 0.35)',
         borderColor: 'hsl(var(--primary))',
-        textColor: '#fff',
+        textColor: 'hsl(var(--primary))',
+        classNames: ['phantom-event'],
         extendedProps: {
           location: '',
           is_public: true,
@@ -162,6 +163,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           themeName: null,
         },
         editable: true,
+        startEditable: true,
+        durationEditable: true,
       });
     }
 
