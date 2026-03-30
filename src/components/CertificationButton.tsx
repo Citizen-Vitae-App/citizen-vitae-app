@@ -49,11 +49,24 @@ export const CertificationButton = ({
 
   // Auto-request location on mount
   useEffect(() => {
-    if (!hasRequestedLocation) {
+    if (!hasRequestedLocation && !disabled) {
       setHasRequestedLocation(true);
       requestLocation();
     }
-  }, [hasRequestedLocation, requestLocation]);
+  }, [hasRequestedLocation, requestLocation, disabled]);
+
+  // If already certified, show confirmation state
+  if (disabled) {
+    return (
+      <Button
+        disabled
+        className="w-full h-12 font-semibold bg-green-50 text-green-800 border border-green-200 hover:bg-green-50 cursor-default"
+      >
+        <CheckCircle2 className="h-5 w-5 mr-2 text-green-600" />
+        Présence certifiée
+      </Button>
+    );
+  }
 
   // If event has no coordinates or is over, don't show button
   if (eventLatitude === null || eventLongitude === null || isAfterEvent) {
@@ -78,7 +91,6 @@ export const CertificationButton = ({
     return (
       <Button
         onClick={onClick}
-        disabled={disabled}
         className="w-full h-12 font-semibold"
         style={{ background: 'linear-gradient(to right, #012573, #083AD2)' }}
       >

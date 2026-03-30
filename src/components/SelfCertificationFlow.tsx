@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { CameraCapture } from './CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -47,6 +48,7 @@ export const SelfCertificationFlow = ({
   organizationId,
   onSuccess,
 }: SelfCertificationFlowProps) => {
+  const queryClient = useQueryClient();
   const [stage, setStage] = useState<CertificationStage>('instructions');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [comment, setComment] = useState<string>('');
@@ -333,6 +335,9 @@ export const SelfCertificationFlow = ({
       // Show success
       setStage('success');
       toast.success('Présence auto-certifiée avec succès !');
+      
+      // Invalidate registration query so button updates
+      queryClient.invalidateQueries({ queryKey: ['event-registration'] });
       
       // Wait then close
       setTimeout(() => {
