@@ -260,6 +260,20 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const newStart = info.event.start?.toISOString();
     const newEnd = info.event.end?.toISOString();
 
+    // Phantom event: update preview + popover state only, no DB call
+    if (eventId === PHANTOM_ID) {
+      setPreviewOverride({ id: PHANTOM_ID, start: newStart!, end: newEnd! });
+      const s = info.event.start;
+      const e = info.event.end;
+      window.dispatchEvent(new CustomEvent('quick-event-time-range', {
+        detail: {
+          startTime: `${String(s.getHours()).padStart(2, '0')}:${String(s.getMinutes()).padStart(2, '0')}`,
+          endTime: `${String(e.getHours()).padStart(2, '0')}:${String(e.getMinutes()).padStart(2, '0')}`,
+        }
+      }));
+      return;
+    }
+
     // If popover is open for this event, update popover state
     if (quickEvent.isOpen && quickEvent.editEvent?.id === eventId) {
       setQuickEvent(prev => ({
