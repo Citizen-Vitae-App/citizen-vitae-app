@@ -356,8 +356,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           firstDay={1}
           events={calendarEvents}
           headerToolbar={false}
-          height={currentView === 'dayGridMonth' ? 'auto' : 700}
-          contentHeight={currentView === 'dayGridMonth' ? 'auto' : undefined}
+          height={700}
+          contentHeight={undefined}
           stickyHeaderDates={true}
           aspectRatio={1.8}
           editable={!isMember}
