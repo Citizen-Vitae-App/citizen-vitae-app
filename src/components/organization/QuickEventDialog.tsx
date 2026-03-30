@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { MapPin, Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag } from 'lucide-react';
+import { Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag } from 'lucide-react';
+import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,8 @@ interface EditEventData {
   start_date: string;
   end_date: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_public: boolean | null;
   description?: string | null;
   capacity?: number | null;
@@ -44,6 +47,7 @@ interface QuickEventDialogProps {
 export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent, onEventPreview }: QuickEventDialogProps) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
   const [description, setDescription] = useState('');
@@ -94,6 +98,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       if (editEvent) {
         setTitle(editEvent.name);
         setLocation(editEvent.location || '');
+        setCoordinates(editEvent.latitude != null && editEvent.longitude != null ? { latitude: editEvent.latitude, longitude: editEvent.longitude } : null);
         setDescription(editEvent.description || '');
         setIsPublic(editEvent.is_public ?? true);
         setCapacity(editEvent.capacity ? String(editEvent.capacity) : '');
@@ -109,6 +114,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       } else {
         setTitle('');
         setLocation('');
+        setCoordinates(null);
         setDescription('');
         setIsPublic(true);
         setCapacity('');
@@ -221,6 +227,8 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         const { error } = await supabase.from('events').update({
           name: title.trim(),
           location: location.trim() || 'À définir',
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           is_public: isPublic,
@@ -248,6 +256,8 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         const { data: eventData, error } = await supabase.from('events').insert({
           name: title.trim(),
           location: location.trim() || 'À définir',
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           organization_id: organizationId,
@@ -444,16 +454,17 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           />
         </div>
 
-        {/* Location */}
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Ajouter un lieu"
-            className="border-0 bg-muted rounded-md h-8 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/30"
-          />
-        </div>
+        {/* Location with Google Places */}
+        <GooglePlacesAutocomplete
+          value={location}
+          onChange={(val) => { setLocation(val); setCoordinates(null); }}
+          onPlaceSelect={(place) => {
+            setLocation(place.address);
+            setCoordinates({ latitude: place.latitude, longitude: place.longitude });
+          }}
+          placeholder="Ajouter un lieu"
+          inputClassName="border-0 bg-muted rounded-md h-8 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/30"
+        />
 
         {/* Expanded options */}
         {isExpanded && (

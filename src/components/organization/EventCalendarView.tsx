@@ -18,6 +18,8 @@ interface EditEventData {
   start_date: string;
   end_date: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_public: boolean | null;
   description?: string | null;
   capacity?: number | null;
@@ -33,6 +35,8 @@ interface CalendarEvent {
   start_date: string;
   end_date: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_public: boolean | null;
   organization_id: string;
   cover_image_url: string | null;
@@ -196,6 +200,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         start_date: originalEvent.start_date,
         end_date: originalEvent.end_date,
         location: originalEvent.location,
+        latitude: originalEvent.latitude,
+        longitude: originalEvent.longitude,
         is_public: originalEvent.is_public,
         capacity: originalEvent.capacity,
         cover_image_url: originalEvent.cover_image_url,
