@@ -365,6 +365,12 @@ All colors MUST be HSL.
   border-radius: 6px;
   border-left: 3px solid hsl(var(--primary));
   box-shadow: 0 1px 3px hsl(var(--foreground) / 0.08);
+  min-height: 22px !important;
+  overflow: visible;
+}
+
+.fc-notion-theme .fc .fc-timegrid-event .fc-event-main {
+  overflow: visible;
 }
 
 .fc-notion-theme .fc .fc-timegrid-event.fc-event-live {
