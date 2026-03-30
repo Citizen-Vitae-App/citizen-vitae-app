@@ -404,14 +404,53 @@ All colors MUST be HSL.
     overflow-x: hidden;
   }
 
-  /* Wider time label column so hours are fully visible */
+  /* Time label column — wide enough for "02:00" */
   .fc-notion-theme .fc .fc-timegrid-axis {
-    min-width: 42px !important;
-    width: 42px !important;
+    min-width: 46px !important;
+    width: 46px !important;
   }
   .fc-notion-theme .fc .fc-timegrid-slot-label {
-    padding-left: 2px !important;
+    padding-left: 4px !important;
     padding-right: 2px !important;
+  }
+  .fc-notion-theme .fc .fc-timegrid-slot-label-cushion {
+    font-size: 0.65rem !important;
+  }
+
+  /* Google Calendar-style column header: no borders, shadow, stacked layout */
+  .fc-notion-theme .fc .fc-col-header-cell {
+    background: hsl(var(--background)) !important;
+    border: none !important;
+    padding: 6px 0 4px !important;
+  }
+  .fc-notion-theme .fc .fc-col-header-cell-cushion {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px;
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: hsl(var(--muted-foreground)) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* Day number on second line, bigger */
+  .fc-notion-theme .fc .fc-col-header-cell-cushion::after {
+    display: none;
+  }
+
+  /* Sticky header with shadow — no top/bottom borders */
+  .fc-notion-theme .fc .fc-scrollgrid-section-header {
+    box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
+  }
+  .fc-notion-theme .fc .fc-scrollgrid-section-header td {
+    border: none !important;
+  }
+
+  /* Also remove header borders on the timegrid axis header cell */
+  .fc-notion-theme .fc .fc-timegrid-axis {
+    border: none !important;
   }
 
   /* Thin scrollbar (2px) to save space */

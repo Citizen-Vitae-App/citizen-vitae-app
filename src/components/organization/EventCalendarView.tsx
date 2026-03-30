@@ -384,13 +384,13 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           }}
           views={{
             dayGridMonth: {
-              dayHeaderFormat: { weekday: 'short' },
+              dayHeaderFormat: { weekday: isMobile ? 'narrow' : 'short' },
             },
             timeGridWeek: {
-              dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+              dayHeaderFormat: { weekday: isMobile ? 'narrow' : 'short', day: 'numeric' },
             },
             timeGridDay: {
-              dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'long' },
+              dayHeaderFormat: { weekday: isMobile ? 'short' : 'long', day: 'numeric', month: isMobile ? 'short' : 'long' },
             },
           }}
           eventTimeFormat={{
