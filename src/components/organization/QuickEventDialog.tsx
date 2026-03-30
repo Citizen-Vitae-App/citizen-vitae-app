@@ -114,6 +114,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       } else {
         setTitle('');
         setLocation('');
+        setCoordinates(null);
         setDescription('');
         setIsPublic(true);
         setCapacity('');
