@@ -41,7 +41,7 @@ interface QuickEventDialogProps {
   onEventPreview?: (startISO: string, endISO: string) => void;
 }
 
-export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent }: QuickEventDialogProps) {
+export function QuickEventDialog({ isOpen, onClose, date, organizationId, position, editEvent, onEventPreview }: QuickEventDialogProps) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [startTime, setStartTime] = useState('09:00');
