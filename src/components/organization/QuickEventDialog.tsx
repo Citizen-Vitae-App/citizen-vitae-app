@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag } from 'lucide-react';
+import { Clock, ImageIcon, Loader2, Check, Globe, Lock, ChevronDown, ChevronUp, Users, UserCheck, ShieldCheck, Pencil, Tag, MoreVertical, Copy, Trash2 } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -290,6 +290,74 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
   };
 
+  // Duplicate event
+  const handleDuplicate = async () => {
+    if (!editEvent) return;
+    setIsSaving(true);
+    try {
+      const [startH, startM] = startTime.split(':').map(Number);
+      const [endH, endM] = endTime.split(':').map(Number);
+      const startDate = new Date(date);
+      startDate.setHours(startH, startM, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(endH, endM, 0, 0);
+      if (endDate <= startDate) endDate.setTime(startDate.getTime() + 3600000);
+
+      const { data: newEvent, error } = await supabase.from('events').insert({
+        name: `${title.trim() || editEvent.name} (copie)`,
+        location: location.trim() || '',
+        latitude: coordinates?.latitude ?? editEvent.latitude ?? null,
+        longitude: coordinates?.longitude ?? editEvent.longitude ?? null,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        organization_id: organizationId,
+        is_public: isPublic,
+        description: description.trim() || null,
+        capacity: capacity ? parseInt(capacity) : null,
+        require_approval: requireApproval,
+        allow_self_certification: allowSelfCertification,
+        cover_image_url: editEvent.cover_image_url,
+      }).select('id').single();
+
+      if (error) throw error;
+
+      if (selectedCauseTheme && newEvent?.id) {
+        await supabase.from('event_cause_themes').insert({
+          event_id: newEvent.id,
+          cause_theme_id: selectedCauseTheme,
+        });
+      }
+
+      toast.success('Événement dupliqué');
+      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+      onClose();
+    } catch (err) {
+      logger.error('Duplicate event failed:', err);
+      toast.error('Erreur lors de la duplication');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete event
+  const handleDelete = async () => {
+    if (!editEvent) return;
+    if (!window.confirm('Supprimer cet événement ?')) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', editEvent.id);
+      if (error) throw error;
+      toast.success('Événement supprimé');
+      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+      onClose();
+    } catch (err) {
+      logger.error('Delete event failed:', err);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Mobile drag handlers — real-time tracking for smooth feel
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     dragStartY.current = e.touches[0].clientY;
@@ -414,6 +482,40 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
             )}
           </div>
         </div>
+
+        {/* 3-dot menu for existing events */}
+        {editEvent && (
+          <div className="absolute top-1.5 right-1.5 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="h-7 w-7 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4 text-white" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onSelect={handleDuplicate}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>Dupliquer</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={handleDelete}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Supprimer</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       <div className={`${isMobileView ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
