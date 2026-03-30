@@ -23,6 +23,8 @@ interface EditEventData {
   start_date: string;
   end_date: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_public: boolean | null;
   description?: string | null;
   capacity?: number | null;
