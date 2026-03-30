@@ -290,6 +290,74 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     }
   };
 
+  // Duplicate event
+  const handleDuplicate = async () => {
+    if (!editEvent) return;
+    setIsSaving(true);
+    try {
+      const [startH, startM] = startTime.split(':').map(Number);
+      const [endH, endM] = endTime.split(':').map(Number);
+      const startDate = new Date(date);
+      startDate.setHours(startH, startM, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(endH, endM, 0, 0);
+      if (endDate <= startDate) endDate.setTime(startDate.getTime() + 3600000);
+
+      const { data: newEvent, error } = await supabase.from('events').insert({
+        name: `${title.trim() || editEvent.name} (copie)`,
+        location: location.trim() || '',
+        latitude: coordinates?.latitude ?? editEvent.latitude ?? null,
+        longitude: coordinates?.longitude ?? editEvent.longitude ?? null,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        organization_id: organizationId,
+        is_public: isPublic,
+        description: description.trim() || null,
+        capacity: capacity ? parseInt(capacity) : null,
+        require_approval: requireApproval,
+        allow_self_certification: allowSelfCertification,
+        cover_image_url: editEvent.cover_image_url,
+      }).select('id').single();
+
+      if (error) throw error;
+
+      if (selectedCauseTheme && newEvent?.id) {
+        await supabase.from('event_cause_themes').insert({
+          event_id: newEvent.id,
+          cause_theme_id: selectedCauseTheme,
+        });
+      }
+
+      toast.success('Événement dupliqué');
+      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+      onClose();
+    } catch (err) {
+      logger.error('Duplicate event failed:', err);
+      toast.error('Erreur lors de la duplication');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete event
+  const handleDelete = async () => {
+    if (!editEvent) return;
+    if (!window.confirm('Supprimer cet événement ?')) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', editEvent.id);
+      if (error) throw error;
+      toast.success('Événement supprimé');
+      queryClient.invalidateQueries({ queryKey: ['organization-events'] });
+      onClose();
+    } catch (err) {
+      logger.error('Delete event failed:', err);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Mobile drag handlers — real-time tracking for smooth feel
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     dragStartY.current = e.touches[0].clientY;
