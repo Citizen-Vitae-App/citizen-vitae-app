@@ -175,6 +175,18 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     const newStart = info.event.start?.toISOString();
     const newEnd = info.event.end?.toISOString() || newStart;
 
+    // If popover is open for this event, update popover state instead of closing
+    if (quickEvent.isOpen && quickEvent.editEvent?.id === eventId) {
+      const el = info.el as HTMLElement;
+      const rect = el.getBoundingClientRect();
+      setQuickEvent(prev => ({
+        ...prev,
+        date: info.event.start,
+        editEvent: prev.editEvent ? { ...prev.editEvent, start_date: newStart, end_date: newEnd } : undefined,
+        position: { top: rect.top, left: rect.right, cellWidth: rect.width, cellHeight: rect.height },
+      }));
+    }
+
     try {
       const { error } = await supabase
         .from('events')
@@ -188,12 +200,22 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
       toast.error('Erreur lors de la mise à jour');
       info.revert();
     }
-  }, [organizationId, queryClient]);
+  }, [organizationId, queryClient, quickEvent]);
 
   // Handle event resize (duration change)
   const handleEventResize = useCallback(async (info: any) => {
     const eventId = info.event.id;
+    const newStart = info.event.start?.toISOString();
     const newEnd = info.event.end?.toISOString();
+
+    // If popover is open for this event, update popover state
+    if (quickEvent.isOpen && quickEvent.editEvent?.id === eventId) {
+      setQuickEvent(prev => ({
+        ...prev,
+        date: info.event.start,
+        editEvent: prev.editEvent ? { ...prev.editEvent, start_date: newStart!, end_date: newEnd! } : undefined,
+      }));
+    }
 
     try {
       const { error } = await supabase
@@ -356,8 +378,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           firstDay={1}
           events={calendarEvents}
           headerToolbar={false}
-          height={currentView === 'dayGridMonth' ? 'auto' : 700}
-          contentHeight={currentView === 'dayGridMonth' ? 'auto' : undefined}
+          height={700}
+          contentHeight={undefined}
           stickyHeaderDates={true}
           aspectRatio={1.8}
           editable={!isMember}
