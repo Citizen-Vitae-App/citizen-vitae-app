@@ -96,6 +96,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   useEffect(() => {
     if (isOpen) {
       setMobileFullScreen(false);
+      setShowDeleteConfirm(false);
       if (editEvent) {
         setTitle(editEvent.name);
         setLocation(editEvent.location || '');
