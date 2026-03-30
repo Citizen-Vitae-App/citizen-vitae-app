@@ -403,6 +403,31 @@ All colors MUST be HSL.
   .fc-notion-theme {
     overflow-x: hidden;
   }
+
+  /* Wider time label column so hours are fully visible */
+  .fc-notion-theme .fc .fc-timegrid-axis {
+    min-width: 42px !important;
+    width: 42px !important;
+  }
+  .fc-notion-theme .fc .fc-timegrid-slot-label {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  /* Thin scrollbar (2px) to save space */
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar {
+    width: 2px;
+  }
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 1px;
+  }
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .fc-notion-theme .fc .fc-scroller {
+    scrollbar-width: thin;
+  }
 }
 
 /* Rich text — style links in blue with underline (editor + display) */
