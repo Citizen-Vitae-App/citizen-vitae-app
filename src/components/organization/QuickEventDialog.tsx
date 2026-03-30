@@ -226,7 +226,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       if (editEvent) {
         const { error } = await supabase.from('events').update({
           name: title.trim(),
-          location: location.trim() || 'À définir',
+          location: location.trim() || '',
           latitude: coordinates?.latitude ?? null,
           longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
@@ -255,7 +255,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       } else {
         const { data: eventData, error } = await supabase.from('events').insert({
           name: title.trim(),
-          location: location.trim() || 'À définir',
+          location: location.trim() || '',
           latitude: coordinates?.latitude ?? null,
           longitude: coordinates?.longitude ?? null,
           start_date: startDate.toISOString(),
@@ -510,7 +510,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
                   return (
                     <DropdownMenuItem
                       key={theme.id}
-                      onClick={() => setSelectedCauseTheme(selectedCauseTheme === theme.id ? null : theme.id)}
+                      onSelect={(e) => { e.preventDefault(); setSelectedCauseTheme(selectedCauseTheme === theme.id ? null : theme.id); }}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <Icon className="h-4 w-4 shrink-0" style={{ color: theme.color }} />
