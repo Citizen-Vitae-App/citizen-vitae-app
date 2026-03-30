@@ -144,6 +144,19 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     return () => window.removeEventListener('quick-event-time-range', handler);
   }, [isOpen]);
 
+  // Live preview: update calendar event block when times change
+  useEffect(() => {
+    if (!isOpen || !editEvent || !onEventPreview) return;
+    const [sH, sM] = startTime.split(':').map(Number);
+    const [eH, eM] = endTime.split(':').map(Number);
+    const s = new Date(date);
+    s.setHours(sH, sM, 0, 0);
+    const e = new Date(date);
+    e.setHours(eH, eM, 0, 0);
+    if (e <= s) e.setTime(s.getTime() + 3600000);
+    onEventPreview(s.toISOString(), e.toISOString());
+  }, [isOpen, startTime, endTime, date, editEvent, onEventPreview]);
+
   // Close on outside click — but ignore clicks inside Radix portals (dropdowns, etc.)
   useEffect(() => {
     if (!isOpen) return;
