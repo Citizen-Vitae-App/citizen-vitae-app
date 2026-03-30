@@ -443,27 +443,61 @@ All colors MUST be HSL.
 
 /* Mobile: prevent horizontal scroll and ensure edge-to-edge */
 @media (max-width: 639px) {
-  .fc-notion-theme .fc .fc-scrollgrid {
-    overflow-x: hidden;
-  }
-  .fc-notion-theme .fc .fc-view-harness {
-    overflow-x: hidden;
-  }
-  .fc-notion-theme {
-    overflow-x: hidden;
+  /* Kill ALL horizontal scroll on calendar container and children */
+  .fc-notion-theme,
+  .fc-notion-theme .fc,
+  .fc-notion-theme .fc .fc-view-harness,
+  .fc-notion-theme .fc .fc-scrollgrid,
+  .fc-notion-theme .fc .fc-scroller,
+  .fc-notion-theme .fc .fc-daygrid-body,
+  .fc-notion-theme .fc table {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
   }
 
-  /* Time label column — wide enough for "02:00" */
+  /* Month view: force table layout to fit viewport */
+  .fc-month-view .fc .fc-scrollgrid {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+  .fc-month-view .fc .fc-daygrid-body {
+    width: 100% !important;
+  }
+  .fc-month-view .fc .fc-daygrid-body table {
+    width: 100% !important;
+  }
+
+  /* Time label column — wide enough for "02:00", not clipped */
   .fc-notion-theme .fc .fc-timegrid-axis {
-    min-width: 46px !important;
-    width: 46px !important;
+    min-width: 48px !important;
+    width: 48px !important;
   }
   .fc-notion-theme .fc .fc-timegrid-slot-label {
-    padding-left: 4px !important;
-    padding-right: 2px !important;
+    min-width: 48px !important;
+    width: 48px !important;
+    padding-left: 6px !important;
+    padding-right: 4px !important;
   }
   .fc-notion-theme .fc .fc-timegrid-slot-label-cushion {
     font-size: 0.65rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Week/day view: use viewport height for proper scrolling */
+  .fc-time-view .fc .fc-view-harness {
+    height: calc(100vh - 180px) !important;
+  }
+  .fc-time-view .fc .fc-scroller {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Sticky header for time grid views */
+  .fc-notion-theme .fc .fc-scrollgrid-section-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    background: hsl(var(--background)) !important;
   }
 
   /* Google Calendar-style column header: no borders, shadow, stacked layout */
@@ -489,7 +523,7 @@ All colors MUST be HSL.
     display: none;
   }
 
-  /* Sticky header with shadow — no top/bottom borders */
+  /* Sticky header shadow — no top/bottom borders */
   .fc-notion-theme .fc .fc-scrollgrid-section-header {
     box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
   }
@@ -515,6 +549,15 @@ All colors MUST be HSL.
   }
   .fc-notion-theme .fc .fc-scroller {
     scrollbar-width: thin;
+  }
+
+  /* Month view sticky header */
+  .fc-month-view .fc .fc-col-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    background: hsl(var(--background)) !important;
+    box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
   }
 }
 
