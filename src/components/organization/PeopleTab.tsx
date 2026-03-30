@@ -618,7 +618,7 @@ export function PeopleTab({
   };
   return <div className="space-y-4 md:space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2 md:py-3">
+      <div className="hidden md:grid grid-cols-3 gap-4 py-2 md:py-3">
         <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
