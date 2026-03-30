@@ -88,11 +88,14 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
   const [quickEvent, setQuickEvent] = useState<{ isOpen: boolean; date: Date; editEvent?: EditEventData; position?: { top: number; left: number; cellWidth: number; cellHeight: number } }>({ isOpen: false, date: new Date() });
   const [previewOverride, setPreviewOverride] = useState<{ id: string; start: string; end: string } | null>(null);
 
-  // Convert events to FullCalendar format
+  // Convert events to FullCalendar format, applying live preview overrides
   const calendarEvents = events.map(event => {
     const now = new Date();
-    const start = new Date(event.start_date);
-    const end = new Date(event.end_date);
+    const override = previewOverride && previewOverride.id === event.id ? previewOverride : null;
+    const startStr = override ? override.start : event.start_date;
+    const endStr = override ? override.end : event.end_date;
+    const start = new Date(startStr);
+    const end = new Date(endStr);
     const isPast = end < now;
     const isLive = start <= now && end >= now;
 
@@ -111,8 +114,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     return {
       id: event.id,
       title: event.name,
-      start: event.start_date,
-      end: event.end_date,
+      start: startStr,
+      end: endStr,
       backgroundColor: bgColor,
       borderColor: isPast ? 'transparent' : (themeColor || undefined),
       textColor: txtColor,
