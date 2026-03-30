@@ -81,6 +81,7 @@ export const VIEW_LABELS_SHORT: Record<CalendarViewType, string> = {
 export function EventCalendarView({ events, organizationId, participantCounts, isMember = false, onToolbarReady, onStateChange }: EventCalendarViewProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const calendarRef = useRef<FullCalendar>(null);
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [currentTitle, setCurrentTitle] = useState('');
