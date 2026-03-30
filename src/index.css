@@ -303,11 +303,21 @@ All colors MUST be HSL.
   top: 0 !important;
   z-index: 10;
   background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 /* Ensure the time-grid scroller enables sticky behavior (week/day) */
 .fc-notion-theme .fc .fc-timegrid .fc-scroller {
   overflow: auto !important;
+}
+
+/* Week/day views: contain scrolling inside the calendar, no page-level scrollbar */
+.fc-notion-theme .fc .fc-scrollgrid {
+  overflow: hidden;
+}
+.fc-notion-theme .fc .fc-scroller-liquid-absolute {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
