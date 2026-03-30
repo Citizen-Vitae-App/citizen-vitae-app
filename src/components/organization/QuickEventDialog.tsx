@@ -804,28 +804,6 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     );
   }
 
-  const deleteConfirmDialog = (
-    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer cet événement ?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Cette action est irréversible. Toutes les inscriptions associées seront également supprimées.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDeleteConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Supprimer
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-
   // ─── Desktop: Fixed positioned card ───
   return (
     <>
