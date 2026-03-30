@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -340,9 +341,15 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
   };
 
   // Delete event
-  const handleDelete = async () => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!editEvent) return;
-    if (!window.confirm('Supprimer cet événement ?')) return;
+    setShowDeleteConfirm(false);
     setIsSaving(true);
     try {
       const { error } = await supabase.from('events').delete().eq('id', editEvent.id);
@@ -505,7 +512,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
                   <span>Dupliquer</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={handleDelete}
+                  onSelect={handleDeleteRequest}
                   disabled={isSaving}
                   className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
                 >
@@ -706,6 +713,28 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     </>
   );
 
+  const deleteConfirmDialog = (
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer cet événement ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action est irréversible. Toutes les inscriptions associées seront également supprimées.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ─── Mobile: Bottom sheet ───
   if (isMobileView) {
     return (
@@ -770,18 +799,22 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
             {formContent}
           </div>
         </div>
+        {deleteConfirmDialog}
       </>
     );
   }
 
   // ─── Desktop: Fixed positioned card ───
   return (
-    <div
-      ref={dialogRef}
-      style={computeDesktopStyle()}
-      className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
-    >
-      {formContent}
-    </div>
+    <>
+      <div
+        ref={dialogRef}
+        style={computeDesktopStyle()}
+        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+      >
+        {formContent}
+      </div>
+      {deleteConfirmDialog}
+    </>
   );
 }
