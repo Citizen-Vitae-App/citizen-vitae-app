@@ -454,16 +454,17 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           />
         </div>
 
-        {/* Location */}
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Ajouter un lieu"
-            className="border-0 bg-muted rounded-md h-8 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/30"
-          />
-        </div>
+        {/* Location with Google Places */}
+        <GooglePlacesAutocomplete
+          value={location}
+          onChange={(val) => { setLocation(val); setCoordinates(null); }}
+          onPlaceSelect={(place) => {
+            setLocation(place.address);
+            setCoordinates({ latitude: place.latitude, longitude: place.longitude });
+          }}
+          placeholder="Ajouter un lieu"
+          inputClassName="border-0 bg-muted rounded-md h-8 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/30"
+        />
 
         {/* Expanded options */}
         {isExpanded && (
