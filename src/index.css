@@ -468,20 +468,20 @@ All colors MUST be HSL.
 
   /* Time label column — wide enough for visible hours on week/day */
   .fc-time-view .fc .fc-timegrid-axis {
-    min-width: 52px !important;
-    width: 52px !important;
+    min-width: 56px !important;
+    width: 56px !important;
   }
 
   .fc-time-view .fc .fc-timegrid-slot-label {
-    min-width: 52px !important;
-    width: 52px !important;
-    padding-left: 8px !important;
+    min-width: 56px !important;
+    width: 56px !important;
+    padding-left: 6px !important;
     padding-right: 4px !important;
   }
 
   .fc-time-view .fc .fc-timegrid-slot-label-cushion {
     display: inline-block !important;
-    font-size: 0.68rem !important;
+    font-size: 0.7rem !important;
     white-space: nowrap !important;
     transform: translateX(0) !important;
   }
