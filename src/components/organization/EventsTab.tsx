@@ -690,7 +690,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher un événement..."
+              placeholder={isMobile ? "Rechercher..." : "Rechercher un événement..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-muted border-0 h-10"
