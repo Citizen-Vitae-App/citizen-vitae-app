@@ -571,6 +571,93 @@ export default function ScanParticipant() {
               </Button>
             </CardContent>
           </Card>
+        ) : !adminCanScan ? (
+          // Admin face match verification gate
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+            <Card className="w-full max-w-sm border shadow-sm">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+                {adminVerification === 'pending' && (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Shield className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">Vérification requise</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Cet événement nécessite une approbation. Vous devez vérifier votre identité avant de scanner les participants.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => setAdminVerification('camera')} 
+                      className="w-full gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Vérifier mon identité
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate(-1)}
+                      className="w-full"
+                    >
+                      Retour
+                    </Button>
+                  </>
+                )}
+                
+                {adminVerification === 'camera' && (
+                  <>
+                    <h2 className="text-lg font-semibold">Prenez un selfie</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Nous allons comparer votre visage avec votre photo d'identité vérifiée.
+                    </p>
+                    <div className="w-full">
+                      <CameraCapture onCapture={handleAdminFaceCapture} />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setAdminVerification('pending')}
+                      className="w-full"
+                    >
+                      Annuler
+                    </Button>
+                  </>
+                )}
+                
+                {adminVerification === 'processing' && (
+                  <>
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Vérification en cours...</p>
+                  </>
+                )}
+                
+                {adminVerification === 'error' && (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <XCircle className="h-8 w-8 text-destructive" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-destructive">Échec</h2>
+                      <p className="text-sm text-muted-foreground mt-1">{adminVerificationError}</p>
+                    </div>
+                    <Button 
+                      onClick={() => setAdminVerification('camera')} 
+                      className="w-full gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Réessayer
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate(-1)}
+                      className="w-full"
+                    >
+                      Retour
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         ) : (
           <div className="flex-1 flex flex-col bg-foreground md:bg-transparent">
             <QRScanner onScan={handleScan} isProcessing={isProcessing} autoStart />
