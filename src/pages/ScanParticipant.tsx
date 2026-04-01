@@ -166,7 +166,7 @@ export default function ScanParticipant() {
           toast.success(`Arrivée enregistrée pour ${result.user_name} (1/2)`);
           if (result.cooldown_remaining_seconds || result.next_scan_available_at) {
             const remaining = result.cooldown_remaining_seconds || 60;
-            setCooldownSeconds(remaining);
+            startCooldown(qrToken, remaining);
           }
         } else if (result.scan_type === 'departure') {
           toast.success(`Certification complète pour ${result.user_name} !`);
