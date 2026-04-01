@@ -376,7 +376,7 @@ const EventDetail = () => {
       {/* Face Match Dialog for mobile */}
       <FaceMatchVerification isOpen={showFaceMatch} onClose={() => setShowFaceMatch(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", {
       locale: fr
-    })}`} existingQrToken={registration?.qr_token} onSuccess={() => setShowFaceMatch(false)} />
+    })}`} existingQrToken={registration?.qr_token} onSuccess={() => {}} />
 
       {/* Self Certification Dialog */}
       <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} organizationName={event.organizations?.name} organizationLogoUrl={event.organizations?.logo_url} onSuccess={() => setShowSelfCertification(false)} />
