@@ -128,8 +128,9 @@ export default function ScanParticipant() {
       return;
     }
 
-    if (qrToken === lastProcessedTokenRef.current && getCooldownForToken(qrToken) > 0) {
-      logger.debug('[QR-SCAN] Ignoring - cooldown active');
+    // Only block re-scanning the SAME participant during cooldown
+    if (getCooldownForToken(qrToken) > 0) {
+      logger.debug('[QR-SCAN] Ignoring - cooldown active for this participant');
       return;
     }
     
