@@ -196,7 +196,7 @@ export default function ScanParticipant() {
       if (errorData?.scan_type === 'cooldown') {
         setLastResult(errorData);
         const remaining = errorData.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
