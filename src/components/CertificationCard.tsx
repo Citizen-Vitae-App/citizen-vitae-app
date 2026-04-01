@@ -444,6 +444,7 @@ export const CertificationCard = ({
         eventStartDate={eventStartDate}
         eventEndDate={eventEndDate}
         organizationId={organizationId}
+        organizationName={organizationName}
         onSuccess={handleSelfCertificationSuccess}
       />
     </>
