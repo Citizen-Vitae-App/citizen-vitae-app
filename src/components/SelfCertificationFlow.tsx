@@ -33,6 +33,8 @@ interface SelfCertificationFlowProps {
   eventStartDate: string;
   eventEndDate: string;
   organizationId: string;
+  organizationName?: string;
+  teamName?: string;
   onSuccess: () => void;
 }
 
