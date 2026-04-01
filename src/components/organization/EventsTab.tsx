@@ -764,6 +764,96 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           </div>
         </div>
 
+        {/* Mobile filter panel */}
+        {isMobile && openFilterPanel && viewMode === 'list' && (
+          <div className="pb-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            {/* Status filter */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Statut</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["En cours", "À venir", "Passé"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        statuses: prev.statuses.includes(status)
+                          ? prev.statuses.filter(s => s !== status)
+                          : [...prev.statuses, status]
+                      }));
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors",
+                      filters.statuses.includes(status)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Visibility filter */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Visibilité</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[{ value: "public", label: "Public" }, { value: "private", label: "Privé" }].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        visibilities: prev.visibilities.includes(value)
+                          ? prev.visibilities.filter(v => v !== value)
+                          : [...prev.visibilities, value]
+                      }));
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors",
+                      filters.visibilities.includes(value)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Sort */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Trier par</p>
+              <div className="flex flex-wrap gap-1.5">
+                {([
+                  { field: "date" as SortField, label: "Date" },
+                  { field: "title" as SortField, label: "Titre" },
+                  { field: "participants" as SortField, label: "Participants" },
+                ] as const).map(({ field, label }) => (
+                  <button
+                    key={field}
+                    onClick={() => toggleSort(field)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1",
+                      sortField === field
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {label}
+                    {sortField === field && (sortDirection === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Clear */}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => { clearFilters(); setOpenFilterPanel(null); }}>
+                Effacer les filtres
+              </Button>
+            )}
+          </div>
+        )}
         {/* Calendar toolbar - inside sticky header */}
         {viewMode === 'calendar' && calendarApi && (
           <div className="flex items-center justify-between gap-1 sm:gap-2 pb-3">
