@@ -225,21 +225,24 @@ export default function EditEvent() {
     }
   }, [isLeader, userTeam, selectedTeamId]);
 
-  // Load cause themes
+  // Load cause themes filtered by organization settings
   useEffect(() => {
     const fetchCauseThemes = async () => {
+      if (!organizationId) return;
       const { data, error } = await supabase
-        .from('cause_themes')
-        .select('id, name, icon, color')
-        .order('name');
-
+        .from('organization_cause_themes')
+        .select('cause_theme_id, cause_themes(id, name, icon, color)')
+        .eq('organization_id', organizationId);
       if (!error && data) {
-        setCauseThemes(data);
+        const themes = data
+          .map((d: any) => d.cause_themes)
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setCauseThemes(themes);
       }
     };
-
     fetchCauseThemes();
-  }, []);
+  }, [organizationId]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

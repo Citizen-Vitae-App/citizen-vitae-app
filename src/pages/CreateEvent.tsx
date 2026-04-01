@@ -138,16 +138,21 @@ export default function CreateEvent() {
   };
   useEffect(() => {
     const fetchCauseThemes = async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('cause_themes').select('id, name, icon, color').order('name');
+      if (!organizationId) return;
+      const { data, error } = await supabase
+        .from('organization_cause_themes')
+        .select('cause_theme_id, cause_themes(id, name, icon, color)')
+        .eq('organization_id', organizationId);
       if (!error && data) {
-        setCauseThemes(data);
+        const themes = data
+          .map((d: any) => d.cause_themes)
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setCauseThemes(themes);
       }
     };
     fetchCauseThemes();
-  }, []);
+  }, [organizationId]);
   const handleSetCapacity = () => {
     if (tempCapacity) {
       form.setValue('capacity', tempCapacity);
