@@ -153,7 +153,7 @@ export const FaceMatchVerification = ({
               <p className="text-sm text-muted-foreground">
                 Pour certifier votre présence, nous allons nous assurer que vous êtes bien la personne avec une photo d'identité vérifiée.
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm font-semibold font-sans text-[#3d4f66]">
                 Assurez-vous d'être dans un endroit bien éclairé.
               </p>
             </div>
