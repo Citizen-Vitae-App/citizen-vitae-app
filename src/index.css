@@ -411,18 +411,11 @@ All colors MUST be HSL.
   opacity: 0.8;
 }
 
-/* Phantom event (in-creation) — translucent with dashed border */
+/* Phantom event (in-creation) — translucent, no dashed border */
 .fc-phantom-event {
-  opacity: 0.6 !important;
-  border-style: dashed !important;
-  border-width: 2px !important;
-  border-left-width: 3px !important;
-  animation: phantom-pulse 2s ease-in-out infinite;
+  opacity: 0.45 !important;
+  filter: grayscale(30%);
 }
-
-@keyframes phantom-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.75; }
 }
 
 .fc-notion-theme .fc .fc-more-link {

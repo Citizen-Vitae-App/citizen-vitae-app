@@ -203,6 +203,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       toast.error('Veuillez saisir un titre');
       return;
     }
+    if (!location.trim()) {
+      toast.error('Veuillez saisir un lieu');
+      return;
+    }
     setIsSaving(true);
     try {
       const [startH, startM] = startTime.split(':').map(Number);
@@ -682,7 +686,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={!title.trim() || isSaving}
+                disabled={!title.trim() || !location.trim() || isSaving}
                 className="h-8 px-4 text-xs"
               >
                 {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
@@ -787,7 +791,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={!title.trim() || isSaving}
+                disabled={!title.trim() || !location.trim() || isSaving}
                 className="h-7 px-3 text-xs rounded-full"
               >
                 {isSaving ? '...' : 'Enreg.'}
