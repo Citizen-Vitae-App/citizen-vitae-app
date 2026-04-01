@@ -92,7 +92,7 @@ export function GooglePlacesAutocomplete({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn("pl-10", inputClassName)}
+        className={cn("pl-10", hasError && "border-destructive focus-visible:ring-destructive", inputClassName)}
       />
     </div>
   );
