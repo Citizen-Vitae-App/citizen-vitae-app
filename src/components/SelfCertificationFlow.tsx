@@ -451,42 +451,47 @@ export const SelfCertificationFlow = ({
         )}
 
         {stage === 'recap' && (
-          <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-3 py-2">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-              <h2 className="text-xl font-semibold text-foreground">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-foreground">
                 Identité vérifiée
               </h2>
             </div>
-            
 
-            {/* Event recap */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-foreground">{eventName}</h3>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span className="capitalize">{formatEventDate()}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Horaires : {formatEventTime()}</span>
+            {/* Event recap — compact */}
+            <div className="bg-muted/30 rounded-lg p-3 space-y-1.5">
+              <h3 className="font-semibold text-foreground text-sm">{eventName}</h3>
+              {(organizationName || teamName) && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  <span>{organizationName}{teamName ? ` · ${teamName}` : ''}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span className="capitalize">{formatEventDate()}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  {formatEventTime()}
+                </span>
               </div>
             </div>
 
-            {/* Current time and location */}
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
-              <h4 className="font-medium text-foreground text-sm">Certification en cours</h4>
-              
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>Heure actuelle : <strong>{formatCurrentTime()}</strong></span>
-              </div>
-              
-              <div className="flex items-start gap-2 text-sm text-foreground">
-                <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span>Position : <strong>{formatCurrentLocation()}</strong></span>
+            {/* Current time and location — compact */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-1.5">
+              <h4 className="font-medium text-foreground text-xs">Certification en cours</h4>
+              <div className="flex items-center gap-3 text-xs text-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <strong>{formatCurrentTime()}</strong>
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <strong className="truncate max-w-[200px]">{formatCurrentLocation()}</strong>
+                </span>
               </div>
             </div>
 
