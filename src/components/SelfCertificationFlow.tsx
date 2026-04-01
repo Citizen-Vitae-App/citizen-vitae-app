@@ -496,27 +496,27 @@ export const SelfCertificationFlow = ({
             </div>
 
             {/* Optional comment with attachments */}
-            <div className="space-y-2">
-              <Label htmlFor="comment" className="text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+            <div className="space-y-1.5">
+              <Label htmlFor="comment" className="text-xs flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5" />
                 Commentaire & pièces jointes (optionnel)
               </Label>
               <Textarea
                 id="comment"
-                placeholder="Ajoutez un commentaire sur votre mission..."
+                placeholder="Ajoutez un commentaire..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="resize-none"
+                className="resize-none text-sm"
                 rows={2}
               />
               
               {/* Attachments display */}
               {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2">
                   {attachments.map((attachment) => (
                     <div key={attachment.id} className="relative group">
                       {attachment.type === 'image' ? (
-                        <div className="w-16 h-16 rounded-md overflow-hidden border border-border">
+                        <div className="w-14 h-14 rounded-md overflow-hidden border border-border">
                           <img
                             src={attachment.preview}
                             alt={attachment.name}
@@ -524,16 +524,16 @@ export const SelfCertificationFlow = ({
                           />
                         </div>
                       ) : (
-                        <div className="w-16 h-16 rounded-md border border-border flex items-center justify-center bg-muted">
-                          <FileText className="h-6 w-6 text-muted-foreground" />
+                        <div className="w-14 h-14 rounded-md border border-border flex items-center justify-center bg-muted">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
                         </div>
                       )}
                       <button
                         type="button"
                         onClick={() => removeAttachment(attachment.id)}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-2.5 w-2.5" />
                       </button>
                     </div>
                   ))}
@@ -541,7 +541,7 @@ export const SelfCertificationFlow = ({
               )}
               
               {/* Attachment buttons */}
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -555,7 +555,7 @@ export const SelfCertificationFlow = ({
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs"
+                  className="text-xs h-7"
                 >
                   <Paperclip className="h-3 w-3 mr-1" />
                   Fichier
@@ -565,7 +565,7 @@ export const SelfCertificationFlow = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setStage('attachment-camera')}
-                  className="text-xs"
+                  className="text-xs h-7"
                 >
                   <Camera className="h-3 w-3 mr-1" />
                   Photo
@@ -574,16 +574,16 @@ export const SelfCertificationFlow = ({
             </div>
 
             {/* Honor declaration */}
-            <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-2.5 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <Checkbox
                 id="honor-declaration"
                 checked={honorDeclaration}
                 onCheckedChange={(checked) => setHonorDeclaration(checked === true)}
                 className="mt-0.5"
               />
-              <Label htmlFor="honor-declaration" className="text-sm text-foreground leading-tight cursor-pointer">
+              <Label htmlFor="honor-declaration" className="text-xs text-foreground leading-tight cursor-pointer">
                 <span className="mr-1">✊</span>
-                Je déclare sur l'honneur que je suis actuellement sur les lieux pour démarrer ma mission citoyenne.
+                Je déclare sur l'honneur être actuellement sur les lieux pour démarrer ma mission citoyenne.
               </Label>
             </div>
 
@@ -591,7 +591,7 @@ export const SelfCertificationFlow = ({
             <Button
               onClick={handleConfirmCertification}
               disabled={!honorDeclaration}
-              className="w-full mt-2"
+              className="w-full"
               style={{ backgroundColor: honorDeclaration ? '#012573' : undefined }}
             >
               <Shield className="h-4 w-4 mr-2" />
