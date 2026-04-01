@@ -26,6 +26,7 @@ export function GooglePlacesAutocomplete({
   placeholder = "Ajouter un lieu",
   className,
   inputClassName,
+  hasError,
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
