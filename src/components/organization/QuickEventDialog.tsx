@@ -203,6 +203,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       toast.error('Veuillez saisir un titre');
       return;
     }
+    if (!location.trim()) {
+      toast.error('Veuillez saisir un lieu');
+      return;
+    }
     setIsSaving(true);
     try {
       const [startH, startM] = startTime.split(':').map(Number);
