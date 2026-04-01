@@ -151,7 +151,7 @@ export const FaceMatchVerification = ({
             </h2>
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Pour certifier votre présence, nous allons comparer votre visage avec votre photo d'identité vérifiée.
+                Pour certifier votre présence, nous allons nous assurer que vous êtes bien la personne avec une photo d'identité vérifiée.
               </p>
               <p className="text-sm text-muted-foreground">
                 Assurez-vous d'être dans un endroit bien éclairé.
