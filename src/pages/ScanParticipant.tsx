@@ -404,20 +404,20 @@ export default function ScanParticipant() {
         <span className="text-lg font-medium">{result.user_name}</span>
       </div>
 
-      {cooldownSeconds > 0 && (
+      {currentCooldown > 0 && (
         <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-center gap-2 text-amber-700 mb-2">
             <Timer className="h-4 w-4" />
-            <span className="text-sm font-medium">Prochain scan dans {cooldownSeconds}s</span>
+            <span className="text-sm font-medium">Prochain scan possible pour ce participant dans {currentCooldown}s</span>
           </div>
           <div className="w-full bg-amber-200 rounded-full h-2">
             <div 
               className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.max(0, ((60 - cooldownSeconds) / 60) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((60 - currentCooldown) / 60) * 100)}%` }}
             />
           </div>
           <p className="text-xs text-amber-600 mt-2">
-            Un délai d'1 minute entre les scans est nécessaire pour garantir l'authenticité
+            Vous pouvez scanner d'autres participants entre-temps
           </p>
         </div>
       )}
