@@ -24,6 +24,7 @@ import {
   Activity,
   Tag,
   List,
+  SlidersHorizontal,
 } from "lucide-react";
 import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS, VIEW_LABELS_SHORT } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
