@@ -37,6 +37,7 @@ interface SelfCertificationFlowProps {
   eventEndDate: string;
   organizationId: string;
   organizationName?: string;
+  organizationLogoUrl?: string | null;
   teamName?: string;
   onSuccess: () => void;
 }
@@ -52,9 +53,11 @@ export const SelfCertificationFlow = ({
   eventEndDate,
   organizationId,
   organizationName,
+  organizationLogoUrl,
   teamName,
   onSuccess,
 }: SelfCertificationFlowProps) => {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [stage, setStage] = useState<CertificationStage>('instructions');
   const [errorMessage, setErrorMessage] = useState<string>('');
