@@ -611,7 +611,7 @@ export default function ScanParticipant() {
                       Nous allons comparer votre visage avec votre photo d'identité vérifiée.
                     </p>
                     <div className="w-full">
-                      <CameraCapture onCapture={handleAdminFaceCapture} />
+                      <CameraCapture onCapture={handleAdminFaceCapture} onCancel={() => setAdminVerification('pending')} />
                     </div>
                     <Button 
                       variant="ghost" 
