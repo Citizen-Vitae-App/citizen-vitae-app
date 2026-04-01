@@ -40,29 +40,37 @@ export default function ScanParticipant() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<ScanResult | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [cooldownMap, setCooldownMap] = useState<Record<string, number>>({});
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   
   const lastProcessedTokenRef = useRef<string | null>(null);
-  const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cooldownIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
-  // Cooldown timer
+  // Per-participant cooldown timers
   useEffect(() => {
-    if (cooldownSeconds > 0) {
-      cooldownIntervalRef.current = setInterval(() => {
-        setCooldownSeconds(prev => {
-          if (prev <= 1) {
-            if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
     return () => {
-      if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
+      Object.values(cooldownIntervalsRef.current).forEach(clearInterval);
     };
-  }, [cooldownSeconds]);
+  }, []);
+
+  const startCooldown = (token: string, seconds: number) => {
+    setCooldownMap(prev => ({ ...prev, [token]: seconds }));
+    if (cooldownIntervalsRef.current[token]) clearInterval(cooldownIntervalsRef.current[token]);
+    cooldownIntervalsRef.current[token] = setInterval(() => {
+      setCooldownMap(prev => {
+        const remaining = (prev[token] || 0) - 1;
+        if (remaining <= 0) {
+          clearInterval(cooldownIntervalsRef.current[token]);
+          delete cooldownIntervalsRef.current[token];
+          const { [token]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [token]: remaining };
+      });
+    }, 1000);
+  };
+
+  const getCooldownForToken = (token: string) => cooldownMap[token] || 0;
 
   const generateCertificate = async (registrationId: string) => {
     if (!user) return;
@@ -120,8 +128,9 @@ export default function ScanParticipant() {
       return;
     }
 
-    if (qrToken === lastProcessedTokenRef.current && cooldownSeconds > 0) {
-      logger.debug('[QR-SCAN] Ignoring - cooldown active');
+    // Only block re-scanning the SAME participant during cooldown
+    if (getCooldownForToken(qrToken) > 0) {
+      logger.debug('[QR-SCAN] Ignoring - cooldown active for this participant');
       return;
     }
     
@@ -158,7 +167,7 @@ export default function ScanParticipant() {
           toast.success(`Arrivée enregistrée pour ${result.user_name} (1/2)`);
           if (result.cooldown_remaining_seconds || result.next_scan_available_at) {
             const remaining = result.cooldown_remaining_seconds || 60;
-            setCooldownSeconds(remaining);
+            startCooldown(qrToken, remaining);
           }
         } else if (result.scan_type === 'departure') {
           toast.success(`Certification complète pour ${result.user_name} !`);
@@ -168,7 +177,7 @@ export default function ScanParticipant() {
         }
       } else if (result.scan_type === 'cooldown') {
         const remaining = result.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
@@ -188,7 +197,7 @@ export default function ScanParticipant() {
       if (errorData?.scan_type === 'cooldown') {
         setLastResult(errorData);
         const remaining = errorData.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
@@ -201,7 +210,7 @@ export default function ScanParticipant() {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, cooldownSeconds, user]);
+  }, [isProcessing, cooldownMap, user]);
 
   const resetScan = () => {
     setLastResult(null);
@@ -212,6 +221,8 @@ export default function ScanParticipant() {
   const formatTime = (isoString: string) => {
     return format(new Date(isoString), 'HH:mm', { locale: fr });
   };
+
+  const currentCooldown = lastProcessedTokenRef.current ? getCooldownForToken(lastProcessedTokenRef.current) : 0;
 
   const renderArrivalResult = (result: ScanResult) => (
     <div className="flex flex-col items-center text-center gap-4">
@@ -267,16 +278,16 @@ export default function ScanParticipant() {
       </div>
 
       {/* Cooldown indicator */}
-      {cooldownSeconds > 0 && (
+      {currentCooldown > 0 && (
         <div className="w-full p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-center gap-2 text-amber-700 mb-2">
             <Timer className="h-4 w-4" />
-            <span className="text-sm font-medium">Prochain scan dans {cooldownSeconds}s</span>
+            <span className="text-sm font-medium">Prochain scan possible pour ce participant dans {currentCooldown}s</span>
           </div>
           <div className="w-full bg-amber-200 rounded-full h-1.5">
             <div 
               className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.max(0, ((60 - cooldownSeconds) / 60) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((60 - currentCooldown) / 60) * 100)}%` }}
             />
           </div>
         </div>
@@ -394,20 +405,20 @@ export default function ScanParticipant() {
         <span className="text-lg font-medium">{result.user_name}</span>
       </div>
 
-      {cooldownSeconds > 0 && (
+      {currentCooldown > 0 && (
         <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-center gap-2 text-amber-700 mb-2">
             <Timer className="h-4 w-4" />
-            <span className="text-sm font-medium">Prochain scan dans {cooldownSeconds}s</span>
+            <span className="text-sm font-medium">Prochain scan possible pour ce participant dans {currentCooldown}s</span>
           </div>
           <div className="w-full bg-amber-200 rounded-full h-2">
             <div 
               className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.max(0, ((60 - cooldownSeconds) / 60) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((60 - currentCooldown) / 60) * 100)}%` }}
             />
           </div>
           <p className="text-xs text-amber-600 mt-2">
-            Un délai d'1 minute entre les scans est nécessaire pour garantir l'authenticité
+            Vous pouvez scanner d'autres participants entre-temps
           </p>
         </div>
       )}
