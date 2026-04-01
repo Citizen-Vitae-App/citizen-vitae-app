@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon, Building2 } from 'lucide-react';
+import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { CameraCapture } from './CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -12,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type CertificationStage = 'instructions' | 'camera' | 'processing' | 'recap' | 'confirming' | 'success' | 'error' | 'attachment-camera';
 
@@ -34,6 +37,7 @@ interface SelfCertificationFlowProps {
   eventEndDate: string;
   organizationId: string;
   organizationName?: string;
+  organizationLogoUrl?: string | null;
   teamName?: string;
   onSuccess: () => void;
 }
@@ -49,9 +53,11 @@ export const SelfCertificationFlow = ({
   eventEndDate,
   organizationId,
   organizationName,
+  organizationLogoUrl,
   teamName,
   onSuccess,
 }: SelfCertificationFlowProps) => {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [stage, setStage] = useState<CertificationStage>('instructions');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -393,10 +399,9 @@ export const SelfCertificationFlow = ({
     return 'Non disponible';
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="sr-only">Auto-certification de présence</DialogTitle>
+  const content = (
+    <>
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6 overflow-y-auto max-h-[85vh] overscroll-contain">
         
         {stage === 'instructions' && (
           <div className="flex flex-col items-center gap-4 py-4">
@@ -464,7 +469,10 @@ export const SelfCertificationFlow = ({
               <h3 className="font-semibold text-foreground text-sm">{eventName}</h3>
               {(organizationName || teamName) && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  <Avatar className="h-4 w-4">
+                    {organizationLogoUrl && <AvatarImage src={organizationLogoUrl} alt={organizationName} />}
+                    <AvatarFallback className="text-[8px] bg-muted">{organizationName?.charAt(0) || '?'}</AvatarFallback>
+                  </Avatar>
                   <span>{organizationName}{teamName ? ` · ${teamName}` : ''}</span>
                 </div>
               )}
@@ -649,6 +657,26 @@ export const SelfCertificationFlow = ({
             </div>
           </div>
         )}
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={handleClose}>
+        <DrawerContent>
+          <DrawerTitle className="sr-only">Auto-certification de présence</DrawerTitle>
+          {content}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Auto-certification de présence</DialogTitle>
+        {content}
       </DialogContent>
     </Dialog>
   );
