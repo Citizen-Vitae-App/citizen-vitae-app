@@ -710,12 +710,24 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           {/* Hide action buttons for regular members - they can only view */}
           {!isMember && (
             <>
-              <Button asChild variant="outline" size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
-                <Link to="/organization/scan">
-                  <QrCode className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Scanner</span>
-                </Link>
-              </Button>
+              {/* Mobile: filter button instead of QR */}
+              {isMobile ? (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn("h-10 w-10 shrink-0", hasActiveFilters && "border-primary text-primary")}
+                  onClick={() => setOpenFilterPanel(openFilterPanel ? null : 'status')}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button asChild variant="outline" size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+                  <Link to="/organization/scan">
+                    <QrCode className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Scanner</span>
+                  </Link>
+                </Button>
+              )}
                <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
                 <Link to="/organization/create-event">
                   <Plus className="h-4 w-4 md:mr-2" />
