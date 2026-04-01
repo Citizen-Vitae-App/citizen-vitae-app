@@ -362,12 +362,12 @@ const EventDetail = () => {
             </div>
             <div className="flex flex-col items-end gap-1 text-right shrink-0">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-semibold text-sm underline text-foreground">{formatMobileDateRange()}</span>
+                <Calendar className="w-[16px] h-[16px] text-muted-foreground" />
+                <span className="font-semibold underline text-foreground text-base">{formatMobileDateRange()}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-muted-foreground/70" />
-                <span className="text-xs text-muted-foreground">{formatTime(event.start_date)}</span>
+                <Clock className="w-[14px] h-[14px] text-muted-foreground/70" />
+                <span className="text-muted-foreground text-sm">{formatTime(event.start_date)}</span>
               </div>
             </div>
           </div>
