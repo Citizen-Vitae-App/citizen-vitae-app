@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon, Building2 } from 'lucide-react';
+import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { CameraCapture } from './CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -12,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type CertificationStage = 'instructions' | 'camera' | 'processing' | 'recap' | 'confirming' | 'success' | 'error' | 'attachment-camera';
 
