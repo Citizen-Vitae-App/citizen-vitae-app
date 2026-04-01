@@ -616,9 +616,9 @@ export function PeopleTab({
         </DropdownMenu>
       </div>;
   };
-  return <div className="space-y-2 md:space-y-3">
+  return <div className="space-y-2 md:space-y-4">
       {/* KPI Cards */}
-      <div className="hidden md:grid grid-cols-3 gap-4 py-1 md:py-2">
+      <div className="hidden md:grid grid-cols-3 gap-4 pb-3">
         <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
