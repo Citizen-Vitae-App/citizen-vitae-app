@@ -322,7 +322,7 @@ const EventDetail = () => {
           } else {
             setShowFaceMatch(true);
           }
-        }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} />
+        }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} certifiedAt={registration?.attended_at || registration?.certification_end_at || registration?.certification_start_at} certificationType={registration?.status === 'self_certified' ? 'self_certified' : registration?.attended_at ? 'scan' : null} />
             {registration?.status !== 'self_certified' && !registration?.attended_at && (
               <TooltipProvider>
                 <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
