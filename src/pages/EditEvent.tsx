@@ -1025,7 +1025,7 @@ export default function EditEvent() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <UserCheck className="h-4 w-4 text-muted-foreground" />
-                            <FormLabel className="text-sm font-normal">Approbation requise</FormLabel>
+                            <FormLabel className="text-sm font-normal">Approbation requise pour le responsable de mission</FormLabel>
                           </div>
                           <FormControl>
                             <Switch
