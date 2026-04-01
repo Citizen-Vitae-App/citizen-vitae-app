@@ -84,7 +84,7 @@ const MyMissions = () => {
             <h3 className="font-semibold text-lg text-foreground truncate">{event.name}</h3>
             <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
           </div>
-          <MissionCertificationButton eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} allowSelfCertification={event.allow_self_certification || false} onClick={() => handleCertificationClick(registration)} />
+          <MissionCertificationButton eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} allowSelfCertification={event.allow_self_certification || false} onClick={() => handleCertificationClick(registration)} disabled={registration.status === 'self_certified' || !!registration.attended_at} />
         </div>
       </div>;
   };
