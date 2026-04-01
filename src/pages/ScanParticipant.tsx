@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Clock, UserCheck, AlertCircle, XCircle, Award, Timer } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, UserCheck, AlertCircle, XCircle, Award, Timer, Shield, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { QRScanner } from '@/components/QRScanner';
+import { CameraCapture } from '@/components/CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navbar } from '@/components/Navbar';
@@ -14,6 +15,7 @@ import { fr } from 'date-fns/locale';
 import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface ScanResult {
   success: boolean;
@@ -33,6 +35,8 @@ interface ScanResult {
   next_scan_available_at?: string;
 }
 
+type AdminVerificationState = 'pending' | 'camera' | 'processing' | 'verified' | 'error';
+
 export default function ScanParticipant() {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -43,8 +47,63 @@ export default function ScanParticipant() {
   const [cooldownMap, setCooldownMap] = useState<Record<string, number>>({});
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   
+  // Admin face match verification state
+  const [adminVerification, setAdminVerification] = useState<AdminVerificationState>('pending');
+  const [adminVerificationError, setAdminVerificationError] = useState('');
+  
   const lastProcessedTokenRef = useRef<string | null>(null);
   const cooldownIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  // Fetch event details to check require_approval
+  const { data: eventData } = useQuery({
+    queryKey: ['scan-event-details', eventId],
+    queryFn: async () => {
+      if (!eventId) return null;
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, name, require_approval')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!eventId,
+  });
+
+  const requiresAdminVerification = eventData?.require_approval === true;
+  const adminCanScan = !requiresAdminVerification || adminVerification === 'verified';
+
+  // Handle admin face match
+  const handleAdminFaceCapture = async (imageData: string) => {
+    if (!user) return;
+    setAdminVerification('processing');
+    setAdminVerificationError('');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('didit-verification', {
+        body: {
+          action: 'face-match',
+          user_id: user.id,
+          selfie_image: imageData,
+        },
+      });
+      
+      if (error) throw error;
+      
+      if (data?.matched) {
+        setAdminVerification('verified');
+        toast.success('Identité vérifiée — vous pouvez scanner');
+      } else {
+        setAdminVerification('error');
+        const score = data?.score ? `${data.score.toFixed(1)}%` : '';
+        setAdminVerificationError(`Correspondance insuffisante${score ? ` (${score})` : ''}. Réessayez.`);
+      }
+    } catch (err: any) {
+      logger.error('Admin face match error:', err);
+      setAdminVerification('error');
+      setAdminVerificationError('Erreur lors de la vérification. Réessayez.');
+    }
+  };
 
   // Per-participant cooldown timers
   useEffect(() => {
