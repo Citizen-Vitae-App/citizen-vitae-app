@@ -21,6 +21,7 @@ interface CertificationCardProps {
   userId: string;
   registrationId: string;
   organizationId: string;
+  organizationName?: string;
   faceMatchPassed?: boolean;
   qrToken?: string | null;
   attendedAt?: string | null;
