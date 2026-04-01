@@ -860,15 +860,22 @@ export default function EditEvent() {
                           <div className="bg-black/[0.03] hover:bg-black/[0.05] rounded-md">
                             <GooglePlacesAutocomplete
                               value={field.value}
-                              onChange={field.onChange}
+                              onChange={(val) => {
+                                field.onChange(val);
+                                setCoordinates(null);
+                              }}
                               onPlaceSelect={(place) => {
                                 field.onChange(place.address);
                                 setCoordinates({ latitude: place.latitude, longitude: place.longitude });
                               }}
                               placeholder="Rechercher une adresse ou un lieu"
+                              hasError={!!field.value && !coordinates}
                             />
                           </div>
                         </FormControl>
+                        {field.value && !coordinates && (
+                          <p className="text-xs text-destructive">Veuillez sélectionner une adresse dans la liste déroulante</p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
