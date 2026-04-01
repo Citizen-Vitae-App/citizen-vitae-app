@@ -274,7 +274,7 @@ const EventDetail = () => {
 
               {/* CTA Button or Certification Card */}
               {isRegistered ? <>
-                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} certificationStartAt={registration?.certification_start_at} certificationEndAt={registration?.certification_end_at} />
+                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} organizationName={event.organizations?.name} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} certificationStartAt={registration?.certification_start_at} certificationEndAt={registration?.certification_end_at} />
                   <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 text-lg font-semibold transition-all duration-300", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
                     {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                         <X className="h-5 w-5 mr-2" />
@@ -375,7 +375,7 @@ const EventDetail = () => {
     })}`} existingQrToken={registration?.qr_token} onSuccess={() => setShowFaceMatch(false)} />
 
       {/* Self Certification Dialog */}
-      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} onSuccess={() => setShowSelfCertification(false)} />
+      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} organizationName={event.organizations?.name} onSuccess={() => setShowSelfCertification(false)} />
 
       {/* Share Dialog */}
       <ShareDialog open={isShareOpen} onOpenChange={setIsShareOpen} url={window.location.href} title={event.name} />
