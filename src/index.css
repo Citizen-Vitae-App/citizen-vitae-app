@@ -416,7 +416,6 @@ All colors MUST be HSL.
   opacity: 0.45 !important;
   filter: grayscale(30%);
 }
-}
 
 .fc-notion-theme .fc .fc-more-link {
   color: hsl(var(--muted-foreground));
