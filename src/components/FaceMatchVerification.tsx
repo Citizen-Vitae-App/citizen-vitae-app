@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'error';
+type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'scan-confirmed' | 'error';
 
 interface FaceMatchVerificationProps {
   isOpen: boolean;
@@ -40,6 +40,7 @@ export const FaceMatchVerification = ({
   const [stage, setStage] = useState<VerificationStage>(initialStage);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [qrToken, setQrToken] = useState<string>(existingQrToken || '');
+  const [scanType, setScanType] = useState<'arrival' | 'departure' | null>(null);
 
   // Auto-transition from success to qr-code
   useEffect(() => {
@@ -50,6 +51,54 @@ export const FaceMatchVerification = ({
       return () => clearTimeout(timer);
     }
   }, [stage, qrToken]);
+
+  // Real-time listener: detect when admin scans QR code
+  useEffect(() => {
+    if (!isOpen || !registrationId || stage === 'scan-confirmed') return;
+
+    const channel = supabase
+      .channel(`registration-scan-${registrationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'event_registrations',
+          filter: `id=eq.${registrationId}`,
+        },
+        (payload) => {
+          const newRow = payload.new as any;
+          const oldRow = payload.old as any;
+
+          // Detect arrival scan (certification_start_at was null, now set)
+          if (!oldRow.certification_start_at && newRow.certification_start_at) {
+            setScanType('arrival');
+            setStage('scan-confirmed');
+          }
+          // Detect departure scan (certification_end_at was null, now set)
+          else if (!oldRow.certification_end_at && newRow.certification_end_at) {
+            setScanType('departure');
+            setStage('scan-confirmed');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, registrationId, stage]);
+
+  // Auto-close after scan-confirmed animation
+  useEffect(() => {
+    if (stage === 'scan-confirmed') {
+      const timer = setTimeout(() => {
+        onSuccess();
+        handleClose();
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [stage]);
 
   const handleStartCapture = () => {
     setStage('camera');
@@ -108,7 +157,6 @@ export const FaceMatchVerification = ({
       }
 
       setQrToken(token);
-      onSuccess();
 
       // If cached result, skip animation and go directly to QR code
       if (data.cached) {
@@ -136,6 +184,7 @@ export const FaceMatchVerification = ({
     setStage(existingQrToken ? 'qr-code' : 'instructions');
     setErrorMessage('');
     setQrToken(existingQrToken || '');
+    setScanType(null);
     onClose();
   };
 
@@ -215,6 +264,25 @@ export const FaceMatchVerification = ({
             </p>
           </div>
         )
+      )}
+
+      {stage === 'scan-confirmed' && (
+        <div className="flex flex-col items-center gap-4 py-8">
+          <div className="relative w-24 h-24 flex items-center justify-center animate-in zoom-in-50 duration-500">
+            <div className="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-30" />
+            <div className="relative w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-200">
+              <UserCheck className="h-10 w-10 text-white" />
+            </div>
+          </div>
+          <p className="text-lg font-semibold text-green-600 text-center animate-fade-in">
+            {scanType === 'arrival' ? 'Arrivée confirmée !' : 'Départ confirmé !'}
+          </p>
+          <p className="text-sm text-muted-foreground text-center animate-fade-in">
+            {scanType === 'arrival'
+              ? 'Votre arrivée a été enregistrée par l\'organisateur.'
+              : 'Votre participation est certifiée. Bravo !'}
+          </p>
+        </div>
       )}
 
       {stage === 'error' && (

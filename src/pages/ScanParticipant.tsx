@@ -40,11 +40,11 @@ export default function ScanParticipant() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<ScanResult | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [cooldownMap, setCooldownMap] = useState<Record<string, number>>({});
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   
   const lastProcessedTokenRef = useRef<string | null>(null);
-  const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cooldownIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   // Cooldown timer
   useEffect(() => {
