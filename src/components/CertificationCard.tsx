@@ -45,6 +45,7 @@ export const CertificationCard = ({
   registrationId,
   organizationId,
   organizationName,
+  organizationLogoUrl,
   faceMatchPassed = false,
   qrToken = null,
   attendedAt = null,
