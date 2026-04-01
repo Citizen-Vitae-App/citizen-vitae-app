@@ -455,9 +455,6 @@ export const SelfCertificationFlow = ({
               </h2>
             </div>
             
-            <p className="text-sm text-muted-foreground">
-              Veuillez confirmer les informations de votre certification :
-            </p>
 
             {/* Event recap */}
             <div className="bg-muted/30 rounded-lg p-4 space-y-3">
