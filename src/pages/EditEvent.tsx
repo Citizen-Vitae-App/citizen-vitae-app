@@ -446,6 +446,10 @@ export default function EditEvent() {
   // Check if form submission should show scope dialog
   const onSubmit = async (data: EventFormData) => {
     if (!eventId || !organizationId) return;
+    if (!coordinates) {
+      toast.error('Veuillez sélectionner une adresse valide depuis les suggestions Google Maps');
+      return;
+    }
 
     // If this event is part of a recurring series, show scope dialog
     if (originalEvent?.recurrenceGroupId) {
