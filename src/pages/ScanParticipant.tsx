@@ -176,7 +176,7 @@ export default function ScanParticipant() {
         }
       } else if (result.scan_type === 'cooldown') {
         const remaining = result.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
