@@ -657,6 +657,26 @@ export const SelfCertificationFlow = ({
             </div>
           </div>
         )}
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={handleClose}>
+        <DrawerContent>
+          <DrawerTitle className="sr-only">Auto-certification de présence</DrawerTitle>
+          {content}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Auto-certification de présence</DialogTitle>
+        {content}
       </DialogContent>
     </Dialog>
   );
