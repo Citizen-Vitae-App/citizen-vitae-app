@@ -46,23 +46,31 @@ export default function ScanParticipant() {
   const lastProcessedTokenRef = useRef<string | null>(null);
   const cooldownIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
-  // Cooldown timer
+  // Per-participant cooldown timers
   useEffect(() => {
-    if (cooldownSeconds > 0) {
-      cooldownIntervalRef.current = setInterval(() => {
-        setCooldownSeconds(prev => {
-          if (prev <= 1) {
-            if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
     return () => {
-      if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
+      Object.values(cooldownIntervalsRef.current).forEach(clearInterval);
     };
-  }, [cooldownSeconds]);
+  }, []);
+
+  const startCooldown = (token: string, seconds: number) => {
+    setCooldownMap(prev => ({ ...prev, [token]: seconds }));
+    if (cooldownIntervalsRef.current[token]) clearInterval(cooldownIntervalsRef.current[token]);
+    cooldownIntervalsRef.current[token] = setInterval(() => {
+      setCooldownMap(prev => {
+        const remaining = (prev[token] || 0) - 1;
+        if (remaining <= 0) {
+          clearInterval(cooldownIntervalsRef.current[token]);
+          delete cooldownIntervalsRef.current[token];
+          const { [token]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [token]: remaining };
+      });
+    }, 1000);
+  };
+
+  const getCooldownForToken = (token: string) => cooldownMap[token] || 0;
 
   const generateCertificate = async (registrationId: string) => {
     if (!user) return;
