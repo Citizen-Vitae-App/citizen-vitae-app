@@ -16,6 +16,7 @@ interface GooglePlacesAutocompleteProps {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  hasError?: boolean;
 }
 
 export function GooglePlacesAutocomplete({
