@@ -399,10 +399,9 @@ export const SelfCertificationFlow = ({
     return 'Non disponible';
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="sr-only">Auto-certification de présence</DialogTitle>
+  const content = (
+    <>
+      <div className="px-4 pb-4 sm:px-6 sm:pb-6 overflow-y-auto max-h-[85vh] overscroll-contain">
         
         {stage === 'instructions' && (
           <div className="flex flex-col items-center gap-4 py-4">
