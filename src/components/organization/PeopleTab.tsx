@@ -616,9 +616,9 @@ export function PeopleTab({
         </DropdownMenu>
       </div>;
   };
-  return <div className="space-y-2 md:space-y-3">
+  return <div className="space-y-2 md:space-y-4">
       {/* KPI Cards */}
-      <div className="hidden md:grid grid-cols-3 gap-4 py-1 md:py-2">
+      <div className="hidden md:grid grid-cols-3 gap-4 pb-3">
         <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
@@ -677,7 +677,7 @@ export function PeopleTab({
       </div>
 
       {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-16 md:top-28 z-20 bg-background pb-2">
+      <div className="sticky top-16 md:top-28 z-20 bg-background pb-1">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

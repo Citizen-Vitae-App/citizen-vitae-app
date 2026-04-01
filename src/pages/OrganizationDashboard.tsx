@@ -103,8 +103,8 @@ export default function OrganizationDashboard() {
         />
       )}
       
-      <main className={`flex-1 overflow-hidden container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-[76px]'}`}>
-        <div className="max-w-5xl mx-auto h-full">
+      <main className={`flex-1 ${activeTab === 'organization' ? 'overflow-auto' : 'overflow-hidden'} container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-[76px]'}`}>
+        <div className={`max-w-5xl mx-auto ${activeTab === 'organization' ? '' : 'h-full'}`}>
           {activeTab === 'events' && (
             <EventsTab 
               userTeamId={(isLeader || isMember) && !isAdmin && !isOwner ? userTeamId : undefined}
