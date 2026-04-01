@@ -48,6 +48,8 @@ export const SelfCertificationFlow = ({
   eventStartDate,
   eventEndDate,
   organizationId,
+  organizationName,
+  teamName,
   onSuccess,
 }: SelfCertificationFlowProps) => {
   const queryClient = useQueryClient();
