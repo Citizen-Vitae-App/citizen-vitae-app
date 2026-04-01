@@ -16,6 +16,7 @@ interface GooglePlacesAutocompleteProps {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  hasError?: boolean;
 }
 
 export function GooglePlacesAutocomplete({
@@ -25,6 +26,7 @@ export function GooglePlacesAutocomplete({
   placeholder = "Ajouter un lieu",
   className,
   inputClassName,
+  hasError,
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,7 +92,7 @@ export function GooglePlacesAutocomplete({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn("pl-10", inputClassName)}
+        className={cn("pl-10", hasError && "border-destructive focus-visible:ring-destructive", inputClassName)}
       />
     </div>
   );

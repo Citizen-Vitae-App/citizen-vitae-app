@@ -446,6 +446,10 @@ export default function EditEvent() {
   // Check if form submission should show scope dialog
   const onSubmit = async (data: EventFormData) => {
     if (!eventId || !organizationId) return;
+    if (!coordinates) {
+      toast.error('Veuillez sélectionner une adresse valide depuis les suggestions Google Maps');
+      return;
+    }
 
     // If this event is part of a recurring series, show scope dialog
     if (originalEvent?.recurrenceGroupId) {
@@ -856,15 +860,22 @@ export default function EditEvent() {
                           <div className="bg-black/[0.03] hover:bg-black/[0.05] rounded-md">
                             <GooglePlacesAutocomplete
                               value={field.value}
-                              onChange={field.onChange}
+                              onChange={(val) => {
+                                field.onChange(val);
+                                setCoordinates(null);
+                              }}
                               onPlaceSelect={(place) => {
                                 field.onChange(place.address);
                                 setCoordinates({ latitude: place.latitude, longitude: place.longitude });
                               }}
                               placeholder="Rechercher une adresse ou un lieu"
+                              hasError={!!field.value && !coordinates}
                             />
                           </div>
                         </FormControl>
+                        {field.value && !coordinates && (
+                          <p className="text-xs text-destructive">Veuillez sélectionner une adresse dans la liste déroulante</p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
