@@ -34,6 +34,7 @@ export const FaceMatchVerification = ({
   existingQrToken,
   onSuccess,
 }: FaceMatchVerificationProps) => {
+  const isMobile = useIsMobile();
   // If we already have a QR token, go directly to qr-code stage
   const initialStage: VerificationStage = existingQrToken ? 'qr-code' : 'instructions';
   const [stage, setStage] = useState<VerificationStage>(initialStage);
