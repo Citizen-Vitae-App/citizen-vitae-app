@@ -209,7 +209,7 @@ export default function ScanParticipant() {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, cooldownSeconds, user]);
+  }, [isProcessing, cooldownMap, user]);
 
   const resetScan = () => {
     setLastResult(null);
