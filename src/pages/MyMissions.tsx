@@ -30,14 +30,14 @@ const MyMissions = () => {
   const [selectedEventForSelfCert, setSelectedEventForSelfCert] = useState<RegistrationWithEvent | null>(null);
   const now = new Date();
 
-  // À venir: events that haven't ended yet, sorted by start_date ascending (closest first)
-  const upcomingEvents = registrations.filter(r => isBefore(now, parseISO(r.events.end_date))).sort((a, b) => parseISO(a.events.start_date).getTime() - parseISO(b.events.start_date).getTime());
+  // À venir: events that haven't ended yet AND not yet certified
+  const upcomingEvents = registrations.filter(r => isBefore(now, parseISO(r.events.end_date)) && r.status !== 'self_certified' && !r.attended_at).sort((a, b) => parseISO(a.events.start_date).getTime() - parseISO(b.events.start_date).getTime());
 
-  // Certificats: past events where user attended (scanned ticket)
-  const completedEvents = registrations.filter(r => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at !== null);
+  // Certificats: past events where user attended OR self-certified (even if event not ended yet)
+  const completedEvents = registrations.filter(r => r.status === 'self_certified' || r.attended_at !== null).sort((a, b) => parseISO(b.events.start_date).getTime() - parseISO(a.events.start_date).getTime());
 
-  // Annulations: past events where user didn't attend (no scan)
-  const cancelledEvents = registrations.filter(r => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at === null);
+  // Annulations: past events where user didn't attend and didn't self-certify
+  const cancelledEvents = registrations.filter(r => !isBefore(now, parseISO(r.events.end_date)) === false ? false : (r.attended_at === null && r.status !== 'self_certified')).filter(r => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at === null && r.status !== 'self_certified');
   const handleCertificationClick = (registration: RegistrationWithEvent) => {
     // If event allows self-certification, use that flow instead
     if (registration.events.allow_self_certification) {
