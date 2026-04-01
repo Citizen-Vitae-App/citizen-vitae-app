@@ -161,9 +161,9 @@ export function QRScanner({ onScan, isProcessing, autoStart = false }: QRScanner
           className="w-full h-full [&_video]:!object-cover [&_video]:!w-full [&_video]:!h-full"
         />
 
-        {/* Visual scan frame */}
+        {/* Visual scan frame - dashed only */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-[70%] max-w-[320px] aspect-square border-2 border-background/70 rounded-xl" />
+          <div className="w-[70%] max-w-[320px] aspect-square border-2 border-dashed border-background/70 rounded-xl" />
         </div>
 
         {/* Auto-start: show loading state instead of a start CTA */}

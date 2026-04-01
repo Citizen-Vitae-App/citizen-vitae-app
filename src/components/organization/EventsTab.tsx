@@ -413,6 +413,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         const priorityA = getStatusPriority(a.start_date, a.end_date);
         const priorityB = getStatusPriority(b.start_date, b.end_date);
         if (priorityA !== priorityB) return priorityA - priorityB;
+        // Past events: most recent first; others: ascending
+        if (priorityA === 2) return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
     }
