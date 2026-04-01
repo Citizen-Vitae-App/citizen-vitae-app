@@ -812,9 +812,6 @@ export function PeopleTab({
                 <TableHead className="min-w-[200px]">
                   <SortableColumnHeader label="Contributeur" field="name" />
                 </TableHead>
-                <TableHead className="w-[100px]">
-                  <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
-                </TableHead>
                 <TableHead className="w-[80px] text-center">
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
