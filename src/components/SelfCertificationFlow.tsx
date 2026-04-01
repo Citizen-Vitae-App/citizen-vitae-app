@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon } from 'lucide-react';
+import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle, MapPin, Calendar, Clock, FileText, Paperclip, Camera, X, Image as ImageIcon, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
