@@ -178,7 +178,7 @@ const MyMissions = () => {
       {showSelfCertification && selectedEventForSelfCert && user && <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => {
       setShowSelfCertification(false);
       setSelectedEventForSelfCert(null);
-    }} userId={user.id} eventId={selectedEventForSelfCert.event_id} registrationId={selectedEventForSelfCert.id} eventName={selectedEventForSelfCert.events.name} eventStartDate={selectedEventForSelfCert.events.start_date} eventEndDate={selectedEventForSelfCert.events.end_date} organizationId={selectedEventForSelfCert.events.organization_id} onSuccess={handleSelfCertificationComplete} />}
+    }} userId={user.id} eventId={selectedEventForSelfCert.event_id} registrationId={selectedEventForSelfCert.id} eventName={selectedEventForSelfCert.events.name} eventStartDate={selectedEventForSelfCert.events.start_date} eventEndDate={selectedEventForSelfCert.events.end_date} organizationId={selectedEventForSelfCert.events.organization_id} organizationName={selectedEventForSelfCert.events.organizations?.name} onSuccess={handleSelfCertificationComplete} />}
     </div>;
 };
 export default MyMissions;
