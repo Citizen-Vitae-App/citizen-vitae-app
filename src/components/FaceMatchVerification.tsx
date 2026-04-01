@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Shield, Loader2, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { CameraCapture } from './CameraCapture';
 import { CertificationQRCode } from './CertificationQRCode';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type VerificationStage = 'instructions' | 'camera' | 'processing' | 'success' | 'qr-code' | 'error';
 
