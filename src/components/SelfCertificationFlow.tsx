@@ -470,7 +470,10 @@ export const SelfCertificationFlow = ({
               <h3 className="font-semibold text-foreground text-sm">{eventName}</h3>
               {(organizationName || teamName) && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  <Avatar className="h-4 w-4">
+                    {organizationLogoUrl && <AvatarImage src={organizationLogoUrl} alt={organizationName} />}
+                    <AvatarFallback className="text-[8px] bg-muted">{organizationName?.charAt(0) || '?'}</AvatarFallback>
+                  </Avatar>
                   <span>{organizationName}{teamName ? ` · ${teamName}` : ''}</span>
                 </div>
               )}
