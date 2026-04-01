@@ -375,7 +375,7 @@ const EventDetail = () => {
     })}`} existingQrToken={registration?.qr_token} onSuccess={() => setShowFaceMatch(false)} />
 
       {/* Self Certification Dialog */}
-      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} organizationName={event.organizations?.name} onSuccess={() => setShowSelfCertification(false)} />
+      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} organizationName={event.organizations?.name} organizationLogoUrl={event.organizations?.logo_url} onSuccess={() => setShowSelfCertification(false)} />
 
       {/* Share Dialog */}
       <ShareDialog open={isShareOpen} onOpenChange={setIsShareOpen} url={window.location.href} title={event.name} />
