@@ -128,7 +128,7 @@ export default function ScanParticipant() {
       return;
     }
 
-    if (qrToken === lastProcessedTokenRef.current && cooldownSeconds > 0) {
+    if (qrToken === lastProcessedTokenRef.current && getCooldownForToken(qrToken) > 0) {
       logger.debug('[QR-SCAN] Ignoring - cooldown active');
       return;
     }
