@@ -221,6 +221,8 @@ export default function ScanParticipant() {
     return format(new Date(isoString), 'HH:mm', { locale: fr });
   };
 
+  const currentCooldown = lastProcessedTokenRef.current ? getCooldownForToken(lastProcessedTokenRef.current) : 0;
+
   const renderArrivalResult = (result: ScanResult) => (
     <div className="flex flex-col items-center text-center gap-4">
       {/* Animated success ring */}
