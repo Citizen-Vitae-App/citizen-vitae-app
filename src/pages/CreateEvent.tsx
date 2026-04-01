@@ -165,6 +165,10 @@ export default function CreateEvent() {
         toast.error('Organisation non trouvée');
         return;
       }
+      if (!coordinates) {
+        toast.error('Veuillez sélectionner une adresse valide depuis les suggestions Google Maps');
+        return;
+      }
 
       // Wait for background upload to complete if still in progress
       let imageUrl: string | null = null;
