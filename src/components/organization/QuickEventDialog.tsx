@@ -791,7 +791,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={!title.trim() || isSaving}
+                disabled={!title.trim() || !location.trim() || isSaving}
                 className="h-7 px-3 text-xs rounded-full"
               >
                 {isSaving ? '...' : 'Enreg.'}
