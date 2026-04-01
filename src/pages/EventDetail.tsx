@@ -323,28 +323,30 @@ const EventDetail = () => {
             setShowFaceMatch(true);
           }
         }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} />
-            <TooltipProvider>
-              <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
-                <TooltipTrigger asChild>
-                  <Button onClick={() => {
-                if (!canUserUnregister) {
-                  setShowUnregisterTooltip(true);
-                  setTimeout(() => setShowUnregisterTooltip(false), 3000);
-                } else {
-                  handleUnregister();
-                }
-              }} disabled={isUnregistering} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}>
-                    {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
-                        <X className="h-5 w-5 mr-2" />
-                        Me désinscrire
-                      </>}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
-                  <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {registration?.status !== 'self_certified' && !registration?.attended_at && (
+              <TooltipProvider>
+                <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
+                  <TooltipTrigger asChild>
+                    <Button onClick={() => {
+                  if (!canUserUnregister) {
+                    setShowUnregisterTooltip(true);
+                    setTimeout(() => setShowUnregisterTooltip(false), 3000);
+                  } else {
+                    handleUnregister();
+                  }
+                }} disabled={isUnregistering} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}>
+                      {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
+                          <X className="h-5 w-5 mr-2" />
+                          Me désinscrire
+                        </>}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
+                    <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-3">
