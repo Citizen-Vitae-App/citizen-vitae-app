@@ -847,9 +847,6 @@ export function PeopleTab({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="py-2">
-                    {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
-                  </TableCell>
                   <TableCell className="py-2 font-medium text-center">
                     {participant.is_pending_invitation ? '—' : participant.event_count}
                   </TableCell>
