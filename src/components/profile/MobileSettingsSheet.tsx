@@ -624,7 +624,7 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[92vh] rounded-t-[28px]">
         <DrawerHeader className="pb-2">
-          <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted mb-2" />
+          
           <DrawerTitle className="text-lg">
             {subPage === 'privacy' ? 'Visibilité' :
              subPage === 'sharing' ? 'Partage' :
