@@ -63,15 +63,19 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
 
   const handleSaveEdit = async () => {
     if (!user?.id) return;
+
+    const trimmedFirst = editData.first_name.trim().slice(0, 30);
+    const trimmedLast = editData.last_name.trim().slice(0, 30);
+    const trimmedBio = editData.bio.trim().slice(0, 226);
     
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: editData.first_name,
-          last_name: editData.last_name,
-          bio: editData.bio,
+          first_name: trimmedFirst,
+          last_name: trimmedLast,
+          bio: trimmedBio,
         })
         .eq('id', user.id);
 
