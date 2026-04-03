@@ -552,7 +552,7 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
   );
 
   const renderNotificationsPage = () => (
-    <div className="px-4 pb-8">
+    <div className="px-4 pb-8 min-h-[60vh]">
       <button className="flex items-center gap-1 text-sm text-muted-foreground mb-4" onClick={() => setSubPage(null)}>
         <ChevronRight className="h-4 w-4 rotate-180" />
         Retour
