@@ -439,7 +439,7 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="flex h-[90vh] max-h-[90vh] flex-col overflow-hidden px-4 pb-0">
           <DrawerHeader className="flex-shrink-0 px-0 text-left">
-            <DrawerTitle>Ajouter une expérience</DrawerTitle>
+            <DrawerTitle>Ajouter une expérience passée</DrawerTitle>
             <DrawerDescription>
               Ajoutez une expérience citoyenne non certifiée à votre profil.
             </DrawerDescription>
@@ -456,7 +456,7 @@ export function AddManualExperienceDialog({ open, onOpenChange }: AddManualExper
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Ajouter une expérience</DialogTitle>
+          <DialogTitle>Ajouter une expérience passée</DialogTitle>
           <DialogDescription>
             Ajoutez une expérience citoyenne non certifiée à votre profil.
           </DialogDescription>
