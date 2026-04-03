@@ -166,17 +166,7 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
 
   return (
     <section className="mb-6 relative">
-      {/* Edit button */}
-      {!isEditing && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-0 right-0 h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={handleStartEdit}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-      )}
+      {/* Edit button is now inline next to the name */}
 
       {/* Save/Cancel buttons when editing */}
       {isEditing && (
