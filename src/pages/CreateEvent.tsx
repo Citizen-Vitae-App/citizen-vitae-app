@@ -311,7 +311,7 @@ export default function CreateEvent() {
       toast.error('Une erreur est survenue');
     }
   };
-  return <div className="min-h-screen relative">
+  return <div className="min-h-screen relative overflow-x-hidden">
       {/* Gradient Background - Same as Auth page */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl" style={{
