@@ -401,7 +401,7 @@ export default function CreateEvent() {
                 field
               }) => <FormItem>
                       <FormControl>
-                        <input {...field} placeholder="Nom de l'event" className="w-full bg-transparent border-0 outline-none text-4xl leading-tight font-semibold placeholder:text-muted-foreground/25" aria-label="Nom de l'événement" />
+                        <input {...field} placeholder="Nom de l'event" className={`w-full bg-transparent border-0 outline-none leading-tight font-semibold placeholder:text-muted-foreground/25 ${isMobile ? 'text-2xl' : 'text-4xl'}`} aria-label="Nom de l'événement" style={{ fontSize: isMobile ? '1.5rem' : undefined }} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
