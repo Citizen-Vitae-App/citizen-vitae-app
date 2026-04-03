@@ -28,7 +28,7 @@ import {
 import {
   Eye, Globe, Bell, Mail, MessageSquare, Phone, MapPin, Trash2, LogOut,
   ChevronRight, Shield, Lock, FileText, Link2, Users, Building2, Heart,
-  BarChart3, BookOpen, Calendar, Copy, Check, QrCode, Pencil, X
+  BarChart3, BookOpen, Calendar, Copy, Check, QrCode, Pencil, X, Download
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
