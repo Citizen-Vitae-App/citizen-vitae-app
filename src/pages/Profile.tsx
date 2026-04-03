@@ -27,7 +27,7 @@ export default function Profile() {
   const { hasRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
   const {
