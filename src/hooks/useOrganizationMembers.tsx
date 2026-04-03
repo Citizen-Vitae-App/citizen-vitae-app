@@ -87,7 +87,7 @@ export const useOrganizationMembers = () => {
         .select(`
           user_id,
           is_leader,
-          team:teams(id, name, organization_id)
+          teams(id, name, organization_id)
         `)
         .in('user_id', memberIds);
 

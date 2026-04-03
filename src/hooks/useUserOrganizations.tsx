@@ -39,7 +39,7 @@ export function useUserOrganizations() {
           .from('team_members')
           .select(`
             is_leader,
-            team:teams(organization_id)
+            teams(organization_id)
           `)
           .eq('user_id', user.id)
           .eq('is_leader', true),

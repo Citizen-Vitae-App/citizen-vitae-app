@@ -316,17 +316,16 @@ export function useUserTeam(userId: string | null, organizationId: string | null
     queryFn: async () => {
       if (!userId || !organizationId) return null;
 
-      const { data, error } = await supabase
+      const { data: memberships, error } = await supabase
         .from('team_members')
         .select(`
           id,
           team_id,
           user_id,
           is_leader,
-          team:teams(id, name, organization_id)
+          teams(id, name, organization_id)
         `)
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
       if (error) {
         if (error.code === 'PGRST116') return null; // No team found
