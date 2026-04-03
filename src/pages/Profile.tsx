@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams, Navigate } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
