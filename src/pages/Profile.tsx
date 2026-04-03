@@ -14,7 +14,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
-import { Settings, Eye, Share2 } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
