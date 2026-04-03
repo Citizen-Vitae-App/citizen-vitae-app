@@ -88,11 +88,9 @@ export default function Profile() {
               }}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Link to="/settings">
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setSettingsOpen(true)}>
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           )}
 
