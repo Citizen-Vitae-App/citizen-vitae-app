@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams, Navigate } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { MainNavbar } from '@/components/MainNavbar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -20,13 +20,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
 import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
 import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
+import { MobileSettingsSheet } from '@/components/profile/MobileSettingsSheet';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
   const { hasRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
   const {
@@ -87,11 +88,9 @@ export default function Profile() {
               }}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Link to="/settings">
-                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setSettingsOpen(true)}>
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           )}
 
@@ -126,9 +125,11 @@ export default function Profile() {
           <MobileBottomNav />
         )}
 
-        {/* Mobile: Privacy Sheet (kept for mobile only) */}
         {isMobile && (
-          <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+          <>
+            <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+            <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+          </>
         )}
       </div>
     </>
