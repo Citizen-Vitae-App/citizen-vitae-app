@@ -28,7 +28,7 @@ import {
 import {
   Eye, Globe, Bell, Mail, MessageSquare, Phone, MapPin, Trash2, LogOut,
   ChevronRight, Shield, Lock, FileText, Link2, Users, Building2, Heart,
-  BarChart3, BookOpen, Calendar, Copy, Check, QrCode, Pencil, X
+  BarChart3, BookOpen, Calendar, Copy, Check, QrCode, Pencil, X, Download
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
@@ -85,7 +85,7 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
     show_upcoming_events: true,
   });
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showQR, setShowQR] = useState(false);
+  
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
 
@@ -440,8 +440,27 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
     </div>
   );
 
+  const handleDownloadQR = useCallback(() => {
+    const svgEl = document.querySelector('#sharing-qr-code svg') as SVGElement | null;
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width * 2;
+      canvas.height = img.height * 2;
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const link = document.createElement('a');
+      link.download = `citizen-vitae-qr-${slug || 'code'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  }, [slug]);
+
   const renderSharingPage = () => (
-    <div className="px-4 pb-8">
+    <div className="px-4 pb-8 min-h-[60vh]">
       <button className="flex items-center gap-1 text-sm text-muted-foreground mb-4" onClick={() => setSubPage(null)}>
         <ChevronRight className="h-4 w-4 rotate-180" />
         Retour
@@ -495,7 +514,7 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
       )}
 
       {/* Full URL + copy */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-5">
         <div className="flex-1 bg-muted rounded-lg px-3 py-2 text-xs text-muted-foreground truncate font-mono">
           {citizenCVUrl || 'Chargement...'}
         </div>
@@ -504,29 +523,36 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
         </Button>
       </div>
 
-      {/* QR */}
-      <Button variant="outline" size="sm" onClick={() => setShowQR(!showQR)} className="gap-2 w-full mb-3">
-        <QrCode className="h-4 w-4" />
-        {showQR ? 'Masquer le QR code' : 'Afficher le QR code'}
-      </Button>
-      {showQR && citizenCVUrl && (
-        <div className="flex justify-center">
-          <div className="bg-background border rounded-lg p-3">
-            <QRCodeSVG
-              value={citizenCVUrl}
-              size={150}
-              level="H"
-              includeMargin
-              imageSettings={{ src: sigle, x: undefined, y: undefined, height: 24, width: 24, excavate: true }}
-            />
+      {/* QR Code always visible */}
+      {citizenCVUrl && (
+        <div className="space-y-3">
+          <div className="flex justify-center" id="sharing-qr-code">
+            <div className="bg-background border rounded-xl p-4">
+              <QRCodeSVG
+                value={citizenCVUrl}
+                size={160}
+                level="H"
+                includeMargin
+                imageSettings={{ src: sigle, x: undefined, y: undefined, height: 24, width: 24, excavate: true }}
+              />
+            </div>
           </div>
+
+          <p className="text-xs text-muted-foreground text-center px-4">
+            Utilisez ce QR code directement sur votre CV pour candidater
+          </p>
+
+          <Button variant="outline" size="sm" onClick={handleDownloadQR} className="gap-2 w-full">
+            <Download className="h-4 w-4" />
+            Télécharger le QR code
+          </Button>
         </div>
       )}
     </div>
   );
 
   const renderNotificationsPage = () => (
-    <div className="px-4 pb-8">
+    <div className="px-4 pb-8 min-h-[60vh]">
       <button className="flex items-center gap-1 text-sm text-muted-foreground mb-4" onClick={() => setSubPage(null)}>
         <ChevronRight className="h-4 w-4 rotate-180" />
         Retour
