@@ -85,7 +85,7 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
     show_upcoming_events: true,
   });
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showQR, setShowQR] = useState(false);
+  
   const [editingSlug, setEditingSlug] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
 
