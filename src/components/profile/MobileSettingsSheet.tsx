@@ -301,45 +301,6 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
 
       <Separator />
 
-      {/* Danger zone */}
-      <div className="py-3">
-        <h3 className="text-base font-semibold mb-3">Compte</h3>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button className="w-full flex items-center justify-between py-4 px-4 bg-muted/50 rounded-xl mb-2">
-              <div className="flex items-center gap-3">
-                <Trash2 className="h-5 w-5 text-destructive" />
-                <span className="text-sm font-medium text-destructive">Supprimer mon compte</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t('settings.deleteAccount.title')}</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3 text-left">
-                <p className="font-medium text-foreground">
-                  {t('settings.deleteAccount.message', { firstName: profile?.first_name })}
-                </p>
-                <p>{t('settings.deleteAccount.warning')}</p>
-                <p className="text-destructive font-medium">{t('settings.deleteAccount.irreversible')}</p>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t('settings.deleteAccount.cancel')}</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteAccount}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={isDeletingAccount}
-              >
-                {isDeletingAccount ? t('settings.deleteAccount.confirming') : t('settings.deleteAccount.confirm')}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-
       {/* Privacy commitment footer */}
       <div className="bg-muted/50 rounded-xl p-4 mt-4">
         <div className="flex gap-3">
@@ -374,6 +335,38 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
         <LogOut className="h-4 w-4 mr-2" />
         Se déconnecter
       </Button>
+
+      {/* Delete account */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className="w-full flex items-center justify-center gap-2 py-3 mt-3 text-sm text-destructive">
+            <Trash2 className="h-4 w-4" />
+            <span>Supprimer mon compte</span>
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('settings.deleteAccount.title')}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 text-left">
+              <p className="font-medium text-foreground">
+                {t('settings.deleteAccount.message', { firstName: profile?.first_name })}
+              </p>
+              <p>{t('settings.deleteAccount.warning')}</p>
+              <p className="text-destructive font-medium">{t('settings.deleteAccount.irreversible')}</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('settings.deleteAccount.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeletingAccount}
+            >
+              {isDeletingAccount ? t('settings.deleteAccount.confirming') : t('settings.deleteAccount.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 
