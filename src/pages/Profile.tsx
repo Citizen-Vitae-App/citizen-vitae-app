@@ -9,7 +9,7 @@ import { CitizenImpactSection } from '@/components/profile/CitizenImpactSection'
 import { CitizenExperiencesSection } from '@/components/profile/CitizenExperiencesSection';
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
-import { ProfilePrivacySheet } from '@/components/profile/ProfilePrivacySheet';
+
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
