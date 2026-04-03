@@ -256,24 +256,30 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
               <div className="flex gap-2 justify-center">
                 <Input
                   value={editData.first_name}
-                  onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
+                  onChange={(e) => setEditData({ ...editData, first_name: e.target.value.slice(0, 30) })}
                   placeholder="Prénom"
+                  maxLength={30}
                   className="flex-1 max-w-[150px]"
                 />
                 <Input
                   value={editData.last_name}
-                  onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
+                  onChange={(e) => setEditData({ ...editData, last_name: e.target.value.slice(0, 30) })}
                   placeholder="Nom"
+                  maxLength={30}
                   className="flex-1 max-w-[150px]"
                 />
               </div>
-              <Textarea
-                value={editData.bio}
-                onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-                placeholder="Décrivez-vous en quelques mots..."
-                className="resize-none"
-                rows={2}
-              />
+              <div className="relative">
+                <Textarea
+                  value={editData.bio}
+                  onChange={(e) => setEditData({ ...editData, bio: e.target.value.slice(0, 226) })}
+                  placeholder="Décrivez-vous en quelques mots..."
+                  maxLength={226}
+                  className="resize-none"
+                  rows={2}
+                />
+                <span className="absolute bottom-1.5 right-2 text-[11px] text-muted-foreground">{editData.bio.length}/226</span>
+              </div>
             </div>
           ) : (
             <>
