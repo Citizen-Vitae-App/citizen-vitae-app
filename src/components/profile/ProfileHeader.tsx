@@ -283,9 +283,21 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
             </div>
           ) : (
             <>
-              <h1 className="text-foreground text-xl font-semibold">
-                {profile?.first_name} {profile?.last_name}
-              </h1>
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-foreground text-xl font-semibold">
+                  {profile?.first_name} {profile?.last_name}
+                </h1>
+                {!isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground flex-shrink-0"
+                    onClick={handleStartEdit}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
               
               {/* Bio field */}
               {profile.bio && (
