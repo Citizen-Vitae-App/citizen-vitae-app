@@ -311,7 +311,7 @@ export default function CreateEvent() {
       toast.error('Une erreur est survenue');
     }
   };
-  return <div className="min-h-screen relative">
+  return <div className="min-h-screen relative overflow-x-hidden">
       {/* Gradient Background - Same as Auth page */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl" style={{
@@ -401,7 +401,7 @@ export default function CreateEvent() {
                 field
               }) => <FormItem>
                       <FormControl>
-                        <input {...field} placeholder="Nom de l'event" className="w-full bg-transparent border-0 outline-none text-4xl leading-tight font-semibold placeholder:text-muted-foreground/25" aria-label="Nom de l'événement" />
+                        <input {...field} placeholder="Nom de l'event" className={`w-full bg-transparent border-0 outline-none leading-tight font-semibold placeholder:text-muted-foreground/25 ${isMobile ? 'text-2xl' : 'text-4xl'}`} aria-label="Nom de l'événement" style={{ fontSize: isMobile ? '1.5rem' : undefined }} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
