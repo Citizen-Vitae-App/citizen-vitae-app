@@ -348,9 +348,14 @@ export function MobileSettingsSheet({ open, onOpenChange }: MobileSettingsSheetP
             <p className="text-sm font-semibold mb-1">Notre engagement pour vos données</p>
             <p className="text-xs text-muted-foreground">
               Citizen Vitae protège vos données personnelles. Consultez notre{' '}
-              <button className="underline" onClick={() => { onOpenChange(false); navigate('/legal/privacy'); }}>
+              <a
+                className="underline"
+                href={window.location.hostname.includes('localhost') || window.location.hostname.includes('lovable') ? 'https://dev.citizenvitae.com/privacy' : 'https://app.citizenvitae.com/privacy'}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Politique de confidentialité
-              </button>.
+              </a>.
             </p>
           </div>
         </div>

@@ -9,12 +9,12 @@ import { CitizenImpactSection } from '@/components/profile/CitizenImpactSection'
 import { CitizenExperiencesSection } from '@/components/profile/CitizenExperiencesSection';
 import { UpcomingEventsSection } from '@/components/profile/UpcomingEventsSection';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
-import { ProfilePrivacySheet } from '@/components/profile/ProfilePrivacySheet';
+
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
-import { Settings, Eye, Share2 } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
@@ -26,7 +26,7 @@ export default function Profile() {
   const [searchParams] = useSearchParams();
   const { hasRole, user } = useAuth();
   const isMobile = useIsMobile();
-  const [privacyOpen, setPrivacyOpen] = useState(false);
+  
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isOrganizationContext = searchParams.get('context') === 'organization';
   
@@ -79,15 +79,6 @@ export default function Profile() {
           {/* Mobile: action buttons row */}
           {!isOrganizationContext && isMobile && (
             <div className="flex justify-end gap-2 mb-1">
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setPrivacyOpen(true)}>
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/citizen/${user?.id}`);
-                import('sonner').then(m => m.toast.success('Lien du CV copié !'));
-              }}>
-                <Share2 className="h-4 w-4" />
-              </Button>
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setSettingsOpen(true)}>
                 <Settings className="h-4 w-4" />
               </Button>
@@ -126,10 +117,7 @@ export default function Profile() {
         )}
 
         {isMobile && (
-          <>
-            <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
-            <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
-          </>
+          <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
         )}
       </div>
     </>
