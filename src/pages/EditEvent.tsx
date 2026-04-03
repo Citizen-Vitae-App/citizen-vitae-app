@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventParticipantsSection } from '@/components/organization/EventParticipantsSection';
+import { EventSupervisorsSection } from '@/components/organization/EventSupervisorsSection';
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
@@ -1120,6 +1121,7 @@ export default function EditEvent() {
           {eventId && (
             <div className="max-w-[916px] mx-auto">
               <EventParticipantsSection eventId={eventId} eventEndDate={originalEvent?.endDate} />
+              <EventSupervisorsSection eventId={eventId} />
             </div>
           )}
         </div>
