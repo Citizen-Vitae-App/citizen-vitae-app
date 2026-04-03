@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CitizenModeFAB } from '@/components/CitizenModeFAB';
 import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
 import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
+import { MobileSettingsSheet } from '@/components/profile/MobileSettingsSheet';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
