@@ -125,9 +125,11 @@ export default function Profile() {
           <MobileBottomNav />
         )}
 
-        {/* Mobile: Privacy Sheet (kept for mobile only) */}
         {isMobile && (
-          <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+          <>
+            <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
+            <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+          </>
         )}
       </div>
     </>
