@@ -117,10 +117,7 @@ export default function Profile() {
         )}
 
         {isMobile && (
-          <>
-            <ProfilePrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
-            <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
-          </>
+          <MobileSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
         )}
       </div>
     </>
