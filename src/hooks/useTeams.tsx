@@ -328,18 +328,23 @@ export function useUserTeam(userId: string | null, organizationId: string | null
         .eq('user_id', userId);
 
       if (error) {
-        if (error.code === 'PGRST116') return null; // No team found
         throw error;
       }
 
-      // Verify the team belongs to this organization
-      const team = Array.isArray(data.team) ? data.team[0] : data.team;
-      if (team?.organization_id !== organizationId) return null;
+      // Find the membership for this organization
+      const match = (memberships || []).find(m => {
+        const team = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+        return team?.organization_id === organizationId;
+      });
+
+      if (!match) return null;
+
+      const team = Array.isArray(match.teams) ? match.teams[0] : match.teams;
 
       return {
-        teamId: data.team_id,
+        teamId: match.team_id,
         teamName: team?.name,
-        isLeader: data.is_leader,
+        isLeader: match.is_leader,
       };
     },
     enabled: !!userId && !!organizationId,
