@@ -387,18 +387,6 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
 
   const handleDatesSet = useCallback((info: any) => {
     setCurrentTitle(info.view.title);
-
-    // Scroll to 8:00 slot for time-grid views (scrollTime doesn't work with overflow:visible)
-    if (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay') {
-      requestAnimationFrame(() => {
-        const slot = document.querySelector('[data-time="08:00:00"]') as HTMLElement;
-        if (slot) {
-          const rect = slot.getBoundingClientRect();
-          const headerOffset = 120; // account for sticky headers
-          window.scrollTo({ top: window.scrollY + rect.top - headerOffset, behavior: 'instant' });
-        }
-      });
-    }
   }, []);
 
   // Expose toolbar controls to parent
@@ -451,12 +439,15 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     );
   }, []);
 
+  const hasInternalTimeGridScroll = !isMobile && currentView !== 'dayGridMonth';
+
   return (
     <div className={currentView === 'dayGridMonth' ? 'overflow-x-hidden' : ''}>
       {/* FullCalendar */}
       <div className={cn(
         "fc-notion-theme bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border overflow-x-hidden",
         currentView !== 'dayGridMonth' && 'overflow-x-visible',
+        hasInternalTimeGridScroll && 'h-[calc(100vh-16rem)] min-h-[560px]',
         currentView === 'dayGridMonth' ? 'fc-month-view' : 'fc-time-view'
       )}>
         <FullCalendar
@@ -467,8 +458,8 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           firstDay={1}
           events={calendarEvents}
           headerToolbar={false}
-          height="auto"
-          contentHeight="auto"
+          height={hasInternalTimeGridScroll ? '100%' : 'auto'}
+          contentHeight={hasInternalTimeGridScroll ? undefined : 'auto'}
           stickyHeaderDates={true}
           aspectRatio={1.8}
           editable={!isMember}
@@ -498,6 +489,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
           slotDuration="00:30:00"
           snapDuration="00:15:00"
           scrollTime="08:00:00"
+          scrollTimeReset={true}
           slotLabelInterval="01:00"
           slotLabelFormat={{
             hour: '2-digit',
