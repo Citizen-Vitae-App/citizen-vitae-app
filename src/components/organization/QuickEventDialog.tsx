@@ -488,9 +488,9 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           type="file"
           accept="image/png,image/jpeg,image/jpg"
           onChange={handleImageUpload}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
             {isImageUploading ? (
               <Loader2 className="w-5 h-5 text-white animate-spin" />
