@@ -387,6 +387,18 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
 
   const handleDatesSet = useCallback((info: any) => {
     setCurrentTitle(info.view.title);
+
+    // Scroll to 8:00 slot for time-grid views (scrollTime doesn't work with overflow:visible)
+    if (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay') {
+      requestAnimationFrame(() => {
+        const slot = document.querySelector('[data-time="08:00:00"]') as HTMLElement;
+        if (slot) {
+          const rect = slot.getBoundingClientRect();
+          const headerOffset = 120; // account for sticky headers
+          window.scrollTo({ top: window.scrollY + rect.top - headerOffset, behavior: 'instant' });
+        }
+      });
+    }
   }, []);
 
   // Expose toolbar controls to parent
