@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Shield, Info, CheckCircle2, Loader2 } from 'lucide-react';
+import { Shield, Info, CheckCircle2, Loader2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useCertificationEligibility } from '@/hooks/useCertificationEligibility';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface CertificationButtonProps {
   eventStartDate: string;
@@ -12,6 +14,8 @@ interface CertificationButtonProps {
   eventLongitude: number | null;
   onClick: () => void;
   disabled?: boolean;
+  certifiedAt?: string | null;
+  certificationType?: 'self_certified' | 'scan' | null;
 }
 
 export const CertificationButton = ({
@@ -21,6 +25,8 @@ export const CertificationButton = ({
   eventLongitude,
   onClick,
   disabled = false,
+  certifiedAt,
+  certificationType,
 }: CertificationButtonProps) => {
   const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
   
@@ -49,11 +55,59 @@ export const CertificationButton = ({
 
   // Auto-request location on mount
   useEffect(() => {
-    if (!hasRequestedLocation) {
+    if (!hasRequestedLocation && !disabled) {
       setHasRequestedLocation(true);
       requestLocation();
     }
-  }, [hasRequestedLocation, requestLocation]);
+  }, [hasRequestedLocation, requestLocation, disabled]);
+
+  // If already certified, show confirmation state with details
+  if (disabled) {
+    const isSelfCertified = certificationType === 'self_certified';
+    const timeStr = certifiedAt
+      ? format(new Date(certifiedAt), "HH:mm", { locale: fr })
+      : null;
+
+    return (
+      <div className="relative w-full">
+        <Button
+          disabled
+          className="w-full h-12 font-semibold bg-green-50 text-green-800 border border-green-200 hover:bg-green-50 cursor-default"
+        >
+          {isSelfCertified ? (
+            <UserCheck className="h-5 w-5 mr-2 text-green-600" />
+          ) : (
+            <CheckCircle2 className="h-5 w-5 mr-2 text-green-600" />
+          )}
+          Présence certifiée
+        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-green-100 transition-colors"
+              type="button"
+            >
+              <Info className="h-4 w-4 text-green-600" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 text-sm space-y-1.5 p-3" side="top">
+            <div className="flex items-center gap-2 font-medium text-green-700">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>Présence certifiée</span>
+            </div>
+            {timeStr && (
+              <p className="text-muted-foreground text-xs">
+                Certifié à {timeStr}
+              </p>
+            )}
+            <p className="text-muted-foreground text-xs">
+              {isSelfCertified ? 'Méthode : Auto-certification' : 'Méthode : Scan QR code'}
+            </p>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  }
 
   // If event has no coordinates or is over, don't show button
   if (eventLatitude === null || eventLongitude === null || isAfterEvent) {
@@ -78,7 +132,6 @@ export const CertificationButton = ({
     return (
       <Button
         onClick={onClick}
-        disabled={disabled}
         className="w-full h-12 font-semibold"
         style={{ background: 'linear-gradient(to right, #012573, #083AD2)' }}
       >

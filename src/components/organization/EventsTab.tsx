@@ -24,8 +24,9 @@ import {
   Activity,
   Tag,
   List,
+  SlidersHorizontal,
 } from "lucide-react";
-import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS } from "./EventCalendarView";
+import { EventCalendarView, CalendarViewType, CalendarToolbarApi, VIEW_LABELS, VIEW_LABELS_SHORT } from "./EventCalendarView";
 import { useOrganizationEvents } from "@/hooks/useEvents";
 import { useEventsParticipantCounts } from "@/hooks/useEventParticipants";
 import { format, isAfter, isBefore, parseISO, isSameDay, startOfMonth, endOfMonth, subMonths, addDays } from "date-fns";
@@ -413,6 +414,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         const priorityA = getStatusPriority(a.start_date, a.end_date);
         const priorityB = getStatusPriority(b.start_date, b.end_date);
         if (priorityA !== priorityB) return priorityA - priorityB;
+        // Past events: most recent first; others: ascending
+        if (priorityA === 2) return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       });
     }
@@ -597,7 +600,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
     return (
       <div className="space-y-4 md:space-y-6">
         {/* KPI Skeletons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="hidden md:grid grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="p-4 rounded-xl border border-border bg-transparent animate-pulse">
               <div className="h-4 bg-muted rounded w-32 mb-2"></div>
@@ -632,8 +635,8 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       <div className="shrink-0 py-2 md:py-3 bg-background">
         {/* KPI Cards */}
         {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-3">
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="hidden md:grid grid-cols-3 gap-4 pb-3">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Nouvelles missions ce mois</p>
@@ -654,7 +657,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Cause la plus présente</p>
@@ -673,7 +676,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border bg-background">
+          <div className="p-4 rounded-xl border border-border bg-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Missions actives</p>
@@ -690,7 +693,7 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           <div className="relative flex-1 min-w-0 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher un événement..."
+              placeholder={isMobile ? "Rechercher..." : "Rechercher un événement..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-muted border-0 h-10"
@@ -707,12 +710,24 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           {/* Hide action buttons for regular members - they can only view */}
           {!isMember && (
             <>
-              <Button asChild variant="outline" size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
-                <Link to="/organization/scan">
-                  <QrCode className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Scanner</span>
-                </Link>
-              </Button>
+              {/* Mobile: filter button instead of QR */}
+              {isMobile ? (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn("h-10 w-10 shrink-0", hasActiveFilters && "border-primary text-primary")}
+                  onClick={() => setOpenFilterPanel(openFilterPanel ? null : 'status')}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button asChild variant="outline" size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
+                  <Link to="/organization/scan">
+                    <QrCode className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Scanner</span>
+                  </Link>
+                </Button>
+              )}
                <Button asChild size="icon" className="h-10 w-10 shrink-0 md:w-auto md:px-4">
                 <Link to="/organization/create-event">
                   <Plus className="h-4 w-4 md:mr-2" />
@@ -749,34 +764,126 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
           </div>
         </div>
 
+        {/* Mobile filter panel */}
+        {isMobile && openFilterPanel && viewMode === 'list' && (
+          <div className="pb-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            {/* Status filter */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Statut</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["En cours", "À venir", "Passé"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        statuses: prev.statuses.includes(status)
+                          ? prev.statuses.filter(s => s !== status)
+                          : [...prev.statuses, status]
+                      }));
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors",
+                      filters.statuses.includes(status)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Visibility filter */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Visibilité</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[{ value: "public", label: "Public" }, { value: "private", label: "Privé" }].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        visibilities: prev.visibilities.includes(value)
+                          ? prev.visibilities.filter(v => v !== value)
+                          : [...prev.visibilities, value]
+                      }));
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors",
+                      filters.visibilities.includes(value)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Sort */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Trier par</p>
+              <div className="flex flex-wrap gap-1.5">
+                {([
+                  { field: "date" as SortField, label: "Date" },
+                  { field: "title" as SortField, label: "Titre" },
+                  { field: "participants" as SortField, label: "Participants" },
+                ] as const).map(({ field, label }) => (
+                  <button
+                    key={field}
+                    onClick={() => toggleSort(field)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1",
+                      sortField === field
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border text-foreground"
+                    )}
+                  >
+                    {label}
+                    {sortField === field && (sortDirection === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Clear */}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => { clearFilters(); setOpenFilterPanel(null); }}>
+                Effacer les filtres
+              </Button>
+            )}
+          </div>
+        )}
         {/* Calendar toolbar - inside sticky header */}
         {viewMode === 'calendar' && calendarApi && (
-          <div className="flex items-center justify-between gap-2 flex-wrap pb-3">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handlePrev()}>
-                <ChevronLeft className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-1 sm:gap-2 pb-3">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0" onClick={() => calendarApi.handlePrev()}>
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
-                Aujourd'hui
+              {!isMobile && (
+                <Button variant="outline" size="sm" className="h-8 text-xs font-medium" onClick={() => calendarApi.handleToday()}>
+                  Aujourd'hui
+                </Button>
+              )}
+              <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0" onClick={() => calendarApi.handleNext()}>
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => calendarApi.handleNext()}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <h3 className="text-base font-semibold capitalize ml-2">{calendarState.currentTitle}</h3>
+              <h3 className="text-sm sm:text-base font-semibold capitalize ml-1 sm:ml-2 truncate">{calendarState.currentTitle}</h3>
             </div>
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-muted rounded-lg p-0.5 flex-shrink-0">
               {(Object.entries(VIEW_LABELS) as [CalendarViewType, string][]).map(([view, label]) => (
                 <button
                   key={view}
                   onClick={() => calendarApi.handleViewChange(view)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                    "px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all",
                     calendarState.currentView === view
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {label}
+                  {isMobile ? VIEW_LABELS_SHORT[view] : label}
                 </button>
               ))}
             </div>
@@ -785,7 +892,14 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto pb-8">
+      <div
+        className={cn(
+          "flex-1 min-h-0",
+          viewMode === 'calendar'
+            ? 'overflow-y-auto overflow-x-hidden overscroll-contain pb-4'
+            : 'overflow-y-auto pb-8'
+        )}
+      >
       {viewMode === 'calendar' ? (
         <EventCalendarView
           events={filteredEvents}

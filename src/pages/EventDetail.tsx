@@ -274,16 +274,18 @@ const EventDetail = () => {
 
               {/* CTA Button or Certification Card */}
               {isRegistered ? <>
-                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} certificationStartAt={registration?.certification_start_at} certificationEndAt={registration?.certification_end_at} />
-                  <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 text-lg font-semibold transition-all duration-300", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
-                    {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
-                        <X className="h-5 w-5 mr-2" />
-                        Me désinscrire
-                      </>}
-                  </Button>
-                  {!canUserUnregister && <p className="text-xs text-muted-foreground text-center">
-                      Désinscription impossible moins de 24h avant la fin de l'événement
-                    </p>}
+                  <CertificationCard eventStartDate={event.start_date} eventEndDate={event.end_date} eventLatitude={event.latitude} eventLongitude={event.longitude} eventName={event.name} eventId={event.id} userId={user?.id || ''} registrationId={registration?.id || ''} organizationId={event.organization_id} organizationName={event.organizations?.name} organizationLogoUrl={event.organizations?.logo_url} faceMatchPassed={registration?.face_match_passed} qrToken={registration?.qr_token} attendedAt={registration?.attended_at} allowSelfCertification={event.allow_self_certification} registrationStatus={registration?.status} certificationStartAt={registration?.certification_start_at} certificationEndAt={registration?.certification_end_at} />
+                  {registration?.status !== 'self_certified' && !registration?.attended_at && <>
+                    <Button onClick={handleUnregister} disabled={isUnregistering || !canUserUnregister} variant="outline" className={cn("w-full h-12 text-lg font-semibold transition-all duration-300", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50 cursor-not-allowed")}>
+                      {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
+                          <X className="h-5 w-5 mr-2" />
+                          Me désinscrire
+                        </>}
+                    </Button>
+                    {!canUserUnregister && <p className="text-xs text-muted-foreground text-center">
+                        Désinscription impossible moins de 24h avant la fin de l'événement
+                      </p>}
+                  </>}
                 </> : renderCTAButton()}
 
               {/* Conditions */}
@@ -320,29 +322,31 @@ const EventDetail = () => {
           } else {
             setShowFaceMatch(true);
           }
-        }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} />
-            <TooltipProvider>
-              <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
-                <TooltipTrigger asChild>
-                  <Button onClick={() => {
-                if (!canUserUnregister) {
-                  setShowUnregisterTooltip(true);
-                  setTimeout(() => setShowUnregisterTooltip(false), 3000);
-                } else {
-                  handleUnregister();
-                }
-              }} disabled={isUnregistering} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}>
-                    {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
-                        <X className="h-5 w-5 mr-2" />
-                        Me désinscrire
-                      </>}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
-                  <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+        }} disabled={registration?.status === 'self_certified' || !!registration?.attended_at} certifiedAt={registration?.attended_at || registration?.certification_end_at || registration?.certification_start_at} certificationType={registration?.status === 'self_certified' ? 'self_certified' : registration?.attended_at ? 'scan' : null} />
+            {registration?.status !== 'self_certified' && !registration?.attended_at && (
+              <TooltipProvider>
+                <Tooltip open={showUnregisterTooltip && !canUserUnregister}>
+                  <TooltipTrigger asChild>
+                    <Button onClick={() => {
+                  if (!canUserUnregister) {
+                    setShowUnregisterTooltip(true);
+                    setTimeout(() => setShowUnregisterTooltip(false), 3000);
+                  } else {
+                    handleUnregister();
+                  }
+                }} disabled={isUnregistering} variant="outline" className={cn("w-full h-12 font-semibold", "border-destructive text-destructive hover:bg-destructive/10", !canUserUnregister && "opacity-50")}>
+                      {isUnregistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
+                          <X className="h-5 w-5 mr-2" />
+                          Me désinscrire
+                        </>}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-destructive text-destructive-foreground max-w-[280px] text-center">
+                    <p>Désinscription impossible moins de 24h avant le début de la mission.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div> : <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border px-4 py-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center gap-3">
@@ -358,12 +362,12 @@ const EventDetail = () => {
             </div>
             <div className="flex flex-col items-end gap-1 text-right shrink-0">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-semibold text-sm underline text-foreground">{formatMobileDateRange()}</span>
+                <Calendar className="w-[16px] h-[16px] text-muted-foreground" />
+                <span className="font-semibold underline text-foreground text-base">{formatMobileDateRange()}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-muted-foreground/70" />
-                <span className="text-xs text-muted-foreground">{formatTime(event.start_date)}</span>
+                <Clock className="w-[14px] h-[14px] text-muted-foreground/70" />
+                <span className="text-muted-foreground text-sm">{formatTime(event.start_date)}</span>
               </div>
             </div>
           </div>
@@ -372,10 +376,10 @@ const EventDetail = () => {
       {/* Face Match Dialog for mobile */}
       <FaceMatchVerification isOpen={showFaceMatch} onClose={() => setShowFaceMatch(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventDate={`${format(parseISO(event.start_date), "d MMMM yyyy 'à' HH:mm", {
       locale: fr
-    })}`} existingQrToken={registration?.qr_token} onSuccess={() => setShowFaceMatch(false)} />
+    })}`} existingQrToken={registration?.qr_token} onSuccess={() => {}} />
 
       {/* Self Certification Dialog */}
-      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} onSuccess={() => setShowSelfCertification(false)} />
+      <SelfCertificationFlow isOpen={showSelfCertification} onClose={() => setShowSelfCertification(false)} userId={user?.id || ''} eventId={event.id} registrationId={registration?.id || ''} eventName={event.name} eventStartDate={event.start_date} eventEndDate={event.end_date} organizationId={event.organization_id} organizationName={event.organizations?.name} organizationLogoUrl={event.organizations?.logo_url} onSuccess={() => setShowSelfCertification(false)} />
 
       {/* Share Dialog */}
       <ShareDialog open={isShareOpen} onOpenChange={setIsShareOpen} url={window.location.href} title={event.name} />

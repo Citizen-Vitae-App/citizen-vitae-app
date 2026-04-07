@@ -126,7 +126,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // For event-based notifications: verify caller is admin/supervisor of the event
-    if (event_id && (notify_participants || !user_id)) {
+    // Skip this check for participant-initiated types (e.g. mission_signup)
+    if (event_id && (notify_participants || !user_id) && !participantInitiatedTypes.includes(type)) {
       // Get event organization
       const { data: event, error: eventError } = await supabase
         .from("events")

@@ -39,7 +39,7 @@ export function useUserOrganizations() {
           .from('team_members')
           .select(`
             is_leader,
-            team:teams(organization_id)
+            teams(organization_id)
           `)
           .eq('user_id', user.id)
           .eq('is_leader', true),
@@ -54,8 +54,8 @@ export function useUserOrganizations() {
       // Get organization IDs where user is a leader
       const leaderOrgIds = new Set(
         (teamMemberships || [])
-          .filter(tm => tm.is_leader && tm.team?.organization_id)
-          .map(tm => tm.team!.organization_id)
+          .filter(tm => tm.is_leader && tm.teams?.organization_id)
+          .map(tm => tm.teams!.organization_id)
       );
 
       // Map memberships to UserOrganization format

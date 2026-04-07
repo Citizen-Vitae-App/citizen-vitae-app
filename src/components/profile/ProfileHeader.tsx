@@ -63,15 +63,19 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
 
   const handleSaveEdit = async () => {
     if (!user?.id) return;
+
+    const trimmedFirst = editData.first_name.trim().slice(0, 30);
+    const trimmedLast = editData.last_name.trim().slice(0, 30);
+    const trimmedBio = editData.bio.trim().slice(0, 226);
     
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: editData.first_name,
-          last_name: editData.last_name,
-          bio: editData.bio,
+          first_name: trimmedFirst,
+          last_name: trimmedLast,
+          bio: trimmedBio,
         })
         .eq('id', user.id);
 
@@ -166,15 +170,15 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
 
   return (
     <section className="mb-6 relative">
-      {/* Edit button */}
+      {/* Edit button - absolute right, aligned with name */}
       {!isEditing && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-0 right-0 h-8 w-8 text-muted-foreground hover:text-foreground"
+          className="absolute top-[7.5rem] right-0 h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={handleStartEdit}
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-3.5 w-3.5" />
         </Button>
       )}
 
@@ -262,24 +266,30 @@ export function ProfileHeader({ organizations, onVerificationComplete }: Profile
               <div className="flex gap-2 justify-center">
                 <Input
                   value={editData.first_name}
-                  onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
+                  onChange={(e) => setEditData({ ...editData, first_name: e.target.value.slice(0, 30) })}
                   placeholder="Prénom"
+                  maxLength={30}
                   className="flex-1 max-w-[150px]"
                 />
                 <Input
                   value={editData.last_name}
-                  onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
+                  onChange={(e) => setEditData({ ...editData, last_name: e.target.value.slice(0, 30) })}
                   placeholder="Nom"
+                  maxLength={30}
                   className="flex-1 max-w-[150px]"
                 />
               </div>
-              <Textarea
-                value={editData.bio}
-                onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-                placeholder="Décrivez-vous en quelques mots..."
-                className="resize-none"
-                rows={2}
-              />
+              <div className="relative">
+                <Textarea
+                  value={editData.bio}
+                  onChange={(e) => setEditData({ ...editData, bio: e.target.value.slice(0, 226) })}
+                  placeholder="Décrivez-vous en quelques mots..."
+                  maxLength={226}
+                  className="resize-none"
+                  rows={2}
+                />
+                <span className="absolute bottom-1.5 right-2 text-[11px] text-muted-foreground">{editData.bio.length}/226</span>
+              </div>
             </div>
           ) : (
             <>

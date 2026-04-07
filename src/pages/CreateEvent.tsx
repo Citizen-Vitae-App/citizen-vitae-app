@@ -138,16 +138,21 @@ export default function CreateEvent() {
   };
   useEffect(() => {
     const fetchCauseThemes = async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('cause_themes').select('id, name, icon, color').order('name');
+      if (!organizationId) return;
+      const { data, error } = await supabase
+        .from('organization_cause_themes')
+        .select('cause_theme_id, cause_themes(id, name, icon, color)')
+        .eq('organization_id', organizationId);
       if (!error && data) {
-        setCauseThemes(data);
+        const themes = data
+          .map((d: any) => d.cause_themes)
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setCauseThemes(themes);
       }
     };
     fetchCauseThemes();
-  }, []);
+  }, [organizationId]);
   const handleSetCapacity = () => {
     if (tempCapacity) {
       form.setValue('capacity', tempCapacity);
@@ -163,6 +168,10 @@ export default function CreateEvent() {
     try {
       if (!organizationId) {
         toast.error('Organisation non trouvée');
+        return;
+      }
+      if (!coordinates) {
+        toast.error('Veuillez sélectionner une adresse valide depuis les suggestions Google Maps');
         return;
       }
 
@@ -302,7 +311,7 @@ export default function CreateEvent() {
       toast.error('Une erreur est survenue');
     }
   };
-  return <div className="min-h-screen relative">
+  return <div className="min-h-screen relative overflow-x-hidden">
       {/* Gradient Background - Same as Auth page */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] opacity-50 blur-3xl" style={{
@@ -392,7 +401,7 @@ export default function CreateEvent() {
                 field
               }) => <FormItem>
                       <FormControl>
-                        <input {...field} placeholder="Nom de l'event" className="w-full bg-transparent border-0 outline-none text-4xl leading-tight font-semibold placeholder:text-muted-foreground/25" aria-label="Nom de l'événement" />
+                        <input {...field} placeholder="Nom de l'event" className={`w-full bg-transparent border-0 outline-none leading-tight font-semibold placeholder:text-muted-foreground/25 ${isMobile ? 'text-2xl' : 'text-4xl'}`} aria-label="Nom de l'événement" style={{ fontSize: isMobile ? '1.5rem' : undefined }} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -411,15 +420,28 @@ export default function CreateEvent() {
                 }) => <FormItem>
                         <FormControl>
                           <div className="bg-black/[0.03] hover:bg-black/[0.05] rounded-md">
-                            <GooglePlacesAutocomplete value={field.value} onChange={field.onChange} onPlaceSelect={place => {
-                        field.onChange(place.address);
-                        setCoordinates({
-                          latitude: place.latitude,
-                          longitude: place.longitude
-                        });
-                      }} placeholder="Rechercher une adresse ou un lieu" />
+                            <GooglePlacesAutocomplete
+                              value={field.value}
+                              onChange={(val) => {
+                                field.onChange(val);
+                                // Clear coordinates when user types manually
+                                setCoordinates(null);
+                              }}
+                              onPlaceSelect={place => {
+                                field.onChange(place.address);
+                                setCoordinates({
+                                  latitude: place.latitude,
+                                  longitude: place.longitude
+                                });
+                              }}
+                              placeholder="Rechercher une adresse ou un lieu"
+                              hasError={!!field.value && !coordinates}
+                            />
                           </div>
                         </FormControl>
+                        {field.value && !coordinates && (
+                          <p className="text-xs text-destructive">Veuillez sélectionner une adresse dans la liste déroulante</p>
+                        )}
                         <FormMessage />
                       </FormItem>} />
                 </div>
@@ -443,53 +465,38 @@ export default function CreateEvent() {
                 {/* Cause Themes */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Catégorie</h3>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2 bg-black/[0.03] hover:bg-black/[0.05] border-0 w-full justify-start">
-                        {selectedCauseThemes.length > 0 ? <>
-                            {(() => {
-                          const selectedTheme = causeThemes.find(t => t.id === selectedCauseThemes[0]);
-                          if (selectedTheme) {
-                            const IconComponent = (Icons as any)[selectedTheme.icon] || Icons.Tag;
-                            return <>
-                                    <IconComponent className="h-4 w-4" />
-                                    {selectedTheme.name}
-                                  </>;
-                          }
-                          return <>
-                                  <Tag className="h-4 w-4" />
-                                  Sélectionner une catégorie
-                                </>;
-                        })()}
-                          </> : <>
-                            <Tag className="h-4 w-4" />
-                            Sélectionner une catégorie
-                          </>}
-                        <ChevronDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-80">
-                      {causeThemes.map(theme => {
+                  <div className="flex flex-wrap gap-2">
+                    {causeThemes.map(theme => {
                       const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
                       const isSelected = selectedCauseThemes.includes(theme.id);
-                      return <DropdownMenuItem key={theme.id} onClick={() => {
-                        if (isSelected) {
-                          setSelectedCauseThemes([]);
-                        } else {
-                          setSelectedCauseThemes([theme.id]);
-                        }
-                      }} className="flex items-center gap-3 p-4 cursor-pointer">
-                            <IconComponent className="h-5 w-5 flex-shrink-0" style={{
-                          color: theme.color
-                        }} />
-                            <div className="flex-1">
-                              <div className="font-semibold">{theme.name}</div>
-                            </div>
-                            {isSelected && <div className="text-primary">✓</div>}
-                          </DropdownMenuItem>;
+                      return (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedCauseThemes([]);
+                            } else {
+                              setSelectedCauseThemes([theme.id]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border"
+                          style={{
+                            backgroundColor: isSelected ? theme.color : 'transparent',
+                            borderColor: theme.color,
+                            color: isSelected ? 'white' : theme.color,
+                            opacity: isSelected ? 1 : 0.7,
+                          }}
+                        >
+                          <IconComponent className="h-4 w-4" />
+                          {theme.name}
+                        </button>
+                      );
                     })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    {causeThemes.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Aucune catégorie configurée pour cette organisation</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Event Options */}
@@ -526,7 +533,7 @@ export default function CreateEvent() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <UserCheck className="h-4 w-4 text-muted-foreground" />
-                            <FormLabel className="text-sm font-normal">Approbation requise</FormLabel>
+                            <FormLabel className="text-sm font-normal">Approbation requise pour le responsable de mission</FormLabel>
                           </div>
                           <FormControl>
                             <Switch checked={field.value} onCheckedChange={field.onChange} />

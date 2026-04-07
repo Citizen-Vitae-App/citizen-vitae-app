@@ -271,10 +271,72 @@ All colors MUST be HSL.
 }
 
 /* Sticky column headers */
-.fc-notion-theme .fc .fc-scrollgrid-section-header > * {
+.fc-notion-theme .fc .fc-scrollgrid-section-header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 12;
+  background: hsl(var(--background));
+}
+
+.fc-notion-theme .fc .fc-scrollgrid-section-header > *,
+.fc-notion-theme .fc .fc-scrollgrid-section-sticky > * {
+  position: sticky;
+  top: 0 !important;
+  z-index: 12;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.fc-notion-theme.fc-month-view .fc .fc-scrollgrid,
+.fc-notion-theme.fc-month-view .fc .fc-view-harness,
+.fc-notion-theme.fc-month-view .fc .fc-scroller,
+.fc-notion-theme.fc-month-view .fc .fc-scroller-liquid,
+.fc-notion-theme.fc-month-view .fc .fc-scroller-liquid-absolute {
+  overflow: visible !important;
+}
+
+.fc-notion-theme.fc-month-view .fc thead,
+.fc-notion-theme.fc-month-view .fc .fc-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: hsl(var(--background));
+}
+
+/* Week/day views on desktop: keep an internal calendar scroll so the view opens at 8:00 while earlier hours remain reachable */
+@media (min-width: 640px) {
+  .fc-notion-theme.fc-time-view .fc,
+  .fc-notion-theme.fc-time-view .fc .fc-view-harness,
+  .fc-notion-theme.fc-time-view .fc .fc-view-harness-active,
+  .fc-notion-theme.fc-time-view .fc .fc-scrollgrid {
+    height: 100% !important;
+  }
+
+  .fc-notion-theme.fc-time-view .fc .fc-scroller,
+  .fc-notion-theme.fc-time-view .fc .fc-scroller-liquid,
+  .fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute,
+  .fc-notion-theme.fc-time-view .fc .fc-timegrid .fc-scroller {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* Time-grid views: sticky day-of-week header row */
+.fc-notion-theme.fc-time-view .fc thead,
+.fc-notion-theme.fc-time-view .fc .fc-col-header,
+.fc-notion-theme.fc-time-view .fc .fc-scrollgrid-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: hsl(var(--background));
+}
+
+.fc-notion-theme.fc-time-view .fc .fc-scrollgrid-section-header > * {
+  position: sticky;
+  top: 0 !important;
+  z-index: 12;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .fc-notion-theme .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
@@ -312,7 +374,7 @@ All colors MUST be HSL.
 }
 
 .fc-notion-theme .fc .fc-timegrid-slot {
-  height: 34px;
+  height: 24px;
   border-color: hsl(var(--border));
 }
 
@@ -325,6 +387,22 @@ All colors MUST be HSL.
   border-radius: 6px;
   border-left: 3px solid hsl(var(--primary));
   box-shadow: 0 1px 3px hsl(var(--foreground) / 0.08);
+  min-height: 22px !important;
+  overflow: visible;
+}
+
+.fc-notion-theme .fc .fc-timegrid-event .fc-event-main {
+  overflow: visible;
+  padding: 1px 2px 0;
+}
+
+.fc-notion-theme .fc .fc-timegrid-event .fc-event-title {
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+.fc-notion-theme .fc .fc-timegrid-event .fc-event-main {
+  overflow: visible;
 }
 
 .fc-notion-theme .fc .fc-timegrid-event.fc-event-live {
@@ -333,6 +411,13 @@ All colors MUST be HSL.
 
 .fc-notion-theme .fc .fc-timegrid-event.fc-event-past {
   border-left-color: hsl(var(--muted-foreground));
+  opacity: 0.8;
+}
+
+/* Phantom event (in-creation) — translucent, no dashed border */
+.fc-phantom-event {
+  opacity: 0.45 !important;
+  filter: grayscale(30%);
 }
 
 .fc-notion-theme .fc .fc-more-link {
@@ -368,4 +453,141 @@ All colors MUST be HSL.
 
 .fc-notion-theme .fc .fc-daygrid-event-harness {
   margin: 1px 2px;
+}
+
+/* Mobile: prevent horizontal scroll and ensure edge-to-edge */
+@media (max-width: 639px) {
+  /* Month view only: kill horizontal scroll */
+  .fc-month-view,
+  .fc-month-view .fc,
+  .fc-month-view .fc .fc-view-harness,
+  .fc-month-view .fc .fc-scrollgrid,
+  .fc-month-view .fc .fc-scroller,
+  .fc-month-view .fc .fc-daygrid-body,
+  .fc-month-view .fc table {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  .fc-month-view .fc .fc-scrollgrid {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .fc-month-view .fc .fc-daygrid-body,
+  .fc-month-view .fc .fc-daygrid-body table {
+    width: 100% !important;
+  }
+
+  /* Time label column — wide enough for visible hours on week/day */
+  .fc-time-view .fc .fc-timegrid-axis {
+    min-width: 56px !important;
+    width: 56px !important;
+  }
+
+  .fc-time-view .fc .fc-timegrid-slot-label {
+    min-width: 56px !important;
+    width: 56px !important;
+    padding-left: 6px !important;
+    padding-right: 4px !important;
+  }
+
+  .fc-time-view .fc .fc-timegrid-slot-label-cushion {
+    display: inline-block !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap !important;
+    transform: translateX(0) !important;
+  }
+
+  /* Week/day view: same single-scroll behavior on mobile */
+  .fc-time-view .fc .fc-view-harness,
+  .fc-time-view .fc .fc-view-harness-active,
+  .fc-time-view .fc .fc-scroller,
+  .fc-time-view .fc .fc-scroller-liquid,
+  .fc-time-view .fc .fc-scroller-liquid-absolute,
+  .fc-time-view .fc .fc-timegrid .fc-scroller {
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .fc-time-view .fc .fc-scrollgrid {
+    overflow: visible !important;
+  }
+
+  /* Sticky header for time grid views */
+  .fc-time-view .fc .fc-scrollgrid-section-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    background: hsl(var(--background)) !important;
+    box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
+  }
+
+  .fc-time-view .fc .fc-scrollgrid-section-header td {
+    border: none !important;
+  }
+
+  /* Google Calendar-style column header */
+  .fc-notion-theme .fc .fc-col-header-cell {
+    background: hsl(var(--background)) !important;
+    border: none !important;
+    padding: 6px 0 4px !important;
+  }
+
+  .fc-notion-theme .fc .fc-col-header-cell-cushion {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px;
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: hsl(var(--muted-foreground)) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em;
+  }
+
+  .fc-notion-theme .fc .fc-col-header-cell-cushion::after {
+    display: none;
+  }
+
+  .fc-notion-theme .fc .fc-timegrid-axis {
+    border: none !important;
+  }
+
+  /* Thin scrollbar (2px) */
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 1px;
+  }
+
+  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .fc-notion-theme .fc .fc-scroller {
+    scrollbar-width: thin;
+  }
+
+  /* Month view sticky header */
+  .fc-month-view .fc .fc-col-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    background: hsl(var(--background)) !important;
+    box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
+  }
+}
+
+/* Rich text — style links in blue with underline (editor + display) */
+.ProseMirror a,
+.prose a {
+  color: hsl(217 91% 50%);
+  text-decoration: underline;
+  text-decoration-color: hsl(217 91% 50%);
+  cursor: pointer;
 }

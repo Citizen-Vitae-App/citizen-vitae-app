@@ -188,8 +188,8 @@ export function EventParticipantsSection({ eventId, eventEndDate }: EventPartici
           </p>
         </div>
       ) : (
-        <div className="border rounded-lg">
-          <Table>
+        <div className="border rounded-lg overflow-x-auto">
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Photo</TableHead>
@@ -241,8 +241,8 @@ export function EventParticipantsSection({ eventId, eventEndDate }: EventPartici
                         </AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell className="font-medium">{participantName}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium whitespace-nowrap">{participantName}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">
                       {participant.email || 'Email non renseigné'}
                     </TableCell>
                     <TableCell>

@@ -87,7 +87,7 @@ export const useOrganizationMembers = () => {
         .select(`
           user_id,
           is_leader,
-          team:teams(id, name, organization_id)
+          teams(id, name, organization_id)
         `)
         .in('user_id', memberIds);
 
@@ -98,7 +98,7 @@ export const useOrganizationMembers = () => {
       // Create team map (only for this organization's teams)
       const teamMap = new Map<string, { team: { id: string; name: string } | null; isLeader: boolean }>();
       (teamMemberships || []).forEach(tm => {
-        const team = Array.isArray(tm.team) ? tm.team[0] : tm.team;
+        const team = Array.isArray(tm.teams) ? tm.teams[0] : tm.teams;
         if (team?.organization_id === organizationId) {
           teamMap.set(tm.user_id, {
             team: { id: team.id, name: team.name },

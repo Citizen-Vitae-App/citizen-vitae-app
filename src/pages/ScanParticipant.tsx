@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Clock, UserCheck, AlertCircle, XCircle, Award, Timer } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, UserCheck, AlertCircle, XCircle, Award, Timer, Shield, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { QRScanner } from '@/components/QRScanner';
+import { CameraCapture } from '@/components/CameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Navbar } from '@/components/Navbar';
@@ -14,6 +15,7 @@ import { fr } from 'date-fns/locale';
 import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface ScanResult {
   success: boolean;
@@ -33,6 +35,8 @@ interface ScanResult {
   next_scan_available_at?: string;
 }
 
+type AdminVerificationState = 'pending' | 'camera' | 'processing' | 'verified' | 'error';
+
 export default function ScanParticipant() {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -40,29 +44,92 @@ export default function ScanParticipant() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<ScanResult | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [cooldownMap, setCooldownMap] = useState<Record<string, number>>({});
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   
+  // Admin face match verification state
+  const [adminVerification, setAdminVerification] = useState<AdminVerificationState>('pending');
+  const [adminVerificationError, setAdminVerificationError] = useState('');
+  
   const lastProcessedTokenRef = useRef<string | null>(null);
-  const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cooldownIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
-  // Cooldown timer
-  useEffect(() => {
-    if (cooldownSeconds > 0) {
-      cooldownIntervalRef.current = setInterval(() => {
-        setCooldownSeconds(prev => {
-          if (prev <= 1) {
-            if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  // Fetch event details to check require_approval
+  const { data: eventData } = useQuery({
+    queryKey: ['scan-event-details', eventId],
+    queryFn: async () => {
+      if (!eventId) return null;
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, name, require_approval')
+        .eq('id', eventId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!eventId,
+  });
+
+  const requiresAdminVerification = eventData?.require_approval === true;
+  const adminCanScan = !requiresAdminVerification || adminVerification === 'verified';
+
+  // Handle admin face match
+  const handleAdminFaceCapture = async (imageData: string) => {
+    if (!user) return;
+    setAdminVerification('processing');
+    setAdminVerificationError('');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('didit-verification', {
+        body: {
+          action: 'face-match',
+          user_id: user.id,
+          selfie_image: imageData,
+        },
+      });
+      
+      if (error) throw error;
+      
+      if (data?.matched) {
+        setAdminVerification('verified');
+        toast.success('Identité vérifiée — vous pouvez scanner');
+      } else {
+        setAdminVerification('error');
+        const score = data?.score ? `${data.score.toFixed(1)}%` : '';
+        setAdminVerificationError(`Correspondance insuffisante${score ? ` (${score})` : ''}. Réessayez.`);
+      }
+    } catch (err: any) {
+      logger.error('Admin face match error:', err);
+      setAdminVerification('error');
+      setAdminVerificationError('Erreur lors de la vérification. Réessayez.');
     }
+  };
+
+  // Per-participant cooldown timers
+  useEffect(() => {
     return () => {
-      if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
+      Object.values(cooldownIntervalsRef.current).forEach(clearInterval);
     };
-  }, [cooldownSeconds]);
+  }, []);
+
+  const startCooldown = (token: string, seconds: number) => {
+    setCooldownMap(prev => ({ ...prev, [token]: seconds }));
+    if (cooldownIntervalsRef.current[token]) clearInterval(cooldownIntervalsRef.current[token]);
+    cooldownIntervalsRef.current[token] = setInterval(() => {
+      setCooldownMap(prev => {
+        const remaining = (prev[token] || 0) - 1;
+        if (remaining <= 0) {
+          clearInterval(cooldownIntervalsRef.current[token]);
+          delete cooldownIntervalsRef.current[token];
+          const { [token]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [token]: remaining };
+      });
+    }, 1000);
+  };
+
+  const getCooldownForToken = (token: string) => cooldownMap[token] || 0;
 
   const generateCertificate = async (registrationId: string) => {
     if (!user) return;
@@ -120,8 +187,9 @@ export default function ScanParticipant() {
       return;
     }
 
-    if (qrToken === lastProcessedTokenRef.current && cooldownSeconds > 0) {
-      logger.debug('[QR-SCAN] Ignoring - cooldown active');
+    // Only block re-scanning the SAME participant during cooldown
+    if (getCooldownForToken(qrToken) > 0) {
+      logger.debug('[QR-SCAN] Ignoring - cooldown active for this participant');
       return;
     }
     
@@ -158,7 +226,7 @@ export default function ScanParticipant() {
           toast.success(`Arrivée enregistrée pour ${result.user_name} (1/2)`);
           if (result.cooldown_remaining_seconds || result.next_scan_available_at) {
             const remaining = result.cooldown_remaining_seconds || 60;
-            setCooldownSeconds(remaining);
+            startCooldown(qrToken, remaining);
           }
         } else if (result.scan_type === 'departure') {
           toast.success(`Certification complète pour ${result.user_name} !`);
@@ -168,7 +236,7 @@ export default function ScanParticipant() {
         }
       } else if (result.scan_type === 'cooldown') {
         const remaining = result.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
@@ -188,7 +256,7 @@ export default function ScanParticipant() {
       if (errorData?.scan_type === 'cooldown') {
         setLastResult(errorData);
         const remaining = errorData.cooldown_remaining_seconds || 30;
-        setCooldownSeconds(remaining);
+        startCooldown(qrToken, remaining);
         toast.info(`Attendez encore ${remaining}s avant le second scan`);
         lastProcessedTokenRef.current = null;
       } else {
@@ -201,7 +269,7 @@ export default function ScanParticipant() {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, cooldownSeconds, user]);
+  }, [isProcessing, cooldownMap, user]);
 
   const resetScan = () => {
     setLastResult(null);
@@ -212,6 +280,8 @@ export default function ScanParticipant() {
   const formatTime = (isoString: string) => {
     return format(new Date(isoString), 'HH:mm', { locale: fr });
   };
+
+  const currentCooldown = lastProcessedTokenRef.current ? getCooldownForToken(lastProcessedTokenRef.current) : 0;
 
   const renderArrivalResult = (result: ScanResult) => (
     <div className="flex flex-col items-center text-center gap-4">
@@ -267,16 +337,16 @@ export default function ScanParticipant() {
       </div>
 
       {/* Cooldown indicator */}
-      {cooldownSeconds > 0 && (
+      {currentCooldown > 0 && (
         <div className="w-full p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-center gap-2 text-amber-700 mb-2">
             <Timer className="h-4 w-4" />
-            <span className="text-sm font-medium">Prochain scan dans {cooldownSeconds}s</span>
+            <span className="text-sm font-medium">Prochain scan possible pour ce participant dans {currentCooldown}s</span>
           </div>
           <div className="w-full bg-amber-200 rounded-full h-1.5">
             <div 
               className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.max(0, ((60 - cooldownSeconds) / 60) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((60 - currentCooldown) / 60) * 100)}%` }}
             />
           </div>
         </div>
@@ -394,20 +464,20 @@ export default function ScanParticipant() {
         <span className="text-lg font-medium">{result.user_name}</span>
       </div>
 
-      {cooldownSeconds > 0 && (
+      {currentCooldown > 0 && (
         <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-center gap-2 text-amber-700 mb-2">
             <Timer className="h-4 w-4" />
-            <span className="text-sm font-medium">Prochain scan dans {cooldownSeconds}s</span>
+            <span className="text-sm font-medium">Prochain scan possible pour ce participant dans {currentCooldown}s</span>
           </div>
           <div className="w-full bg-amber-200 rounded-full h-2">
             <div 
               className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${Math.max(0, ((60 - cooldownSeconds) / 60) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((60 - currentCooldown) / 60) * 100)}%` }}
             />
           </div>
           <p className="text-xs text-amber-600 mt-2">
-            Un délai d'1 minute entre les scans est nécessaire pour garantir l'authenticité
+            Vous pouvez scanner d'autres participants entre-temps
           </p>
         </div>
       )}
@@ -501,6 +571,93 @@ export default function ScanParticipant() {
               </Button>
             </CardContent>
           </Card>
+        ) : !adminCanScan ? (
+          // Admin face match verification gate
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+            <Card className="w-full max-w-sm border shadow-sm">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+                {adminVerification === 'pending' && (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Shield className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">Vérification requise</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Cet événement nécessite une approbation. Vous devez vérifier votre identité avant de scanner les participants.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => setAdminVerification('camera')} 
+                      className="w-full gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Vérifier mon identité
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate(-1)}
+                      className="w-full"
+                    >
+                      Retour
+                    </Button>
+                  </>
+                )}
+                
+                {adminVerification === 'camera' && (
+                  <>
+                    <h2 className="text-lg font-semibold">Prenez un selfie</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Nous allons comparer votre visage avec votre photo d'identité vérifiée.
+                    </p>
+                    <div className="w-full">
+                      <CameraCapture onCapture={handleAdminFaceCapture} onCancel={() => setAdminVerification('pending')} />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setAdminVerification('pending')}
+                      className="w-full"
+                    >
+                      Annuler
+                    </Button>
+                  </>
+                )}
+                
+                {adminVerification === 'processing' && (
+                  <>
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Vérification en cours...</p>
+                  </>
+                )}
+                
+                {adminVerification === 'error' && (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <XCircle className="h-8 w-8 text-destructive" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-destructive">Échec</h2>
+                      <p className="text-sm text-muted-foreground mt-1">{adminVerificationError}</p>
+                    </div>
+                    <Button 
+                      onClick={() => setAdminVerification('camera')} 
+                      className="w-full gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Réessayer
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate(-1)}
+                      className="w-full"
+                    >
+                      Retour
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         ) : (
           <div className="flex-1 flex flex-col bg-foreground md:bg-transparent">
             <QRScanner onScan={handleScan} isProcessing={isProcessing} autoStart />

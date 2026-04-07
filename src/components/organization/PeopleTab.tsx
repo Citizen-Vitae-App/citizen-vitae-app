@@ -616,9 +616,9 @@ export function PeopleTab({
         </DropdownMenu>
       </div>;
   };
-  return <div className="space-y-4 md:space-y-6">
+  return <div className="space-y-2 md:space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="hidden md:grid grid-cols-3 gap-4 pt-2 pb-3">
         <div className="p-4 rounded-xl border border-border bg-white">
           <div className="flex items-center justify-between">
             <div>
@@ -677,7 +677,7 @@ export function PeopleTab({
       </div>
 
       {/* Search and Actions Bar - Sticky */}
-      <div className="sticky top-16 md:top-28 z-20 bg-background pb-4">
+      <div className="sticky top-16 md:top-28 z-20 bg-background pb-1">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 md:w-72 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -812,9 +812,6 @@ export function PeopleTab({
                 <TableHead className="min-w-[200px]">
                   <SortableColumnHeader label="Contributeur" field="name" />
                 </TableHead>
-                <TableHead className="w-[100px]">
-                  <ColumnHeaderWithFilter label="Statut" field="status" filterType="status" />
-                </TableHead>
                 <TableHead className="w-[80px] text-center">
                   <ColumnHeaderWithFilter label="Missions" field="missions" filterType="number" />
                 </TableHead>
@@ -849,9 +846,6 @@ export function PeopleTab({
                         </span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    {getStatusBadge(participant.last_status, participant.is_pending_invitation)}
                   </TableCell>
                   <TableCell className="py-2 font-medium text-center">
                     {participant.is_pending_invitation ? '—' : participant.event_count}

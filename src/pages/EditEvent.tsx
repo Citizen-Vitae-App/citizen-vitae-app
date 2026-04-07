@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import defaultEventCover from '@/assets/default-event-cover.jpg';
 import { GooglePlacesAutocomplete } from '@/components/GooglePlacesAutocomplete';
 import { EventParticipantsSection } from '@/components/organization/EventParticipantsSection';
+import { EventSupervisorsSection } from '@/components/organization/EventSupervisorsSection';
 import { EventDateTimeSection } from '@/components/EventDateTimeSection';
 import { TeamSelector } from '@/components/organization/TeamSelector';
 import { useUserTeam } from '@/hooks/useTeams';
@@ -225,21 +226,24 @@ export default function EditEvent() {
     }
   }, [isLeader, userTeam, selectedTeamId]);
 
-  // Load cause themes
+  // Load cause themes filtered by organization settings
   useEffect(() => {
     const fetchCauseThemes = async () => {
+      if (!organizationId) return;
       const { data, error } = await supabase
-        .from('cause_themes')
-        .select('id, name, icon, color')
-        .order('name');
-
+        .from('organization_cause_themes')
+        .select('cause_theme_id, cause_themes(id, name, icon, color)')
+        .eq('organization_id', organizationId);
       if (!error && data) {
-        setCauseThemes(data);
+        const themes = data
+          .map((d: any) => d.cause_themes)
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setCauseThemes(themes);
       }
     };
-
     fetchCauseThemes();
-  }, []);
+  }, [organizationId]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -446,6 +450,10 @@ export default function EditEvent() {
   // Check if form submission should show scope dialog
   const onSubmit = async (data: EventFormData) => {
     if (!eventId || !organizationId) return;
+    if (!coordinates) {
+      toast.error('Veuillez sélectionner une adresse valide depuis les suggestions Google Maps');
+      return;
+    }
 
     // If this event is part of a recurring series, show scope dialog
     if (originalEvent?.recurrenceGroupId) {
@@ -689,7 +697,7 @@ export default function EditEvent() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative overflow-x-hidden">
       {/* Gradient Background */}
       <div className="absolute top-0 left-0 right-0 bottom-0 -z-10 bg-background">
         <div 
@@ -710,16 +718,18 @@ export default function EditEvent() {
       
       <main className={`container mx-auto px-4 pb-12 ${isMobile ? 'pt-20' : 'pt-32'}`}>
         <div className="max-w-6xl mx-auto space-y-12">
-          {/* Back button */}
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/organization/dashboard?tab=events')}
-            className="gap-2"
-            type="button"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Button>
+          {/* Back button - desktop only (mobile version is overlaid on image) */}
+          {!isMobile && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/organization/dashboard?tab=events')}
+              className="gap-2"
+              type="button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour
+            </Button>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[400px_500px] gap-8 justify-center">
               {/* Left side - Cover Image */}
@@ -730,6 +740,18 @@ export default function EditEvent() {
                     alt="Cover" 
                     className="w-full h-full object-cover" 
                   />
+                  {/* Mobile back button overlaid on image */}
+                  {isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate('/organization/dashboard?tab=events')}
+                      className="absolute top-3 left-3 z-10 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+                      type="button"
+                    >
+                      <ArrowLeft className="h-5 w-5 text-foreground" />
+                    </Button>
+                  )}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/jpg"
@@ -842,15 +864,22 @@ export default function EditEvent() {
                           <div className="bg-black/[0.03] hover:bg-black/[0.05] rounded-md">
                             <GooglePlacesAutocomplete
                               value={field.value}
-                              onChange={field.onChange}
+                              onChange={(val) => {
+                                field.onChange(val);
+                                setCoordinates(null);
+                              }}
                               onPlaceSelect={(place) => {
                                 field.onChange(place.address);
                                 setCoordinates({ latitude: place.latitude, longitude: place.longitude });
                               }}
                               placeholder="Rechercher une adresse ou un lieu"
+                              hasError={!!field.value && !coordinates}
                             />
                           </div>
                         </FormControl>
+                        {field.value && !coordinates && (
+                          <p className="text-xs text-destructive">Veuillez sélectionner une adresse dans la liste déroulante</p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -892,65 +921,38 @@ export default function EditEvent() {
                 {/* Cause Themes */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Catégorie</h3>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2 bg-black/[0.03] hover:bg-black/[0.05] border-0 w-full justify-start">
-                        {selectedCauseThemes.length > 0 ? (
-                          <>
-                            {(() => {
-                              const selectedTheme = causeThemes.find(t => t.id === selectedCauseThemes[0]);
-                              if (selectedTheme) {
-                                const IconComponent = (Icons as any)[selectedTheme.icon] || Icons.Tag;
-                                return (
-                                  <>
-                                    <IconComponent className="h-4 w-4" />
-                                    {selectedTheme.name}
-                                  </>
-                                );
-                              }
-                              return (
-                                <>
-                                  <Tag className="h-4 w-4" />
-                                  Sélectionner une catégorie
-                                </>
-                              );
-                            })()}
-                          </>
-                        ) : (
-                          <>
-                            <Tag className="h-4 w-4" />
-                            Sélectionner une catégorie
-                          </>
-                        )}
-                        <ChevronDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-80">
-                      {causeThemes.map((theme) => {
-                        const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
-                        const isSelected = selectedCauseThemes.includes(theme.id);
-                        return (
-                          <DropdownMenuItem
-                            key={theme.id}
-                            onClick={() => {
-                              if (isSelected) {
-                                setSelectedCauseThemes([]);
-                              } else {
-                                setSelectedCauseThemes([theme.id]);
-                              }
-                            }}
-                            className="flex items-center gap-3 p-4 cursor-pointer"
-                          >
-                            <IconComponent className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
-                            <div className="flex-1">
-                              <div className="font-semibold">{theme.name}</div>
-                            </div>
-                            {isSelected && <div className="text-primary">✓</div>}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex flex-wrap gap-2">
+                    {causeThemes.map((theme) => {
+                      const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
+                      const isSelected = selectedCauseThemes.includes(theme.id);
+                      return (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedCauseThemes([]);
+                            } else {
+                              setSelectedCauseThemes([theme.id]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border"
+                          style={{
+                            backgroundColor: isSelected ? theme.color : 'transparent',
+                            borderColor: theme.color,
+                            color: isSelected ? 'white' : theme.color,
+                            opacity: isSelected ? 1 : 0.7,
+                          }}
+                        >
+                          <IconComponent className="h-4 w-4" />
+                          {theme.name}
+                        </button>
+                      );
+                    })}
+                    {causeThemes.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Aucune catégorie configurée pour cette organisation</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Event Options */}
@@ -997,7 +999,7 @@ export default function EditEvent() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <UserCheck className="h-4 w-4 text-muted-foreground" />
-                            <FormLabel className="text-sm font-normal">Approbation requise</FormLabel>
+                            <FormLabel className="text-sm font-normal">Approbation requise pour le responsable de mission</FormLabel>
                           </div>
                           <FormControl>
                             <Switch
@@ -1092,6 +1094,7 @@ export default function EditEvent() {
           {eventId && (
             <div className="max-w-[916px] mx-auto">
               <EventParticipantsSection eventId={eventId} eventEndDate={originalEvent?.endDate} />
+              <EventSupervisorsSection eventId={eventId} />
             </div>
           )}
         </div>
