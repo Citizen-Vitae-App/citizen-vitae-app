@@ -664,53 +664,39 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           </div>
         )}
 
-        {/* Desktop actions (hidden on mobile) */}
-        {!isMobileView && (
-          <div className="flex items-center justify-between pt-1">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
-            >
-              {isExpanded ? 'Moins d\'options' : 'Plus d\'options'}
-              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 px-3 text-xs">
-                Annuler
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={!title.trim() || !location.trim() || isSaving}
-                className="h-8 px-4 text-xs"
-              >
-                {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile: "Plus d'options" link */}
-        {isMobileView && !isExpanded && (
-          <button
-            onClick={() => { setIsExpanded(true); setMobileFullScreen(true); }}
-            className="text-xs text-primary hover:underline font-medium flex items-center gap-1 pt-1"
-          >
-            Plus d'options
-            <ChevronUp className="h-3 w-3" />
-          </button>
-        )}
-        {isMobileView && isExpanded && (
-          <button
-            onClick={() => { setIsExpanded(false); setMobileFullScreen(false); }}
-            className="text-xs text-primary hover:underline font-medium flex items-center gap-1 pt-1"
-          >
-            Moins d'options
-            <ChevronDown className="h-3 w-3" />
-          </button>
-        )}
       </div>
     </>
+  );
+
+  // Sticky action bar for both desktop and mobile
+  const actionBar = (
+    <div className="shrink-0 border-t border-border bg-background px-4 py-2 flex items-center justify-between">
+      <button
+        onClick={() => {
+          setIsExpanded(!isExpanded);
+          if (isMobileView) setMobileFullScreen(!isExpanded);
+        }}
+        className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
+      >
+        {isExpanded ? "Moins d'options" : "Plus d'options"}
+        {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+      <div className="flex items-center gap-2">
+        {!isMobileView && (
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 px-3 text-xs">
+            Annuler
+          </Button>
+        )}
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={!title.trim() || !location.trim() || isSaving}
+          className="h-8 px-4 text-xs"
+        >
+          {isSaving ? (editEvent ? 'Mise à jour...' : 'Création...') : 'Enregistrer'}
+        </Button>
+      </div>
+    </div>
   );
 
   const deleteConfirmDialog = (
