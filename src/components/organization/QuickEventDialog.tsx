@@ -758,7 +758,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
             <div className="flex justify-center pt-3 pb-1.5">
               <div className="w-9 h-[5px] rounded-full bg-muted-foreground/40" />
             </div>
-            {/* Header: Annuler — Title — Enreg. */}
+            {/* Header: Annuler — Title */}
             <div className="flex items-center justify-between px-4 pb-2.5">
               <button
                 onClick={onClose}
@@ -769,14 +769,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               <span className="text-sm font-semibold text-foreground">
                 {editEvent ? 'Modifier' : 'Nouvel événement'}
               </span>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={!title.trim() || !location.trim() || isSaving}
-                className="h-7 px-3 text-xs rounded-full"
-              >
-                {isSaving ? '...' : 'Enreg.'}
-              </Button>
+              <div className="w-14" /> {/* spacer for centering */}
             </div>
           </div>
 
@@ -784,6 +777,9 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
           <div className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
             {formContent}
           </div>
+
+          {/* Sticky action bar */}
+          {actionBar}
         </div>
         {deleteConfirmDialog}
       </>
@@ -801,6 +797,7 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
         <div className="flex-1 overflow-y-auto">
           {formContent}
         </div>
+        {actionBar}
       </div>
       {deleteConfirmDialog}
     </>
