@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import * as WebBrowser from 'expo-web-browser';
 import {
   View,
   Text,
@@ -29,10 +28,13 @@ import { useMobileEventRegistration } from '@/hooks/useMobileEventRegistration';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { CertifyPresenceButton } from '@/components/eventDetail/CertifyPresenceButton';
+import { EventCertificationModal } from '@/components/eventDetail/certification/EventCertificationModal';
 import { UnregisterConfirmModal } from '@/components/eventDetail/UnregisterConfirmModal';
 import { EventMapBlock } from '@/components/eventDetail/EventMapBlock';
 import { buildWebAppPath } from '@/lib/webAppUrl';
+import { useOrganizationSheet } from '@/contexts/OrganizationSheetContext';
 import { sanitizeMobileHtml } from '@/lib/sanitizeMobileHtml';
+import { parseOrganizationIdFromHref } from '@/lib/organizationPublicUrl';
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=1200&auto=format&fit=crop';
 
@@ -46,7 +48,8 @@ export function EventDetailScreen({ navigation, route }: Props) {
   const { eventId } = route.params;
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const { openOrganization } = useOrganizationSheet();
   const { showToast } = useToast();
   const registrationCallbacks = useMemo(
     () => ({
@@ -62,6 +65,7 @@ export function EventDetailScreen({ navigation, route }: Props) {
     [showToast]
   );
   const [unregisterModalVisible, setUnregisterModalVisible] = useState(false);
+  const [certModalVisible, setCertModalVisible] = useState(false);
   const { data: event, isLoading, error } = useEventDetail(eventId);
   const { coords, isGeocoding } = useGeocodeAddress(event?.location, event?.latitude, event?.longitude);
   const { isFavorite, toggleFavorite, isPending: favPending } = useMobileFavorites();
@@ -84,11 +88,16 @@ export function EventDetailScreen({ navigation, route }: Props) {
         onPress: (_evt: unknown, href: string) => {
           const url = href?.trim();
           if (!url) return;
+          const orgId = parseOrganizationIdFromHref(url);
+          if (orgId) {
+            openOrganization(orgId);
+            return;
+          }
           void Linking.openURL(url);
         },
       },
     }),
-    []
+    [openOrganization]
   );
 
   const formatTime = (iso: string) => format(parseISO(iso), "HH'h'mm", { locale: fr });
@@ -112,12 +121,7 @@ export function EventDetailScreen({ navigation, route }: Props) {
 
   const openOrg = () => {
     if (!event) return;
-    const url = buildWebAppPath(`/organization/${event.organizations.id}`);
-    if (!url) {
-      Alert.alert('Lien indisponible', 'Configure EXPO_PUBLIC_WEB_APP_ORIGIN pour ouvrir la page organisation.');
-      return;
-    }
-    void Linking.openURL(url);
+    openOrganization(event.organizations.id);
   };
 
   const onShare = async () => {
@@ -197,18 +201,6 @@ export function EventDetailScreen({ navigation, route }: Props) {
   const cover = event.cover_image_url?.trim() || DEFAULT_COVER;
   const safeDesc = event.description ? sanitizeMobileHtml(event.description) : '';
 
-  const openEventCertification = async () => {
-    const url = buildWebAppPath(`/events/${event.id}`);
-    if (!url) {
-      Alert.alert(
-        'Lien indisponible',
-        'Configure EXPO_PUBLIC_WEB_APP_ORIGIN pour ouvrir la certification.'
-      );
-      return;
-    }
-    await WebBrowser.openBrowserAsync(url);
-  };
-
   const certifyAlreadyDone =
     registration?.status === 'self_certified' || !!registration?.attended_at;
 
@@ -277,7 +269,7 @@ export function EventDetailScreen({ navigation, route }: Props) {
 
           <View style={styles.hr} />
 
-          <Pressable style={styles.orgBlock} onPress={openOrg} accessibilityRole="link">
+          <Pressable style={styles.orgBlock} onPress={openOrg} accessibilityRole="button">
             <View style={styles.orgAvatar}>
               {event.organizations.logo_url ? (
                 <Image
@@ -348,7 +340,7 @@ export function EventDetailScreen({ navigation, route }: Props) {
               eventLongitude={venueLongitude}
               isVenueCoordsLoading={isVenueCoordsLoading}
               certifyDisabled={certifyAlreadyDone}
-              onCertifyPress={() => void openEventCertification()}
+              onCertifyPress={() => setCertModalVisible(true)}
             />
             <Pressable
               style={[
@@ -408,6 +400,23 @@ export function EventDetailScreen({ navigation, route }: Props) {
         onClose={() => setUnregisterModalVisible(false)}
         onConfirm={onConfirmUnregister}
       />
+      {user && registration ? (
+        <EventCertificationModal
+          visible={certModalVisible}
+          onClose={() => setCertModalVisible(false)}
+          eventId={event.id}
+          organizationId={event.organization_id}
+          eventName={event.name}
+          eventStartDate={event.start_date}
+          eventEndDate={event.end_date}
+          eventLatitude={venueLatitude}
+          eventLongitude={venueLongitude}
+          allowSelfCertification={!!event.allow_self_certification}
+          registrationId={registration.id}
+          userId={user.id}
+          registration={registration}
+        />
+      ) : null}
     </View>
   );
 }
@@ -494,7 +503,7 @@ const styles = StyleSheet.create({
   orgAvatarImg: { width: '100%', height: '100%' },
   orgTextCol: { marginLeft: 14, flex: 1 },
   orgHint: { fontSize: 14, color: META },
-  orgName: { fontSize: 16, fontWeight: '700', color: '#000000', textDecorationLine: 'underline' },
+  orgName: { fontSize: 16, fontWeight: '700', color: '#000000' },
   descBlock: { marginBottom: 8 },
   sectionTitle: { fontSize: 17, fontWeight: '600', color: '#111827', marginBottom: 12 },
   htmlBase: { color: META, fontSize: 15 },

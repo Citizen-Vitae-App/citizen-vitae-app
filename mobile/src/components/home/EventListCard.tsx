@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, Alert, Linking } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Image } from 'expo-image';
@@ -7,7 +7,7 @@ import type { PublicEventRow } from '@/hooks/usePublicEvents';
 import type { AppStackParamList } from '@/navigation/types';
 import { generateShortTitle } from '@/lib/generateShortTitle';
 import { formatEventStartDate } from '@/lib/formatEventDate';
-import { buildWebAppPath } from '@/lib/webAppUrl';
+import { useOrganizationSheet } from '@/contexts/OrganizationSheetContext';
 
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800&auto=format&fit=crop';
@@ -29,28 +29,12 @@ type Props = {
 
 export function EventListCard({ event }: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const { openOrganization } = useOrganizationSheet();
   const uri = event.cover_image_url?.trim() || DEFAULT_COVER;
   const short = generateShortTitle(event.name);
   const lines = overlayLines(short.toUpperCase());
   const orgName = event.organization_name?.trim() || 'Organisation';
   const dateLabel = formatEventStartDate(event.start_date);
-
-  const openPath = async (path: string) => {
-    const url = buildWebAppPath(path);
-    if (!url) {
-      Alert.alert(
-        'Lien indisponible',
-        'Ajoute EXPO_PUBLIC_WEB_APP_ORIGIN dans mobile/.env (URL du site web, sans slash final) pour ouvrir cette page.'
-      );
-      return;
-    }
-    try {
-      const ok = await Linking.canOpenURL(url);
-      if (ok) await Linking.openURL(url);
-    } catch {
-      Alert.alert('Erreur', 'Impossible d’ouvrir le lien.');
-    }
-  };
 
   return (
     <View style={styles.card}>
@@ -90,8 +74,8 @@ export function EventListCard({ event }: Props) {
       <View style={styles.orgRow}>
         <Text style={styles.orgPrefix}>Organisé par </Text>
         <Pressable
-          onPress={() => void openPath(`/organization/${event.organization_id}`)}
-          accessibilityRole="link"
+          onPress={() => openOrganization(event.organization_id)}
+          accessibilityRole="button"
           accessibilityLabel={`Organisation ${orgName}`}
         >
           <Text style={styles.orgLink}>{orgName}</Text>

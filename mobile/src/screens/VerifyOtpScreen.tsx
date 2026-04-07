@@ -15,6 +15,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthOrbBackground } from '@/components/layout/AuthOrbBackground';
+import { CitizenVitaeLogo } from '@/components/branding/CitizenVitaeLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AuthStackParamList } from '@/navigation/types';
 import { CvColors } from '@/theme/colors';
@@ -25,7 +26,7 @@ type R = RouteProp<AuthStackParamList, 'VerifyOtp'>;
 export function VerifyOtpScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<R>();
-  const { email, redirect: _redirect } = route.params;
+  const { email, redirect: _redirect, shouldCreateUser = true } = route.params;
   const { verifyOtp, signInWithOtp } = useAuth();
 
   const [otp, setOtp] = useState('');
@@ -68,7 +69,7 @@ export function VerifyOtpScreen() {
     if (!canResend) return;
     setCanResend(false);
     setCountdown(60);
-    const { error } = await signInWithOtp(email);
+    const { error } = await signInWithOtp(email, { shouldCreateUser });
     if (error) {
       Alert.alert('Erreur', error.message);
       setCanResend(true);
@@ -89,6 +90,9 @@ export function VerifyOtpScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <View style={styles.logoRow}>
+              <CitizenVitaeLogo width={200} height={30} />
+            </View>
             <View style={styles.card}>
               <Text style={styles.title}>Code de vérification</Text>
               <Text style={styles.subtitle}>Saisis le code reçu par email pour {email}</Text>
@@ -157,6 +161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 24,
   },
+  logoRow: { alignItems: 'center', marginBottom: 20 },
   card: {
     backgroundColor: CvColors.card,
     borderRadius: 16,

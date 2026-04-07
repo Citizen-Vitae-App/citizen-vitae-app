@@ -30,12 +30,28 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Citizen Vitae peut enregistrer une image de ton certificat dans la photothèque lorsque tu choisis « Enregistrer dans Photos ».",
+          "savePhotosPermission": "Citizen Vitae enregistre le certificat dans ta photothèque lorsque tu confirmes."
+        }
+      ],
       "expo-web-browser",
       "expo-asset",
+      "@react-native-community/datetimepicker",
       [
         "expo-location",
         {
           "locationWhenInUsePermission": "Citizen Vitae utilise ta position pour vérifier que tu es sur le lieu de l'événement lors de la certification de présence."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Citizen Vitae utilise la caméra pour prendre un selfie et comparer ton visage à ta photo de vérification d’identité.",
+          "recordAudioAndroid": false
         }
       ]
     ]

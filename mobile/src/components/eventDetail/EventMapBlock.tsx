@@ -26,14 +26,15 @@ export function EventMapBlock({ latitude, longitude }: Props) {
   const provider = Platform.OS === 'android' || hasKey ? PROVIDER_GOOGLE : undefined;
   const region = buildRegion(latitude, longitude);
 
+  /** Aperçu : pas de scroll ni zoom pour que le ScrollView parent reste prioritaire. */
   const mapNode = (
     <MapView
       style={styles.mapFill}
       provider={provider}
       initialRegion={region}
-      zoomEnabled
-      scrollEnabled
-      rotateEnabled
+      zoomEnabled={false}
+      scrollEnabled={false}
+      rotateEnabled={false}
       pitchEnabled={false}
       showsUserLocation={false}
       mapType="standard"

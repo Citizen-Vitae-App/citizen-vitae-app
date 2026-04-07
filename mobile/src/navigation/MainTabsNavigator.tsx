@@ -59,6 +59,7 @@ export function MainTabsNavigator() {
         name="Missions"
         component={MissionsScreen}
         options={{
+          headerShown: false,
           title: 'Missions',
           tabBarLabel: 'Missions',
           tabBarIcon: ({ color, size }) => (
@@ -70,6 +71,7 @@ export function MainTabsNavigator() {
         name="Notifications"
         component={NotificationsScreen}
         options={{
+          headerShown: false,
           title: 'Notifications',
           tabBarLabel: 'Notifications',
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="bell-outline" size={size} color={color} />,
@@ -87,6 +89,7 @@ export function MainTabsNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
+          headerShown: false,
           title: 'Profil',
           tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="account-outline" size={size} color={color} />,

@@ -1,12 +1,104 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  Pressable,
+  ListRenderItem,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useMyMissions } from '@/hooks/useMyMissions';
+import { parseISO, isBefore } from 'date-fns';
+import { useMyMissions, type RegistrationWithEvent } from '@/hooks/useMyMissions';
+import { MissionCertificateCard } from '@/components/missions/MissionCertificateCard';
+import { MissionUpcomingCard } from '@/components/missions/MissionUpcomingCard';
+import { MissionCancelledCard } from '@/components/missions/MissionCancelledCard';
 import { CvColors } from '@/theme/colors';
 
-export function MissionsScreen() {
-  const { data = [], isLoading, isError, error, refetch, isRefetching } = useMyMissions();
+type MissionTab = 'upcoming' | 'certificates' | 'cancelled';
 
-  if (isLoading && !data.length) {
+function MissionsTabBar({ active, onChange }: { active: MissionTab; onChange: (t: MissionTab) => void }) {
+  const tabs: { id: MissionTab; label: string }[] = [
+    { id: 'upcoming', label: 'À venir' },
+    { id: 'certificates', label: 'Certificats' },
+    { id: 'cancelled', label: 'Annulations' },
+  ];
+  return (
+    <View style={styles.tabBar}>
+      {tabs.map((t) => {
+        const isActive = active === t.id;
+        return (
+          <Pressable
+            key={t.id}
+            style={styles.tabBtn}
+            onPress={() => onChange(t.id)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
+          >
+            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{t.label}</Text>
+            <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+export function MissionsScreen() {
+  const { data: registrations = [], isLoading, isError, error, refetch, isRefetching } = useMyMissions();
+  const [tab, setTab] = useState<MissionTab>('certificates');
+
+  const { upcomingEvents, completedEvents, cancelledEvents } = useMemo(() => {
+    const now = new Date();
+    const list = registrations;
+    const upcoming = list
+      .filter((r) => isBefore(now, parseISO(r.events.end_date)))
+      .sort(
+        (a, b) =>
+          parseISO(a.events.start_date).getTime() - parseISO(b.events.start_date).getTime()
+      );
+    const completed = list.filter(
+      (r) => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at !== null
+    );
+    const cancelled = list.filter(
+      (r) => !isBefore(now, parseISO(r.events.end_date)) && r.attended_at === null
+    );
+    return { upcomingEvents: upcoming, completedEvents: completed, cancelledEvents: cancelled };
+  }, [registrations]);
+
+  const listData: RegistrationWithEvent[] = useMemo(() => {
+    switch (tab) {
+      case 'upcoming':
+        return upcomingEvents;
+      case 'certificates':
+        return completedEvents;
+      default:
+        return cancelledEvents;
+    }
+  }, [tab, upcomingEvents, completedEvents, cancelledEvents]);
+
+  const renderItem: ListRenderItem<RegistrationWithEvent> = ({ item }) => {
+    if (tab === 'certificates') return <MissionCertificateCard registration={item} />;
+    if (tab === 'upcoming') return <MissionUpcomingCard registration={item} />;
+    return <MissionCancelledCard registration={item} />;
+  };
+
+  const emptyMessage = useMemo(() => {
+    switch (tab) {
+      case 'upcoming':
+        return 'Aucune mission à venir';
+      case 'certificates':
+        return 'Aucun certificat disponible';
+      default:
+        return 'Aucune annulation';
+    }
+  }, [tab]);
+
+  const keyExtractor = (item: RegistrationWithEvent) => item.id;
+
+  if (isLoading && !registrations.length) {
     return (
       <SafeAreaView style={styles.center} edges={['top']}>
         <ActivityIndicator size="large" color={CvColors.primary} accessibilityLabel="Chargement des missions" />
@@ -27,9 +119,15 @@ export function MissionsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.screenTitle}>Mes Missions</Text>
+        <MissionsTabBar active={tab} onChange={setTab} />
+      </View>
       <FlatList
-        data={data}
-        keyExtractor={(item) => item.id}
+        data={listData}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        extraData={tab}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -38,31 +136,39 @@ export function MissionsScreen() {
             colors={[CvColors.primary]}
           />
         }
-        contentContainerStyle={data.length === 0 ? styles.emptyContainer : styles.listPad}
-        ListEmptyComponent={
-          <Text style={styles.empty}>
-            Aucune mission pour le moment. Inscris-toi à un événement sur le web.
-          </Text>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.eventName}>{item.events?.name ?? 'Événement'}</Text>
-            <Text style={styles.org}>{item.events?.organizations?.name ?? ''}</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.status}</Text>
-            </View>
-          </View>
-        )}
+        contentContainerStyle={listData.length === 0 ? styles.emptyContainer : styles.listContent}
+        ListEmptyComponent={<Text style={styles.empty}>{emptyMessage}</Text>}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: CvColors.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: CvColors.background },
-  pad: { flex: 1, padding: 20, backgroundColor: CvColors.background },
-  listPad: { paddingVertical: 8, paddingBottom: 24 },
+  safe: { flex: 1, backgroundColor: '#F8FAFC' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
+  pad: { flex: 1, padding: 20, backgroundColor: '#F8FAFC' },
+  header: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: CvColors.foreground,
+    letterSpacing: -0.5,
+    marginBottom: 10,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 10 },
+  tabLabel: { fontSize: 15, fontWeight: '600', color: '#94A3B8' },
+  tabLabelActive: { color: '#0F172A' },
+  tabUnderline: { height: 2, marginTop: 8, alignSelf: 'stretch', backgroundColor: 'transparent' },
+  tabUnderlineActive: { backgroundColor: '#0F172A' },
+  listContent: { paddingTop: 12, paddingBottom: 32 },
+  emptyContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32, paddingBottom: 48 },
+  empty: { fontSize: 15, color: CvColors.mutedForeground, textAlign: 'center', lineHeight: 22 },
   errorCard: {
     backgroundColor: CvColors.card,
     borderRadius: 12,
@@ -72,31 +178,4 @@ const styles = StyleSheet.create({
   },
   errorTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8, color: CvColors.foreground },
   errorBody: { fontSize: 15, color: CvColors.destructive },
-  emptyContainer: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  empty: { fontSize: 15, color: CvColors.mutedForeground, textAlign: 'center', lineHeight: 22 },
-  card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 18,
-    borderRadius: 14,
-    backgroundColor: CvColors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: CvColors.border,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  eventName: { fontSize: 17, fontWeight: '600', color: CvColors.foreground },
-  org: { fontSize: 14, color: CvColors.mutedForeground, marginTop: 4 },
-  badge: {
-    alignSelf: 'flex-start',
-    marginTop: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: CvColors.muted,
-  },
-  badgeText: { fontSize: 12, fontWeight: '600', color: CvColors.mutedForeground },
 });

@@ -2,6 +2,7 @@
  * Lit le .env à l’évaluation de la config (comme le web avec Vite).
  * Les clés VITE_* du projet racine ne sont pas injectées dans le bundle Expo :
  * on les recopie dans `extra` pour que `src/lib/supabase.ts` puisse les lire.
+ * Expériences déclaratives (manual_experiences) : même URL + anon key, pas de clé Expo dédiée.
  */
 function stripEnv(value) {
   return String(value ?? '')

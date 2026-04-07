@@ -1,9 +1,11 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { navigationRef } from '@/navigation/navigationRef';
+import { OrganizationSheetProvider } from '@/contexts/OrganizationSheetContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { AuthStackNavigator } from '@/navigation/AuthStackNavigator';
-import { OnboardingPlaceholderScreen } from '@/screens/OnboardingPlaceholderScreen';
+import { OnboardingFlowScreen } from '@/screens/OnboardingFlowScreen';
 import { CvColors } from '@/theme/colors';
 
 function LoadingSplash() {
@@ -37,15 +39,17 @@ export function RootNavigator() {
   };
 
   return (
-    <NavigationContainer key={navKey} theme={navTheme}>
-      {!user ? (
-        <AuthStackNavigator />
-      ) : needsOnboarding ? (
-        <OnboardingPlaceholderScreen />
-      ) : (
-        <AppNavigator />
-      )}
-    </NavigationContainer>
+    <OrganizationSheetProvider>
+      <NavigationContainer ref={navigationRef} key={navKey} theme={navTheme}>
+        {!user ? (
+          <AuthStackNavigator />
+        ) : needsOnboarding ? (
+          <OnboardingFlowScreen />
+        ) : (
+          <AppNavigator />
+        )}
+      </NavigationContainer>
+    </OrganizationSheetProvider>
   );
 }
 

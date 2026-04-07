@@ -37,7 +37,10 @@ interface AuthContextType {
   profile: Profile | null;
   roles: string[];
   isLoading: boolean;
-  signInWithOtp: (email: string) => Promise<{ error: Error | null }>;
+  signInWithOtp: (
+    email: string,
+    options?: { shouldCreateUser?: boolean }
+  ) => Promise<{ error: Error | null }>;
   verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -307,10 +310,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithOtp = async (email: string) => {
+  const signInWithOtp = async (email: string, options?: { shouldCreateUser?: boolean }) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: options?.shouldCreateUser ?? true },
     });
     return { error: error as Error | null };
   };

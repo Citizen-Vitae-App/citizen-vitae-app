@@ -63,4 +63,4 @@ Si tu vois la page Supabase mais pas Google, ouvre la même URL dans Safari sur 
 
 ## Types partagés
 
-Le client Supabase importe les types générés du web : `../src/integrations/supabase/types.ts`. Metro est configuré pour surveiller le dossier parent (`metro.config.js`).
+Le schéma Supabase (`Database`, etc.) vit dans `../shared/supabase/types.ts` ; le client mobile utilise `createSupabaseClient` depuis `../shared/supabase/client.ts`. Metro surveille la racine du monorepo et `shared/` (`metro.config.js`).

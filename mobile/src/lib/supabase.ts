@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../../../src/integrations/supabase/types';
+import { createSupabaseClient } from '@shared/supabase/client';
 
 function stripEnv(raw: string | undefined): string {
   return (raw ?? '').replace(/^\uFEFF/, '').trim();
@@ -29,7 +28,7 @@ if (!isSupabaseConfigured && __DEV__) {
   );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
