@@ -371,7 +371,7 @@ All colors MUST be HSL.
 }
 
 .fc-notion-theme .fc .fc-timegrid-slot {
-  height: 34px;
+  height: 24px;
   border-color: hsl(var(--border));
 }
 
