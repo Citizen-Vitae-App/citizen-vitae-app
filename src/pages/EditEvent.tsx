@@ -921,65 +921,38 @@ export default function EditEvent() {
                 {/* Cause Themes */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Catégorie</h3>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2 bg-black/[0.03] hover:bg-black/[0.05] border-0 w-full justify-start">
-                        {selectedCauseThemes.length > 0 ? (
-                          <>
-                            {(() => {
-                              const selectedTheme = causeThemes.find(t => t.id === selectedCauseThemes[0]);
-                              if (selectedTheme) {
-                                const IconComponent = (Icons as any)[selectedTheme.icon] || Icons.Tag;
-                                return (
-                                  <>
-                                    <IconComponent className="h-4 w-4" />
-                                    {selectedTheme.name}
-                                  </>
-                                );
-                              }
-                              return (
-                                <>
-                                  <Tag className="h-4 w-4" />
-                                  Sélectionner une catégorie
-                                </>
-                              );
-                            })()}
-                          </>
-                        ) : (
-                          <>
-                            <Tag className="h-4 w-4" />
-                            Sélectionner une catégorie
-                          </>
-                        )}
-                        <ChevronDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-80">
-                      {causeThemes.map((theme) => {
-                        const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
-                        const isSelected = selectedCauseThemes.includes(theme.id);
-                        return (
-                          <DropdownMenuItem
-                            key={theme.id}
-                            onClick={() => {
-                              if (isSelected) {
-                                setSelectedCauseThemes([]);
-                              } else {
-                                setSelectedCauseThemes([theme.id]);
-                              }
-                            }}
-                            className="flex items-center gap-3 p-4 cursor-pointer"
-                          >
-                            <IconComponent className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
-                            <div className="flex-1">
-                              <div className="font-semibold">{theme.name}</div>
-                            </div>
-                            {isSelected && <div className="text-primary">✓</div>}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex flex-wrap gap-2">
+                    {causeThemes.map((theme) => {
+                      const IconComponent = (Icons as any)[theme.icon] || Icons.Tag;
+                      const isSelected = selectedCauseThemes.includes(theme.id);
+                      return (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedCauseThemes([]);
+                            } else {
+                              setSelectedCauseThemes([theme.id]);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border"
+                          style={{
+                            backgroundColor: isSelected ? theme.color : 'transparent',
+                            borderColor: theme.color,
+                            color: isSelected ? 'white' : theme.color,
+                            opacity: isSelected ? 1 : 0.7,
+                          }}
+                        >
+                          <IconComponent className="h-4 w-4" />
+                          {theme.name}
+                        </button>
+                      );
+                    })}
+                    {causeThemes.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Aucune catégorie configurée pour cette organisation</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Event Options */}
