@@ -601,40 +601,35 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
               rows={2}
             />
 
-            {/* Cause Theme */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 w-full text-sm text-left px-2 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors">
-                  {selectedCauseTheme ? (() => {
-                    const theme = causeThemes.find(t => t.id === selectedCauseTheme);
-                    if (theme) {
-                      const Icon = (Icons as any)[theme.icon] || Icons.Tag;
-                      return <><Icon className="h-4 w-4 shrink-0" style={{ color: theme.color }} /><span className="truncate">{theme.name}</span></>;
-                    }
-                    return <><Tag className="h-4 w-4 text-muted-foreground shrink-0" /><span className="text-muted-foreground">Catégorie</span></>;
-                  })() : (
-                    <><Tag className="h-4 w-4 text-muted-foreground shrink-0" /><span className="text-muted-foreground">Catégorie</span></>
-                  )}
-                  <ChevronDown className="h-3 w-3 ml-auto text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 max-h-48 overflow-y-auto">
+            {/* Cause Theme — badge pills */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Catégorie</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
                 {causeThemes.map(theme => {
                   const Icon = (Icons as any)[theme.icon] || Icons.Tag;
+                  const isSelected = selectedCauseTheme === theme.id;
                   return (
-                    <DropdownMenuItem
+                    <button
                       key={theme.id}
-                      onSelect={(e) => { e.preventDefault(); setSelectedCauseTheme(selectedCauseTheme === theme.id ? null : theme.id); }}
-                      className="flex items-center gap-2 cursor-pointer"
+                      type="button"
+                      onClick={() => setSelectedCauseTheme(isSelected ? null : theme.id)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors"
+                      style={{
+                        backgroundColor: isSelected ? theme.color : 'transparent',
+                        borderColor: theme.color,
+                        color: isSelected ? 'white' : theme.color,
+                      }}
                     >
-                      <Icon className="h-4 w-4 shrink-0" style={{ color: theme.color }} />
-                      <span>{theme.name}</span>
-                      {selectedCauseTheme === theme.id && <Check className="h-3 w-3 ml-auto text-primary" />}
-                    </DropdownMenuItem>
+                      <Icon className="h-3 w-3" />
+                      {theme.name}
+                    </button>
                   );
                 })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </div>
+            </div>
 
             {/* Options */}
             <div className="space-y-2 bg-muted/50 rounded-md px-3 py-2">
@@ -815,9 +810,11 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       <div
         ref={dialogRef}
         style={computeDesktopStyle()}
-        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden"
+        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[80vh]"
       >
-        {formContent}
+        <div className="flex-1 overflow-y-auto">
+          {formContent}
+        </div>
       </div>
       {deleteConfirmDialog}
     </>
