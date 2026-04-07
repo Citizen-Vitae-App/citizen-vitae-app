@@ -441,12 +441,24 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
 
   // Desktop positioning
   const computeDesktopStyle = (): React.CSSProperties => {
-    if (!position) {
-      return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 50 };
-    }
-    const cardWidth = 340;
-    const cardHeight = isExpanded ? 600 : 360;
     const gap = 8;
+    const colHeader = document.querySelector('.fc-col-header');
+    const minTop = colHeader ? colHeader.getBoundingClientRect().bottom + gap : gap;
+    const availableHeight = window.innerHeight - minTop - gap;
+
+    if (!position) {
+      return {
+        position: 'fixed',
+        top: minTop,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        maxHeight: availableHeight,
+      };
+    }
+
+    const cardWidth = 340;
+    const estimatedCardHeight = Math.min(isExpanded ? 680 : 420, availableHeight);
 
     let left = position.left + gap;
     if (left + cardWidth > window.innerWidth - gap) {
@@ -456,15 +468,10 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
     left = Math.max(gap, Math.min(left, window.innerWidth - cardWidth - gap));
 
     const eventCenterY = position.top + (position.cellHeight || 0) / 2;
-    let top = eventCenterY - cardHeight / 2;
-    if (top + cardHeight > window.innerHeight - gap) {
-      top = window.innerHeight - cardHeight - gap;
-    }
-    const colHeader = document.querySelector('.fc-col-header');
-    const minTop = colHeader ? colHeader.getBoundingClientRect().bottom + gap : gap;
-    top = Math.max(minTop, top);
+    let top = eventCenterY - estimatedCardHeight / 2;
+    top = Math.max(minTop, Math.min(top, window.innerHeight - estimatedCardHeight - gap));
 
-    return { position: 'fixed', top, left, zIndex: 50 };
+    return { position: 'fixed', top, left, zIndex: 50, maxHeight: availableHeight };
   };
 
   // ─── Shared form content ───
