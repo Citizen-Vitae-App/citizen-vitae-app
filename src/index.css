@@ -303,19 +303,22 @@ All colors MUST be HSL.
   background: hsl(var(--background));
 }
 
-/* Week/day views: let the surrounding panel own the vertical scroll */
-.fc-notion-theme.fc-time-view .fc .fc-view-harness,
-.fc-notion-theme.fc-time-view .fc .fc-view-harness-active,
-.fc-notion-theme.fc-time-view .fc .fc-scroller,
-.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid,
-.fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute,
-.fc-notion-theme.fc-time-view .fc .fc-timegrid .fc-scroller {
-  height: auto !important;
-  overflow: visible !important;
-}
+/* Week/day views on desktop: keep an internal calendar scroll so the view opens at 8:00 while earlier hours remain reachable */
+@media (min-width: 640px) {
+  .fc-notion-theme.fc-time-view .fc,
+  .fc-notion-theme.fc-time-view .fc .fc-view-harness,
+  .fc-notion-theme.fc-time-view .fc .fc-view-harness-active,
+  .fc-notion-theme.fc-time-view .fc .fc-scrollgrid {
+    height: 100% !important;
+  }
 
-.fc-notion-theme.fc-time-view .fc .fc-scrollgrid {
-  overflow: visible !important;
+  .fc-notion-theme.fc-time-view .fc .fc-scroller,
+  .fc-notion-theme.fc-time-view .fc .fc-scroller-liquid,
+  .fc-notion-theme.fc-time-view .fc .fc-scroller-liquid-absolute,
+  .fc-notion-theme.fc-time-view .fc .fc-timegrid .fc-scroller {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
 }
 
 /* Time-grid views: sticky day-of-week header row */
