@@ -792,9 +792,9 @@ export function QuickEventDialog({ isOpen, onClose, date, organizationId, positi
       <div
         ref={dialogRef}
         style={computeDesktopStyle()}
-        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[80vh]"
+        className="w-[340px] rounded-xl bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 animate-in fade-in-0 zoom-in-95 duration-150 flex flex-col max-h-[80vh]"
       >
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           {formContent}
         </div>
         {actionBar}
