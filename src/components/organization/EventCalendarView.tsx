@@ -425,7 +425,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
 
     return (
-      <div className={cn("p-1 sm:p-1.5 w-full h-full", isMobile ? "overflow-visible" : "overflow-hidden")}>
+      <div className={cn("p-1 sm:p-1.5 w-full h-full px-0", isMobile ? "overflow-visible" : "overflow-hidden")}>
         <p className={cn(
           "font-semibold leading-tight",
           isMobile ? "text-[0.55rem] whitespace-normal break-words" : "text-xs truncate"
