@@ -381,7 +381,7 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 flex-1">
+      <main className="container mx-auto px-4 pt-4 pb-12 md:py-12 flex-1">
         <PageTransition>
         {isEventsLoading ? (
           <EventCardSkeletons count={6} />
