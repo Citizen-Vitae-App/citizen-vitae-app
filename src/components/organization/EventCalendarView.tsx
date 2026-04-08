@@ -445,8 +445,9 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     <div className={currentView === 'dayGridMonth' ? 'overflow-x-hidden' : ''}>
       {/* FullCalendar */}
       <div className={cn(
-        "fc-notion-theme bg-background -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border border-y border-border overflow-x-hidden",
-        currentView !== 'dayGridMonth' && 'overflow-x-visible',
+        "fc-notion-theme bg-background sm:rounded-lg sm:border sm:border-border border-y border-border",
+        isMobile ? '-mx-4 overflow-x-hidden w-[100vw]' : 'mx-0',
+        currentView !== 'dayGridMonth' && !isMobile && 'overflow-x-visible',
         hasInternalTimeGridScroll && 'h-[calc(100vh-16rem)] min-h-[560px]',
         currentView === 'dayGridMonth' ? 'fc-month-view' : 'fc-time-view'
       )}>
