@@ -90,7 +90,7 @@ const MyMissions = () => {
   };
   const renderCompactCard = (registration: RegistrationWithEvent) => {
     const event = registration.events;
-    return <div key={registration.id} className="flex items-center gap-4 border border-border rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/events/${event.id}`)}>
+    return <div key={registration.id} className="flex items-center gap-4 border border-border rounded-xl p-3 cursor-pointer transition-colors bg-white" onClick={() => navigate(`/events/${event.id}`)}>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
           <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
