@@ -443,7 +443,7 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
         )}
       </div>
     );
-  }, []);
+  }, [isMobile]);
 
   const hasInternalTimeGridScroll = !isMobile && currentView !== 'dayGridMonth';
 
