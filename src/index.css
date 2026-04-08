@@ -587,23 +587,16 @@ All colors MUST be HSL.
     border: none !important;
   }
 
-  /* Thin scrollbar (2px) — positioned below day header */
+  /* Hide scrollbar completely on mobile */
   .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar {
-    width: 2px;
-    height: 2px;
-  }
-
-  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 1px;
-  }
-
-  .fc-notion-theme .fc .fc-scroller::-webkit-scrollbar-track {
-    background: transparent;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .fc-notion-theme .fc .fc-scroller {
-    scrollbar-width: thin;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   /* Month view sticky header */
