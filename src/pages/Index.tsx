@@ -135,12 +135,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background relative">
+      <nav className="sticky top-0 z-50 bg-background relative border-b border-border md:border-b-0 shadow-[0_1px_3px_0_rgba(0,0,0,0.08)] md:shadow-none">
         <div className="container mx-auto px-4">
           <div className={`flex items-center ${isMobileSearchOpen ? 'md:justify-between' : 'justify-between'} h-14 md:h-16 gap-3 relative transition-all duration-300`}>
-            {/* Logo - Hidden on mobile when search is open */}
-            <div className={`flex-shrink-0 transition-all duration-300 ${isMobileSearchOpen ? 'hidden md:block opacity-0 md:opacity-100 w-0 md:w-auto' : 'block opacity-100 w-auto'}`}>
-              <img src={logo} alt="Citizen Vitae" className="h-6 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
+            {/* Logo - Always visible on mobile */}
+            <div className="flex-shrink-0">
+              <img src={logo} alt="Citizen Vitae" className="h-5 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
             </div>
 
             {/* Search Bar - Desktop */}
