@@ -78,7 +78,7 @@ const Notifications = () => {
               Vous n'avez pas encore de notifications
             </p>
           </div> : <div className="space-y-2">
-            {notifications.map(notification => <button key={notification.id} onClick={() => handleNotificationClick(notification)} className={`w-full text-left p-4 rounded-lg border border-border transition-colors ${notification.is_read ? 'bg-background hover:bg-muted/50' : 'bg-muted/30 hover:bg-muted/50'}`}>
+            {notifications.map(notification => <button key={notification.id} onClick={() => handleNotificationClick(notification)} className={`w-full text-left p-4 rounded-lg border border-border transition-colors ${notification.is_read ? 'bg-background hover:bg-muted/50' : 'bg-white'}`}>
                 <div className="flex items-start gap-3">
                   {/* Event thumbnail */}
                   {notification.event && <img src={notification.event.cover_image_url || defaultEventCover} alt="" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />}
