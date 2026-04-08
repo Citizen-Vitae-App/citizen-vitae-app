@@ -79,7 +79,7 @@ const MyMissions = () => {
         <div className="aspect-[16/9] w-full overflow-hidden">
           <img src={event.cover_image_url || defaultCover} alt={event.name} loading="lazy" className="w-full h-full object-cover" />
         </div>
-        <div className="p-4 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="p-4 space-y-4 bg-white" onClick={e => e.stopPropagation()}>
           <div onClick={() => navigate(`/events/${event.id}`)} className="cursor-pointer">
             <h3 className="font-semibold text-lg text-foreground truncate">{event.name}</h3>
             <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
