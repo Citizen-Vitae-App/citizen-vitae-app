@@ -425,19 +425,25 @@ export function EventCalendarView({ events, organizationId, participantCounts, i
     }
 
     return (
-      <div className={cn("p-1.5 w-full h-full overflow-hidden")}>
-        <p className="text-xs font-semibold truncate leading-tight">{eventInfo.event.title}</p>
-        <p className="text-[10px] opacity-80 truncate mt-0.5">
+      <div className={cn("p-1 sm:p-1.5 w-full h-full", isMobile ? "overflow-visible" : "overflow-hidden")}>
+        <p className={cn(
+          "font-semibold leading-tight",
+          isMobile ? "text-[0.55rem] whitespace-normal break-words" : "text-xs truncate"
+        )}>{eventInfo.event.title}</p>
+        <p className={cn(
+          "opacity-80 mt-0.5",
+          isMobile ? "text-[0.5rem]" : "text-[10px] truncate"
+        )}>
           {eventInfo.timeText}
         </p>
-        {participantCount > 0 && (
+        {participantCount > 0 && !isMobile && (
           <p className="text-[10px] opacity-80 mt-0.5">
             {participantCount}{capacity ? `/${capacity}` : ''} part.
           </p>
         )}
       </div>
     );
-  }, []);
+  }, [isMobile]);
 
   const hasInternalTimeGridScroll = !isMobile && currentView !== 'dayGridMonth';
 

@@ -896,9 +896,10 @@ export function EventsTab({ userTeamId, canManageAllEvents = true, isMember = fa
         className={cn(
           "flex-1 min-h-0",
           viewMode === 'calendar'
-            ? 'overflow-y-auto overflow-x-hidden overscroll-contain pb-4'
+            ? 'overflow-y-auto overflow-x-hidden overscroll-contain pb-4 scrollbar-none'
             : 'overflow-y-auto pb-8'
         )}
+        style={viewMode === 'calendar' ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties : undefined}
       >
       {viewMode === 'calendar' ? (
         <EventCalendarView
