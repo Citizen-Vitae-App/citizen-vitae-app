@@ -135,12 +135,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background relative">
+      <nav className="sticky top-0 z-50 bg-background relative border-b border-border md:border-b-0 shadow-[0_1px_3px_0_rgba(0,0,0,0.08)] md:shadow-none">
         <div className="container mx-auto px-4">
-          <div className={`flex items-center ${isMobileSearchOpen ? 'md:justify-between' : 'justify-between'} h-14 md:h-16 gap-3 relative transition-all duration-300`}>
-            {/* Logo - Hidden on mobile when search is open */}
-            <div className={`flex-shrink-0 transition-all duration-300 ${isMobileSearchOpen ? 'hidden md:block opacity-0 md:opacity-100 w-0 md:w-auto' : 'block opacity-100 w-auto'}`}>
-              <img src={logo} alt="Citizen Vitae" className="h-6 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
+          <div className="flex items-center justify-between h-14 md:h-16 gap-3 relative">
+            {/* Logo - Always visible on mobile */}
+            <div className="flex-shrink-0">
+              <img src={logo} alt="Citizen Vitae" className="h-5 md:h-8 w-auto" width="203" height="32" fetchPriority="high" />
             </div>
 
             {/* Search Bar - Desktop */}
@@ -186,64 +186,43 @@ const Index = () => {
 
             </div>
 
-            {/* Search Bar - Mobile (transforms from button to full bar) */}
-            <div className="flex md:hidden flex-1 items-center justify-end gap-2">
-              {/* Search Button/Bar - Expands when open */}
-              <div 
-                className={`
-                  border border-border flex items-center bg-background/50 flex-shrink-0 transition-all duration-300 ease-in-out
-                  ${isMobileSearchOpen 
-                    ? 'w-full rounded-2xl px-3 py-1 shadow-md' 
-                    : 'w-[38px] h-[38px] rounded-full p-2.5 justify-center hover:bg-background/70 hover:shadow-md hover:border-primary/30'
-                  }
-                `}
-              >
-                {isMobileSearchOpen ? (
-                  <>
-                    <Search className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-1" />
-                    <Input
-                      type="search"
-                      placeholder="Rechercher un événement..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="border-0 bg-transparent px-3 py-2 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground flex-1 text-base"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => setIsMobileSearchOpen(false)}
-                      className="flex-shrink-0 p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                      aria-label="Fermer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
-                ) : (
+            {/* Search Bar + Filter - Mobile: always visible, wide search bar */}
+            <div className="flex md:hidden flex-1 items-center gap-2">
+              {/* Search bar - always expanded */}
+              <div className="flex-1 flex items-center bg-muted/60 rounded-full px-3 py-1.5 gap-2">
+                <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <Input
+                  type="search"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border-0 bg-transparent px-1 py-1 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground flex-1 text-sm"
+                  disabled={showMobileLoginPrompt}
+                />
+                {searchQuery && (
                   <button
-                    onClick={() => !showMobileLoginPrompt && setIsMobileSearchOpen(true)}
-                    disabled={showMobileLoginPrompt}
-                    className={`w-full h-full flex items-center justify-center ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}
+                    onClick={() => setSearchQuery('')}
+                    className="flex-shrink-0 p-0.5 rounded-full text-muted-foreground hover:text-foreground"
+                    aria-label="Effacer"
                   >
-                    <Search className="w-4 h-4 text-foreground" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
               
-              {/* Filters Button - Mobile (icon only, disabled when not logged in) */}
-              {!isMobileSearchOpen && (
-                <button
-                  onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
-                  disabled={showMobileLoginPrompt}
-                  className={`border border-border rounded-full p-2.5 flex items-center justify-center bg-background/50 relative flex-shrink-0 transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : 'hover:bg-background/70 hover:shadow-md hover:border-primary/30'}`}
-                >
-                  <SlidersHorizontal className="w-4 h-4 text-foreground" />
-                  {activeFiltersCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
-              )}
-              
+              {/* Filters Button - icon only */}
+              <button
+                onClick={() => !showMobileLoginPrompt && setIsFiltersOpen(true)}
+                disabled={showMobileLoginPrompt}
+                className={`flex-shrink-0 p-2 relative transition-all duration-200 ${showMobileLoginPrompt ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* User Actions - Desktop only */}
