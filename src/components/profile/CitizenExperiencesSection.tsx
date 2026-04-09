@@ -91,7 +91,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
           <BookOpen className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           Mes expériences citoyennes
           {grandTotal > 0 && (
-            <Badge variant="secondary" className="ml-1">
+            <Badge variant="secondary" className="ml-0">
               {grandTotal}
             </Badge>
           )}
@@ -101,7 +101,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
             variant="ghost"
             size="icon"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 w-8 flex-shrink-0"
+            className="h-8 w-6 flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
           </Button>
