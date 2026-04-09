@@ -9,11 +9,13 @@ import {
   ActivityIndicator,
   Linking,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import { SettingsSheetHandle } from '@/components/settings/SettingsChrome';
+import { CvColors } from '@/theme/colors';
 import RenderHtml from 'react-native-render-html';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -29,7 +31,7 @@ const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=1200&auto=format&fit=crop';
 const META = '#6B7280';
 const BLUE_LINK = '#0A51EC';
-const OVERLAY = 'rgba(93, 93, 93, 0.55)';
+const CHROME_BORDER = '#E5E7EB';
 
 function formatOrgType(type: string | null): string {
   switch (type) {
@@ -66,7 +68,6 @@ export function OrganizationProfileBottomSheet({
   onClose,
   onOpenOrganizationId,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const htmlW = width - 48;
   const { data, isLoading, isError, refetch } = useOrganizationProfile(visible ? organizationId : null);
@@ -101,29 +102,24 @@ export function OrganizationProfileBottomSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <View style={styles.modalRoot} pointerEvents="box-none">
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer la fiche" />
-        <Animated.View
-          entering={SlideInDown.springify().damping(28).stiffness(280)}
-          style={[
-            styles.sheet,
-            {
-              maxHeight: '92%',
-              paddingBottom: Math.max(insets.bottom, 16),
-            },
-          ]}
-        >
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetHeaderSpacer} />
-            <Pressable
-              onPress={onClose}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Fermer"
-            >
-              <Feather name="x" size={22} color={META} />
-            </Pressable>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      {...(Platform.OS === 'ios' ? { presentationStyle: 'pageSheet' as const } : {})}
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={styles.safeRoot} edges={['bottom']}>
+        <View style={styles.sheetInner}>
+          <View style={styles.chromeHeader}>
+            <SettingsSheetHandle />
+            <View style={styles.chromeTopRow}>
+              <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Fermer">
+                <Text style={styles.fermer}>Fermer</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.chromeTitle} numberOfLines={2}>
+              {org?.name ?? 'Organisation'}
+            </Text>
           </View>
 
           {!organizationId ? null : isLoading ? (
@@ -143,6 +139,8 @@ export function OrganizationProfileBottomSheet({
             </View>
           ) : (
             <ScrollView
+              style={styles.scroll}
+              nestedScrollEnabled
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.scrollPad}
@@ -155,7 +153,7 @@ export function OrganizationProfileBottomSheet({
                 />
               </View>
 
-              <View style={styles.headerBlock}>
+              <View style={styles.orgHeroBlock}>
                 <View style={styles.logoWrap}>
                   {org.logo_url ? (
                     <Image source={{ uri: org.logo_url }} style={styles.logoImg} contentFit="cover" />
@@ -163,8 +161,7 @@ export function OrganizationProfileBottomSheet({
                     <MaterialCommunityIcons name="domain" size={36} color="#012573" />
                   )}
                 </View>
-                <View style={styles.titleRow}>
-                  <Text style={styles.orgTitle}>{org.name}</Text>
+                <View style={styles.typePillRow}>
                   <View style={styles.typePill}>
                     <Text style={styles.typePillText}>{formatOrgType(org.type)}</Text>
                   </View>
@@ -361,39 +358,31 @@ export function OrganizationProfileBottomSheet({
               ) : null}
             </ScrollView>
           )}
-        </Animated.View>
-      </View>
+        </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalRoot: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: OVERLAY,
+  safeRoot: { flex: 1, backgroundColor: '#FFFFFF' },
+  sheetInner: { flex: 1 },
+  chromeHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: CHROME_BORDER,
   },
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
+  chromeTopRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 },
+  fermer: { fontSize: 16, color: CvColors.mutedForeground, fontWeight: '500' },
+  chromeTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: CvColors.foreground,
+    letterSpacing: -0.3,
   },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  sheetHeaderSpacer: { flex: 1 },
-  loader: { paddingVertical: 48, alignItems: 'center', paddingHorizontal: 24 },
+  scroll: { flex: 1 },
+  loader: { flex: 1, paddingVertical: 48, alignItems: 'center', paddingHorizontal: 24, justifyContent: 'center' },
   errText: { fontSize: 15, color: META, textAlign: 'center' },
   retryBtn: { marginTop: 12, paddingVertical: 10, paddingHorizontal: 20 },
   retryBtnText: { color: BLUE_LINK, fontWeight: '600', fontSize: 16 },
@@ -407,7 +396,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   coverImg: { width: '100%', height: '100%' },
-  headerBlock: { paddingHorizontal: 20, marginTop: -36 },
+  orgHeroBlock: { paddingHorizontal: 20, marginTop: -36 },
+  typePillRow: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   logoWrap: {
     width: 80,
     height: 80,
@@ -425,8 +415,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logoImg: { width: '100%', height: '100%' },
-  titleRow: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  orgTitle: { fontSize: 22, fontWeight: '700', color: '#000000', flex: 1, minWidth: 160 },
   typePill: {
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 10,

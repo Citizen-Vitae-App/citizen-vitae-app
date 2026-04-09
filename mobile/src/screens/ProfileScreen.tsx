@@ -225,9 +225,7 @@ export function ProfileScreen() {
               {timeline.slice(0, 30).map((entry, index) =>
                 entry.kind === 'certified' ? (
                   <View key={`c-${entry.data.id}`} style={styles.timelineItem}>
-                    <View style={styles.timelineGutter}>
-                      <View style={[styles.timelineDot, index === 0 && styles.timelineDotFirst]} />
-                    </View>
+                    <View style={[styles.timelineDot, index === 0 && styles.timelineDotFirst]} />
                     <Pressable
                       style={styles.expCard}
                       onPress={() => goToCertifiedEvent(entry.data.event_id)}
@@ -286,9 +284,7 @@ export function ProfileScreen() {
                   </View>
                 ) : (
                   <View key={`m-${entry.data.id}`} style={styles.timelineItem}>
-                    <View style={styles.timelineGutter}>
-                      <View style={[styles.timelineDot, index === 0 && styles.timelineDotFirst]} />
-                    </View>
+                    <View style={[styles.timelineDot, index === 0 && styles.timelineDotFirst]} />
                     <View style={styles.expCard}>
                       <View style={[styles.expCardTop, styles.expCardTopRel]}>
                         <View style={styles.expLogo}>
@@ -471,34 +467,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   countBadgeText: { fontSize: 13, fontWeight: '700', color: CvColors.mutedForeground },
+  /**
+   * Aligné sur CitizenExperiencesSection (web) : ligne `left-3` (12px), rangée `pl-8` (32px),
+   * pastille `left-1` (4px) + `w-4 h-4` (16px) centrée verticalement sur la carte (`top-1/2`).
+   */
   timeline: {
     marginTop: 4,
-    paddingLeft: 8,
     position: 'relative',
   },
-  /** Ligne centrée sur la colonne de 32 px (centre à 16 px, ligne 2 px → left 15). */
   timelineLine: {
     position: 'absolute',
-    left: 15,
-    top: 18,
-    bottom: 18,
-    width: 2,
+    left: 12,
+    top: 0,
+    bottom: 0,
+    width: 1,
     backgroundColor: '#E2E8F0',
-    borderRadius: 1,
   },
-  timelineItem: { flexDirection: 'row', alignItems: 'stretch', marginBottom: 16 },
-  /** Colonne alignée sur la ligne : point centré verticalement sur la carte. */
-  timelineGutter: {
-    width: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    marginRight: 0,
+  timelineItem: {
+    position: 'relative',
+    paddingLeft: 32,
+    marginBottom: 16,
   },
   timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    position: 'absolute',
+    left: 4,
+    top: '50%',
+    marginTop: -8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: CvColors.card,
     borderWidth: 2,
     borderColor: '#CBD5E1',

@@ -45,7 +45,8 @@ export interface OrganizationProfileData {
 }
 
 /**
- * Charge le détail public d’une organisation (RLS : vérifiée, membre, ou super admin).
+ * Charge le détail public d’une organisation (RLS : org vérifiée en anon/authenticated,
+ * membre, ou super admin ; cause_themes lisible en anon pour les jointures).
  * Thèmes et événements sont chargés en parallèle comme sur le web.
  */
 export function useOrganizationProfile(organizationId: string | null) {

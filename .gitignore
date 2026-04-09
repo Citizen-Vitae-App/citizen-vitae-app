@@ -35,3 +35,6 @@ supabase/.temp/
 .env
 .env.production
 .vercel
+
+# MCP
+mcp.json

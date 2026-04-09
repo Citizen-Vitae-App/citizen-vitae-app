@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Home, ClipboardList, Bell, User } from 'lucide-react-native';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { MissionsScreen } from '@/screens/MissionsScreen';
 import { NotificationsScreen } from '@/screens/NotificationsScreen';
@@ -18,6 +19,16 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const BADGE_RED = '#EF4444';
+
+const ICON_STROKE = 1.75;
+
+type TabLabelProps = { focused: boolean; color: string; children: string };
+
+function TabLabel({ focused, color, children }: TabLabelProps) {
+  return (
+    <Text style={{ color, fontSize: 12, fontWeight: focused ? '700' : '500', marginTop: 2 }}>{children}</Text>
+  );
+}
 
 export function MainTabsNavigator() {
   const { data: notifications } = useNotificationsList();
@@ -42,7 +53,6 @@ export function MainTabsNavigator() {
           backgroundColor: '#FAFAFA',
           borderTopColor: '#E5E7EB',
         },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
       }}
     >
       <Tab.Screen
@@ -51,8 +61,14 @@ export function MainTabsNavigator() {
         options={{
           headerShown: false,
           title: 'Accueil',
-          tabBarLabel: 'Accueil',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="home-outline" size={size} color={color} />,
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color}>
+              Accueil
+            </TabLabel>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Home size={size} color={color} strokeWidth={ICON_STROKE} />
+          ),
         }}
       />
       <Tab.Screen
@@ -61,9 +77,13 @@ export function MainTabsNavigator() {
         options={{
           headerShown: false,
           title: 'Missions',
-          tabBarLabel: 'Missions',
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color}>
+              Missions
+            </TabLabel>
+          ),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="clipboard-text-outline" size={size} color={color} />
+            <ClipboardList size={size} color={color} strokeWidth={ICON_STROKE} />
           ),
         }}
       />
@@ -73,8 +93,14 @@ export function MainTabsNavigator() {
         options={{
           headerShown: false,
           title: 'Notifications',
-          tabBarLabel: 'Notifications',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="bell-outline" size={size} color={color} />,
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color}>
+              Notifications
+            </TabLabel>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Bell size={size} color={color} strokeWidth={ICON_STROKE} />
+          ),
           tabBarBadge:
             unreadCount > 99 ? '99+' : unreadCount > 0 ? unreadCount : undefined,
           tabBarBadgeStyle: {
@@ -91,8 +117,14 @@ export function MainTabsNavigator() {
         options={{
           headerShown: false,
           title: 'Profil',
-          tabBarLabel: 'Profil',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="account-outline" size={size} color={color} />,
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color}>
+              Profil
+            </TabLabel>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} strokeWidth={ICON_STROKE} />
+          ),
         }}
       />
     </Tab.Navigator>

@@ -3,6 +3,10 @@ import QRCode from 'react-native-qrcode-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { buildWebAppPath } from '@/lib/webAppUrl';
 import { CvColors } from '@/theme/colors';
+import { CitizenVitaeSigil } from '@/components/branding/CitizenVitaeSigil';
+
+const QR_SIZE = 200;
+const LOGO_INNER = 40;
 
 type Props = {
   qrToken: string;
@@ -39,7 +43,14 @@ export function CertificationQrPanel({
       )}
 
       <View style={[styles.qrBox, scanPhase === 'first_scan_done' && styles.qrBoxBlue]}>
-        <QRCode value={displayUrl} size={200} />
+        <View style={styles.qrWithLogo}>
+          <QRCode value={displayUrl} size={QR_SIZE} ecl="H" />
+          <View style={styles.qrLogoOverlay} pointerEvents="none">
+            <View style={styles.qrLogoPad}>
+              <CitizenVitaeSigil size={LOGO_INNER} />
+            </View>
+          </View>
+        </View>
       </View>
 
       <Text style={styles.tokenLine}>
@@ -74,6 +85,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     marginBottom: 12,
+  },
+  qrWithLogo: {
+    width: QR_SIZE,
+    height: QR_SIZE,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qrLogoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qrLogoPad: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#E5E7EB',
   },
   qrBoxBlue: { borderColor: '#BFDBFE' },
   tokenLine: { fontSize: 11, color: CvColors.mutedForeground, marginBottom: 12 },

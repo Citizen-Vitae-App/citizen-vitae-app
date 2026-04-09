@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { navigationRef } from '@/navigation/navigationRef';
 import { OrganizationSheetProvider } from '@/contexts/OrganizationSheetContext';
@@ -11,6 +11,12 @@ import { CvColors } from '@/theme/colors';
 function LoadingSplash() {
   return (
     <View style={styles.splash}>
+      <Image
+        source={require('../../assets/app-logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+        accessibilityLabel="Logo Citizen Vitae"
+      />
       <ActivityIndicator size="large" color={CvColors.primary} accessibilityLabel="Chargement" />
     </View>
   );
@@ -59,5 +65,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: CvColors.background,
+  },
+  logo: {
+    width: 180,
+    height: 180,
+    marginBottom: 20,
   },
 });

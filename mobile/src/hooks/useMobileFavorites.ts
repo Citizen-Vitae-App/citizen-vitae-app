@@ -43,6 +43,7 @@ export function useMobileFavorites() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] });
+      void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
     },
   });
 
@@ -53,6 +54,7 @@ export function useMobileFavorites() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['favorites', user?.id] });
+      void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
     },
   });
 

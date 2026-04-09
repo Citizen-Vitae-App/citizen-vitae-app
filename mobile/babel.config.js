@@ -2,7 +2,8 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: [
-      ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
+      // Désactive l’auto-plugin reanimated/worklets du preset pour n’en avoir qu’un seul, en dernier (requis Reanimated 4).
+      ['babel-preset-expo', { jsxImportSource: 'nativewind', reanimated: false }],
       'nativewind/babel',
     ],
     plugins: [
@@ -17,7 +18,7 @@ module.exports = function (api) {
           extensions: ['.tsx', '.ts', '.js', '.json'],
         },
       ],
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
     ],
   };
 };

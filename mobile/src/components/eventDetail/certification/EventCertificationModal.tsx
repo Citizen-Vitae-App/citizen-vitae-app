@@ -1,17 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
-  Modal,
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  ScrollView,
   Alert,
-  KeyboardAvoidingView,
   Platform,
+  BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+  type BottomSheetBackdropProps,
+} from '@gorhom/bottom-sheet';
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -26,6 +35,49 @@ import { CertificationSelfieCamera } from '@/components/eventDetail/certificatio
 import { CertificationQrPanel } from '@/components/eventDetail/certification/CertificationQrPanel';
 import type { EventRegistrationRow } from '@/hooks/useMobileEventRegistration';
 import { CvColors } from '@/theme/colors';
+
+function logCertificationDiagnostic(tag: string, payload?: Record<string, unknown>) {
+  if (!__DEV__) return;
+  if (payload && Object.keys(payload).length > 0) {
+    console.log(`[CitizenVitae:Certification] ${tag}`, payload);
+  } else {
+    console.log(`[CitizenVitae:Certification] ${tag}`);
+  }
+}
+
+function logCertificationError(tag: string, payload: Record<string, unknown>) {
+  if (!__DEV__) return;
+  console.error(`[CitizenVitae:Certification] ${tag}`, payload);
+}
+
+/** Détaille une erreur `functions.invoke` (statut HTTP, corps renvoyé, erreur réseau). */
+async function serializeFunctionInvokeError(error: unknown): Promise<Record<string, unknown>> {
+  const base: Record<string, unknown> = {
+    errorType: error instanceof Error ? error.constructor.name : typeof error,
+    message: error instanceof Error ? error.message : String(error),
+  };
+  if (error instanceof FunctionsHttpError) {
+    base.kind = 'FunctionsHttpError';
+    try {
+      const res = error.context;
+      base.httpStatus = res.status;
+      const text = await res.clone().text();
+      base.responseBodyPreview = text.slice(0, 1200);
+    } catch (readErr) {
+      base.responseBodyReadError = readErr instanceof Error ? readErr.message : String(readErr);
+    }
+    return base;
+  }
+  if (error instanceof FunctionsRelayError) {
+    base.kind = 'FunctionsRelayError';
+    return base;
+  }
+  if (error instanceof FunctionsFetchError) {
+    base.kind = 'FunctionsFetchError';
+    return base;
+  }
+  return base;
+}
 
 type Stage =
   | 'precheck'
@@ -72,6 +124,8 @@ export function EventCertificationModal({
   registration,
 }: Props) {
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+  const bottomSheetRef = useRef<React.ComponentRef<typeof BottomSheetModal>>(null);
   const { locationSharingEnabled } = useLocationPreference();
   const {
     latitude: userLatitude,
@@ -107,6 +161,95 @@ export function EventCertificationModal({
     'waiting_first_scan'
   );
   const openedRef = useRef(false);
+
+  const snapPoints = useMemo(() => ['90%'], []);
+
+  const allowPanDownToClose = useMemo(
+    () =>
+      !(
+        stage === 'processing' ||
+        stage === 'self_submitting' ||
+        stage === 'success_anim' ||
+        stage === 'camera'
+      ),
+    [stage]
+  );
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.35}
+        pressBehavior={
+          stage === 'precheck' || stage === 'instructions' ? 'close' : 'none'
+        }
+      />
+    ),
+    [stage]
+  );
+
+  useEffect(() => {
+    if (visible) {
+      const id = requestAnimationFrame(() => bottomSheetRef.current?.present());
+      return () => cancelAnimationFrame(id);
+    }
+    bottomSheetRef.current?.dismiss();
+  }, [visible]);
+
+  const handleSheetBack = useCallback(() => {
+    switch (stage) {
+      case 'instructions':
+        setStage('precheck');
+        return;
+      case 'camera':
+        setStage('instructions');
+        return;
+      case 'self_recap':
+        setStage('qr');
+        return;
+      case 'error':
+        setStage('instructions');
+        return;
+      default:
+        return;
+    }
+  }, [stage]);
+
+  useEffect(() => {
+    if (!visible || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      switch (stage) {
+        case 'processing':
+        case 'self_submitting':
+        case 'success_anim':
+          return true;
+        case 'instructions':
+          setStage('precheck');
+          return true;
+        case 'camera':
+          setStage('instructions');
+          return true;
+        case 'self_recap':
+          setStage('qr');
+          return true;
+        case 'error':
+          setStage('instructions');
+          return true;
+        case 'precheck':
+        case 'qr':
+        case 'flow_done':
+        case 'self_success':
+          onClose();
+          return true;
+        default:
+          onClose();
+          return true;
+      }
+    });
+    return () => sub.remove();
+  }, [visible, stage, onClose]);
 
   const eventDateLabel = `${format(parseISO(eventStartDate), "d MMMM yyyy 'à' HH:mm", {
     locale: fr,
@@ -212,6 +355,11 @@ export function EventCertificationModal({
   const runFaceMatch = async (imageBase64: string) => {
     setCertificationTime(new Date());
     setStage('processing');
+    logCertificationDiagnostic('face-match:request', {
+      registrationId,
+      eventId,
+      payloadSelfieLength: imageBase64.length,
+    });
     try {
       const { data, error } = await supabase.functions.invoke('didit-verification', {
         body: {
@@ -224,10 +372,23 @@ export function EventCertificationModal({
       });
 
       if (error) {
+        const detail = await serializeFunctionInvokeError(error);
+        logCertificationError('face-match:invoke-failed', detail);
         setErrorMessage('Une erreur est survenue lors de la vérification.');
         setStage('error');
         return;
       }
+
+      logCertificationDiagnostic('face-match:response', {
+        success: data?.success,
+        passed: data?.passed,
+        score: data?.score,
+        needs_reverification: data?.needs_reverification,
+        cached: data?.cached,
+        hasQrToken: typeof data?.qr_token === 'string' && data.qr_token.length > 0,
+        serverError: typeof (data as { error?: string })?.error === 'string' ? (data as { error: string }).error : undefined,
+      });
+
       if (!data?.success) {
         if (data?.needs_reverification) {
           setErrorMessage(
@@ -248,6 +409,7 @@ export function EventCertificationModal({
       }
       const token = data.qr_token as string | undefined;
       if (!token) {
+        logCertificationError('face-match:missing-qr-token', { dataKeys: data ? Object.keys(data as object) : [] });
         setErrorMessage('Aucun QR code généré. Réessaie.');
         setStage('error');
         return;
@@ -267,7 +429,11 @@ export function EventCertificationModal({
           setTimeout(() => setStage('qr'), 1400);
         }
       }
-    } catch {
+    } catch (err) {
+      logCertificationError('face-match:unexpected', {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : undefined,
+      });
       setErrorMessage('Une erreur est survenue. Réessaie.');
       setStage('error');
     }
@@ -279,6 +445,7 @@ export function EventCertificationModal({
       return;
     }
     setStage('self_submitting');
+    logCertificationDiagnostic('self-cert:submit', { registrationId });
     try {
       const { error } = await supabase
         .from('event_registrations')
@@ -290,6 +457,12 @@ export function EventCertificationModal({
         .eq('id', registrationId);
 
       if (error) {
+        logCertificationError('self-cert:db-update-failed', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        });
         setErrorMessage("Impossible d'enregistrer la certification.");
         setStage('error');
         return;
@@ -324,7 +497,10 @@ export function EventCertificationModal({
       setTimeout(() => {
         onClose();
       }, 2200);
-    } catch {
+    } catch (err) {
+      logCertificationError('self-cert:unexpected', {
+        message: err instanceof Error ? err.message : String(err),
+      });
       setErrorMessage('Erreur réseau.');
       setStage('error');
     }
@@ -414,7 +590,7 @@ export function EventCertificationModal({
       return (
         <CertificationSelfieCamera
           onCapture={(b64) => void runFaceMatch(b64)}
-          onCancel={onClose}
+          onCancel={() => setStage('instructions')}
         />
       );
     }
@@ -558,52 +734,93 @@ export function EventCertificationModal({
   };
 
   const showClose = stage !== 'camera' && stage !== 'self_submitting' && stage !== 'processing';
+  const showHeaderBack = stage === 'instructions' || stage === 'camera' || stage === 'self_recap' || stage === 'error';
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Certification</Text>
-            {showClose ? (
-              <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Fermer">
-                <MaterialCommunityIcons name="close" size={26} color={CvColors.foreground} />
-              </Pressable>
-            ) : (
-              <View style={{ width: 26 }} />
-            )}
-          </View>
-          <ScrollView
-            contentContainerStyle={styles.scroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {renderBody()}
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+    <BottomSheetModal
+      ref={bottomSheetRef}
+      snapPoints={snapPoints}
+      enableDynamicSizing={false}
+      enablePanDownToClose={allowPanDownToClose}
+      topInset={insets.top}
+      bottomInset={insets.bottom}
+      onDismiss={onClose}
+      backdropComponent={renderBackdrop}
+      handleIndicatorStyle={styles.sheetHandleBar}
+      backgroundStyle={styles.sheetBackground}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustResize"
+    >
+      <View style={styles.sheetHeader}>
+        <View style={styles.headerSide}>
+          {showHeaderBack ? (
+            <Pressable
+              onPress={handleSheetBack}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Retour"
+            >
+              <Text style={styles.headerBackText}>Retour</Text>
+            </Pressable>
+          ) : null}
+        </View>
+        <Text style={styles.headerTitleCenter} numberOfLines={1}>
+          Certification
+        </Text>
+        <View style={[styles.headerSide, styles.headerSideEnd]}>
+          {showClose ? (
+            <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Fermer">
+              <MaterialCommunityIcons name="close" size={26} color={CvColors.foreground} />
+            </Pressable>
+          ) : (
+            <View style={{ width: 26 }} />
+          )}
+        </View>
+      </View>
+      <BottomSheetScrollView
+        contentContainerStyle={stage === 'camera' ? styles.scrollCamera : styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={stage !== 'camera'}
+      >
+        {renderBody()}
+      </BottomSheetScrollView>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  safe: { flex: 1, backgroundColor: '#FAFAFA' },
-  header: {
+  sheetBackground: {
+    backgroundColor: '#FAFAFA',
+  },
+  sheetHandleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+  },
+  sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
   },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: CvColors.foreground },
+  headerSide: { width: 72, flexDirection: 'row', alignItems: 'center' },
+  headerSideEnd: { justifyContent: 'flex-end' },
+  headerBackText: { fontSize: 16, color: '#64748B', fontWeight: '500' },
+  headerTitleCenter: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '700',
+    color: CvColors.foreground,
+    textAlign: 'center',
+  },
   scroll: { padding: 20, paddingBottom: 40 },
+  scrollCamera: { paddingHorizontal: 16, paddingBottom: 28, paddingTop: 4 },
   block: { gap: 14 },
   centerBlock: { alignItems: 'center', paddingVertical: 32, gap: 16 },
   h2: { fontSize: 20, fontWeight: '700', color: CvColors.foreground, textAlign: 'center' },

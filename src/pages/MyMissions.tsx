@@ -16,6 +16,7 @@ import { FaceMatchVerification } from '@/components/FaceMatchVerification';
 import { SelfCertificationFlow } from '@/components/SelfCertificationFlow';
 import { CertificateCard } from '@/components/CertificateCard';
 import { useMyMissions, type RegistrationWithEvent } from '@/hooks/useMyMissions';
+import { useFavoriteMissions, type FavoriteWithEvent } from '@/hooks/useFavoriteMissions';
 const MyMissions = () => {
   const {
     user
@@ -24,6 +25,7 @@ const MyMissions = () => {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'upcoming';
   const { data: registrations = [], isLoading } = useMyMissions();
+  const { data: favoriteMissions = [], isLoading: isLoadingFavorites } = useFavoriteMissions();
   const [showFaceMatch, setShowFaceMatch] = useState(false);
   const [showSelfCertification, setShowSelfCertification] = useState(false);
   const [selectedEventForFaceMatch, setSelectedEventForFaceMatch] = useState<RegistrationWithEvent | null>(null);
@@ -100,6 +102,18 @@ const MyMissions = () => {
         </div>
       </div>;
   };
+  const renderFavoriteCard = (row: FavoriteWithEvent) => {
+    const event = row.events;
+    return <div key={row.id} className="flex items-center gap-4 border border-border rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/events/${event.id}`)}>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
+          <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
+        </div>
+        <div className="w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+          <img src={event.cover_image_url || defaultCover} alt={event.name} loading="lazy" className="w-full h-full object-cover" />
+        </div>
+      </div>;
+  };
   const renderEmptyState = (message: string, showCTA: boolean = true) => (
     <EmptyState
       icon="clipboard"
@@ -116,6 +130,16 @@ const MyMissions = () => {
       title="Aucune annulation"
     />
   );
+
+  const renderFavoritesEmptyState = () => (
+    <EmptyState
+      icon="heart"
+      title="Aucune mission en favoris"
+      description="Like une mission depuis sa fiche pour la retrouver ici"
+      ctaLabel="Découvrir les missions"
+      ctaLink="/"
+    />
+  );
   return <div className="min-h-screen bg-background">
       {/* Navigation - Desktop only */}
       <MainNavbar />
@@ -124,14 +148,17 @@ const MyMissions = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
-            <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-4 py-2 text-muted-foreground data-[state=active]:text-foreground">
+          <TabsList className="w-full justify-start gap-0 flex-wrap sm:flex-nowrap bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
+            <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
               À venir
             </TabsTrigger>
-            <TabsTrigger value="certificates" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-4 py-2 text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="favorites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
+              Favoris
+            </TabsTrigger>
+            <TabsTrigger value="certificates" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
               Certificats
             </TabsTrigger>
-            <TabsTrigger value="cancelled" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-4 py-2 text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="cancelled" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
               Annulations
             </TabsTrigger>
           </TabsList>
@@ -141,6 +168,14 @@ const MyMissions = () => {
                 <Skeleton className="h-64 w-full rounded-xl" />
               </div> : upcomingEvents.length === 0 ? renderEmptyState("Aucune mission à venir") : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.map(renderUpcomingCard)}
+              </div>}
+          </TabsContent>
+
+          <TabsContent value="favorites" className="mt-0">
+            {isLoadingFavorites ? <div className="space-y-3">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+              </div> : favoriteMissions.length === 0 ? renderFavoritesEmptyState() : <div className="space-y-3">
+                {favoriteMissions.map(renderFavoriteCard)}
               </div>}
           </TabsContent>
 

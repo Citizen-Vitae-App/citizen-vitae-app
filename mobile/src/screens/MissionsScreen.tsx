@@ -8,47 +8,67 @@ import {
   RefreshControl,
   Pressable,
   ListRenderItem,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { parseISO, isBefore } from 'date-fns';
 import { useMyMissions, type RegistrationWithEvent } from '@/hooks/useMyMissions';
+import { useFavoriteMissions, type FavoriteWithEvent } from '@/hooks/useFavoriteMissions';
 import { MissionCertificateCard } from '@/components/missions/MissionCertificateCard';
 import { MissionUpcomingCard } from '@/components/missions/MissionUpcomingCard';
 import { MissionCancelledCard } from '@/components/missions/MissionCancelledCard';
+import { MissionFavoriteCard } from '@/components/missions/MissionFavoriteCard';
 import { CvColors } from '@/theme/colors';
 
-type MissionTab = 'upcoming' | 'certificates' | 'cancelled';
+type MissionTab = 'upcoming' | 'favorites' | 'certificates' | 'cancelled';
 
 function MissionsTabBar({ active, onChange }: { active: MissionTab; onChange: (t: MissionTab) => void }) {
+  const { width } = useWindowDimensions();
   const tabs: { id: MissionTab; label: string }[] = [
     { id: 'upcoming', label: 'À venir' },
+    { id: 'favorites', label: 'Favoris' },
     { id: 'certificates', label: 'Certificats' },
     { id: 'cancelled', label: 'Annulations' },
   ];
   return (
-    <View style={styles.tabBar}>
-      {tabs.map((t) => {
-        const isActive = active === t.id;
-        return (
-          <Pressable
-            key={t.id}
-            style={styles.tabBtn}
-            onPress={() => onChange(t.id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-          >
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{t.label}</Text>
-            <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
-          </Pressable>
-        );
-      })}
+    <View style={styles.tabBarOuter}>
+      <View style={[styles.tabBar, { width }]}>
+        {tabs.map((t) => {
+          const isActive = active === t.id;
+          return (
+            <Pressable
+              key={t.id}
+              style={styles.tabBtn}
+              onPress={() => onChange(t.id)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+            >
+              <Text
+                style={[styles.tabLabel, isActive && styles.tabLabelActive]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.82}
+              >
+                {t.label}
+              </Text>
+              <View style={[styles.tabUnderline, isActive && styles.tabUnderlineActive]} />
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 export function MissionsScreen() {
   const { data: registrations = [], isLoading, isError, error, refetch, isRefetching } = useMyMissions();
-  const [tab, setTab] = useState<MissionTab>('certificates');
+  const {
+    data: favoriteMissions = [],
+    isLoading: favLoading,
+    refetch: refetchFavorites,
+    isRefetching: favRefetching,
+  } = useFavoriteMissions();
+  const [tab, setTab] = useState<MissionTab>('upcoming');
 
   const { upcomingEvents, completedEvents, cancelledEvents } = useMemo(() => {
     const now = new Date();
@@ -68,27 +88,41 @@ export function MissionsScreen() {
     return { upcomingEvents: upcoming, completedEvents: completed, cancelledEvents: cancelled };
   }, [registrations]);
 
-  const listData: RegistrationWithEvent[] = useMemo(() => {
+  const listDataRegistrations: RegistrationWithEvent[] = useMemo(() => {
     switch (tab) {
       case 'upcoming':
         return upcomingEvents;
       case 'certificates':
         return completedEvents;
-      default:
+      case 'cancelled':
         return cancelledEvents;
+      default:
+        return [];
     }
   }, [tab, upcomingEvents, completedEvents, cancelledEvents]);
 
-  const renderItem: ListRenderItem<RegistrationWithEvent> = ({ item }) => {
+  const refreshing = isRefetching || favRefetching;
+
+  const onRefresh = () => {
+    void Promise.all([refetch(), refetchFavorites()]);
+  };
+
+  const renderRegistrationItem: ListRenderItem<RegistrationWithEvent> = ({ item }) => {
     if (tab === 'certificates') return <MissionCertificateCard registration={item} />;
     if (tab === 'upcoming') return <MissionUpcomingCard registration={item} />;
     return <MissionCancelledCard registration={item} />;
   };
 
+  const renderFavoriteItem: ListRenderItem<FavoriteWithEvent> = ({ item }) => (
+    <MissionFavoriteCard favorite={item} />
+  );
+
   const emptyMessage = useMemo(() => {
     switch (tab) {
       case 'upcoming':
         return 'Aucune mission à venir';
+      case 'favorites':
+        return 'Aucune mission en favoris';
       case 'certificates':
         return 'Aucun certificat disponible';
       default:
@@ -96,7 +130,8 @@ export function MissionsScreen() {
     }
   }, [tab]);
 
-  const keyExtractor = (item: RegistrationWithEvent) => item.id;
+  const keyExtractorReg = (item: RegistrationWithEvent) => item.id;
+  const keyExtractorFav = (item: FavoriteWithEvent) => item.id;
 
   if (isLoading && !registrations.length) {
     return (
@@ -117,6 +152,49 @@ export function MissionsScreen() {
     );
   }
 
+  if (tab === 'favorites') {
+    if (favLoading && favoriteMissions.length === 0) {
+      return (
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Text style={styles.screenTitle}>Mes Missions</Text>
+            <MissionsTabBar active={tab} onChange={setTab} />
+          </View>
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={CvColors.primary} accessibilityLabel="Chargement des favoris" />
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.screenTitle}>Mes Missions</Text>
+          <MissionsTabBar active={tab} onChange={setTab} />
+        </View>
+        <FlatList
+          data={favoriteMissions}
+          keyExtractor={keyExtractorFav}
+          renderItem={renderFavoriteItem}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={CvColors.primary}
+              colors={[CvColors.primary]}
+            />
+          }
+          contentContainerStyle={
+            favoriteMissions.length === 0 ? styles.emptyContainer : styles.listContent
+          }
+          ListEmptyComponent={<Text style={styles.empty}>{emptyMessage}</Text>}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
@@ -124,19 +202,21 @@ export function MissionsScreen() {
         <MissionsTabBar active={tab} onChange={setTab} />
       </View>
       <FlatList
-        data={listData}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
+        data={listDataRegistrations}
+        keyExtractor={keyExtractorReg}
+        renderItem={renderRegistrationItem}
         extraData={tab}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => void refetch()}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             tintColor={CvColors.primary}
             colors={[CvColors.primary]}
           />
         }
-        contentContainerStyle={listData.length === 0 ? styles.emptyContainer : styles.listContent}
+        contentContainerStyle={
+          listDataRegistrations.length === 0 ? styles.emptyContainer : styles.listContent
+        }
         ListEmptyComponent={<Text style={styles.empty}>{emptyMessage}</Text>}
         showsVerticalScrollIndicator={false}
       />
@@ -156,13 +236,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 10,
   },
+  tabBarOuter: { alignSelf: 'stretch' },
   tabBar: {
     flexDirection: 'row',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E7EB',
   },
-  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 10 },
-  tabLabel: { fontSize: 15, fontWeight: '600', color: '#94A3B8' },
+  tabBtn: { flex: 1, minWidth: 0, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 2 },
+  tabLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', textAlign: 'center' },
   tabLabelActive: { color: '#0F172A' },
   tabUnderline: { height: 2, marginTop: 8, alignSelf: 'stretch', backgroundColor: 'transparent' },
   tabUnderlineActive: { backgroundColor: '#0F172A' },

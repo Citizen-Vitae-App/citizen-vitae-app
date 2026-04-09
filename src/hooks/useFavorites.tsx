@@ -60,6 +60,9 @@ export const useFavorites = () => {
             }
             return old;
           });
+          if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+            void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user.id] });
+          }
         }
       )
       .subscribe();
@@ -109,7 +112,8 @@ export const useFavorites = () => {
       queryClient.setQueryData(['favorites', user?.id], (old: Favorite[] = []) =>
         old.map(f => f.id === context.tempFavorite.id ? data : f)
       );
-      
+      void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
+
       toast({
         title: "Ajouté aux favoris",
         description: "L'événement a été ajouté à vos favoris"
@@ -153,6 +157,7 @@ export const useFavorites = () => {
       return { removed };
     },
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
       toast({
         title: "Retiré des favoris",
         description: "L'événement a été retiré de vos favoris"
