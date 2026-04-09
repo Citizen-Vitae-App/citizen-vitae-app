@@ -104,7 +104,7 @@ const MyMissions = () => {
   };
   const renderFavoriteCard = (row: FavoriteWithEvent) => {
     const event = row.events;
-    return <div key={row.id} className="flex items-center gap-4 border border-border rounded-xl p-3 cursor-pointer transition-colors bg-white" onClick={() => navigate(`/events/${event.id}`)}Inner:
+    return <div key={row.id} className="flex items-center gap-4 border border-border rounded-xl p-3 cursor-pointer transition-colors bg-white" onClick={() => navigate(`/events/${event.id}`)}>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
           <p className="text-muted-foreground text-sm">{formatEventDate(event.start_date)}</p>
