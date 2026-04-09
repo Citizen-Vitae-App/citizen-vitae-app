@@ -91,7 +91,7 @@ export function FavoriteCausesSection({ causes }: FavoriteCausesSectionProps) {
     return (
       <section className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+          <h2 className="text-lg flex items-center gap-2 font-medium">
             <Heart className="h-5 w-5 text-muted-foreground" />
             Mes causes favorites
           </h2>
@@ -149,7 +149,7 @@ export function FavoriteCausesSection({ causes }: FavoriteCausesSectionProps) {
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
+        <h2 className="text-lg flex items-center gap-2 font-medium">
           <Heart className="h-5 w-5 text-muted-foreground" />
           Mes causes favorites
         </h2>
