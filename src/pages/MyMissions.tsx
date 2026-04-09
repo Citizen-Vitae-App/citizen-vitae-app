@@ -148,17 +148,17 @@ const MyMissions = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="w-full justify-start gap-0 flex-wrap sm:flex-nowrap bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
-            <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
+          <TabsList className="w-full grid grid-cols-4 bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
+            <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               À venir
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
+            <TabsTrigger value="favorites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               Favoris
             </TabsTrigger>
-            <TabsTrigger value="certificates" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
+            <TabsTrigger value="certificates" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               Certificats
             </TabsTrigger>
-            <TabsTrigger value="cancelled" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-muted-foreground data-[state=active]:text-foreground shrink-0">
+            <TabsTrigger value="cancelled" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               Annulations
             </TabsTrigger>
           </TabsList>
