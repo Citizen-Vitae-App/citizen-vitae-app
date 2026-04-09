@@ -148,7 +148,7 @@ const MyMissions = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 bg-transparent border-b border-border rounded-none h-auto p-0 mb-6">
+          <TabsList className="w-full grid grid-cols-4 bg-background border-b border-border rounded-none h-auto p-0 mb-6 sticky top-0 z-30">
             <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               À venir
             </TabsTrigger>
