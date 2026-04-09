@@ -196,6 +196,7 @@ const MyMissions = () => {
                 {cancelledEvents.map(renderCompactCard)}
               </div>}
           </TabsContent>
+          </div>
         </Tabs>
       </main>
 
