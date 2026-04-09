@@ -87,7 +87,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
+        <h2 className="text-lg flex items-center gap-2 whitespace-nowrap font-medium">
           <BookOpen className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           Mes expériences citoyennes
           {grandTotal > 0 && (
