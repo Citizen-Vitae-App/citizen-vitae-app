@@ -101,7 +101,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
             variant="ghost"
             size="icon"
             onClick={() => setAddDialogOpen(true)}
-            className="h-8 w-8 flex-shrink-0"
+            className="h-8 w-6 flex-shrink-0"
           >
             <Plus className="h-4 w-4" />
           </Button>
