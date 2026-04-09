@@ -162,7 +162,9 @@ const MyMissions = () => {
               Annulations
             </TabsTrigger>
           </TabsList>
+          </div>
 
+          <div className="mt-6">
           <TabsContent value="upcoming" className="mt-0">
             {isLoading ? <div className="space-y-4">
                 <Skeleton className="h-64 w-full rounded-xl" />
