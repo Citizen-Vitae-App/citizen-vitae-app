@@ -21,7 +21,7 @@ export function OrganizationsSection({
   return <section className="mb-6">
       {/* Companies */}
       {companies.length > 0 && <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-lg mb-4 flex items-center gap-2 font-medium">
             <Building2 className="h-5 w-5 text-muted-foreground" />
             {companies.length > 1 ? 'Mes entreprises' : 'Mon entreprise'}
           </h2>
@@ -32,7 +32,7 @@ export function OrganizationsSection({
 
       {/* Associations / Foundations */}
       {associations.length > 0 && <div>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-lg mb-4 flex items-center gap-2 font-medium">
             <Home className="h-5 w-5 text-muted-foreground" />
             {associations.length > 1 ? 'Mes associations' : 'Mon association'}
           </h2>
