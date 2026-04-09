@@ -145,10 +145,10 @@ const MyMissions = () => {
       <MainNavbar />
 
       <main className="container mx-auto px-4 pt-6 md:pt-8 pb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Mes Missions</h1>
-
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 bg-background border-b border-border rounded-none h-auto p-0 mb-6 sticky top-0 z-30">
+          <div className="sticky top-0 z-30 bg-background pb-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4 pt-2">Mes Missions</h1>
+            <TabsList className="w-full grid grid-cols-4 bg-background border-b border-border rounded-none h-auto p-0 mb-0">
             <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent bg-transparent py-2 text-sm text-muted-foreground data-[state=active]:text-foreground text-center">
               À venir
             </TabsTrigger>
@@ -162,7 +162,9 @@ const MyMissions = () => {
               Annulations
             </TabsTrigger>
           </TabsList>
+          </div>
 
+          <div className="mt-6">
           <TabsContent value="upcoming" className="mt-0">
             {isLoading ? <div className="space-y-4">
                 <Skeleton className="h-64 w-full rounded-xl" />
@@ -194,6 +196,7 @@ const MyMissions = () => {
                 {cancelledEvents.map(renderCompactCard)}
               </div>}
           </TabsContent>
+          </div>
         </Tabs>
       </main>
 
