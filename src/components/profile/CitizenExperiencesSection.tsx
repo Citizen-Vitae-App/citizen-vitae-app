@@ -91,7 +91,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
           <BookOpen className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           Mes expériences citoyennes
           {grandTotal > 0 && (
-            <Badge variant="secondary" className="ml-1">
+            <Badge variant="secondary" className="ml-0">
               {grandTotal}
             </Badge>
           )}
