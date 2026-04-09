@@ -96,7 +96,7 @@ export function CitizenExperiencesSection({ missions, totalCount }: CitizenExper
             </Badge>
           )}
         </h2>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0">
           <Button
             variant="ghost"
             size="icon"
