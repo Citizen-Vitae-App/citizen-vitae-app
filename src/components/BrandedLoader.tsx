@@ -11,16 +11,8 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
       height={size}
       viewBox="0 0 48 48"
       fill="none"
-      initial={{ opacity: 1, scale: 1 }}
-      animate={{ opacity: 1, scale: 1 }}
     >
-      {/* Background circle */}
-      <motion.circle
-        cx="24"
-        cy="24"
-        r="24"
-        fill="#FFFDF8"
-      />
+      <circle cx="24" cy="24" r="24" fill="#FFFDF8" />
 
       {/* C shape — draws in via stroke */}
       <motion.path
@@ -31,12 +23,12 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
         initial={{ pathLength: 0, fillOpacity: 0 }}
         animate={{ pathLength: 1, fillOpacity: 1 }}
         transition={{
-          pathLength: { duration: 0.8, ease: 'easeInOut' },
-          fillOpacity: { duration: 0.3, delay: 0.6, ease: 'easeIn' },
+          pathLength: { duration: 0.5, ease: 'easeInOut' },
+          fillOpacity: { duration: 0.2, delay: 0.35, ease: 'easeIn' },
         }}
       />
 
-      {/* V shape — sweeps in like a signature after C is drawn */}
+      {/* V shape — sweeps in like a signature */}
       <motion.path
         d="M12.5898 24.1336L18.3373 15.468L21.0327 17.2277L25.2208 27.8316L38.3642 8.07202L41.082 9.87628L25.4435 33.49L23.1937 32.0197L18.8274 20.7699L15.3747 25.9382L12.5898 24.1336Z"
         stroke="#E23428"
@@ -45,12 +37,12 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
         initial={{ pathLength: 0, fillOpacity: 0 }}
         animate={{ pathLength: 1, fillOpacity: 1 }}
         transition={{
-          pathLength: { duration: 0.6, ease: 'easeInOut', delay: 0.7 },
-          fillOpacity: { duration: 0.25, delay: 1.1, ease: 'easeIn' },
+          pathLength: { duration: 0.4, ease: 'easeInOut', delay: 0.4 },
+          fillOpacity: { duration: 0.15, delay: 0.65, ease: 'easeIn' },
         }}
       />
 
-      {/* Subtle pulse ring after full reveal */}
+      {/* Subtle pulse ring */}
       <motion.circle
         cx="24"
         cy="24"
@@ -61,10 +53,10 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
         initial={{ opacity: 0, scale: 1 }}
         animate={{ opacity: [0, 0.4, 0], scale: [1, 1.15, 1.3] }}
         transition={{
-          duration: 1.2,
-          delay: 1.3,
+          duration: 1,
+          delay: 0.8,
           repeat: Infinity,
-          repeatDelay: 0.8,
+          repeatDelay: 0.5,
           ease: 'easeOut',
         }}
       />
