@@ -11,9 +11,8 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
       height={size}
       viewBox="0 0 48 48"
       fill="none"
-      initial={{ opacity: 0, scale: 0.85 }}
+      initial={{ opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {/* Background circle */}
       <motion.circle
@@ -21,9 +20,6 @@ export function BrandedLoader({ size = 48 }: { size?: number }) {
         cy="24"
         r="24"
         fill="#FFFDF8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1] }}
-        transition={{ duration: 0.2 }}
       />
 
       {/* C shape — draws in via stroke */}
