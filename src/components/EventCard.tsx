@@ -3,6 +3,7 @@ import { Star, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface EventCardProps {
@@ -30,6 +31,7 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
   }
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { isFavorite, toggleFavorite } = useFavorites();
   
   const isLiked = id ? isFavorite(id) : false;
@@ -129,13 +131,13 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
       <button
         onClick={handleLikeClick}
         className={cn(
-          "absolute top-4 right-4 z-10 transition-opacity duration-300 p-2 rounded-full bg-background/80 hover:bg-background relative overflow-hidden",
-          isLiked ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          "absolute top-4 right-4 z-10 transition-opacity duration-300 p-2 rounded-full bg-background/80 hover:bg-background",
+          isLiked || isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}
       >
         {/* Halo pulse effect */}
         {animating && (
-          <span className="absolute inset-0 rounded-full animate-[heartHalo_0.5s_ease-out_forwards] bg-destructive/30" />
+          <span className="absolute inset-0 rounded-full animate-[heartHalo_0.5s_ease-out_forwards] bg-destructive/30 pointer-events-none" />
         )}
         <Heart className={cn(
           "w-5 h-5 transition-transform duration-300 relative z-10",
