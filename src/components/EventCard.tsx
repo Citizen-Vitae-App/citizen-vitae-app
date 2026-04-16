@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Star, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -33,6 +33,7 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
   const { isFavorite, toggleFavorite } = useFavorites();
   
   const isLiked = id ? isFavorite(id) : false;
+  const [animating, setAnimating] = useState(false);
 
   const handleLikeClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -43,6 +44,11 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
     if (!user) {
       navigate('/auth');
       return;
+    }
+
+    if (!isLiked) {
+      setAnimating(true);
+      setTimeout(() => setAnimating(false), 400);
     }
     
     await toggleFavorite(id);
@@ -128,8 +134,9 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
         )}
       >
         <Heart className={cn(
-          "w-5 h-5",
-          isLiked ? "fill-destructive text-destructive" : "text-foreground"
+          "w-5 h-5 transition-transform duration-300",
+          isLiked ? "fill-destructive text-destructive" : "text-foreground",
+          animating && "animate-[heartPop_0.4s_ease-out]"
         )} />
       </button>
 
