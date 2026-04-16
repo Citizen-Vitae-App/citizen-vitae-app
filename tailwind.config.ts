@@ -90,6 +90,11 @@ export default {
           "60%": { transform: "scale(0.9)" },
           "100%": { transform: "scale(1)" },
         },
+        heartHalo: {
+          "0%": { transform: "scale(0.3)", opacity: "0.6" },
+          "50%": { transform: "scale(1)", opacity: "0.3" },
+          "100%": { transform: "scale(1)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
