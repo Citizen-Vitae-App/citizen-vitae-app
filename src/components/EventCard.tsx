@@ -129,12 +129,16 @@ const EventCardComponent = ({ id, title, shortTitle, organization, organizationI
       <button
         onClick={handleLikeClick}
         className={cn(
-          "absolute top-4 right-4 z-10 transition-opacity duration-300 p-2 rounded-full bg-background/80 hover:bg-background",
+          "absolute top-4 right-4 z-10 transition-opacity duration-300 p-2 rounded-full bg-background/80 hover:bg-background relative overflow-hidden",
           isLiked ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}
       >
+        {/* Halo pulse effect */}
+        {animating && (
+          <span className="absolute inset-0 rounded-full animate-[heartHalo_0.5s_ease-out_forwards] bg-destructive/30" />
+        )}
         <Heart className={cn(
-          "w-5 h-5 transition-transform duration-300",
+          "w-5 h-5 transition-transform duration-300 relative z-10",
           isLiked ? "fill-destructive text-destructive" : "text-foreground",
           animating && "animate-[heartPop_0.4s_ease-out]"
         )} />
