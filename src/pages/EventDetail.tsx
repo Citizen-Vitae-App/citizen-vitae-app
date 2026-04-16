@@ -50,11 +50,16 @@ const EventDetail = () => {
   const [showSelfCertification, setShowSelfCertification] = useState(false);
   const [showUnregisterTooltip, setShowUnregisterTooltip] = useState(false);
   const isLiked = eventId ? isFavorite(eventId) : false;
+  const [heartAnimating, setHeartAnimating] = useState(false);
   const handleLikeClick = async () => {
     if (!eventId) return;
     if (!user) {
       navigate('/auth');
       return;
+    }
+    if (!isLiked) {
+      setHeartAnimating(true);
+      setTimeout(() => setHeartAnimating(false), 400);
     }
     await toggleFavorite(eventId);
   };
@@ -186,8 +191,15 @@ const EventDetail = () => {
           
           {/* Action buttons on cover */}
           <div className="absolute bottom-12 right-6 lg:bottom-6 flex items-center gap-3">
-            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
-              <Heart className={`h-5 w-5 ${isLiked ? 'fill-destructive text-destructive' : 'text-foreground'}`} />
+            <button onClick={handleLikeClick} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75 relative">
+              {heartAnimating && (
+                <span className="absolute inset-0 rounded-full animate-[heartHalo_0.5s_ease-out_forwards] bg-destructive/30 pointer-events-none" />
+              )}
+              <Heart className={cn(
+                "h-5 w-5 relative z-10 transition-transform duration-300",
+                isLiked ? 'fill-destructive text-destructive' : 'text-foreground',
+                heartAnimating && "animate-[heartPop_0.4s_ease-out]"
+              )} />
             </button>
             <button onClick={handleShare} className="p-3 bg-background/90 backdrop-blur-sm hover:bg-background transition-colors rounded-full opacity-75">
               <Share2 className="h-5 w-5 text-foreground" />
