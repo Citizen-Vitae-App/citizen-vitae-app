@@ -11,7 +11,6 @@ interface Favorite {
 
 export const useFavorites = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch user favorites avec React Query
