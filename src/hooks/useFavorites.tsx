@@ -2,7 +2,6 @@ import { useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 
 interface Favorite {
   id: string;
@@ -12,7 +11,6 @@ interface Favorite {
 
 export const useFavorites = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch user favorites avec React Query
@@ -113,11 +111,6 @@ export const useFavorites = () => {
         old.map(f => f.id === context.tempFavorite.id ? data : f)
       );
       void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
-
-      toast({
-        title: "Ajouté aux favoris",
-        description: "L'événement a été ajouté à vos favoris"
-      });
     },
     onError: (_, __, context) => {
       // Rollback
@@ -126,12 +119,6 @@ export const useFavorites = () => {
           old.filter(f => f.id !== context.tempFavorite.id)
         );
       }
-      
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter aux favoris",
-        variant: "destructive"
-      });
     },
   });
 
@@ -158,10 +145,6 @@ export const useFavorites = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['favorite-missions', user?.id] });
-      toast({
-        title: "Retiré des favoris",
-        description: "L'événement a été retiré de vos favoris"
-      });
     },
     onError: (_, __, context) => {
       // Rollback
@@ -170,12 +153,6 @@ export const useFavorites = () => {
           [...old, context.removed]
         );
       }
-      
-      toast({
-        title: "Erreur",
-        description: "Impossible de retirer des favoris",
-        variant: "destructive"
-      });
     },
   });
 
