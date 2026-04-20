@@ -21,6 +21,7 @@ import { CitizenModeFAB } from '@/components/CitizenModeFAB';
 import { OrganizationMobileHeader } from '@/components/organization/OrganizationMobileHeader';
 import { OrganizationBottomNav } from '@/components/OrganizationBottomNav';
 import { MobileSettingsSheet } from '@/components/profile/MobileSettingsSheet';
+import logoCzv from '@/assets/logo.svg';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
@@ -76,6 +77,14 @@ export default function Profile() {
         {isOrganizationContext && isMobile ? <OrganizationMobileHeader /> : <MainNavbar />}
 
         <main className={`container mx-auto px-4 pb-24 max-w-5xl ${isOrganizationContext && isMobile ? 'pt-20' : 'pt-6 md:pt-8'}`}>
+          {/* Title: "Mon" + Citizen Vitae logo */}
+          {!isOrganizationContext && (
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className="text-2xl md:text-3xl font-bold text-foreground">Mon</span>
+              <img src={logoCzv} alt="Citizen Vitae" className="h-6 md:h-7 w-auto" />
+            </div>
+          )}
+
           {/* Mobile: action buttons row */}
           {!isOrganizationContext && isMobile && (
             <div className="flex justify-end gap-2 mb-1">
